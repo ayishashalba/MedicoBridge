@@ -16,18 +16,12 @@ import PatientRegister from "../pages/Register/PatientRegister";
 import VerifyEmail from "../pages/VerifyEmail/VerifyEmail";
 import DoctorRegister from "../pages/Register/DoctorRegister";
 import HospitalRegister from "../pages/Register/HospitalRegister";
+import PharmacyRegister from "../pages/Register/PharmacyRegister";
 
 // Inline placeholders for pages to be built in subsequent steps
 const AdminLoginPlaceholder = () => (
   <div style={{ padding: "120px 2rem", textAlign: "center" }}>
     <h2>Admin Login (Under Construction)</h2>
-  </div>
-);
-
-
-const PharmacyRegisterPlaceholder = () => (
-  <div style={{ padding: "120px 2rem", textAlign: "center" }}>
-    <h2>Pharmacy Registration (Under Construction)</h2>
   </div>
 );
 
@@ -56,7 +50,7 @@ function AppRoutes() {
       />
       <Route
         path="/register/pharmacy"
-        element={<PharmacyRegisterPlaceholder />}
+        element={<PharmacyRegister />}
       />
 
       {/* Dashboards */}
