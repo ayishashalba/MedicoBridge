@@ -18,7 +18,7 @@ const SPECIALIZATIONS = [
 const INITIAL = {
   fullName: "", email: "", phone: "", gender: "",
   medRegNumber: "", specialization: "", qualification: "", experience: "",
-  practiceType: "hospital",
+  practiceType: "", // empty by default so no practice fields show
   // Hospital fields
   hospitalName: "", branchLocation: "", department: "",
   // Clinic fields
@@ -83,11 +83,13 @@ function DoctorRegister() {
       errs.experience = "Enter a valid number (0–60)";
 
     // Practice
-    if (form.practiceType === "hospital") {
+    if (!form.practiceType) {
+      errs.practiceType = "Please select your practice type";
+    } else if (form.practiceType === "hospital") {
       if (!form.hospitalName.trim())     errs.hospitalName    = "Hospital name is required";
       if (!form.branchLocation.trim())   errs.branchLocation  = "Branch location is required";
       if (!form.department.trim())       errs.department      = "Department is required";
-    } else {
+    } else if (form.practiceType === "clinic") {
       if (!form.clinicName.trim())       errs.clinicName      = "Clinic name is required";
       if (!form.clinicAddress.trim())    errs.clinicAddress   = "Clinic address is required";
       if (!form.clinicCity.trim())       errs.clinicCity      = "City is required";
@@ -147,257 +149,223 @@ function DoctorRegister() {
         {/* Card */}
         <div className="doc-reg-card">
 
-          {/* Header */}
-          <div className="doc-reg-card-header">
-            <div className="doc-reg-icon-circle"><FaStethoscope /></div>
-            <h2>Create Doctor Account</h2>
-            <p>Join MedicoBridge and connect with patients who need your expertise</p>
+          {/* Header Layout with Circular Avatar on Top Right */}
+          <div className="doc-reg-header-flex">
+            <div className="doc-reg-card-header-left">
+              <div className="doc-reg-icon-circle"><FaStethoscope /></div>
+              <h2>Create Doctor Account</h2>
+              <p>Join MedicoBridge and connect with patients who need your expertise</p>
+            </div>
+            
+            {/* Top Right Avatar Upload */}
+            <div className="doc-reg-avatar-upload-container">
+              <div
+                className="doc-reg-avatar-zone"
+                onClick={() => photoRef.current?.click()}
+                role="button" tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && photoRef.current?.click()}
+              >
+                <input ref={photoRef} type="file" accept=".jpg,.jpeg,.png,.webp"
+                  className="doc-reg-file-input" onChange={handlePhoto} />
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Profile preview" className="doc-reg-avatar-preview" />
+                ) : (
+                  <div className="doc-reg-avatar-placeholder">
+                    <FaUser className="doc-reg-avatar-placeholder-icon" />
+                    <div className="doc-reg-avatar-camera-badge">
+                      <FaCamera />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <span className="doc-reg-avatar-hint">Profile Photo (Optional)</span>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="doc-reg-form" noValidate>
 
-            {/* ══ SECTION 1 — Personal Details ════════════ */}
-            <div className="doc-reg-section">
-              <div className="doc-reg-section-title">
-                <span className="doc-reg-section-num">1</span>
-                Personal Details
-              </div>
+            {/* Continuous Flow Inputs */}
+            <div className="doc-reg-grid-row">
+              {fld("fullName", "Full Name", "text", "Dr. Jane Smith")}
+              {fld("email", "Email Address", "email", "doctor@example.com")}
+            </div>
 
-              <div className="doc-reg-grid-row">
-                {fld("fullName", "Full Name", "text", "Dr. Jane Smith")}
-                {fld("email", "Email Address", "email", "doctor@example.com")}
-              </div>
+            <div className="doc-reg-grid-row">
+              {fld("phone", "Phone Number", "tel", "e.g. 9876543210")}
 
-              <div className="doc-reg-grid-row">
-                {fld("phone", "Phone Number", "tel", "e.g. 9876543210")}
-
-                {/* Gender — pill radio */}
-                <div className="doc-reg-form-group">
-                  <label>Gender</label>
-                  <div className={`doc-reg-pill-group${errors.gender ? " doc-reg-pill-group-error" : ""}`}>
-                    {["Male", "Female", "Other"].map(g => (
-                      <label
-                        key={g}
-                        className={`doc-reg-pill${form.gender === g ? " doc-reg-pill-active" : ""}`}
-                      >
-                        <input
-                          type="radio" name="gender" value={g}
-                          checked={form.gender === g} onChange={handleChange}
-                        />
-                        {g}
-                      </label>
-                    ))}
-                  </div>
-                  {errors.gender && <span className="doc-reg-error-msg">{errors.gender}</span>}
+              {/* Gender */}
+              <div className="doc-reg-form-group">
+                <label>Gender</label>
+                <div className={`doc-reg-pill-group${errors.gender ? " doc-reg-pill-group-error" : ""}`}>
+                  {["Male", "Female", "Other"].map(g => (
+                    <label
+                      key={g}
+                      className={`doc-reg-pill${form.gender === g ? " doc-reg-pill-active" : ""}`}
+                    >
+                      <input
+                        type="radio" name="gender" value={g}
+                        checked={form.gender === g} onChange={handleChange}
+                      />
+                      {g}
+                    </label>
+                  ))}
                 </div>
+                {errors.gender && <span className="doc-reg-error-msg">{errors.gender}</span>}
               </div>
             </div>
 
-            {/* ══ SECTION 2 — Professional Details ════════ */}
-            <div className="doc-reg-section">
-              <div className="doc-reg-section-title">
-                <span className="doc-reg-section-num">2</span>
-                Professional Details
-              </div>
+            <div className="doc-reg-grid-row">
+              {fld("medRegNumber", "Medical Registration Number", "text", "e.g. MCI-12345678")}
 
-              <div className="doc-reg-grid-row">
-                {fld("medRegNumber", "Medical Registration Number", "text", "e.g. MCI-12345678")}
-
-                <div className="doc-reg-form-group">
-                  <label htmlFor="dr-specialization">Specialization</label>
-                  <select
-                    id="dr-specialization" name="specialization"
-                    className={`doc-reg-input doc-reg-select${errors.specialization ? " doc-reg-input-error" : ""}`}
-                    value={form.specialization} onChange={handleChange}
-                  >
-                    <option value="">Select specialization</option>
-                    {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  {errors.specialization && <span className="doc-reg-error-msg">{errors.specialization}</span>}
-                </div>
-              </div>
-
-              <div className="doc-reg-grid-row">
-                {fld("qualification", "Qualification", "text", "e.g. MBBS, MD, MS")}
-                {fld("experience", "Years of Experience", "number", "e.g. 5")}
+              <div className="doc-reg-form-group">
+                <label htmlFor="dr-specialization">Specialization</label>
+                <select
+                  id="dr-specialization" name="specialization"
+                  className={`doc-reg-input doc-reg-select${errors.specialization ? " doc-reg-input-error" : ""}`}
+                  value={form.specialization} onChange={handleChange}
+                >
+                  <option value="">Select specialization</option>
+                  {SPECIALIZATIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                {errors.specialization && <span className="doc-reg-error-msg">{errors.specialization}</span>}
               </div>
             </div>
 
-            {/* ══ SECTION 3 — Practice Type ════════════════ */}
-            <div className="doc-reg-section">
-              <div className="doc-reg-section-title">
-                <span className="doc-reg-section-num">3</span>
-                Practice Type
-              </div>
-
-              {/* Hospital / Clinic radio cards */}
-              <div className="doc-reg-practice-row">
-                {[
-                  { val: "hospital", Icon: FaHospital, label: "Hospital" },
-                  { val: "clinic",   Icon: FaMedkit,   label: "Clinic"   },
-                ].map(({ val, Icon, label }) => (
-                  <label
-                    key={val}
-                    className={`doc-reg-practice-card${form.practiceType === val ? " doc-reg-practice-active" : ""}`}
-                  >
-                    <input
-                      type="radio" name="practiceType" value={val}
-                      checked={form.practiceType === val} onChange={handleChange}
-                    />
-                    <Icon className="doc-reg-practice-icon" />
-                    <span>{label}</span>
-                  </label>
-                ))}
-              </div>
-
-              {/* Conditional — Hospital */}
-              {form.practiceType === "hospital" && (
-                <div className="doc-reg-conditional">
-                  <div className="doc-reg-grid-row">
-                    {fld("hospitalName",  "Hospital Name",        "text", "Enter hospital name")}
-                    {fld("branchLocation","Branch Location (City)","text", "e.g. Mumbai")}
-                  </div>
-                  <div className="doc-reg-grid-row-1">
-                    {fld("department", "Department", "text", "e.g. Cardiology, ICU")}
-                  </div>
-                </div>
-              )}
-
-              {/* Conditional — Clinic */}
-              {form.practiceType === "clinic" && (
-                <div className="doc-reg-conditional">
-                  <div className="doc-reg-grid-row">
-                    {fld("clinicName",    "Clinic Name",    "text", "Enter clinic name")}
-                    {fld("clinicAddress", "Clinic Address", "text", "Street / Building")}
-                  </div>
-                  <div className="doc-reg-grid-row-3">
-                    {fld("clinicCity",    "City",    "text", "e.g. Bangalore")}
-                    {fld("clinicState",   "State",   "text", "e.g. Karnataka")}
-                    {fld("clinicPincode", "Pincode", "text", "6-digit pincode")}
-                  </div>
-                </div>
-              )}
+            <div className="doc-reg-grid-row">
+              {fld("qualification", "Qualification", "text", "e.g. MBBS, MD, MS")}
+              {fld("experience", "Years of Experience", "number", "e.g. 5")}
             </div>
 
-            {/* ══ SECTION 4 — Account Details ══════════════ */}
-            <div className="doc-reg-section">
-              <div className="doc-reg-section-title">
-                <span className="doc-reg-section-num">4</span>
-                Account Details
+            {/* Practice Type Toggle Switch / Segment Control */}
+            <div className="doc-reg-form-group doc-reg-full-width">
+              <label>Practice Type</label>
+              <div className={`doc-reg-practice-toggle${errors.practiceType ? " doc-reg-toggle-error" : ""}`}>
+                <button
+                  type="button"
+                  className={`doc-reg-toggle-btn-opt ${form.practiceType === "hospital" ? "active" : ""}`}
+                  onClick={() => {
+                    setForm(prev => ({ ...prev, practiceType: "hospital" }));
+                    if (errors.practiceType) setErrors(prev => ({ ...prev, practiceType: "" }));
+                  }}
+                >
+                  Hospital
+                </button>
+                <button
+                  type="button"
+                  className={`doc-reg-toggle-btn-opt ${form.practiceType === "clinic" ? "active" : ""}`}
+                  onClick={() => {
+                    setForm(prev => ({ ...prev, practiceType: "clinic" }));
+                    if (errors.practiceType) setErrors(prev => ({ ...prev, practiceType: "" }));
+                  }}
+                >
+                  Clinic
+                </button>
               </div>
-
-              <div className="doc-reg-grid-row">
-                {/* Password */}
-                <div className="doc-reg-form-group">
-                  <label htmlFor="dr-password">Password</label>
-                  <div className="doc-reg-pw-wrapper">
-                    <input
-                      type={showPwd ? "text" : "password"} id="dr-password" name="password"
-                      className={`doc-reg-input${errors.password ? " doc-reg-input-error" : ""}`}
-                      placeholder="Min. 6 characters"
-                      value={form.password} onChange={handleChange}
-                    />
-                    <button type="button" className="doc-reg-eye-btn"
-                      onClick={() => setShowPwd(!showPwd)}
-                      aria-label={showPwd ? "Hide password" : "Show password"}>
-                      {showPwd ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
-                  {errors.password && <span className="doc-reg-error-msg">{errors.password}</span>}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="doc-reg-form-group">
-                  <label htmlFor="dr-confirmPassword">Confirm Password</label>
-                  <div className="doc-reg-pw-wrapper">
-                    <input
-                      type={showConfirm ? "text" : "password"} id="dr-confirmPassword" name="confirmPassword"
-                      className={`doc-reg-input${errors.confirmPassword ? " doc-reg-input-error" : ""}`}
-                      placeholder="Re-enter your password"
-                      value={form.confirmPassword} onChange={handleChange}
-                    />
-                    <button type="button" className="doc-reg-eye-btn"
-                      onClick={() => setShowConfirm(!showConfirm)}
-                      aria-label={showConfirm ? "Hide password" : "Show password"}>
-                      {showConfirm ? <FaEyeSlash /> : <FaEye />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && <span className="doc-reg-error-msg">{errors.confirmPassword}</span>}
-                </div>
-              </div>
+              {errors.practiceType && <span className="doc-reg-error-msg">{errors.practiceType}</span>}
             </div>
 
-            {/* ══ SECTION 5 — Verification ══════════════════ */}
-            <div className="doc-reg-section">
-              <div className="doc-reg-section-title">
-                <span className="doc-reg-section-num">5</span>
-                Verification Documents
+            {/* Conditional Reveal - Hospital fields */}
+            {form.practiceType === "hospital" && (
+              <div className="doc-reg-conditional">
+                <div className="doc-reg-grid-row">
+                  {fld("hospitalName",  "Hospital Name",        "text", "Enter hospital name")}
+                  {fld("branchLocation","Branch Location (City)","text", "e.g. Mumbai")}
+                </div>
+                <div className="doc-reg-grid-row-1">
+                  {fld("department", "Department", "text", "e.g. Cardiology, ICU")}
+                </div>
+              </div>
+            )}
+
+            {/* Conditional Reveal - Clinic fields */}
+            {form.practiceType === "clinic" && (
+              <div className="doc-reg-conditional">
+                <div className="doc-reg-grid-row">
+                  {fld("clinicName",    "Clinic Name",    "text", "Enter clinic name")}
+                  {fld("clinicAddress", "Clinic Address", "text", "Street / Building")}
+                </div>
+                <div className="doc-reg-grid-row-3">
+                  {fld("clinicCity",    "City",    "text", "e.g. Bangalore")}
+                  {fld("clinicState",   "State",   "text", "e.g. Karnataka")}
+                  {fld("clinicPincode", "Pincode", "text", "6-digit pincode")}
+                </div>
+              </div>
+            )}
+
+            {/* Password & Confirm Password */}
+            <div className="doc-reg-grid-row">
+              {/* Password */}
+              <div className="doc-reg-form-group">
+                <label htmlFor="dr-password">Password</label>
+                <div className="doc-reg-pw-wrapper">
+                  <input
+                    type={showPwd ? "text" : "password"} id="dr-password" name="password"
+                    className={`doc-reg-input${errors.password ? " doc-reg-input-error" : ""}`}
+                    placeholder="Min. 6 characters"
+                    value={form.password} onChange={handleChange}
+                  />
+                  <button type="button" className="doc-reg-eye-btn"
+                    onClick={() => setShowPwd(!showPwd)}
+                    aria-label={showPwd ? "Hide password" : "Show password"}>
+                    {showPwd ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                {errors.password && <span className="doc-reg-error-msg">{errors.password}</span>}
               </div>
 
-              <div className="doc-reg-uploads-row">
-                {/* Medical License — required */}
-                <div className="doc-reg-form-group">
-                  <label>
-                    Medical License <span className="doc-reg-required-badge">Required</span>
-                  </label>
-                  <div
-                    className={`doc-reg-upload-zone${licenseFile ? " doc-reg-upload-filled" : ""}${errors.licenseFile ? " doc-reg-upload-error" : ""}`}
-                    onClick={() => licenseRef.current?.click()}
-                    role="button" tabIndex={0}
-                    onKeyDown={e => e.key === "Enter" && licenseRef.current?.click()}
-                  >
-                    <input ref={licenseRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
-                      className="doc-reg-file-input" onChange={handleLicense} />
-                    {licenseFile ? (
-                      <div className="doc-reg-upload-preview">
-                        <FaFileAlt className="doc-reg-file-icon" />
-                        <div>
-                          <span className="doc-reg-file-name">{licenseFile.name}</span>
-                          <span className="doc-reg-file-size"> ({(licenseFile.size/1024).toFixed(1)} KB)</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="doc-reg-upload-placeholder">
-                        <FaUpload className="doc-reg-upload-icon" />
-                        <span className="doc-reg-upload-text">Upload Medical License</span>
-                        <span className="doc-reg-upload-hint">PDF, JPG or PNG · Max 5 MB</span>
-                      </div>
-                    )}
-                  </div>
-                  {errors.licenseFile && <span className="doc-reg-error-msg">{errors.licenseFile}</span>}
+              {/* Confirm Password */}
+              <div className="doc-reg-form-group">
+                <label htmlFor="dr-confirmPassword">Confirm Password</label>
+                <div className="doc-reg-pw-wrapper">
+                  <input
+                    type={showConfirm ? "text" : "password"} id="dr-confirmPassword" name="confirmPassword"
+                    className={`doc-reg-input${errors.confirmPassword ? " doc-reg-input-error" : ""}`}
+                    placeholder="Re-enter your password"
+                    value={form.confirmPassword} onChange={handleChange}
+                  />
+                  <button type="button" className="doc-reg-eye-btn"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    aria-label={showConfirm ? "Hide password" : "Show password"}>
+                    {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                  </button>
                 </div>
-
-                {/* Profile Photo — optional */}
-                <div className="doc-reg-form-group">
-                  <label>
-                    Profile Photo <span className="doc-reg-optional-badge">Optional</span>
-                  </label>
-                  <div
-                    className={`doc-reg-photo-zone${photoFile ? " doc-reg-upload-filled" : ""}`}
-                    onClick={() => photoRef.current?.click()}
-                    role="button" tabIndex={0}
-                    onKeyDown={e => e.key === "Enter" && photoRef.current?.click()}
-                  >
-                    <input ref={photoRef} type="file" accept=".jpg,.jpeg,.png,.webp"
-                      className="doc-reg-file-input" onChange={handlePhoto} />
-                    {photoPreview ? (
-                      <img src={photoPreview} alt="Profile preview" className="doc-reg-photo-preview" />
-                    ) : (
-                      <div className="doc-reg-upload-placeholder">
-                        <div className="doc-reg-photo-icon-wrapper">
-                          <FaUser className="doc-reg-photo-placeholder-icon" />
-                          <FaCamera className="doc-reg-photo-camera" />
-                        </div>
-                        <span className="doc-reg-upload-text">Upload Profile Photo</span>
-                        <span className="doc-reg-upload-hint">JPG, PNG or WebP</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {errors.confirmPassword && <span className="doc-reg-error-msg">{errors.confirmPassword}</span>}
               </div>
             </div>
 
-            {/* ══ SECTION 6 — Agreement ═════════════════════ */}
+            {/* Medical License upload zone */}
+            <div className="doc-reg-form-group doc-reg-full-width">
+              <label>
+                Medical License <span className="doc-reg-required-badge">Required</span>
+              </label>
+              <div
+                className={`doc-reg-upload-zone${licenseFile ? " doc-reg-upload-filled" : ""}${errors.licenseFile ? " doc-reg-upload-error" : ""}`}
+                onClick={() => licenseRef.current?.click()}
+                role="button" tabIndex={0}
+                onKeyDown={e => e.key === "Enter" && licenseRef.current?.click()}
+              >
+                <input ref={licenseRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
+                  className="doc-reg-file-input" onChange={handleLicense} />
+                {licenseFile ? (
+                  <div className="doc-reg-upload-preview">
+                    <FaFileAlt className="doc-reg-file-icon" />
+                    <div>
+                      <span className="doc-reg-file-name">{licenseFile.name}</span>
+                      <span className="doc-reg-file-size"> ({(licenseFile.size/1024).toFixed(1)} KB)</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="doc-reg-upload-placeholder">
+                    <FaUpload className="doc-reg-upload-icon" />
+                    <span className="doc-reg-upload-text">Upload Medical License</span>
+                    <span className="doc-reg-upload-hint">PDF, JPG or PNG · Max 5 MB</span>
+                  </div>
+                )}
+              </div>
+              {errors.licenseFile && <span className="doc-reg-error-msg">{errors.licenseFile}</span>}
+            </div>
+
+            {/* Agreement */}
             <div className="doc-reg-terms-group">
               <label className={`doc-reg-terms-label${errors.acceptTerms ? " doc-reg-terms-error" : ""}`}>
                 <input type="checkbox" name="acceptTerms"
