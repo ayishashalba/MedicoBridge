@@ -1,0 +1,354 @@
+.login-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: 3rem 1.5rem;
+  background-image: radial-gradient(
+      circle at 10% 20%,
+      rgba(204, 251, 241, 0.4) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(224, 242, 254, 0.4) 0%,
+      transparent 35%
+    );
+}
+
+.login-card-container {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: cardFadeIn 0.4s ease-out;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Brand styling */
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.brand-icon-wrapper {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: var(--white);
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2);
+}
+
+.brand-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
+}
+
+/* Login Card frame */
+.login-card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+.login-card-header {
+  text-align: center;
+}
+
+.login-card-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.3px;
+}
+
+.login-card-header p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Forms layout */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  outline: none;
+  background-color: var(--bg-secondary);
+  transition: all var(--transition-fast);
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+}
+
+.form-input:focus {
+  background-color: var(--white);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+}
+
+/* Error States */
+.form-input.input-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-input.input-error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
+}
+
+.form-error-msg {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: 0.15rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Password wrapper toggles */
+.password-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper .form-input {
+  padding-right: 3rem;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: color var(--transition-fast);
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary-color);
+}
+
+/* Form actions checkbox and redirects */
+.form-actions-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-color);
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.forgot-pwd-link {
+  color: var(--primary-color);
+  transition: color var(--transition-fast);
+}
+
+.forgot-pwd-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.form-submit-btn {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+/* Divider styling */
+.form-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 0.25rem 0;
+}
+
+.form-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.form-divider span {
+  background-color: var(--white);
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Google Sign-in styles */
+.btn-google-login {
+  width: 100%;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  background-color: var(--white);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: all var(--transition-fast);
+}
+
+.btn-google-login:hover {
+  background-color: var(--bg-secondary);
+  border-color: #b7c6d8;
+  transform: translateY(-1.5px);
+  box-shadow: var(--shadow-sm);
+}
+
+.google-icon {
+  color: #ea4335; /* Google Red logo tint */
+  font-size: 1.1rem;
+}
+
+/* Footer elements redirect */
+.login-card-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.footer-redirect-link {
+  color: var(--primary-color);
+  font-weight: 750;
+  transition: color var(--transition-fast);
+}
+
+.footer-redirect-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+/* Small screen adjustments */
+@media screen and (max-width: 480px) {
+  .login-page-wrapper {
+    padding: 2rem 1rem;
+  }
+
+  .login-card {
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .login-card-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .form-actions-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}

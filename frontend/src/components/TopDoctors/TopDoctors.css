@@ -1,0 +1,231 @@
+.top-doctors-section {
+  position: relative;
+  background-color: var(--white);
+  padding: 5.5rem 2rem;
+}
+
+.top-doctors-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Section Header */
+.top-doctors-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 3.5rem;
+}
+
+.top-doctors-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+}
+
+.top-doctors-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Doctor Cards Grid */
+.top-doctors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(280px, 1fr));
+  gap: 2.5rem;
+}
+
+/* Doctor Card */
+.doctor-card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 420px;
+  /* Critical for wrapping image border-radius */
+  transition: all var(--transition-normal);
+}
+
+.doctor-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+  border-color: rgba(13, 148, 136, 0.2);
+}
+
+/* Image Wrapper and Zoom effect */
+.doctor-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+}
+
+.doctor-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.doctor-card:hover .doctor-img {
+  transform: scale(1.05);
+}
+
+/* Rating Badge overlay */
+.doctor-rating-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+  z-index: 5;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.star-icon {
+  color: #f59e0b;
+  /* Golden Amber star */
+  font-size: 0.9rem;
+}
+
+/* Info Section styling */
+.doctor-info {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex-grow: 1;
+}
+
+.doctor-name {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 750;
+  color: var(--text-primary);
+}
+
+.doctor-specialty {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  background-color: var(--primary-light);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  align-self: flex-start;
+  letter-spacing: 0.25px;
+}
+
+/* Metadata list (Location/Experience) */
+.doctor-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0.85rem 0;
+  margin: 0.25rem 0;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.meta-icon {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+/* Action button inside card */
+.doctor-card-btn {
+  text-align: center;
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.doctor-nav {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.nav-btn {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-btn:hover {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+/* Responsive Queries */
+@media screen and (max-width: 992px) {
+  .top-doctors-section {
+    padding: 4.5rem 1.5rem;
+  }
+
+  .top-doctors-title {
+    font-size: 2.2rem;
+  }
+
+  .top-doctors-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .top-doctors-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .top-doctors-title {
+    font-size: 1.8rem;
+  }
+
+  .doctor-card {
+    max-width: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .doctor-image-wrapper {
+    height: 240px;
+  }
+}

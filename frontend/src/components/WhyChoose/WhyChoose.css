@@ -1,0 +1,163 @@
+.why-choose-section {
+  position: relative;
+  background-color: #f8fafc;
+  /* Soft neutral backdrop */
+  padding: 5.5rem 2rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.why-choose-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Section Header */
+.why-choose-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 3.5rem;
+}
+
+.why-choose-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+}
+
+.why-choose-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Feature Cards Grid */
+.why-choose-grid {
+  column-count: 3;
+  column-gap: 2rem;
+}
+
+.why-choose-card {
+  break-inside: avoid;
+  margin-bottom: 2rem;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Feature Card */
+.why-choose-card {
+  background: linear-gradient(145deg, #ffffff, #f9fbfd);
+  padding: 2.2rem;
+  border-radius: 18px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.why-choose-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(13, 148, 136, 0.25);
+}
+
+/* Card Icon Wrapper */
+.why-choose-card-icon-wrapper {
+  background-color: rgba(13, 148, 136, 0.08);
+  color: var(--primary-color);
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all var(--transition-fast);
+}
+
+.why-choose-card:hover .why-choose-card-icon-wrapper {
+  transform: scale(1.08) rotate(-5deg);
+  background-color: var(--primary-light);
+  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.1);
+}
+
+/* Typography Sizing */
+.why-choose-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 750;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.why-choose-card-description {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.why-choose-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(120deg,
+      transparent,
+      rgba(13, 148, 136, 0.08),
+      transparent);
+  transition: 0.5s;
+}
+
+.why-choose-card:hover::before {
+  left: 100%;
+}
+
+.why-choose-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 12px 30px rgba(13, 148, 136, 0.12);
+}
+
+.why-choose-card:nth-child(1) {
+  border: 1px solid rgba(13, 148, 136, 0.25);
+  background: linear-gradient(145deg, #ffffff, #f0fdfa);
+}
+
+/* Responsive Queries */
+@media screen and (max-width: 992px) {
+  .why-choose-section {
+    padding: 4.5rem 1.5rem;
+  }
+
+  .why-choose-title {
+    font-size: 2.2rem;
+  }
+
+  .why-choose-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .why-choose-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .why-choose-title {
+    font-size: 1.8rem;
+  }
+
+  .why-choose-card {
+    padding: 2rem 1.5rem;
+  }
+}

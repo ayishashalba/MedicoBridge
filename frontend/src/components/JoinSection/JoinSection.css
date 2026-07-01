@@ -1,0 +1,184 @@
+.join-section {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0) 0%,
+    var(--bg-secondary) 100%
+  );
+  padding: 5rem 2rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.join-container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Header styles */
+.join-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 3.5rem;
+}
+
+.join-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+}
+
+.join-subtitle {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Cards Grid */
+.join-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+/* Base Card Style */
+.join-card {
+  background-color: var(--white);
+  padding: 2.5rem 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.join-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Icon Wrappers */
+.join-card-icon-wrapper {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  transition: transform var(--transition-fast);
+}
+
+.join-card:hover .join-card-icon-wrapper {
+  transform: scale(1.1);
+}
+
+/* Themes for cards */
+.patient-theme {
+  border-bottom: 4px solid var(--primary-color);
+}
+.patient-theme .join-card-icon-wrapper {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+}
+.patient-theme:hover {
+  border-color: var(--primary-color);
+}
+
+.doctor-theme {
+  border-bottom: 4px solid var(--secondary-color);
+}
+.doctor-theme .join-card-icon-wrapper {
+  background-color: var(--secondary-light);
+  color: var(--secondary-color);
+}
+.doctor-theme:hover {
+  border-color: var(--secondary-color);
+}
+
+.hospital-theme {
+  border-bottom: 4px solid var(--accent-color);
+}
+.hospital-theme .join-card-icon-wrapper {
+  background-color: #fef3c7; /* Amber 100 */
+  color: var(--accent-color);
+}
+.hospital-theme:hover {
+  border-color: var(--accent-color);
+}
+
+.pharmacy-theme {
+  border-bottom: 4px solid #8b5cf6; /* Indigo/Violet */
+}
+.pharmacy-theme .join-card-icon-wrapper {
+  background-color: #f5f3ff; /* Purple 50 */
+  color: #8b5cf6;
+}
+.pharmacy-theme:hover {
+  border-color: #8b5cf6;
+}
+
+/* Title and description text */
+.join-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 750;
+  margin-bottom: 1rem;
+  color: var(--text-primary);
+}
+
+.join-card-description {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  flex-grow: 1; /* Pushes the button to the bottom so buttons align perfectly */
+}
+
+/* Card Button Override */
+.join-card-btn {
+  width: 100%;
+  text-align: center;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  display: block;
+}
+
+/* Responsive Breakpoints */
+@media screen and (max-width: 1024px) {
+  .join-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .join-title {
+    font-size: 2.2rem;
+  }
+
+  .join-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .join-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .join-title {
+    font-size: 1.8rem;
+  }
+
+  .join-card {
+    padding: 2.5rem 1.5rem;
+  }
+}
