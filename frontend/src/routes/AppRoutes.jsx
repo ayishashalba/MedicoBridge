@@ -13,6 +13,7 @@ import AdminDashboard from "../pages/Admin/AdminDashboard";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
 import ResetPassword from "../pages/ResetPassword/ResetPassword";
 import PatientRegister from "../pages/Register/PatientRegister";
+import VerifyEmail from "../pages/VerifyEmail/VerifyEmail";
 
 // Inline placeholders for pages to be built in subsequent steps
 const AdminLoginPlaceholder = () => (
@@ -51,7 +52,7 @@ function AppRoutes() {
       <Route path="/admin/login" element={<AdminLoginPlaceholder />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verify-email" element={<div style={{ padding: "120px 2rem", textAlign: "center" }}><h2>Email Verification (OTP) — Coming Next</h2></div>} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Role Registration Routes */}
       <Route path="/register/patient" element={<PatientRegister />} />
