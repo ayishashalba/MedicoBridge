@@ -140,7 +140,7 @@ function DoctorRegister() {
 
         {/* Brand */}
         <Link to="/" className="doc-reg-brand">
-          <div className="doc-reg-brand-icon"><FaHeartbeat /></div>
+          <div className="doc-reg-brand-icon-wrapper"><FaHeartbeat /></div>
           <span className="doc-reg-brand-title">MedicoBridge</span>
         </Link>
 

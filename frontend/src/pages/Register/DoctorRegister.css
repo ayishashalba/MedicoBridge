@@ -433,9 +433,276 @@
   text-decoration: underline;
 }
 
+/* ── Sections & Subsections ───────────────────────────────── */
+.doc-reg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.doc-reg-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.doc-reg-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.doc-reg-section-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+/* ── Pill Selectors (Gender) ──────────────────────────────── */
+.doc-reg-pill-group {
+  display: flex;
+  gap: 0.5rem;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  transition: all var(--transition-fast);
+}
+
+.doc-reg-pill-group-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.doc-reg-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.doc-reg-pill input[type="radio"] {
+  display: none;
+}
+
+.doc-reg-pill:hover {
+  background-color: rgba(79, 70, 229, 0.05);
+  color: #4f46e5;
+}
+
+.doc-reg-pill-active {
+  background-color: var(--white);
+  color: #4f46e5;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* ── Practice Type Card Row ───────────────────────────────── */
+.doc-reg-practice-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.doc-reg-practice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background-color: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  gap: 0.75rem;
+}
+
+.doc-reg-practice-card input[type="radio"] {
+  display: none;
+}
+
+.doc-reg-practice-card:hover {
+  border-color: #4f46e5;
+  background-color: rgba(79, 70, 229, 0.02);
+}
+
+.doc-reg-practice-card.doc-reg-practice-active {
+  border-color: #4f46e5;
+  background-color: rgba(79, 70, 229, 0.05);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.doc-reg-practice-icon {
+  font-size: 2rem;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.doc-reg-practice-card.doc-reg-practice-active .doc-reg-practice-icon {
+  color: #4f46e5;
+}
+
+.doc-reg-practice-card span {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ── Conditional Practice Content ────────────────────────── */
+.doc-reg-conditional {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border-radius: var(--radius-lg);
+  background-color: rgba(79, 70, 229, 0.02);
+  border: 1px dashed rgba(79, 70, 229, 0.2);
+  animation: docRegSlideDown 0.3s ease-out;
+}
+
+@keyframes docRegSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.doc-reg-grid-row-1 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.doc-reg-grid-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.25rem;
+}
+
+/* ── Verification & Uploads Row ───────────────────────────── */
+.doc-reg-uploads-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.25rem;
+}
+
+.doc-reg-photo-zone {
+  width: 100%;
+  height: 92px;
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.doc-reg-photo-zone:hover {
+  border-color: #4f46e5;
+  background-color: rgba(79, 70, 229, 0.04);
+}
+
+.doc-reg-photo-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doc-reg-photo-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.doc-reg-photo-placeholder-icon {
+  font-size: 2.2rem;
+  color: var(--text-muted);
+}
+
+.doc-reg-photo-camera {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background-color: #4f46e5;
+  color: #fff;
+  border-radius: 50%;
+  padding: 4px;
+  font-size: 0.8rem;
+  border: 2px solid var(--white);
+}
+
+/* Badges */
+.doc-reg-required-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #ef4444;
+  background-color: #fef2f2;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.35rem;
+}
+
+.doc-reg-optional-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background-color: var(--bg-secondary);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.35rem;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media screen and (max-width: 640px) {
   .doc-reg-grid-row {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
+
+  .doc-reg-grid-row-3 {
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+  }
+
+  .doc-reg-uploads-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .doc-reg-practice-row {
     grid-template-columns: 1fr;
     gap: 1.1rem;
   }
