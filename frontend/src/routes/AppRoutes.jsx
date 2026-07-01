@@ -5,17 +5,13 @@ import Login from "../pages/Login/Login";
 import PatientLogin from "../pages/Login/PatientLogin";
 import DoctorLogin from "../pages/Login/DoctorLogin";
 import HospitalLogin from "../pages/Login/HospitalLogin";
+import PharmacyLogin from "../pages/Login/PharmacyLogin";
 import PatientDashboard from "../pages/Patient/PatientDashboard";
 import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
 import HospitalDashboard from "../pages/Hospital/HospitalDashboard";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 
 // Inline placeholders for pages to be built in subsequent steps
-const PharmacyLoginPlaceholder = () => (
-  <div style={{ padding: "120px 2rem", textAlign: "center" }}>
-    <h2>Pharmacy Login (Under Construction)</h2>
-  </div>
-);
 const AdminLoginPlaceholder = () => (
   <div style={{ padding: "120px 2rem", textAlign: "center" }}>
     <h2>Admin Login (Under Construction)</h2>
@@ -53,7 +49,7 @@ function AppRoutes() {
       <Route path="/login/patient" element={<PatientLogin />} />
       <Route path="/login/doctor" element={<DoctorLogin />} />
       <Route path="/login/hospital" element={<HospitalLogin />} />
-      <Route path="/login/pharmacy" element={<PharmacyLoginPlaceholder />} />
+      <Route path="/login/pharmacy" element={<PharmacyLogin />} />
       <Route path="/admin/login" element={<AdminLoginPlaceholder />} />
 
       {/* Role Registration Routes */}

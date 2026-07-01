@@ -1,33 +1,37 @@
-.doctor-login-page-wrapper {
+
+.pharm-login-page-wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--bg-secondary);
   padding: 3rem 1.5rem;
-  background-image: radial-gradient(circle at 10% 20%,
-      rgba(199, 210, 254, 0.45) 0%,
-      transparent 35%),
-    radial-gradient(circle at 90% 80%,
-      rgba(186, 230, 253, 0.4) 0%,
-      transparent 35%);
+  background-image: radial-gradient(
+      circle at 10% 20%,
+      rgba(221, 214, 254, 0.45) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(240, 231, 255, 0.4) 0%,
+      transparent 35%
+    );
 }
 
-.doctor-login-card-container {
+.pharm-login-card-container {
   width: 100%;
   max-width: 460px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  animation: doctorCardFadeIn 0.4s ease-out;
+  animation: pharmCardFadeIn 0.4s ease-out;
 }
 
-@keyframes doctorCardFadeIn {
+@keyframes pharmCardFadeIn {
   from {
     opacity: 0;
     transform: translateY(12px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -35,7 +39,7 @@
 }
 
 /* ── Brand ─────────────────────────────────────────────── */
-.doctor-login-brand {
+.pharm-login-brand {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,8 +48,8 @@
   text-decoration: none;
 }
 
-.doctor-brand-icon-wrapper {
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+.pharm-brand-icon-wrapper {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
   color: #fff;
   width: 38px;
   height: 38px;
@@ -53,15 +57,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
-  box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25);
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(124, 58, 237, 0.28);
 }
 
-.doctor-brand-title {
+.pharm-brand-title {
   font-family: var(--font-heading);
   font-size: 1.6rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -70,7 +74,7 @@
 }
 
 /* ── Card Frame ─────────────────────────────────────────── */
-.doctor-login-card {
+.pharm-login-card {
   background-color: var(--white);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
@@ -81,11 +85,11 @@
   gap: 1.75rem;
 }
 
-.doctor-login-card-header {
+.pharm-login-card-header {
   text-align: center;
 }
 
-.doctor-login-card-header h2 {
+.pharm-login-card-header h2 {
   font-family: var(--font-heading);
   font-size: 1.6rem;
   font-weight: 800;
@@ -94,33 +98,33 @@
   letter-spacing: -0.3px;
 }
 
-.doctor-login-card-header p {
+.pharm-login-card-header p {
   font-size: 0.95rem;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
 /* ── Form Layout ────────────────────────────────────────── */
-.doctor-login-form {
+.pharm-login-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
 
-.doctor-form-group {
+.pharm-form-group {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   text-align: left;
 }
 
-.doctor-form-group label {
+.pharm-form-group label {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-secondary);
 }
 
-.doctor-form-input {
+.pharm-form-input {
   width: 100%;
   padding: 0.85rem 1.1rem;
   border-radius: var(--radius-md);
@@ -132,27 +136,27 @@
   transition: all var(--transition-fast);
 }
 
-.doctor-form-input::placeholder {
+.pharm-form-input::placeholder {
   color: var(--text-muted);
 }
 
-.doctor-form-input:focus {
+.pharm-form-input:focus {
   background-color: var(--white);
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.12);
 }
 
 /* ── Error States ───────────────────────────────────────── */
-.doctor-form-input.doctor-input-error {
+.pharm-form-input.pharm-input-error {
   border-color: #ef4444;
   background-color: #fef2f2;
 }
 
-.doctor-form-input.doctor-input-error:focus {
+.pharm-form-input.pharm-input-error:focus {
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12);
 }
 
-.doctor-form-error-msg {
+.pharm-form-error-msg {
   font-size: 0.8rem;
   font-weight: 600;
   color: #ef4444;
@@ -162,18 +166,18 @@
 }
 
 /* ── Password Toggle ────────────────────────────────────── */
-.doctor-password-input-wrapper {
+.pharm-password-input-wrapper {
   position: relative;
   width: 100%;
   display: flex;
   align-items: center;
 }
 
-.doctor-password-input-wrapper .doctor-form-input {
+.pharm-password-input-wrapper .pharm-form-input {
   padding-right: 3rem;
 }
 
-.doctor-password-toggle-btn {
+.pharm-password-toggle-btn {
   position: absolute;
   right: 1rem;
   background: none;
@@ -188,12 +192,12 @@
   transition: color var(--transition-fast);
 }
 
-.doctor-password-toggle-btn:hover {
-  color: #4f46e5;
+.pharm-password-toggle-btn:hover {
+  color: #7c3aed;
 }
 
 /* ── Actions Row ────────────────────────────────────────── */
-.doctor-form-actions-row {
+.pharm-form-actions-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -201,7 +205,7 @@
   font-weight: 600;
 }
 
-.doctor-checkbox-label {
+.pharm-checkbox-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -209,27 +213,27 @@
   cursor: pointer;
 }
 
-.doctor-checkbox-label input[type="checkbox"] {
+.pharm-checkbox-label input[type="checkbox"] {
   width: 16px;
   height: 16px;
   border-radius: var(--radius-sm);
   border: 2px solid var(--border-color);
-  accent-color: #4f46e5;
+  accent-color: #7c3aed;
   cursor: pointer;
 }
 
-.doctor-forgot-pwd-link {
-  color: #4f46e5;
+.pharm-forgot-pwd-link {
+  color: #7c3aed;
   transition: color var(--transition-fast);
 }
 
-.doctor-forgot-pwd-link:hover {
-  color: #4338ca;
+.pharm-forgot-pwd-link:hover {
+  color: #6d28d9;
   text-decoration: underline;
 }
 
 /* ── Submit Button ──────────────────────────────────────── */
-.doctor-form-submit-btn {
+.pharm-form-submit-btn {
   width: 100%;
   padding: 0.85rem;
   font-size: 1rem;
@@ -238,26 +242,26 @@
   border: none;
   cursor: pointer;
   margin-top: 0.5rem;
-  background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
   color: #fff;
   letter-spacing: 0.3px;
   transition: opacity var(--transition-fast), transform var(--transition-fast),
     box-shadow var(--transition-fast);
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
 }
 
-.doctor-form-submit-btn:hover {
-  opacity: 0.92;
+.pharm-form-submit-btn:hover {
+  opacity: 0.91;
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.38);
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.38);
 }
 
-.doctor-form-submit-btn:active {
+.pharm-form-submit-btn:active {
   transform: translateY(0);
 }
 
 /* ── Divider ────────────────────────────────────────────── */
-.doctor-form-divider {
+.pharm-form-divider {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -265,7 +269,7 @@
   margin: 0.25rem 0;
 }
 
-.doctor-form-divider::before {
+.pharm-form-divider::before {
   content: "";
   position: absolute;
   left: 0;
@@ -275,7 +279,7 @@
   z-index: 1;
 }
 
-.doctor-form-divider span {
+.pharm-form-divider span {
   background-color: var(--white);
   padding: 0 0.75rem;
   font-size: 0.85rem;
@@ -287,7 +291,7 @@
 }
 
 /* ── Google Button ──────────────────────────────────────── */
-.doctor-btn-google-login {
+.pharm-btn-google-login {
   width: 100%;
   padding: 0.85rem 1.1rem;
   border-radius: var(--radius-md);
@@ -304,20 +308,20 @@
   transition: all var(--transition-fast);
 }
 
-.doctor-btn-google-login:hover {
+.pharm-btn-google-login:hover {
   background-color: var(--bg-secondary);
   border-color: #b7c6d8;
   transform: translateY(-1.5px);
   box-shadow: var(--shadow-sm);
 }
 
-.doctor-google-icon {
+.pharm-google-icon {
   color: #ea4335;
   font-size: 1.1rem;
 }
 
 /* ── Card Footer ────────────────────────────────────────── */
-.doctor-login-card-footer {
+.pharm-login-card-footer {
   text-align: center;
   font-size: 0.9rem;
   font-weight: 500;
@@ -327,33 +331,33 @@
   margin-top: 0.25rem;
 }
 
-.doctor-footer-redirect-link {
-  color: #4f46e5;
+.pharm-footer-redirect-link {
+  color: #7c3aed;
   font-weight: 750;
   transition: color var(--transition-fast);
 }
 
-.doctor-footer-redirect-link:hover {
-  color: #4338ca;
+.pharm-footer-redirect-link:hover {
+  color: #6d28d9;
   text-decoration: underline;
 }
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media screen and (max-width: 480px) {
-  .doctor-login-page-wrapper {
+  .pharm-login-page-wrapper {
     padding: 2rem 1rem;
   }
 
-  .doctor-login-card {
+  .pharm-login-card {
     padding: 2rem 1.5rem;
     gap: 1.5rem;
   }
 
-  .doctor-login-card-header h2 {
+  .pharm-login-card-header h2 {
     font-size: 1.4rem;
   }
 
-  .doctor-form-actions-row {
+  .pharm-form-actions-row {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
