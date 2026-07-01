@@ -1,0 +1,529 @@
+.hosp-reg-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-secondary);
+  padding: 3rem 1.5rem;
+  background-image: radial-gradient(
+      circle at 10% 20%,
+      rgba(167, 243, 208, 0.4) 0%,
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(209, 250, 229, 0.45) 0%,
+      transparent 35%
+    );
+}
+
+.hosp-reg-card-container {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: hospRegCardFadeIn 0.4s ease-out;
+}
+
+@keyframes hospRegCardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Brand ─────────────────────────────────────────────── */
+.hosp-reg-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.hosp-reg-brand-icon-wrapper {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #white;
+  color: #fff;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+}
+
+.hosp-reg-brand-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #059669, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
+}
+
+/* ── Card Frame ─────────────────────────────────────────── */
+.hosp-reg-card {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.hosp-reg-card-header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hosp-reg-icon-circle {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.1), rgba(16, 185, 129, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #059669;
+  border: 2px solid rgba(5, 150, 105, 0.2);
+}
+
+.hosp-reg-card-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.hosp-reg-card-header p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 540px;
+}
+
+/* ── Form Sections ──────────────────────────────────────── */
+.hosp-reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hosp-reg-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #059669;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid rgba(5, 150, 105, 0.1);
+  margin-top: 0.5rem;
+}
+
+/* ── Grid Layouts ────────────────────────────────────────── */
+.hosp-reg-grid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.hosp-reg-grid-row-full {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.hosp-reg-full-width {
+  grid-column: 1 / -1;
+}
+
+.hosp-reg-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hosp-reg-form-group label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* ── Inputs & Selects ────────────────────────────────────── */
+.hosp-reg-input {
+  width: 100%;
+  padding: 0.82rem 1rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--border-color);
+  font-size: 0.93rem;
+  color: var(--text-primary);
+  outline: none;
+  background-color: var(--bg-secondary);
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.hosp-reg-input::placeholder {
+  color: var(--text-muted);
+}
+
+.hosp-reg-input:focus {
+  background-color: var(--white);
+  border-color: #059669;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.12);
+}
+
+/* Select dropdown icon */
+.hosp-reg-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%236b7280' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+/* Hide spin arrows for number inputs */
+.hosp-reg-input[type="number"]::-webkit-inner-spin-button,
+.hosp-reg-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hosp-reg-input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* Error States */
+.hosp-reg-input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.hosp-reg-input-error:focus {
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+}
+
+.hosp-reg-error-msg {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ef4444;
+  margin-top: 0.1rem;
+}
+
+/* ── Password Toggle ─────────────────────────────────────── */
+.hosp-reg-pw-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.hosp-reg-pw-wrapper .hosp-reg-input {
+  padding-right: 3rem;
+}
+
+.hosp-reg-eye-btn {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  transition: color var(--transition-fast);
+}
+
+.hosp-reg-eye-btn:hover {
+  color: var(--text-secondary);
+}
+
+/* ── Selected Department Pills/Tags ─────────────────────── */
+.hosp-reg-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  padding: 0.5rem;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.hosp-reg-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background-color: rgba(5, 150, 105, 0.08);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  color: #047857;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  animation: tagScaleIn 0.2s ease-out;
+}
+
+@keyframes tagScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hosp-reg-tag-remove {
+  background: none;
+  border: none;
+  color: #059669;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  padding: 0.1rem;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.hosp-reg-tag-remove:hover {
+  background-color: rgba(5, 150, 105, 0.15);
+  color: #047857;
+}
+
+/* ── License Upload Zone ────────────────────────────────── */
+.hosp-reg-upload-zone {
+  border: 2px dashed var(--border-color);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+}
+
+.hosp-reg-upload-zone:hover {
+  border-color: #059669;
+  background-color: rgba(5, 150, 105, 0.04);
+}
+
+.hosp-reg-upload-filled {
+  border-color: #059669;
+  background-color: rgba(5, 150, 105, 0.02);
+}
+
+.hosp-reg-upload-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.hosp-reg-file-input {
+  display: none;
+}
+
+.hosp-reg-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hosp-reg-upload-icon {
+  font-size: 1.6rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.hosp-reg-upload-text {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.hosp-reg-upload-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.hosp-reg-upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.hosp-reg-file-icon {
+  font-size: 2rem;
+  color: #059669;
+}
+
+.hosp-reg-upload-preview-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.hosp-reg-file-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hosp-reg-file-size {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.hosp-reg-required-badge {
+  font-size: 0.72rem;
+  background-color: #fef2f2;
+  color: #ef4444;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+  margin-left: 0.35rem;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* ── Agreement/Terms Checkbox ───────────────────────────── */
+.hosp-reg-terms-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.hosp-reg-terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  font-weight: 550;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hosp-reg-checkbox {
+  margin-top: 0.2rem;
+  width: 16px;
+  height: 16px;
+  accent-color: #059669;
+  cursor: pointer;
+}
+
+.hosp-reg-terms-link {
+  color: #059669;
+  font-weight: 700;
+}
+
+.hosp-reg-terms-link:hover {
+  text-decoration: underline;
+}
+
+.hosp-reg-terms-error {
+  color: #ef4444;
+}
+
+/* ── Submit Button ──────────────────────────────────────── */
+.hosp-reg-submit-btn {
+  width: 100%;
+  padding: 0.95rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #059669, #10b981);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+}
+
+.hosp-reg-submit-btn:hover {
+  opacity: 0.91;
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 18px rgba(5, 150, 105, 0.38);
+}
+
+.hosp-reg-submit-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+.hosp-reg-footer {
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-color);
+  padding-top: 1.5rem;
+}
+
+.hosp-reg-login-link {
+  color: #059669;
+  font-weight: 750;
+  transition: color var(--transition-fast);
+}
+
+.hosp-reg-login-link:hover {
+  color: #047857;
+  text-decoration: underline;
+}
+
+/* ── Responsive Styling ──────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  .hosp-reg-page-wrapper {
+    padding: 2rem 1rem;
+  }
+
+  .hosp-reg-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .hosp-reg-grid-row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
