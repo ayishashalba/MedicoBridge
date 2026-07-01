@@ -11,6 +11,7 @@ import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
 import HospitalDashboard from "../pages/Hospital/HospitalDashboard";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword/ResetPassword";
 
 // Inline placeholders for pages to be built in subsequent steps
 const AdminLoginPlaceholder = () => (
@@ -53,6 +54,7 @@ function AppRoutes() {
       <Route path="/login/pharmacy" element={<PharmacyLogin />} />
       <Route path="/admin/login" element={<AdminLoginPlaceholder />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Role Registration Routes */}
       <Route
