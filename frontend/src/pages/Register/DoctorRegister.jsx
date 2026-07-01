@@ -156,31 +156,6 @@ function DoctorRegister() {
 
           <form onSubmit={handleSubmit} className="doc-reg-form" noValidate>
 
-            {/* Profile Photo Upload at the Top */}
-            <div className="doc-reg-avatar-section">
-              <div
-                className={`doc-reg-photo-zone${photoFile ? " doc-reg-upload-filled" : ""}`}
-                onClick={() => photoRef.current?.click()}
-                role="button" tabIndex={0}
-                onKeyDown={e => e.key === "Enter" && photoRef.current?.click()}
-              >
-                <input ref={photoRef} type="file" accept=".jpg,.jpeg,.png,.webp"
-                  className="doc-reg-file-input" onChange={handlePhoto} />
-                {photoPreview ? (
-                  <img src={photoPreview} alt="Profile preview" className="doc-reg-photo-preview" />
-                ) : (
-                  <div className="doc-reg-upload-placeholder">
-                    <div className="doc-reg-photo-icon-wrapper">
-                      <FaUser className="doc-reg-photo-placeholder-icon" />
-                      <FaCamera className="doc-reg-photo-camera" />
-                    </div>
-                    <span className="doc-reg-upload-text">Upload Photo</span>
-                    <span className="doc-reg-upload-hint">JPG, PNG or WebP</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* ══ SECTION 1 — Personal Details ════════════ */}
             <div className="doc-reg-section">
               <div className="doc-reg-section-title">
@@ -356,38 +331,69 @@ function DoctorRegister() {
             <div className="doc-reg-section">
               <div className="doc-reg-section-title">
                 <span className="doc-reg-section-num">5</span>
-                Verification
+                Verification Documents
               </div>
 
-              <div className="doc-reg-form-group">
-                <label>
-                  Medical License <span className="doc-reg-required-badge">Required</span>
-                </label>
-                <div
-                  className={`doc-reg-upload-zone${licenseFile ? " doc-reg-upload-filled" : ""}${errors.licenseFile ? " doc-reg-upload-error" : ""}`}
-                  onClick={() => licenseRef.current?.click()}
-                  role="button" tabIndex={0}
-                  onKeyDown={e => e.key === "Enter" && licenseRef.current?.click()}
-                >
-                  <input ref={licenseRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
-                    className="doc-reg-file-input" onChange={handleLicense} />
-                  {licenseFile ? (
-                    <div className="doc-reg-upload-preview">
-                      <FaFileAlt className="doc-reg-file-icon" />
-                      <div>
-                        <span className="doc-reg-file-name">{licenseFile.name}</span>
-                        <span className="doc-reg-file-size"> ({(licenseFile.size/1024).toFixed(1)} KB)</span>
+              <div className="doc-reg-uploads-row">
+                {/* Medical License — required */}
+                <div className="doc-reg-form-group">
+                  <label>
+                    Medical License <span className="doc-reg-required-badge">Required</span>
+                  </label>
+                  <div
+                    className={`doc-reg-upload-zone${licenseFile ? " doc-reg-upload-filled" : ""}${errors.licenseFile ? " doc-reg-upload-error" : ""}`}
+                    onClick={() => licenseRef.current?.click()}
+                    role="button" tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && licenseRef.current?.click()}
+                  >
+                    <input ref={licenseRef} type="file" accept=".pdf,.jpg,.jpeg,.png"
+                      className="doc-reg-file-input" onChange={handleLicense} />
+                    {licenseFile ? (
+                      <div className="doc-reg-upload-preview">
+                        <FaFileAlt className="doc-reg-file-icon" />
+                        <div>
+                          <span className="doc-reg-file-name">{licenseFile.name}</span>
+                          <span className="doc-reg-file-size"> ({(licenseFile.size/1024).toFixed(1)} KB)</span>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="doc-reg-upload-placeholder">
-                      <FaUpload className="doc-reg-upload-icon" />
-                      <span className="doc-reg-upload-text">Upload Medical License</span>
-                      <span className="doc-reg-upload-hint">PDF, JPG or PNG · Max 5 MB</span>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="doc-reg-upload-placeholder">
+                        <FaUpload className="doc-reg-upload-icon" />
+                        <span className="doc-reg-upload-text">Upload Medical License</span>
+                        <span className="doc-reg-upload-hint">PDF, JPG or PNG · Max 5 MB</span>
+                      </div>
+                    )}
+                  </div>
+                  {errors.licenseFile && <span className="doc-reg-error-msg">{errors.licenseFile}</span>}
                 </div>
-                {errors.licenseFile && <span className="doc-reg-error-msg">{errors.licenseFile}</span>}
+
+                {/* Profile Photo — optional */}
+                <div className="doc-reg-form-group">
+                  <label>
+                    Profile Photo <span className="doc-reg-optional-badge">Optional</span>
+                  </label>
+                  <div
+                    className={`doc-reg-photo-zone${photoFile ? " doc-reg-upload-filled" : ""}`}
+                    onClick={() => photoRef.current?.click()}
+                    role="button" tabIndex={0}
+                    onKeyDown={e => e.key === "Enter" && photoRef.current?.click()}
+                  >
+                    <input ref={photoRef} type="file" accept=".jpg,.jpeg,.png,.webp"
+                      className="doc-reg-file-input" onChange={handlePhoto} />
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Profile preview" className="doc-reg-photo-preview" />
+                    ) : (
+                      <div className="doc-reg-upload-placeholder">
+                        <div className="doc-reg-photo-icon-wrapper">
+                          <FaUser className="doc-reg-photo-placeholder-icon" />
+                          <FaCamera className="doc-reg-photo-camera" />
+                        </div>
+                        <span className="doc-reg-upload-text">Upload Profile Photo</span>
+                        <span className="doc-reg-upload-hint">JPG, PNG or WebP</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
