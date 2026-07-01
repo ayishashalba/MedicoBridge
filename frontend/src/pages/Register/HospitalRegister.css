@@ -5,16 +5,12 @@
   justify-content: center;
   background-color: var(--bg-secondary);
   padding: 3rem 1.5rem;
-  background-image: radial-gradient(
-      circle at 10% 20%,
+  background-image: radial-gradient(circle at 10% 20%,
       rgba(167, 243, 208, 0.4) 0%,
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at 90% 80%,
+      transparent 35%),
+    radial-gradient(circle at 90% 80%,
       rgba(209, 250, 229, 0.45) 0%,
-      transparent 35%
-    );
+      transparent 35%);
 }
 
 .hosp-reg-card-container {
@@ -31,6 +27,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -49,8 +46,7 @@
 
 .hosp-reg-brand-icon-wrapper {
   background: linear-gradient(135deg, #059669, #10b981);
-  color: #white;
-  color: #fff;
+  color: white;
   width: 38px;
   height: 38px;
   border-radius: var(--radius-md);
@@ -295,6 +291,7 @@
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

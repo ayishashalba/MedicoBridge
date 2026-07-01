@@ -45,9 +45,7 @@ const INITIAL_FORM_STATE = {
   city: "",
   state: "",
   hospitalType: "",
-  bedsCount: "",
   departments: [],
-  yearsOfOperation: "",
   password: "",
   confirmPassword: "",
   acceptTerms: false,
@@ -142,11 +140,6 @@ function HospitalRegister() {
     if (!form.hospitalType) {
       errs.hospitalType = "Please select hospital type";
     }
-    if (!form.bedsCount.trim()) {
-      errs.bedsCount = "Number of beds is required";
-    } else if (isNaN(form.bedsCount) || parseInt(form.bedsCount, 10) <= 0) {
-      errs.bedsCount = "Number of beds must be a positive numeric value";
-    }
     if (form.departments.length === 0) {
       errs.departments = "Please select at least one department";
     }
@@ -154,12 +147,6 @@ function HospitalRegister() {
     // Compliance
     if (!licenseFile) {
       errs.licenseFile = "Medical license is required";
-    }
-    if (form.yearsOfOperation.trim()) {
-      const years = parseInt(form.yearsOfOperation, 10);
-      if (isNaN(years) || years < 0) {
-        errs.yearsOfOperation = "Please enter a valid number of years";
-      }
     }
 
     // Security
@@ -231,7 +218,6 @@ function HospitalRegister() {
 
           <form onSubmit={handleSubmit} className="hosp-reg-form" noValidate>
             {/* ── Basic Details Section ── */}
-            <div className="hosp-reg-section-title">Basic Details</div>
             <div className="hosp-reg-grid-row">
               {renderField("hospitalName", "Hospital Name", "text", "e.g. City General Hospital")}
               {renderField("regNumber", "Hospital Registration Number", "text", "e.g. REG-123456")}
@@ -243,7 +229,6 @@ function HospitalRegister() {
             </div>
 
             {/* ── Location Details Section ── */}
-            <div className="hosp-reg-section-title">Location Details</div>
             <div className="hosp-reg-grid-row-full">
               {renderField("address", "Address", "text", "e.g. 123 Healthcare Blvd, Sector 4")}
             </div>
@@ -253,17 +238,14 @@ function HospitalRegister() {
             </div>
 
             {/* ── Hospital Info Section ── */}
-            <div className="hosp-reg-section-title">Hospital Info</div>
             <div className="hosp-reg-grid-row">
               {/* Hospital Type Dropdown */}
               <div className="hosp-reg-form-group">
-                <label htmlFor="hosp-reg-hospitalType">Hospital Type</label>
                 <select
                   id="hosp-reg-hospitalType"
                   name="hospitalType"
-                  className={`hosp-reg-input hosp-reg-select${
-                    errors.hospitalType ? " hosp-reg-input-error" : ""
-                  }`}
+                  className={`hosp-reg-input hosp-reg-select${errors.hospitalType ? " hosp-reg-input-error" : ""
+                    }`}
                   value={form.hospitalType}
                   onChange={handleChange}
                 >
@@ -280,17 +262,15 @@ function HospitalRegister() {
               </div>
 
               {/* Number of Beds */}
-              {renderField("bedsCount", "Number of Beds", "number", "e.g. 150")}
+
             </div>
 
             {/* Departments Multi-select UI */}
             <div className="hosp-reg-form-group hosp-reg-full-width">
-              <label htmlFor="hosp-reg-departments-select">Departments</label>
               <select
                 id="hosp-reg-departments-select"
-                className={`hosp-reg-input hosp-reg-select${
-                  errors.departments ? " hosp-reg-input-error" : ""
-                }`}
+                className={`hosp-reg-input hosp-reg-select${errors.departments ? " hosp-reg-input-error" : ""
+                  }`}
                 onChange={handleSelectDepartment}
                 defaultValue=""
               >
@@ -330,7 +310,6 @@ function HospitalRegister() {
             </div>
 
             {/* ── Compliance Section ── */}
-            <div className="hosp-reg-section-title">Compliance</div>
             <div className="hosp-reg-grid-row">
               {/* Medical License Upload (UI only) */}
               <div className="hosp-reg-form-group">
@@ -338,9 +317,8 @@ function HospitalRegister() {
                   Medical License <span className="hosp-reg-required-badge">Required</span>
                 </label>
                 <div
-                  className={`hosp-reg-upload-zone${
-                    licenseFile ? " hosp-reg-upload-filled" : ""
-                  }${errors.licenseFile ? " hosp-reg-upload-error" : ""}`}
+                  className={`hosp-reg-upload-zone${licenseFile ? " hosp-reg-upload-filled" : ""
+                    }${errors.licenseFile ? " hosp-reg-upload-error" : ""}`}
                   onClick={() => fileInputRef.current?.click()}
                   role="button"
                   tabIndex={0}
@@ -376,13 +354,9 @@ function HospitalRegister() {
                   <span className="hosp-reg-error-msg">{errors.licenseFile}</span>
                 )}
               </div>
-
-              {/* Years of Operation (optional) */}
-              {renderField("yearsOfOperation", "Years of Operation (Optional)", "number", "e.g. 10")}
             </div>
 
             {/* ── Security Section ── */}
-            <div className="hosp-reg-section-title">Security</div>
             <div className="hosp-reg-grid-row">
               {/* Password */}
               <div className="hosp-reg-form-group">
@@ -419,9 +393,8 @@ function HospitalRegister() {
                     type={showConfirm ? "text" : "password"}
                     id="hosp-reg-confirmPassword"
                     name="confirmPassword"
-                    className={`hosp-reg-input${
-                      errors.confirmPassword ? " hosp-reg-input-error" : ""
-                    }`}
+                    className={`hosp-reg-input${errors.confirmPassword ? " hosp-reg-input-error" : ""
+                      }`}
                     placeholder="Re-enter your password"
                     value={form.confirmPassword}
                     onChange={handleChange}
