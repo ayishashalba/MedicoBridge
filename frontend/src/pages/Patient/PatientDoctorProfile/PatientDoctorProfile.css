@@ -12,8 +12,15 @@
 }
 
 @keyframes dpFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Back Button ─────────────────────────────────────────────── */
@@ -79,13 +86,13 @@
 .dp-avail--yes {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(34,197,94,0.3);
+  box-shadow: 0 3px 10px rgba(34, 197, 94, 0.3);
 }
 
 .dp-avail--no {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff;
-  box-shadow: 0 3px 10px rgba(245,158,11,0.3);
+  box-shadow: 0 3px 10px rgba(245, 158, 11, 0.3);
 }
 
 .dp-hero-inner {
@@ -112,7 +119,7 @@
   font-weight: 800;
   color: #fff;
   letter-spacing: -1px;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   user-select: none;
 }
 
@@ -136,8 +143,15 @@
 }
 
 @keyframes statusPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-  50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
 }
 
 /* Identity block */
@@ -147,7 +161,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding-right: 9rem; /* room for availability badge */
+  padding-right: 9rem;
+  /* room for availability badge */
 }
 
 .dp-hero-name-row {
@@ -244,14 +259,19 @@
   border-color: var(--primary-color);
 }
 
-.dp-stat-chip > svg {
+.dp-stat-chip>svg {
   font-size: 1rem;
   color: var(--primary-color);
   flex-shrink: 0;
 }
 
-.dp-stat-star { color: #f59e0b !important; }
-.dp-stat-fee  { color: #22c55e !important; }
+.dp-stat-star {
+  color: #f59e0b !important;
+}
+
+.dp-stat-fee {
+  color: #22c55e !important;
+}
 
 .dp-stat-val {
   display: block;
@@ -357,7 +377,7 @@
 }
 
 .dp-cta-slot-tag {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   padding: 0.1rem 0.55rem;
   border-radius: var(--radius-full);
   font-size: 0.75rem;
@@ -428,15 +448,41 @@
 }
 
 /* Card header icon colors */
-.dp-icon--about  { color: var(--primary-color); }
-.dp-icon--edu    { color: #7c3aed; }
-.dp-icon--cert   { color: #f59e0b; }
-.dp-icon--svc    { color: #ef4444; }
-.dp-icon--review { color: #f59e0b; }
-.dp-icon--hosp   { color: var(--secondary-color); }
-.dp-icon--clinic { color: #10b981; }
-.dp-icon--cal    { color: var(--primary-color); }
-.dp-icon--loc    { color: #ef4444; }
+.dp-icon--about {
+  color: var(--primary-color);
+}
+
+.dp-icon--edu {
+  color: #7c3aed;
+}
+
+.dp-icon--cert {
+  color: #f59e0b;
+}
+
+.dp-icon--svc {
+  color: #ef4444;
+}
+
+.dp-icon--review {
+  color: #f59e0b;
+}
+
+.dp-icon--hosp {
+  color: var(--secondary-color);
+}
+
+.dp-icon--clinic {
+  color: #10b981;
+}
+
+.dp-icon--cal {
+  color: var(--primary-color);
+}
+
+.dp-icon--loc {
+  color: #ef4444;
+}
 
 /* ── About ───────────────────────────────────────────────────── */
 .dp-about-text {
@@ -616,9 +662,20 @@
   gap: 2px;
 }
 
-.dp-stars--sm svg  { font-size: 0.65rem; color: #f59e0b; }
-.dp-stars--md svg  { font-size: 0.8rem;  color: #f59e0b; }
-.dp-stars--lg svg  { font-size: 1.2rem;  color: #f59e0b; }
+.dp-stars--sm svg {
+  font-size: 0.65rem;
+  color: #f59e0b;
+}
+
+.dp-stars--md svg {
+  font-size: 0.8rem;
+  color: #f59e0b;
+}
+
+.dp-stars--lg svg {
+  font-size: 1.2rem;
+  color: #f59e0b;
+}
 
 .dp-rating-label {
   font-size: 0.82rem;
@@ -663,7 +720,7 @@
   color: #fff;
   flex-shrink: 0;
   letter-spacing: -0.5px;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .dp-review-meta {
@@ -794,8 +851,13 @@
   margin-top: 0.1rem;
 }
 
-.dp-booking-info--hospital .dp-booking-info-icon { color: var(--secondary-color); }
-.dp-booking-info--clinic   .dp-booking-info-icon { color: #059669; }
+.dp-booking-info--hospital .dp-booking-info-icon {
+  color: var(--secondary-color);
+}
+
+.dp-booking-info--clinic .dp-booking-info-icon {
+  color: #059669;
+}
 
 .dp-booking-info-title {
   font-size: 0.85rem;
@@ -847,7 +909,7 @@
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 3px 10px rgba(13,148,136,0.3);
+  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.3);
 }
 
 .dp-slot-grid {
@@ -882,7 +944,7 @@
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-color: transparent;
   color: #fff;
-  box-shadow: 0 3px 10px rgba(13,148,136,0.25);
+  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25);
 }
 
 .dp-slot-icon {
@@ -899,7 +961,7 @@
   color: var(--primary-color);
   font-weight: 600;
   background: var(--bg-accent);
-  border: 1px solid rgba(13,148,136,0.2);
+  border: 1px solid rgba(13, 148, 136, 0.2);
   border-radius: var(--radius-md);
   padding: 0.5rem 0.75rem;
   animation: dpFadeIn 0.2s ease-out;
@@ -916,7 +978,8 @@
   flex-direction: column;
   gap: 0.65rem;
   position: sticky;
-  top: calc(70px + 1.5rem); /* below the topnav */
+  top: calc(70px + 1.5rem);
+  /* below the topnav */
 }
 
 /* ── Floating Toast ──────────────────────────────────────────── */
@@ -940,8 +1003,15 @@
 }
 
 @keyframes toastSlide {
-  from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* ================================================================
@@ -952,10 +1022,6 @@
 @media screen and (max-width: 1100px) {
   .dp-grid {
     grid-template-columns: 1fr;
-  }
-
-  .dp-col--right {
-    /* Place right col content before left in mobile? No — keep order */
   }
 
   .dp-cta-sticky {
@@ -1052,7 +1118,14 @@
   }
 
   @keyframes toastSlide {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
