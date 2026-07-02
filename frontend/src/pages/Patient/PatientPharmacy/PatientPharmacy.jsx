@@ -1,7 +1,7 @@
 import React from "react";
 import { FaPills } from "react-icons/fa";
-import PlaceholderPage from "../../components/PlaceholderPage/PlaceholderPage";
-import "../../components/PlaceholderPage/PlaceholderPage.css";
+import PlaceholderPage from "../../../components/PlaceholderPage/PlaceholderPage";
+import "../../../components/PlaceholderPage/PlaceholderPage.css";
 
 function PatientPharmacy() {
   return (

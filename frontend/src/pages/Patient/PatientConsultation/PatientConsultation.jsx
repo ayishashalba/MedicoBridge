@@ -1,7 +1,7 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
-import PlaceholderPage from "../../components/PlaceholderPage/PlaceholderPage";
-import "../../components/PlaceholderPage/PlaceholderPage.css";
+import PlaceholderPage from "../../../components/PlaceholderPage/PlaceholderPage";
+import "../../../components/PlaceholderPage/PlaceholderPage.css";
 
 function PatientConsultation() {
   return (
