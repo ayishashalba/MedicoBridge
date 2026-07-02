@@ -1,12 +1,12 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
 
+/**
+ * /patient/dashboard redirects index to the dashboard home page.
+ * This file is kept as the index redirect for the nested route.
+ */
 function PatientDashboard() {
-  return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>Patient Dashboard</h1>
-      <p>Manage your health records, appointments, and prescriptions.</p>
-    </div>
-  );
+  return <Navigate to="/patient/dashboard" replace />;
 }
 
 export default PatientDashboard;
