@@ -122,6 +122,29 @@
   border-color: rgba(94, 234, 212, 0.3);
 }
 
+.sidebar-expand-btn {
+  position: fixed;
+  left: 72px;
+  top: 85px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 950;
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+}
+
+.sidebar-expand-btn:hover {
+  transform: scale(1.1);
+  background: var(--secondary-color);
+}
 
 /* Close button (mobile only) */
 .sidebar-close-btn {
