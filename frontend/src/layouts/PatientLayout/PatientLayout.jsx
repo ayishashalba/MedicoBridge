@@ -196,15 +196,7 @@ function PatientLayout() {
           </button>
         </div>
       </aside>
-      {sidebarCollapsed && (
-        <button
-          className="sidebar-expand-btn"
-          onClick={toggleCollapse}
-          aria-label="Expand Sidebar"
-        >
-          <FaChevronRight />
-        </button>
-      )}
+
 
       {/* ─── Main Area ─── */}
       <div className={`patient-main ${sidebarCollapsed ? "main-expanded" : ""}`}>
