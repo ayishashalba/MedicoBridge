@@ -84,8 +84,15 @@ function PatientDashboardHome() {
     currentHour < 12
       ? "Good Morning"
       : currentHour < 18
-      ? "Good Afternoon"
-      : "Good Evening";
+        ? "Good Afternoon"
+        : "Good Evening";
+
+  const today = new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="dashboard-home">
@@ -101,10 +108,10 @@ function PatientDashboardHome() {
           </p>
         </div>
         <div className="welcome-badge">
-          <span className="badge-icon">🩺</span>
+          <span className="badge-icon">📅</span>
           <div>
-            <p className="badge-label">Health Status</p>
-            <p className="badge-value">Good</p>
+            <p className="badge-label">Today's Date</p>
+            <p className="badge-value">{today}</p>
           </div>
         </div>
       </section>
