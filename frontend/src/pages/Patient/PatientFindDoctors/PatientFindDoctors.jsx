@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { NavLink } from "react-router-dom";
 import {
   FaSearch,
   FaStethoscope,
@@ -307,10 +308,14 @@ function DoctorCard({ doctor }) {
             <span className="fd-fee-value">₹{doctor.fee}</span>
           </div>
         </div>
-        <button className="fd-view-btn" aria-label={`View profile of ${doctor.name}`}>
+        <NavLink
+          to={`/patient/doctor-profile/${doctor.id}`}
+          className="fd-view-btn"
+          aria-label={`View profile of ${doctor.name}`}
+        >
           <FaUserMd />
           View Profile
-        </button>
+        </NavLink>
       </div>
     </article>
   );
