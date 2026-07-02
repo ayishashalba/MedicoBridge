@@ -7,8 +7,8 @@ function PatientProfile() {
   return (
     <PlaceholderPage
       icon={<FaUserCircle />}
-      title="My Profile"
-      description="View and manage your personal details, health information, and account preferences."
+      title="Patient Profile"
+      description="This page will be implemented in the next step."
       color="#0d9488"
     />
   );

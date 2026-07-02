@@ -28,11 +28,7 @@ const sidebarNavItems = [
     icon: <FaTachometerAlt />,
     path: "/patient/dashboard",
   },
-  {
-    label: "My Profile",
-    icon: <FaUserCircle />,
-    path: "/patient/profile",
-  },
+
   {
     label: "Find Doctors",
     icon: <FaStethoscope />,
@@ -135,8 +131,16 @@ function PatientLayout() {
           </button>
         </div>
 
-        {/* Patient Profile Card */}
-        <div className={`sidebar-profile-card ${sidebarCollapsed ? "profile-card-collapsed" : ""}`}>
+        {/* Patient Profile Card — clickable, navigates to /patient/profile */}
+        <NavLink
+          to="/patient/profile"
+          className={({ isActive }) =>
+            `sidebar-profile-card${sidebarCollapsed ? " profile-card-collapsed" : ""}${isActive ? " profile-card-active" : ""}`
+          }
+          onClick={closeMobileSidebar}
+          title="View My Profile"
+          aria-label="View My Profile"
+        >
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar">
               <FaUserCircle />
@@ -150,7 +154,7 @@ function PatientLayout() {
               <span className="profile-id-badge">ID: #PT-20041</span>
             </div>
           )}
-        </div>
+        </NavLink>
 
         {/* Nav Items */}
         <nav className="sidebar-nav" aria-label="Patient menu">

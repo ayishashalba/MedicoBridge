@@ -174,10 +174,19 @@
   border-radius: var(--radius-md);
   transition: all var(--transition-fast);
   flex-shrink: 0;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .sidebar-profile-card:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(94, 234, 212, 0.25);
+  transform: translateY(-1px);
+}
+
+.profile-card-active {
+  background: rgba(94, 234, 212, 0.08) !important;
+  border-color: rgba(94, 234, 212, 0.35) !important;
 }
 
 .profile-card-collapsed {
