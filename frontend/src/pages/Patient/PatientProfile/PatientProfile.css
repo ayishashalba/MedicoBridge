@@ -1,0 +1,565 @@
+/* ================================================================
+   PatientProfile.css — MedicoBridge Patient Profile Page
+   Design tokens from index.css
+   ================================================================ */
+
+/* ── Page wrapper ───────────────────────────────────────────── */
+.patient-profile-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  animation: ppFadeIn 0.4s ease-out;
+}
+
+@keyframes ppFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page Header ────────────────────────────────────────────── */
+.pp-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pp-page-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+
+.pp-page-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+}
+
+.pp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Saved toast */
+.pp-saved-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #059669;
+  background: #d1fae5;
+  border: 1px solid #6ee7b7;
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.9rem;
+  animation: toastSlide 0.3s ease-out;
+}
+
+@keyframes toastSlide {
+  from { opacity: 0; transform: translateX(10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.pp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.pp-btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.pp-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(13, 148, 136, 0.35);
+}
+
+.pp-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+}
+
+.pp-btn-ghost:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.pp-btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.pp-btn-outline:hover {
+  background: var(--bg-accent);
+}
+
+/* ── Layout Grid ────────────────────────────────────────────── */
+.pp-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  align-items: start;
+  gap: 1.5rem;
+}
+
+/* ── Shared Card ────────────────────────────────────────────── */
+.pp-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-fast);
+}
+
+.pp-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Card Header ────────────────────────────────────────────── */
+.pp-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pp-card-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--card-color) 12%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--card-color);
+  flex-shrink: 0;
+}
+
+.pp-card-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.pp-card-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* ── Sidebar Column ─────────────────────────────────────────── */
+.pp-sidebar-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Photo Card ─────────────────────────────────────────────── */
+.pp-photo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  text-align: center;
+}
+
+.pp-avatar-ring {
+  position: relative;
+  width: 110px;
+  height: 110px;
+}
+
+.pp-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(13, 148, 136, 0.2);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.2);
+}
+
+.pp-avatar-icon {
+  font-size: 5rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.pp-camera-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  color: #fff;
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.pp-camera-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.1);
+}
+
+.pp-camera-btn:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.pp-avatar-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.pp-avatar-name {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.pp-avatar-role {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  background: var(--bg-accent);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: var(--radius-full);
+  padding: 0.2rem 0.75rem;
+}
+
+.pp-avatar-id {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pp-change-photo-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  font-size: 0.82rem;
+}
+
+/* ── Quick Stats in Photo Card ──────────────────────────────── */
+.pp-quick-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.pp-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.pp-stat-val {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.pp-stat-key {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.pp-stat-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border-color);
+}
+
+/* ── Health Badge Card ──────────────────────────────────────── */
+.pp-health-badge-card {
+  padding: 1.25rem;
+}
+
+.pp-health-badge-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.pp-shield-icon {
+  color: var(--accent-color);
+  font-size: 1rem;
+}
+
+.pp-health-tag-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pp-health-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+}
+
+.pp-tag-condition {
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+}
+
+.pp-tag-allergy {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+/* ── Main Column ────────────────────────────────────────────── */
+.pp-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Fields Grid ────────────────────────────────────────────── */
+.pp-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.pp-fields-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.pf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pf-field--full {
+  grid-column: 1 / -1;
+}
+
+.pf-field-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pf-field-icon {
+  color: var(--primary-color);
+  font-size: 0.75rem;
+}
+
+/* View mode value */
+.pf-value {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding: 0.55rem 0;
+  border-bottom: 1px dashed var(--border-color);
+  line-height: 1.5;
+}
+
+.pf-empty {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Edit mode inputs */
+.pf-input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.pf-input:focus {
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+.pf-input:hover:not(:focus) {
+  border-color: #cbd5e1;
+}
+
+.pf-textarea {
+  resize: vertical;
+  min-height: 72px;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/* ── Medical Tags (view mode) ───────────────────────────────── */
+.pp-medical-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pp-tag {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-full);
+}
+
+.pp-tag--red {
+  color: #b91c1c;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.pp-tag--blue {
+  color: #0369a1;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+}
+
+/* ── Bottom Action Row (mobile repeat) ─────────────────────── */
+.pp-bottom-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+/* Tablet */
+@media screen and (max-width: 1100px) {
+  .pp-grid {
+    grid-template-columns: 240px 1fr;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .pp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pp-sidebar-col {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .pp-photo-card {
+    flex: 1;
+    min-width: 220px;
+  }
+
+  .pp-health-badge-card {
+    flex: 1;
+    min-width: 220px;
+  }
+}
+
+/* Mobile */
+@media screen and (max-width: 640px) {
+  .pp-page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pp-header-actions {
+    justify-content: flex-end;
+  }
+
+  .pp-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pp-sidebar-col {
+    flex-direction: column;
+  }
+
+  .pp-page-title {
+    font-size: 1.3rem;
+  }
+
+  .pp-card {
+    padding: 1.25rem;
+  }
+
+  .pp-quick-stats {
+    gap: 0.5rem;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .pp-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.9rem;
+  }
+}
