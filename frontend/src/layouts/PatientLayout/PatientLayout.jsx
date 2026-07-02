@@ -14,7 +14,7 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
-  FaChevronRight,
+  FaChevronLeft,
   FaSearch,
   FaMoon,
   FaSun,
@@ -114,15 +114,16 @@ function PatientLayout() {
           </NavLink>
 
           {/* Collapse toggle (desktop) */}
-          <button
-            className="sidebar-collapse-btn"
-            onClick={toggleCollapse}
-            aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <FaChevronRight className={`collapse-chevron ${sidebarCollapsed ? "chevron-rotated" : ""}`} />
-          </button>
-
+          {!sidebarCollapsed && (
+            <button
+              className="sidebar-collapse-btn"
+              onClick={toggleCollapse}
+              aria-label="Collapse Sidebar"
+              title="Collapse Sidebar"
+            >
+              <FaChevronLeft />
+            </button>
+          )}
           {/* Close button (mobile) */}
           <button
             className="sidebar-close-btn"
@@ -195,6 +196,15 @@ function PatientLayout() {
           </button>
         </div>
       </aside>
+      {sidebarCollapsed && (
+        <button
+          className="sidebar-expand-btn"
+          onClick={toggleCollapse}
+          aria-label="Expand Sidebar"
+        >
+          <FaChevronRight />
+        </button>
+      )}
 
       {/* ─── Main Area ─── */}
       <div className={`patient-main ${sidebarCollapsed ? "main-expanded" : ""}`}>
