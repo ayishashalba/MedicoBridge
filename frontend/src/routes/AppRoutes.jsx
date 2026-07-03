@@ -31,6 +31,7 @@ import PatientDashboardHome from "../pages/Patient/PatientDashboardHome/PatientD
 import PatientProfile from "../pages/Patient/PatientProfile/PatientProfile";
 import PatientFindDoctors from "../pages/Patient/PatientFindDoctors/PatientFindDoctors";
 import PatientDoctorProfile from "../pages/Patient/PatientDoctorProfile/PatientDoctorProfile";
+import PatientBookAppointment from "../pages/Patient/PatientBookAppointment/PatientBookAppointment";
 import PatientAppointments from "../pages/Patient/PatientAppointments/PatientAppointments";
 import PatientConsultation from "../pages/Patient/PatientConsultation/PatientConsultation";
 import PatientPharmacy from "../pages/Patient/PatientPharmacy/PatientPharmacy";
@@ -76,6 +77,7 @@ function AppRoutes() {
         <Route path="profile" element={<PatientProfile />} />
         <Route path="find-doctors" element={<PatientFindDoctors />} />
         <Route path="doctor-profile/:id" element={<PatientDoctorProfile />} />
+        <Route path="book-appointment/:id" element={<PatientBookAppointment />} />
         <Route path="appointments" element={<PatientAppointments />} />
         <Route path="consultation" element={<PatientConsultation />} />
         <Route path="pharmacy" element={<PatientPharmacy />} />

@@ -277,11 +277,12 @@ function PatientDoctorProfile() {
   const isHospital = doctor.type === "hospital";
 
   const handleBookAppointment = () => {
-    const msg = isHospital
-      ? "📋 Appointment will be booked through the hospital. Our team will contact you shortly to confirm."
-      : "📋 Appointment will be booked directly with the doctor. You will receive a confirmation within 30 minutes.";
-    setBookingMsg(msg);
-    setTimeout(() => setBookingMsg(""), 6000);
+    navigate(`/patient/book-appointment/${doctor.id}`, {
+      state: {
+        day: selectedDay,
+        slot: selectedSlot || "",
+      }
+    });
   };
 
   return (
