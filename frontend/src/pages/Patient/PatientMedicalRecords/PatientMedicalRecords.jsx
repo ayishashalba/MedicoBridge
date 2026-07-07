@@ -8,6 +8,9 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import "./PatientMedicalRecords.css";
+import { useNavigate } from "react-router-dom";
+
+const navigate = useNavigate();
 
 const consultations = [
   {
@@ -179,7 +182,11 @@ function PatientMedicalRecords() {
                 {record.status}
               </span>
 
-              <button className="view-btn">
+
+              <button
+                className="view-btn"
+                onClick={() => navigate(`/patient/medical-records/${record.id}`)}
+              >
                 <FaEye />
                 View Details
               </button>
