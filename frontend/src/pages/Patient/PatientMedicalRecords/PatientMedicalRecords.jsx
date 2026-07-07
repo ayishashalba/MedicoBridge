@@ -10,8 +10,6 @@ import {
 import "./PatientMedicalRecords.css";
 import { useNavigate } from "react-router-dom";
 
-const navigate = useNavigate();
-
 const consultations = [
   {
     id: 1,
@@ -106,6 +104,7 @@ const medicalDocuments = [
 
 
 function PatientMedicalRecords() {
+  const navigate = useNavigate();
   return (
     <div className="medical-records">
 
