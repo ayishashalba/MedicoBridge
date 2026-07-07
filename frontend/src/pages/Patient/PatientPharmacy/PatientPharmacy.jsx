@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaMapMarkerAlt,
@@ -67,6 +68,7 @@ const medicines = [
 ];
 
 function PatientPharmacy() {
+  const navigate = useNavigate();
   return (
     <div className="patient-pharmacy">
 
@@ -182,7 +184,10 @@ function PatientPharmacy() {
                 {medicine.stock}
               </span>
 
-              <button className="primary-btn">
+              <button
+                className="primary-btn"
+                onClick={() => navigate(`/patient/medicine/${medicine.id}`)}
+              >
                 View Details
                 <FaArrowRight />
               </button>
