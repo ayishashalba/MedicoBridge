@@ -34,6 +34,8 @@ import PatientDoctorProfile from "../pages/Patient/PatientDoctorProfile/PatientD
 import PatientBookAppointment from "../pages/Patient/PatientBookAppointment/PatientBookAppointment";
 import PatientAppointments from "../pages/Patient/PatientAppointments/PatientAppointments";
 import PatientConsultation from "../pages/Patient/PatientConsultation/PatientConsultation";
+import PatientConsultationDetails from "../pages/Patient/PatientConsultationDetails/PatientConsultationDetails";
+import PatientConsultationRoom from "../pages/Patient/PatientConsultationRoom/PatientConsultationRoom";
 import PatientPharmacy from "../pages/Patient/PatientPharmacy/PatientPharmacy";
 import PatientMedicalRecords from "../pages/Patient/PatientMedicalRecords/PatientMedicalRecords";
 import PatientNotifications from "../pages/Patient/PatientNotifications/PatientNotifications";
@@ -80,6 +82,8 @@ function AppRoutes() {
         <Route path="book-appointment/:id" element={<PatientBookAppointment />} />
         <Route path="appointments" element={<PatientAppointments />} />
         <Route path="consultation" element={<PatientConsultation />} />
+        <Route path="consultation/:id" element={<PatientConsultationDetails />} />
+        <Route path="consultation/:id/room" element={<PatientConsultationRoom />} />
         <Route path="pharmacy" element={<PatientPharmacy />} />
         <Route path="medical-records" element={<PatientMedicalRecords />} />
         <Route path="notifications" element={<PatientNotifications />} />

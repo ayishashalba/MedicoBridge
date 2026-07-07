@@ -339,7 +339,7 @@ function PatientConsultation() {
                 <div className="oc-card-footer">
                   <button
                     className="oc-btn oc-btn--details"
-                    onClick={() => handleViewDetails(consult.doctorName)}
+                    onClick={() => navigate(`/patient/consultation/${consult.id}`)}
                     aria-label={`View details of consultation with ${consult.doctorName}`}
                   >
                     View Details
@@ -348,7 +348,7 @@ function PatientConsultation() {
                   {consult.status === "ready" ? (
                     <button
                       className="oc-btn oc-btn--join"
-                      onClick={() => alert(`Launching Consultation Room for ${consult.id}`)}
+                      onClick={() => navigate(`/patient/consultation/${consult.id}?join=true`)}
                       aria-label="Join video consultation call"
                     >
                       <FaVideo /> Join Call
