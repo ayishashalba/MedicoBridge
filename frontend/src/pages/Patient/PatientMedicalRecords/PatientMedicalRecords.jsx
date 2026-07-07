@@ -5,6 +5,7 @@ import {
   FaUserMd,
   FaHospital,
   FaEye,
+  FaSearch,
 } from "react-icons/fa";
 import "./PatientMedicalRecords.css";
 
