@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FaFileMedical,
   FaCalendarAlt,
@@ -104,6 +104,7 @@ const medicalDocuments = [
 
 
 function PatientMedicalRecords() {
+  const [selectedFilter, setSelectedFilter] = useState("All Records");
   const navigate = useNavigate();
   return (
     <div className="medical-records">
@@ -119,7 +120,11 @@ function PatientMedicalRecords() {
             />
           </div>
 
-          <select className="filter-select">
+          <select
+            className="filter-select"
+            value={selectedFilter}
+            onChange={(e) => setSelectedFilter(e.target.value)}
+          >
             <option>All Records</option>
             <option>Consultations</option>
             <option>Prescriptions</option>
@@ -136,186 +141,199 @@ function PatientMedicalRecords() {
         </p>
       </div>
 
-      <div className="records-section">
+      {(selectedFilter === "All Records" ||
+        selectedFilter === "Consultations") && (
+          <div className="records-section">
 
-        <h3>Consultation History</h3>
+            <h3>Consultation History</h3>
 
-        {consultations.map((record) => (
-          <div className="record-card" key={record.id}>
+            {consultations.map((record) => (
+              <div className="record-card" key={record.id}>
 
-            <div className="record-left">
+                <div className="record-left">
 
-              <div className="record-icon">
-                <FaUserMd />
-              </div>
+                  <div className="record-icon">
+                    <FaUserMd />
+                  </div>
 
-              <div className="record-details">
+                  <div className="record-details">
 
-                <h4>{record.doctor}</h4>
+                    <h4>{record.doctor}</h4>
 
-                <p>{record.specialization}</p>
+                    <p>{record.specialization}</p>
 
-                <p>
-                  <FaHospital /> {record.hospital}, {record.city}
-                </p>
+                    <p>
+                      <FaHospital /> {record.hospital}, {record.city}
+                    </p>
 
-                <p>
-                  <FaCalendarAlt /> {record.date}
-                </p>
+                    <p>
+                      <FaCalendarAlt /> {record.date}
+                    </p>
 
-                <span className="consultation-type">
-                  {record.type}
-                </span>
+                    <span className="consultation-type">
+                      {record.type}
+                    </span>
 
-                <div className="diagnosis">
-                  Diagnosis: <strong>{record.diagnosis}</strong>
+                    <div className="diagnosis">
+                      Diagnosis: <strong>{record.diagnosis}</strong>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                <div className="record-right">
+
+                  <span className="completed-badge">
+                    {record.status}
+                  </span>
+
+
+                  <button
+                    className="view-btn"
+                    onClick={() => navigate(`/patient/medical-records/${record.id}`)}
+                  >
+                    <FaEye />
+                    View Details
+                  </button>
+
                 </div>
 
               </div>
-
-            </div>
-
-            <div className="record-right">
-
-              <span className="completed-badge">
-                {record.status}
-              </span>
-
-
-              <button
-                className="view-btn"
-                onClick={() => navigate(`/patient/medical-records/${record.id}`)}
-              >
-                <FaEye />
-                View Details
-              </button>
-
-            </div>
+            ))}
 
           </div>
-        ))}
+        )}
+      {(selectedFilter === "All Records" ||
+        selectedFilter === "Prescriptions") && (
+          <div className="records-section">
 
-      </div>
-      <div className="records-section">
+            <h3>Prescriptions</h3>
 
-        <h3>Prescriptions</h3>
+            {prescriptions.map((item) => (
+              <div className="record-card" key={item.id}>
 
-        {prescriptions.map((item) => (
-          <div className="record-card" key={item.id}>
+                <div className="record-left">
 
-            <div className="record-left">
+                  <div className="record-icon">
+                    <FaFileMedical />
+                  </div>
 
-              <div className="record-icon">
-                <FaFileMedical />
+                  <div className="record-details">
+
+                    <h4>{item.doctor}</h4>
+
+                    <p>Date: {item.date}</p>
+
+                    <p>Diagnosis: {item.diagnosis}</p>
+
+                    <p>Medicines: {item.medicines}</p>
+
+                  </div>
+
+                </div>
+
+                <div className="record-right">
+
+                  <button className="view-btn">
+                    <FaEye />
+                    View Prescription
+                  </button>
+
+                </div>
+
               </div>
-
-              <div className="record-details">
-
-                <h4>{item.doctor}</h4>
-
-                <p>Date: {item.date}</p>
-
-                <p>Diagnosis: {item.diagnosis}</p>
-
-                <p>Medicines: {item.medicines}</p>
-
-              </div>
-
-            </div>
-
-            <div className="record-right">
-
-              <button className="view-btn">
-                <FaEye />
-                View Prescription
-              </button>
-
-            </div>
+            ))}
 
           </div>
-        ))}
+        )}
+      {(selectedFilter === "All Records" ||
+        selectedFilter === "Lab Reports") && (
+          <div className="records-section">
 
-      </div>
-      <div className="records-section">
+            <h3>Lab Reports</h3>
 
-        <h3>Lab Reports</h3>
+            {labReports.map((report) => (
+              <div className="record-card" key={report.id}>
 
-        {labReports.map((report) => (
-          <div className="record-card" key={report.id}>
+                <div className="record-left">
 
-            <div className="record-left">
+                  <div className="record-icon">
+                    <FaFileMedical />
+                  </div>
 
-              <div className="record-icon">
-                <FaFileMedical />
+                  <div className="record-details">
+
+                    <h4>{report.test}</h4>
+
+                    <p>{report.hospital}</p>
+
+                    <p>Date: {report.date}</p>
+
+                    <p>Status: {report.status}</p>
+
+                  </div>
+
+                </div>
+
+                <div className="record-right">
+
+                  <button className="view-btn">
+                    <FaEye />
+                    View Report
+                  </button>
+
+                </div>
+
               </div>
-
-              <div className="record-details">
-
-                <h4>{report.test}</h4>
-
-                <p>{report.hospital}</p>
-
-                <p>Date: {report.date}</p>
-
-                <p>Status: {report.status}</p>
-
-              </div>
-
-            </div>
-
-            <div className="record-right">
-
-              <button className="view-btn">
-                <FaEye />
-                View Report
-              </button>
-
-            </div>
+            ))}
 
           </div>
-        ))}
+        )}
+      {(selectedFilter === "All Records" ||
+        selectedFilter === "Medical Documents") && (
+          <div className="records-section">
 
-      </div>
-      <div className="records-section">
+            <h3>Medical Documents</h3>
 
-        <h3>Medical Documents</h3>
+            {medicalDocuments.map((document) => (
+              <div className="record-card" key={document.id}>
 
-        {medicalDocuments.map((document) => (
-          <div className="record-card" key={document.id}>
+                <div className="record-left">
 
-            <div className="record-left">
+                  <div className="record-icon">
+                    <FaFileMedical />
+                  </div>
 
-              <div className="record-icon">
-                <FaFileMedical />
+                  <div className="record-details">
+
+                    <h4>{document.title}</h4>
+
+                    <p>{document.hospital}</p>
+
+                    <p>Type: {document.type}</p>
+
+                    <p>Date: {document.date}</p>
+
+                  </div>
+
+                </div>
+
+                <div className="record-right">
+
+                  <button className="view-btn">
+                    <FaEye />
+                    View Document
+                  </button>
+
+                </div>
+
               </div>
-
-              <div className="record-details">
-
-                <h4>{document.title}</h4>
-
-                <p>{document.hospital}</p>
-
-                <p>Type: {document.type}</p>
-
-                <p>Date: {document.date}</p>
-
-              </div>
-
-            </div>
-
-            <div className="record-right">
-
-              <button className="view-btn">
-                <FaEye />
-                View Document
-              </button>
-
-            </div>
+            ))}
 
           </div>
-        ))}
+        )}
 
-      </div>
     </div>
 
 
