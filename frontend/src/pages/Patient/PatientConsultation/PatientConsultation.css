@@ -1,0 +1,489 @@
+/* ================================================================
+   PatientConsultation.css — Online Consultations Page (Part 1)
+   Design tokens inherited from index.css
+   ================================================================ */
+
+/* ── Page Wrapper ─────────────────────────────────────────────── */
+.oc-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  animation: ocFadeIn 0.4s ease-out;
+}
+
+@keyframes ocFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Page Header ──────────────────────────────────────────────── */
+.oc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.5rem;
+}
+
+.oc-title {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.4px;
+}
+
+.oc-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.oc-request-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
+  flex-shrink: 0;
+}
+
+.oc-request-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
+}
+
+/* ── Summary Stats Bar ────────────────────────────────────────── */
+.oc-stats-bar {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.oc-stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid var(--stat-color);
+  min-width: 90px;
+  transition: all var(--transition-fast);
+}
+
+.oc-stat-chip:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.oc-stat-val {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--stat-color);
+  line-height: 1;
+}
+
+.oc-stat-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* ── Section Title ────────────────────────────────────────────── */
+.oc-section-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.oc-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-color);
+}
+
+/* ── Consultation Cards Grid ───────────────────────────────────── */
+.oc-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 1.25rem;
+}
+
+/* ── Consultation Card ─────────────────────────────────────────── */
+.oc-card {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.oc-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  transition: opacity var(--transition-fast);
+  opacity: 1;
+}
+
+.oc-card--confirmed::before {
+  background: linear-gradient(90deg, var(--primary-color), #2dd4bf);
+}
+
+.oc-card--pending::before {
+  background: linear-gradient(90deg, var(--accent-color), #fbbf24);
+}
+
+.oc-card--ready::before {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.oc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Card Header: Doctor Avatar & Information */
+.oc-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.oc-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.oc-avatar-img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--bg-secondary);
+}
+
+.oc-avatar-fallback {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+  user-select: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.oc-avatar-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2.5px solid var(--bg-primary);
+}
+
+.oc-status--online {
+  background-color: #10b981;
+  animation: pulseGreen 2s infinite;
+}
+
+.oc-status--offline {
+  background-color: var(--text-muted);
+}
+
+@keyframes pulseGreen {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.oc-doctor-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.oc-doc-name {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-doc-spec {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.oc-doc-hosp {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oc-meta-icon {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* Card Body: Date, Time & Status Details */
+.oc-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.oc-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.oc-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+}
+
+.oc-meta-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Consultation Status Badges */
+.oc-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  text-transform: capitalize;
+}
+
+.oc-status-badge--confirmed {
+  background: var(--secondary-light);
+  color: var(--secondary-color);
+}
+
+.oc-status-badge--pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.oc-status-badge--ready {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* Card Footer: Action Buttons */
+.oc-card-footer {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: auto;
+  border-top: 1px solid var(--border-color);
+  padding-top: 0.9rem;
+}
+
+.oc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex: 1;
+}
+
+.oc-btn--details {
+  background: transparent;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.oc-btn--details:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.oc-btn--join {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.oc-btn--join:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.45);
+}
+
+.oc-btn--disabled {
+  background: var(--bg-secondary);
+  border-color: transparent;
+  color: var(--text-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.oc-btn--disabled:hover {
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Empty State ──────────────────────────────────────────────── */
+.oc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  gap: 1rem;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.oc-empty-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--bg-accent);
+  color: var(--primary-color);
+  font-size: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.oc-empty-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.oc-empty-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.oc-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.65rem 1.4rem;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2);
+  margin-top: 0.5rem;
+}
+
+.oc-empty-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(13, 148, 136, 0.35);
+}
+
+/* ── Responsive Media Queries ─────────────────────────────────── */
+@media screen and (max-width: 768px) {
+  .oc-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .oc-request-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .oc-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
