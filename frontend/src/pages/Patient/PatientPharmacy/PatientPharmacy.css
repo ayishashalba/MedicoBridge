@@ -1,0 +1,234 @@
+.patient-pharmacy {
+    padding: 30px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Header */
+
+.pharmacy-header {
+    margin-bottom: 30px;
+}
+
+.pharmacy-header h2 {
+    font-size: 2rem;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.pharmacy-header p {
+    color: #64748b;
+}
+
+/* Search */
+
+.medicine-search {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fff;
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    margin-bottom: 35px;
+}
+
+.search-icon {
+    color: #0ea5e9;
+    font-size: 18px;
+}
+
+.medicine-search input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    background: transparent;
+}
+
+/* Sections */
+
+.pharmacy-section {
+    margin-bottom: 40px;
+}
+
+.pharmacy-section h3 {
+    margin-bottom: 20px;
+    color: #0f172a;
+}
+
+/* Categories */
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background: #fff;
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    cursor: pointer;
+    transition: .3s;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+.category-icon {
+    font-size: 30px;
+    color: #0ea5e9;
+    margin-bottom: 12px;
+}
+
+/* Nearby Pharmacies */
+
+.pharmacy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+
+.pharmacy-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 15px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+}
+
+.pharmacy-card h4 {
+    margin-bottom: 10px;
+    color: #0f172a;
+}
+
+.pharmacy-card p {
+    margin: 8px 0;
+    color: #64748b;
+}
+
+.open-badge {
+    display: inline-block;
+    margin: 12px 0;
+    background: #dcfce7;
+    color: #166534;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+/* Medicines */
+
+.medicine-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.medicine-card {
+    background: #fff;
+    padding: 22px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+}
+
+.medicine-image {
+    width: 80px;
+    height: 80px;
+    margin: auto;
+    border-radius: 50%;
+    background: #e0f2fe;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    margin-bottom: 15px;
+}
+
+.medicine-card h4 {
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.medicine-card p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0284c7;
+}
+
+.stock-badge {
+    display: inline-block;
+    margin: 12px 0;
+    background: #dcfce7;
+    color: #166534;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+/* Upload */
+
+.upload-prescription {
+    margin-top: 50px;
+    background: #fff;
+    padding: 40px;
+    border-radius: 18px;
+    text-align: center;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+}
+
+.upload-icon {
+    font-size: 55px;
+    color: #0ea5e9;
+    margin-bottom: 18px;
+}
+
+.upload-prescription h3 {
+    margin-bottom: 10px;
+}
+
+.upload-prescription p {
+    color: #64748b;
+    margin-bottom: 20px;
+}
+
+/* Buttons */
+
+.primary-btn {
+    border: none;
+    background: #0ea5e9;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: .3s;
+}
+
+.primary-btn:hover {
+    background: #0284c7;
+}
+
+/* Responsive */
+
+@media (max-width:768px) {
+
+    .patient-pharmacy {
+        padding: 20px;
+    }
+
+    .medicine-search {
+        padding: 12px;
+    }
+
+    .upload-prescription {
+        padding: 25px;
+    }
+
+}
