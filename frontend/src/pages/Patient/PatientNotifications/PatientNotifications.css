@@ -1,0 +1,162 @@
+.patient-notifications {
+    padding: 2rem;
+}
+
+.notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.notifications-header h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1.8rem;
+    color: var(--text-primary);
+}
+
+.header-icon {
+    color: var(--primary-color);
+}
+
+.notifications-header p {
+    margin-top: 0.4rem;
+    color: var(--text-secondary);
+}
+
+.mark-read-btn {
+    padding: 0.75rem 1.4rem;
+    border: none;
+    border-radius: 10px;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.mark-read-btn:hover {
+    background: var(--secondary-color);
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.notification-card {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: 0.3s;
+}
+
+.notification-card:hover {
+    transform: translateY(-3px);
+}
+
+.notification-card.unread {
+    border-left: 5px solid var(--primary-color);
+}
+
+.notification-card.read {
+    opacity: 0.85;
+}
+
+.notification-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: rgba(13, 148, 136, 0.12);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+}
+
+.notification-top h3 {
+    font-size: 1.05rem;
+    color: var(--text-primary);
+}
+
+.notification-content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0.8rem;
+}
+
+.notification-time {
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.read-badge {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.unread-badge {
+    background: #ccfbf1;
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .patient-notifications {
+        padding: 1rem;
+    }
+
+    .notifications-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .mark-read-btn {
+        width: 100%;
+    }
+
+    .notification-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .notification-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+    }
+
+    .notification-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
