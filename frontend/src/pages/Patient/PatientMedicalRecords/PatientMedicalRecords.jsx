@@ -7,7 +7,6 @@ import {
   FaEye,
 } from "react-icons/fa";
 import "./PatientMedicalRecords.css";
-import { FaSearch, FaFilter } from "react-icons/fa";
 
 const consultations = [
   {
