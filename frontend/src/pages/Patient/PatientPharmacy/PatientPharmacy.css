@@ -5,7 +5,6 @@
 }
 
 /* Header */
-
 .pharmacy-header {
     margin-bottom: 30px;
 }
@@ -21,7 +20,6 @@
 }
 
 /* Search */
-
 .medicine-search {
     display: flex;
     align-items: center;
@@ -47,7 +45,6 @@
 }
 
 /* Sections */
-
 .pharmacy-section {
     margin-bottom: 40px;
 }
@@ -58,7 +55,6 @@
 }
 
 /* Categories */
-
 .category-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -86,7 +82,6 @@
 }
 
 /* Nearby Pharmacies */
-
 .pharmacy-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -121,7 +116,6 @@
 }
 
 /* Medicines */
-
 .medicine-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -130,48 +124,35 @@
 
 .medicine-card {
     background: #fff;
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, .08);
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-
+    padding: 22px;
+    border-radius: 15px;
     text-align: center;
-}
-
-.medicine-card:hover {
-    transform: translateY(-5px);
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
 }
 
 .medicine-image {
-    width: 100px;
-    height: 100px;
-    border-radius: 12px;
+    width: 80px;
+    height: 80px;
+    margin: auto;
+    border-radius: 50%;
     background: #e0f2fe;
-
     display: flex;
-    align-items: center;
     justify-content: center;
-
-    font-size: 50px;
+    align-items: center;
+    font-size: 40px;
     margin-bottom: 15px;
 }
 
 .medicine-card h4 {
-    margin: 10px 0;
     color: #0f172a;
-    min-height: 56px;
+    margin-bottom: 10px;
 }
 
 .medicine-card p {
-    margin: 8px 0;
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
     color: #0284c7;
 }
-
 
 .stock-badge {
     display: inline-block;
@@ -184,7 +165,6 @@
 }
 
 /* Upload */
-
 .upload-prescription {
     margin-top: 50px;
     background: #fff;
@@ -210,35 +190,25 @@
 }
 
 /* Buttons */
-
-.medicine-btn {
-    width: 100%;
-    margin-top: 18px;
-
+.primary-btn {
     border: none;
     background: #0ea5e9;
-    color: #fff;
-
-    padding: 12px;
+    color: white;
+    padding: 12px 22px;
     border-radius: 10px;
-
-    display: flex;
-    justify-content: center;
+    cursor: pointer;
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-
-    cursor: pointer;
     transition: .3s;
 }
 
-.medicine-btn:hover {
+.primary-btn:hover {
     background: #0284c7;
 }
 
 /* Responsive */
-
 @media (max-width:768px) {
-
     .patient-pharmacy {
         padding: 20px;
     }
@@ -250,5 +220,4 @@
     .upload-prescription {
         padding: 25px;
     }
-
 }
