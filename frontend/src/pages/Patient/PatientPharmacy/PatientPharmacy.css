@@ -131,7 +131,6 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
 
     text-align: center;
     transition: .3s;
@@ -152,19 +151,23 @@
 }
 
 .medicine-card h4 {
-    color: #0f172a;
-    margin-bottom: 10px;
+    margin: 10px 0 8px;
 }
 
 .medicine-card p {
-    font-size: 18px;
+    margin: 0;
+    font-size: 20px;
     font-weight: 600;
     color: #0284c7;
 }
 
 .stock-badge {
-    display: inline-block;
     margin: 12px 0;
+}
+
+.stock-badge {
+    display: inline-block;
+    /* margin: 12px 0; */
     background: #dcfce7;
     color: #166534;
     padding: 6px 14px;
