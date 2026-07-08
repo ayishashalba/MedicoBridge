@@ -142,18 +142,13 @@
 }
 
 .medicine-image {
-    width: 75px;
-    height: 75px;
-    margin: 0 auto 15px;
-
-    border-radius: 12px;
-    background: #e0f2fe;
+    font-size: 40px;
+    color: #0ea5e9;
+    margin-bottom: 16px;
 
     display: flex;
     justify-content: center;
     align-items: center;
-
-    font-size: 38px;
 }
 
 .medicine-card h4 {
