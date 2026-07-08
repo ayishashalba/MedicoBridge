@@ -73,7 +73,7 @@ function PatientOrders() {
 
                         <button
                             className="view-btn"
-                            onClick={() => navigate(`/patient/orders/${order.id}`)}
+                            onClick={() => navigate(`/patient/order-details/${order.id}`)}
                         >
                             <FaEye />
                             View Order
