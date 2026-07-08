@@ -185,7 +185,7 @@ function PatientPharmacy() {
               </span>
 
               <button
-                className="primary-btn"
+                className="medicine-btn"
                 onClick={() => navigate(`/patient/medicine/${medicine.id}`)}
               >
                 View Details

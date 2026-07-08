@@ -163,24 +163,20 @@
 }
 
 .medicine-card h4 {
+    margin: 10px 0;
     color: #0f172a;
-    margin-bottom: 10px;
+    min-height: 56px;
 }
 
 .medicine-card p {
-    font-size: 18px;
-    font-weight: 600;
+    margin: 8px 0;
+    font-size: 20px;
+    font-weight: 700;
     color: #0284c7;
 }
 
 .stock-badge {
-    display: inline-block;
-    margin: 12px 0;
-    background: #dcfce7;
-    color: #166534;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
+    margin: 12px 0 18px;
 }
 
 /* Upload */
