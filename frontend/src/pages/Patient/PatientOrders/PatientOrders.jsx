@@ -7,6 +7,7 @@ import {
     FaEye,
 } from "react-icons/fa";
 import "./PatientOrders.css";
+import { useNavigate } from "react-router-dom";
 
 const orders = [
     {
@@ -33,6 +34,7 @@ const orders = [
 ];
 
 function PatientOrders() {
+    const navigate = useNavigate();
     return (
         <div className="patient-orders">
 
@@ -69,7 +71,10 @@ function PatientOrders() {
                             {order.status}
                         </span>
 
-                        <button className="view-btn">
+                        <button
+                            className="view-btn"
+                            onClick={() => navigate(`/patient/orders/${order.id}`)}
+                        >
                             <FaEye />
                             View Order
                         </button>
