@@ -43,7 +43,8 @@ import PatientSettings from "../pages/Patient/PatientSettings/PatientSettings";
 import PatientMedicineDetails from "../pages/Patient/PatientMedicineDetails/PatientMedicineDetails";
 import PatientCart from "../pages/Patient/PatientCart/PatientCart";
 import PatientCheckout from "../pages/Patient/PatientCheckout/PatientCheckout";
-
+import PatientOrderSuccess from "../pages/Patient/PatientOrderSuccess/PatientOrderSuccess";
+import PatientOrders from "../pages/Patient/PatientOrders/PatientOrders";
 
 // ── Inline placeholders ────────────────────────────────────────
 const AdminLoginPlaceholder = () => (
@@ -92,6 +93,8 @@ function AppRoutes() {
         <Route path="medicine/:id" element={<PatientMedicineDetails />} />
         <Route path="cart" element={<PatientCart />} />
         <Route path="checkout" element={<PatientCheckout />} />
+        <Route path="order-success" element={<PatientOrderSuccess />} />
+        <Route path="orders" element={<PatientOrders />} />
         <Route path="medical-records" element={<PatientMedicalRecords />} />
         <Route path="notifications" element={<PatientNotifications />} />
         <Route path="settings" element={<PatientSettings />} />
