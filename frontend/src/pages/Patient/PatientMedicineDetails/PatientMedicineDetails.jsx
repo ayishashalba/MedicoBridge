@@ -73,7 +73,10 @@ function PatientMedicineDetails() {
 
                     <div className="button-group">
 
-                        <button className="cart-btn">
+                        <button
+                            className="cart-btn"
+                            onClick={() => navigate("/patient/cart")}
+                        >
                             <FaShoppingCart />
                             Add to Cart
                         </button>

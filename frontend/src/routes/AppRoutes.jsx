@@ -41,6 +41,7 @@ import PatientMedicalRecords from "../pages/Patient/PatientMedicalRecords/Patien
 import PatientNotifications from "../pages/Patient/PatientNotifications/PatientNotifications";
 import PatientSettings from "../pages/Patient/PatientSettings/PatientSettings";
 import PatientMedicineDetails from "../pages/Patient/PatientMedicineDetails/PatientMedicineDetails";
+import PatientCart from "../pages/Patient/PatientCart/PatientCart";
 
 // ── Inline placeholders ────────────────────────────────────────
 const AdminLoginPlaceholder = () => (
@@ -90,6 +91,7 @@ function AppRoutes() {
         <Route path="notifications" element={<PatientNotifications />} />
         <Route path="settings" element={<PatientSettings />} />
         <Route path="medicine/:id" element={<PatientMedicineDetails />} />
+        <Route path="cart" element={<PatientCart />} />
       </Route>
 
       {/* ── Other Dashboards ──────────────────────────────── */}
