@@ -10,6 +10,7 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import "./DoctorAppointments.css";
+import { useNavigate } from "react-router-dom";
 
 const appointments = [
   {
@@ -39,6 +40,7 @@ const appointments = [
 ];
 
 function DoctorAppointments() {
+  const navigate = useNavigate();
   return (
     <div className="doctor-appointments">
 
@@ -110,7 +112,10 @@ function DoctorAppointments() {
 
             <div className="btn-group">
 
-              <button className="view-btn">
+              <button
+                className="view-btn"
+                onClick={() => navigate(`/doctor/appointments/${item.id}`)}
+              >
                 <FaEye />
                 View
               </button>
