@@ -13,8 +13,11 @@ import {
   FaMoneyBillWave,
 } from "react-icons/fa";
 import "./DoctorProfile.css";
+import { useNavigate } from "react-router-dom";
 
 function DoctorProfile() {
+
+  const navigate = useNavigate();
   const doctor = {
     name: "Dr. Ayisha Shalba",
     specialization: "Cardiologist",
@@ -46,7 +49,10 @@ function DoctorProfile() {
             <h2>{doctor.name}</h2>
             <p>{doctor.specialization}</p>
 
-            <button className="edit-profile-btn">
+            <button
+              className="edit-profile-btn"
+              onClick={() => navigate("/doctor/edit-profile")}
+            >
               <FaEdit />
               Edit Profile
             </button>
