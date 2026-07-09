@@ -26,13 +26,13 @@ import AdminDashboard from "../pages/Admin/AdminDashboard";
 
 // ── Doctor Dashboard Layout & Pages ────────────────────────────
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
-import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
-import DoctorProfile from "../pages/Doctor/DoctorProfile";
-import DoctorEditProfile from "../pages/Doctor/DoctorEditProfile";
-import DoctorAppointments from "../pages/Doctor/DoctorAppointments";
-import DoctorAppointmentDetails from "../pages/Doctor/DoctorAppointmentDetails";
-import DoctorConsultation from "../pages/Doctor/DoctorConsultation";
-import DoctorPatients from "../pages/Doctor/DoctorPatients";
+import DoctorDashboard from "../pages/Doctor/DoctorDashboard/DoctorDashboard";
+import DoctorProfile from "../pages/Doctor/DoctorProfile/DoctorProfile";
+import DoctorEditProfile from "../pages/Doctor/DoctorEditProfile/DoctorEditProfile";
+import DoctorAppointments from "../pages/Doctor/DoctorAppointments/DoctorAppointments";
+import DoctorAppointmentDetails from "../pages/Doctor/DoctorAppointmentDetails/DoctorAppointmentDetails";
+import DoctorConsultation from "../pages/Doctor/DoctorConsultation/DoctorConsultation";
+import DoctorPatients from "../pages/Doctor/DoctorPatients/DoctorPatients";
 import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions";
 import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords";
 import DoctorNotifications from "../pages/Doctor/DoctorNotifications";
