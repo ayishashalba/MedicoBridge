@@ -1,11 +1,15 @@
 import React from "react";
+import { FaTachometerAlt } from "react-icons/fa";
+import PlaceholderPage from "../../components/PlaceholderPage/PlaceholderPage";
 
 function DoctorDashboard() {
   return (
-    <div style={{ padding: "2rem", textAlign: "center" }}>
-      <h1>Doctor Dashboard</h1>
-      <p>View patient queues, medical history, and consultation schedule.</p>
-    </div>
+    <PlaceholderPage
+      icon={<FaTachometerAlt />}
+      title="Doctor Dashboard Home"
+      description="View patient queues, medical history summaries, today's schedule at a glance, and consultation stats."
+      color="#0d9488"
+    />
   );
 }
 

@@ -21,9 +21,20 @@ import HospitalRegister from "../pages/Register/HospitalRegister";
 import PharmacyRegister from "../pages/Register/PharmacyRegister";
 
 // Other dashboards (placeholders)
-import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
 import HospitalDashboard from "../pages/Hospital/HospitalDashboard";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+
+// ── Doctor Dashboard Layout & Pages ────────────────────────────
+import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
+import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
+import DoctorProfile from "../pages/Doctor/DoctorProfile";
+import DoctorAppointments from "../pages/Doctor/DoctorAppointments";
+import DoctorConsultation from "../pages/Doctor/DoctorConsultation";
+import DoctorPatients from "../pages/Doctor/DoctorPatients";
+import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions";
+import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords";
+import DoctorNotifications from "../pages/Doctor/DoctorNotifications";
+import DoctorSettings from "../pages/Doctor/DoctorSettings";
 
 // ── Patient Dashboard Layout & Pages ──────────────────────────
 import PatientLayout from "../layouts/PatientLayout/PatientLayout";
@@ -103,8 +114,20 @@ function AppRoutes() {
 
       </Route>
 
+      {/* ── Doctor Dashboard (nested layout) ─────────────── */}
+      <Route path="/doctor" element={<DoctorLayout />}>
+        <Route path="dashboard" element={<DoctorDashboard />} />
+        <Route path="profile" element={<DoctorProfile />} />
+        <Route path="appointments" element={<DoctorAppointments />} />
+        <Route path="consultation" element={<DoctorConsultation />} />
+        <Route path="patients" element={<DoctorPatients />} />
+        <Route path="prescriptions" element={<DoctorPrescriptions />} />
+        <Route path="medical-records" element={<DoctorMedicalRecords />} />
+        <Route path="notifications" element={<DoctorNotifications />} />
+        <Route path="settings" element={<DoctorSettings />} />
+      </Route>
+
       {/* ── Other Dashboards ──────────────────────────────── */}
-      <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
       <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
