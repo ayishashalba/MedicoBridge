@@ -28,6 +28,7 @@ import AdminDashboard from "../pages/Admin/AdminDashboard";
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
 import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
 import DoctorProfile from "../pages/Doctor/DoctorProfile";
+import DoctorEditProfile from "../pages/Doctor/DoctorEditProfile";
 import DoctorAppointments from "../pages/Doctor/DoctorAppointments";
 import DoctorConsultation from "../pages/Doctor/DoctorConsultation";
 import DoctorPatients from "../pages/Doctor/DoctorPatients";
