@@ -280,15 +280,17 @@
 /* Featured Medicines Grid */
 .medicine-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+    justify-content: center;
+    gap: 20px;
 }
 
 .medicine-card {
+    width: 200px;
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 19px;
+    padding: 16px;
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
