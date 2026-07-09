@@ -33,10 +33,10 @@ import DoctorAppointments from "../pages/Doctor/DoctorAppointments/DoctorAppoint
 import DoctorAppointmentDetails from "../pages/Doctor/DoctorAppointmentDetails/DoctorAppointmentDetails";
 import DoctorConsultation from "../pages/Doctor/DoctorConsultation/DoctorConsultation";
 import DoctorPatients from "../pages/Doctor/DoctorPatients/DoctorPatients";
-import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions";
-import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords";
-import DoctorNotifications from "../pages/Doctor/DoctorNotifications";
-import DoctorSettings from "../pages/Doctor/DoctorSettings";
+import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions/DoctorPrescriptions";
+import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords/DoctorMedicalRecords";
+import DoctorNotifications from "../pages/Doctor/DoctorNotifications/DoctorNotifications";
+import DoctorSettings from "../pages/Doctor/DoctorSettings/DoctorSettings";
 
 // ── Patient Dashboard Layout & Pages ──────────────────────────
 import PatientLayout from "../layouts/PatientLayout/PatientLayout";
