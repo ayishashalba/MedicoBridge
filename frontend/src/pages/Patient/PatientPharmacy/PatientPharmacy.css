@@ -200,7 +200,8 @@
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    color: #eab308; /* Gold Star */
+    color: #eab308;
+    /* Gold Star */
     font-weight: 600;
     font-size: 14px;
     margin: 0;
@@ -279,7 +280,7 @@
 /* Featured Medicines Grid */
 .medicine-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 24px;
 }
 
@@ -287,7 +288,7 @@
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
-    padding: 24px;
+    padding: 19px;
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -307,7 +308,7 @@
     font-size: 24px;
     color: var(--primary-color);
     background: var(--bg-secondary);
-    width: 48px;
+    width: 35px;
     height: 48px;
     border-radius: var(--radius-md);
     display: flex;
@@ -345,7 +346,8 @@
 
 .medicine-btn {
     width: 100%;
-    margin-top: auto; /* Push button to the bottom */
+    margin-top: auto;
+    /* Push button to the bottom */
     border: none;
     background: var(--secondary-color);
     color: var(--bg-primary);
