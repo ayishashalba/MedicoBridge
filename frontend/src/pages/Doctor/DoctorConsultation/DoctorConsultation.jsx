@@ -1,6 +1,6 @@
 import React from "react";
 import { FaVideo } from "react-icons/fa";
-import PlaceholderPage from "../../components/PlaceholderPage/PlaceholderPage";
+import PlaceholderPage from "../../../components/PlaceholderPage/PlaceholderPage";
 
 function DoctorConsultation() {
   return (
