@@ -26,11 +26,6 @@ const sidebarNavItems = [
     path: "/doctor/dashboard",
   },
   {
-    label: "My Profile",
-    icon: <FaUserMd />,
-    path: "/doctor/profile",
-  },
-  {
     label: "Appointments",
     icon: <FaCalendarCheck />,
     path: "/doctor/appointments",
@@ -84,7 +79,15 @@ function DoctorLayout() {
 
   const getPageTitle = () => {
     const currentPath = location.pathname;
-    const matchedItem = sidebarNavItems.find((item) => item.path === currentPath);
+
+    if (currentPath === "/doctor/profile") {
+      return "My Profile";
+    }
+
+    const matchedItem = sidebarNavItems.find(
+      (item) => item.path === currentPath
+    );
+
     return matchedItem ? matchedItem.label : "Doctor Portal";
   };
 
