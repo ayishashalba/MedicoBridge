@@ -41,38 +41,66 @@ function DoctorAppointmentDetails() {
                 <h2>Appointment Details</h2>
 
                 <div className="detail-row">
-                    <FaUser />
-                    <span><strong>Patient:</strong> {appointment.patient}</span>
+                    <div className="detail-icon">
+                        <FaUser />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Patient:</strong> {appointment.patient}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaUser />
-                    <span><strong>Age:</strong> {appointment.age}</span>
+                    <div className="detail-icon">
+                        <FaUser />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Age:</strong> {appointment.age}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaUser />
-                    <span><strong>Gender:</strong> {appointment.gender}</span>
+                    <div className="detail-icon">
+                        <FaUser />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Gender:</strong> {appointment.gender}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaCalendarAlt />
-                    <span><strong>Date:</strong> {appointment.date}</span>
+                    <div className="detail-icon">
+                        <FaCalendarAlt />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Date:</strong> {appointment.date}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaClock />
-                    <span><strong>Time:</strong> {appointment.time}</span>
+                    <div className="detail-icon">
+                        <FaClock />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Time:</strong> {appointment.time}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaVideo />
-                    <span><strong>Consultation:</strong> {appointment.type}</span>
+                    <div className="detail-icon">
+                        <FaVideo />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Consultation:</strong> {appointment.type}</span>
+                    </div>
                 </div>
 
                 <div className="detail-row">
-                    <FaNotesMedical />
-                    <span><strong>Symptoms:</strong> {appointment.symptoms}</span>
+                    <div className="detail-icon">
+                        <FaNotesMedical />
+                    </div>
+                    <div className="detail-content">
+                        <span className="detail-value"><strong>Symptoms:</strong> {appointment.symptoms}</span>
+                    </div>
                 </div>
 
                 <div className="button-group">
