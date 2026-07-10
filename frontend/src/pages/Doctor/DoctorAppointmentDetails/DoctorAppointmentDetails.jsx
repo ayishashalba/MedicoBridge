@@ -91,7 +91,10 @@ function DoctorAppointmentDetails() {
 
                 <div className="button-group">
 
-                    <button className="start-btn">
+                    <button
+                        className="start-btn"
+                        onClick={() => navigate("/doctor/consultation-room/1")}
+                    >
                         <FaPlay />
                         Start Consultation
                     </button>

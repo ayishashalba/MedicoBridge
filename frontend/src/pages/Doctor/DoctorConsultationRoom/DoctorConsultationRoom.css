@@ -1,0 +1,200 @@
+.consultation-room {
+    padding: 30px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Back Button */
+
+.back-btn {
+    border: none;
+    background: #0ea5e9;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 25px;
+    transition: .3s;
+}
+
+.back-btn:hover {
+    background: #0284c7;
+}
+
+/* Layout */
+
+.consultation-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 25px;
+}
+
+/* Video */
+
+.video-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+}
+
+.video-box {
+    height: 420px;
+    border-radius: 14px;
+    background: #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #475569;
+}
+
+.patient-icon {
+    font-size: 80px;
+    color: #0ea5e9;
+    margin-bottom: 20px;
+}
+
+.video-box h3 {
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.video-controls {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* Buttons */
+
+.icon-btn,
+.end-btn {
+    border: none;
+    cursor: pointer;
+    border-radius: 12px;
+    transition: .3s;
+}
+
+.icon-btn {
+    width: 55px;
+    height: 55px;
+    background: #0ea5e9;
+    color: white;
+    font-size: 20px;
+}
+
+.icon-btn:hover {
+    background: #0284c7;
+}
+
+.end-btn {
+    background: #ef4444;
+    color: white;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.end-btn:hover {
+    background: #dc2626;
+}
+
+/* Notes */
+
+.notes-section {
+    background: #fff;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+}
+
+.notes-section h2 {
+    margin-bottom: 20px;
+    color: #0f172a;
+}
+
+.notes-section label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.notes-section textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    resize: none;
+    outline: none;
+    font-size: 15px;
+    font-family: inherit;
+}
+
+.notes-section textarea:focus {
+    border-color: #0ea5e9;
+}
+
+/* Save */
+
+.save-btn {
+    margin-top: 25px;
+    width: 100%;
+    border: none;
+    padding: 14px;
+    border-radius: 10px;
+    background: #16a34a;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: .3s;
+}
+
+.save-btn:hover {
+    background: #15803d;
+}
+
+/* Responsive */
+
+@media (max-width: 992px) {
+
+    .consultation-container {
+        grid-template-columns: 1fr;
+    }
+
+    .video-box {
+        height: 300px;
+    }
+
+}
+
+@media (max-width:768px) {
+
+    .consultation-room {
+        padding: 20px;
+    }
+
+    .video-controls {
+        flex-wrap: wrap;
+    }
+
+    .icon-btn,
+    .end-btn {
+        width: 100%;
+        justify-content: center;
+        height: 50px;
+    }
+
+}

@@ -32,6 +32,7 @@ import DoctorEditProfile from "../pages/Doctor/DoctorEditProfile/DoctorEditProfi
 import DoctorAppointments from "../pages/Doctor/DoctorAppointments/DoctorAppointments";
 import DoctorAppointmentDetails from "../pages/Doctor/DoctorAppointmentDetails/DoctorAppointmentDetails";
 import DoctorConsultation from "../pages/Doctor/DoctorConsultation/DoctorConsultation";
+import DoctorConsultationRoom from "../pages/Doctor/DoctorConsultationRoom/DoctorConsultationRoom";
 import DoctorPatients from "../pages/Doctor/DoctorPatients/DoctorPatients";
 import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions/DoctorPrescriptions";
 import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords/DoctorMedicalRecords";
@@ -124,6 +125,7 @@ function AppRoutes() {
         <Route path="appointments" element={<DoctorAppointments />} />
         <Route path="appointments/:id" element={<DoctorAppointmentDetails />} />
         <Route path="consultation" element={<DoctorConsultation />} />
+        <Route path="consultation/:id/room" element={<DoctorConsultationRoom />} />
         <Route path="patients" element={<DoctorPatients />} />
         <Route path="prescriptions" element={<DoctorPrescriptions />} />
         <Route path="medical-records" element={<DoctorMedicalRecords />} />
