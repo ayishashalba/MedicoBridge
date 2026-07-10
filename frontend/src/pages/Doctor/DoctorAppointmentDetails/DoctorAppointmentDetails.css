@@ -37,10 +37,40 @@
 .detail-row {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 14px 0;
+    gap: 18px;
+    padding: 18px 0;
     border-bottom: 1px solid #e5e7eb;
-    color: #475569;
+
+}
+
+.detail-icon {
+    width: 45px;
+    height: 45px;
+    background: #e0f2fe;
+    color: #0284c7;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.detail-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.detail-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    margin-top: 4px;
 }
 
 .detail-row:last-child {
