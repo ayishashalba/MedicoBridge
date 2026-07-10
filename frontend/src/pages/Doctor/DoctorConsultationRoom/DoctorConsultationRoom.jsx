@@ -79,7 +79,10 @@ function DoctorConsultationRoom() {
                         placeholder="Enter medicines..."
                     />
 
-                    <button className="save-btn">
+                    <button
+                        className="save-btn"
+                        onClick={() => navigate("/doctor/prescription/new/1")}
+                    >
                         <FaSave />
                         Save Consultation
                     </button>
