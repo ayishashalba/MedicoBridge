@@ -1,0 +1,137 @@
+.prescription-page {
+    padding: 30px;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Back Button */
+
+.back-btn {
+    border: none;
+    background: #0ea5e9;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 25px;
+    transition: .3s;
+}
+
+.back-btn:hover {
+    background: #0284c7;
+}
+
+/* Card */
+
+.prescription-card {
+    max-width: 850px;
+    margin: auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 35px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+}
+
+.prescription-card h2 {
+    color: #0f172a;
+    margin-bottom: 30px;
+    font-size: 28px;
+}
+
+/* Patient Info */
+
+.patient-info {
+    display: flex;
+    gap: 40px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.patient-info p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #334155;
+    font-size: 16px;
+}
+
+.patient-info svg {
+    color: #0ea5e9;
+}
+
+/* Form */
+
+.prescription-card label {
+    display: block;
+    margin-bottom: 10px;
+    margin-top: 20px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.prescription-card textarea {
+    width: 100%;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: .3s;
+}
+
+.prescription-card textarea:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, .15);
+}
+
+/* Save Button */
+
+.save-btn {
+    margin-top: 30px;
+    width: 100%;
+    border: none;
+    background: #16a34a;
+    color: #fff;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transition: .3s;
+}
+
+.save-btn:hover {
+    background: #15803d;
+}
+
+/* Responsive */
+
+@media (max-width:768px) {
+
+    .prescription-page {
+        padding: 20px;
+    }
+
+    .prescription-card {
+        padding: 22px;
+    }
+
+    .patient-info {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .prescription-card h2 {
+        font-size: 24px;
+    }
+
+}
