@@ -10,6 +10,7 @@ import {
     FaPrint,
     FaDownload,
     FaPaperPlane,
+    FaEdit,
 } from "react-icons/fa";
 import "./DoctorPrescriptionPreview.css";
 
@@ -87,6 +88,14 @@ function DoctorPrescriptionPreview() {
                 </div>
 
                 <div className="action-buttons">
+
+                    <button
+                        className="edit-btn"
+                        onClick={() => navigate("/doctor/consultation-room/1")}
+                    >
+                        <FaEdit />
+                        Edit
+                    </button>
 
                     <button className="print-btn">
                         <FaPrint />
