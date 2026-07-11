@@ -64,7 +64,10 @@ Vitamin C - 1 Tablet - Morning"
                     placeholder="Doctor's advice..."
                 />
 
-                <button className="save-btn">
+                <button
+                    className="save-btn"
+                    onClick={() => navigate("/doctor/prescription-preview/1")}
+                >
                     <FaSave />
                     Save Prescription
                 </button>
