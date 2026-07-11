@@ -107,7 +107,10 @@ function DoctorPrescriptionPreview() {
                         Download PDF
                     </button>
 
-                    <button className="send-btn">
+                    <button
+                        className="send-btn"
+                        onClick={() => navigate("/doctor/prescription-success")}
+                    >
                         <FaPaperPlane />
                         Send to Patient
                     </button>

@@ -1,0 +1,123 @@
+.prescription-success-page {
+    min-height: 100vh;
+    background: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+}
+
+.success-card {
+    width: 100%;
+    max-width: 620px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+}
+
+.success-icon {
+    font-size: 80px;
+    color: #22c55e;
+    margin-bottom: 20px;
+}
+
+.success-card h2 {
+    color: #0f172a;
+    margin-bottom: 10px;
+}
+
+.success-message {
+    color: #64748b;
+    margin-bottom: 30px;
+}
+
+.success-details {
+    border-top: 1px solid #e5e7eb;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 20px 0;
+    margin-bottom: 30px;
+}
+
+.detail-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 15px 0;
+    color: #334155;
+}
+
+.detail-row svg {
+    color: #0ea5e9;
+    width: 20px;
+    font-size: 18px;
+}
+
+.label {
+    width: 90px;
+    font-weight: 600;
+}
+
+.colon {
+    font-weight: 700;
+}
+
+.value {
+    color: #0f172a;
+}
+
+.success-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.dashboard-btn,
+.appointments-btn {
+    border: none;
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    transition: .3s;
+}
+
+.dashboard-btn {
+    background: #0ea5e9;
+}
+
+.dashboard-btn:hover {
+    background: #0284c7;
+}
+
+.appointments-btn {
+    background: #16a34a;
+}
+
+.appointments-btn:hover {
+    background: #15803d;
+}
+
+@media (max-width:768px) {
+
+    .success-card {
+        padding: 25px;
+    }
+
+    .success-actions {
+        flex-direction: column;
+    }
+
+    .dashboard-btn,
+    .appointments-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
