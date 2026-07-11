@@ -91,7 +91,7 @@ function DoctorPrescriptionPreview() {
 
                     <button
                         className="edit-btn"
-                        onClick={() => navigate("/doctor/consultation-room/1")}
+                        onClick={() => navigate("/doctor/edit-prescription/1")}
                     >
                         <FaEdit />
                         Edit

@@ -7,7 +7,7 @@ import {
     FaPills,
     FaSave,
 } from "react-icons/fa";
-import "./DoctorPrescriptionForm.css";
+import "./DoctorEditPrescription.css";
 
 function DoctorPrescriptionForm() {
     const navigate = useNavigate();
@@ -75,4 +75,4 @@ Vitamin C - 1 Tablet - Morning"
     );
 }
 
-export default DoctorPrescriptionForm;
+export default DoctorEditPrescription;
