@@ -1,11 +1,11 @@
 import React from "react";
 import {
     FaArrowLeft,
-    FaMicrophone,
     FaVideo,
+    FaMicrophone,
     FaPhoneSlash,
-    FaSave,
     FaUser,
+    FaSave,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./DoctorConsultationRoom.css";
@@ -64,7 +64,7 @@ function DoctorConsultationRoom() {
                     <label>Symptoms</label>
                     <textarea
                         rows="3"
-                        placeholder="Enter symptoms..."
+                        placeholder="Enter patient symptoms..."
                     />
 
                     <label>Diagnosis</label>
@@ -75,13 +75,21 @@ function DoctorConsultationRoom() {
 
                     <label>Prescription</label>
                     <textarea
-                        rows="4"
-                        placeholder="Enter medicines..."
+                        rows="5"
+                        placeholder="Example:
+Paracetamol 650mg - 1 Tablet - Twice Daily
+Vitamin C - 1 Tablet - Morning"
+                    />
+
+                    <label>Doctor Advice</label>
+                    <textarea
+                        rows="3"
+                        placeholder="Enter doctor's advice..."
                     />
 
                     <button
                         className="save-btn"
-                        onClick={() => navigate("/doctor/prescription/new/1")}
+                        onClick={() => navigate("/doctor/prescription-preview/1")}
                     >
                         <FaSave />
                         Save Consultation
