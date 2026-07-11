@@ -33,7 +33,7 @@ import DoctorAppointments from "../pages/Doctor/DoctorAppointments/DoctorAppoint
 import DoctorAppointmentDetails from "../pages/Doctor/DoctorAppointmentDetails/DoctorAppointmentDetails";
 import DoctorConsultation from "../pages/Doctor/DoctorConsultation/DoctorConsultation";
 import DoctorConsultationRoom from "../pages/Doctor/DoctorConsultationRoom/DoctorConsultationRoom";
-import DoctorPrescriptionForm from "../pages/Doctor/DoctorEditPrescription/DoctorEditPrescription";
+import DoctorEditPrescription from "../pages/Doctor/DoctorEditPrescription/DoctorEditPrescription";
 import DoctorPrescriptionPreview from "../pages/Doctor/DoctorPrescriptionPreview/DoctorPrescriptionPreview";
 import DoctorPatients from "../pages/Doctor/DoctorPatients/DoctorPatients";
 import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions/DoctorPrescriptions";
@@ -129,6 +129,7 @@ function AppRoutes() {
         <Route path="consultation" element={<DoctorConsultation />} />
         <Route path="consultation-room/:id" element={<DoctorConsultationRoom />} />
         <Route path="prescription/new/:id" element={<DoctorEditPrescription />} />
+
         <Route path="prescription-preview/:id" element={<DoctorPrescriptionPreview />} />
         <Route path="patients" element={<DoctorPatients />} />
         <Route path="prescriptions" element={<DoctorPrescriptions />} />

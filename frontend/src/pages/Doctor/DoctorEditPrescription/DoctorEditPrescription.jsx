@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 import "./DoctorEditPrescription.css";
 
-function DoctorPrescriptionForm() {
+function DoctorEditPrescription() {
     const navigate = useNavigate();
 
     return (
