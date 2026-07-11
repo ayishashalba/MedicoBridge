@@ -37,7 +37,7 @@ import DoctorEditPrescription from "../pages/Doctor/DoctorEditPrescription/Docto
 import DoctorPrescriptionPreview from "../pages/Doctor/DoctorPrescriptionPreview/DoctorPrescriptionPreview";
 import DoctorPrescriptionSuccess from "../pages/Doctor/DoctorPrescriptionSuccess/DoctorPrescriptionSuccess";
 import DoctorPatients from "../pages/Doctor/DoctorPatients/DoctorPatients";
-import DoctorPatientDetails from "../pages/Doctor/DoctorPatientDetails/DoctorPatientDetails";
+import DoctorPatientDetails from "../pages/Doctor/DoctorPatients/DoctorPatientDetails";
 import DoctorPrescriptions from "../pages/Doctor/DoctorPrescriptions/DoctorPrescriptions";
 import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords/DoctorMedicalRecords";
 import DoctorNotifications from "../pages/Doctor/DoctorNotifications/DoctorNotifications";
