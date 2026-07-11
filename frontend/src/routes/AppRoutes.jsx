@@ -128,7 +128,10 @@ function AppRoutes() {
         <Route path="appointments/:id" element={<DoctorAppointmentDetails />} />
         <Route path="consultation" element={<DoctorConsultation />} />
         <Route path="consultation-room/:id" element={<DoctorConsultationRoom />} />
-        <Route path="prescription/new/:id" element={<DoctorEditPrescription />} />
+        <Route
+          path="edit-prescription/:id"
+          element={<DoctorEditPrescription />}
+        />
 
         <Route path="prescription-preview/:id" element={<DoctorPrescriptionPreview />} />
         <Route path="patients" element={<DoctorPatients />} />
