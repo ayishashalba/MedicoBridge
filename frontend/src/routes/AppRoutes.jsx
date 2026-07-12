@@ -43,6 +43,7 @@ import DoctorPrescriptionDetails from "../pages/Doctor/DoctorPrescriptionDetails
 import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords/DoctorMedicalRecords";
 import DoctorNotifications from "../pages/Doctor/DoctorNotifications/DoctorNotifications";
 import DoctorSettings from "../pages/Doctor/DoctorSettings/DoctorSettings";
+import DoctorReviews from "../pages/Doctor/DoctorReviews/DoctorReviews";
 
 // ── Patient Dashboard Layout & Pages ──────────────────────────
 import PatientLayout from "../layouts/PatientLayout/PatientLayout";
@@ -149,6 +150,7 @@ function AppRoutes() {
         <Route path="prescriptions/:id" element={<DoctorPrescriptionDetails />} />
         <Route path="medical-records" element={<DoctorMedicalRecords />} />
         <Route path="notifications" element={<DoctorNotifications />} />
+        <Route path="reviews" element={<DoctorReviews />} />
         <Route path="settings" element={<DoctorSettings />} />
       </Route>
 

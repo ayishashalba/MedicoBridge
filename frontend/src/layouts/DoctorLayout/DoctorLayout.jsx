@@ -16,6 +16,7 @@ import {
   FaTimes,
   FaChevronLeft,
   FaChevronRight,
+  FaStar,
 } from "react-icons/fa";
 import "./DoctorLayout.css";
 
@@ -57,6 +58,11 @@ const sidebarNavItems = [
     badge: 5,
   },
   {
+    label: "Reviews & Ratings",
+    icon: <FaStar />,
+    path: "/doctor/reviews",
+  },
+  {
     label: "Settings",
     icon: <FaCog />,
     path: "/doctor/settings",
@@ -82,6 +88,10 @@ function DoctorLayout() {
 
     if (currentPath === "/doctor/profile") {
       return "My Profile";
+    }
+
+    if (currentPath === "/doctor/reviews") {
+      return "Reviews & Ratings";
     }
 
     const matchedItem = sidebarNavItems.find(

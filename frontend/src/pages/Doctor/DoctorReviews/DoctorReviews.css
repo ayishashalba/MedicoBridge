@@ -1,0 +1,641 @@
+/* ================================================================
+   DoctorReviews.css — Reviews & Ratings Page
+   Matches MedicoBridge Doctor Portal blue-white theme
+   ================================================================ */
+
+/* ── Page ────────────────────────────────────────────────────── */
+.drr-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+}
+
+/* ── Page Header ─────────────────────────────────────────────── */
+.drr-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.drr-header-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.drr-page-title {
+    font-family: var(--font-heading);
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    letter-spacing: -0.4px;
+}
+
+.drr-title-icon {
+    color: #f59e0b;
+    font-size: 1.5rem;
+}
+
+.drr-page-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* ── Summary Section ─────────────────────────────────────────── */
+.drr-summary {
+    display: grid;
+    grid-template-columns: 220px 1fr auto;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* Average Rating Card */
+.drr-avg-card {
+    background: linear-gradient(145deg, #0d9488 0%, #0284c7 100%);
+    border-radius: var(--radius-lg);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.28);
+    color: #fff;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.drr-avg-card::before {
+    content: "★";
+    position: absolute;
+    bottom: -18px;
+    right: -12px;
+    font-size: 7rem;
+    opacity: 0.08;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.drr-avg-score {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -2px;
+    color: #fff;
+}
+
+.drr-avg-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    opacity: 0.85;
+}
+
+.drr-avg-total {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 0.3rem 0.9rem;
+    border-radius: var(--radius-full);
+}
+
+.drr-avg-total strong {
+    font-weight: 800;
+}
+
+/* Breakdown Card */
+.drr-breakdown-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.drr-breakdown-title {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.drr-breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.drr-breakdown-label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 24px;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.drr-breakdown-track {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.drr-breakdown-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drr-breakdown-fill--5 { background: linear-gradient(90deg, #10b981, #059669); }
+.drr-breakdown-fill--4 { background: linear-gradient(90deg, #34d399, #10b981); }
+.drr-breakdown-fill--3 { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.drr-breakdown-fill--2 { background: linear-gradient(90deg, #fb923c, #ea580c); }
+.drr-breakdown-fill--1 { background: linear-gradient(90deg, #f87171, #dc2626); }
+
+.drr-breakdown-count {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    min-width: 20px;
+    text-align: right;
+}
+
+/* Quick Stats */
+.drr-quick-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 160px;
+}
+
+.drr-qstat {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--primary-color);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.drr-qstat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.drr-qstat--highlight {
+    border-left-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.drr-qstat-val {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.drr-qstat--highlight .drr-qstat-val {
+    color: #d97706;
+}
+
+.drr-qstat-lbl {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ── Star Display ─────────────────────────────────────────────── */
+.drr-stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.drr-stars--sm { gap: 1px; }
+.drr-stars--md { gap: 2px; }
+.drr-stars--lg { gap: 3px; }
+
+.drr-star {
+    flex-shrink: 0;
+}
+
+.drr-stars--sm .drr-star { font-size: 0.72rem; }
+.drr-stars--md .drr-star { font-size: 0.9rem; }
+.drr-stars--lg .drr-star { font-size: 1.35rem; }
+
+.drr-star--filled { color: #f59e0b; }
+.drr-star--half   { color: #f59e0b; }
+.drr-star--empty  { color: #d1d5db; }
+
+/* ── Controls Row ────────────────────────────────────────────── */
+.drr-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Search */
+.drr-search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 1rem;
+    flex: 1;
+    min-width: 240px;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.drr-search:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+.drr-search-icon {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.drr-search input {
+    border: none;
+    outline: none;
+    font-size: 0.87rem;
+    color: var(--text-primary);
+    background: transparent;
+    flex: 1;
+    min-width: 0;
+}
+
+.drr-search input::placeholder { color: var(--text-muted); }
+
+.drr-search-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 0;
+    line-height: 1;
+    transition: color var(--transition-fast);
+    flex-shrink: 0;
+}
+.drr-search-clear:hover { color: #dc2626; }
+
+/* Filter Select */
+.drr-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 0.55rem 0.85rem;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.drr-filter-wrap:focus-within {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
+.drr-filter-icon {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.drr-filter-select {
+    border: none;
+    outline: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+    min-width: 130px;
+}
+
+.drr-results-count {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    white-space: nowrap;
+    padding: 0.55rem 0;
+    margin-left: auto;
+}
+
+/* ── Reviews Grid ────────────────────────────────────────────── */
+.drr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.25rem;
+}
+
+/* ── Review Card ─────────────────────────────────────────────── */
+.drr-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.drr-card::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    border-radius: 2px 0 0 2px;
+    background: linear-gradient(180deg, #0d9488, #0284c7);
+}
+
+.drr-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+}
+
+/* Card Header */
+.drr-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.drr-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.drr-card-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.drr-patient-name {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.drr-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Consultation Type Badge */
+.drr-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.drr-type-badge--online {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.drr-type-badge--hospital {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+/* Card Rating Row */
+.drr-card-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.drr-rating-num {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+/* Review Text */
+.drr-review-text {
+    font-size: 0.86rem;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    flex: 1;
+    position: relative;
+    padding-left: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.drr-quote-icon {
+    color: var(--primary-color);
+    font-size: 0.7rem;
+    opacity: 0.5;
+    margin-right: 0.4rem;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+/* Card Footer */
+.drr-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.9rem;
+    margin-top: 0.1rem;
+}
+
+.drr-helpful-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.38rem 0.8rem;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.drr-helpful-btn:hover {
+    background: var(--bg-accent);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.drr-helpful-btn--liked {
+    background: var(--bg-accent);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.drr-helpful-btn--liked svg {
+    color: var(--primary-color);
+}
+
+/* Rating chip */
+.drr-rating-chip {
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+}
+
+.drr-rating-chip--5 { background: #f0fdf4; color: #16a34a; }
+.drr-rating-chip--4 { background: #f0fdf4; color: #15803d; }
+.drr-rating-chip--3 { background: #fef3c7; color: #d97706; }
+.drr-rating-chip--2 { background: #fff7ed; color: #ea580c; }
+.drr-rating-chip--1 { background: #fef2f2; color: #dc2626; }
+
+/* ── Empty State ─────────────────────────────────────────────── */
+.drr-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 4rem 2rem;
+    text-align: center;
+    background: var(--bg-primary);
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    color: var(--text-muted);
+}
+
+.drr-empty-icon {
+    font-size: 3rem;
+    color: #f59e0b;
+    opacity: 0.35;
+}
+
+.drr-empty h3 {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.drr-empty p {
+    font-size: 0.87rem;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+
+@media screen and (max-width: 1100px) {
+    .drr-summary {
+        grid-template-columns: 200px 1fr;
+    }
+    .drr-quick-stats {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+        min-width: unset;
+    }
+    .drr-qstat {
+        flex: 1;
+        min-width: 130px;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .drr-grid { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); }
+    .drr-summary {
+        grid-template-columns: 1fr 1fr;
+    }
+    .drr-avg-card {
+        grid-column: 1 / -1;
+        flex-direction: row;
+        justify-content: center;
+        gap: 1.5rem;
+        padding: 1.4rem 2rem;
+    }
+    .drr-avg-card::before { display: none; }
+}
+
+@media screen and (max-width: 768px) {
+    .drr-controls { flex-direction: column; align-items: stretch; }
+    .drr-search    { min-width: unset; }
+    .drr-filter-wrap { width: 100%; }
+    .drr-filter-select { width: 100%; }
+    .drr-results-count { margin-left: 0; text-align: center; }
+    .drr-page-title { font-size: 1.45rem; }
+    .drr-summary { grid-template-columns: 1fr; }
+    .drr-avg-card { flex-direction: column; }
+    .drr-quick-stats { flex-direction: row; flex-wrap: wrap; }
+}
+
+@media screen and (max-width: 640px) {
+    .drr-grid { grid-template-columns: 1fr; }
+    .drr-quick-stats { flex-direction: row; }
+    .drr-qstat { flex: 1 1 calc(50% - 0.4rem); }
+}
+
+@media screen and (max-width: 420px) {
+    .drr-page-title { font-size: 1.2rem; }
+    .drr-avg-score  { font-size: 2.8rem; }
+    .drr-card-footer { flex-direction: column; gap: 0.5rem; align-items: flex-start; }
+}
