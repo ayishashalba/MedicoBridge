@@ -18,8 +18,8 @@ import {
   FaChevronRight,
   FaHospital,
 } from "react-icons/fa";
-import "./hospital-shared.css";
 import "./HospitalLayout.css";
+import "./hospital-shared.css";
 
 const sidebarNavItems = [
   {
