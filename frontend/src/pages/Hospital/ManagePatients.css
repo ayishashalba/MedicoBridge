@@ -1,0 +1,156 @@
+/* ================================================================
+   ManagePatients.css — Hospital Portal Patient Records Table
+   Matches the MedicoBridge design token system (Healing Blue Theme)
+   ================================================================ */
+
+.hosp-pats-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Controls and Filters */
+.hosp-pats-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hosp-pats-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.hosp-pats-search:focus-within {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.hosp-pats-search input {
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background: transparent;
+  width: 100%;
+}
+
+.hosp-pats-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Card table container */
+.hosp-pats-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hosp-pat-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hosp-pat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.hosp-pat-sub {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Status Badges */
+.hosp-status-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  display: inline-block;
+}
+
+.hosp-status-badge--admitted { background-color: #fee2e2; color: #dc2626; }
+.hosp-status-badge--discharged { background-color: #dcfce7; color: #16a34a; }
+.hosp-status-badge--outpatient { background-color: #e0f2fe; color: #0284c7; }
+
+/* Buttons */
+.hosp-btn-discharge {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.hosp-btn-discharge:hover {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.hosp-action-disabled {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Empty Table State */
+.hosp-table-empty {
+  text-align: center;
+  padding: 5rem 2rem !important;
+  color: var(--text-muted);
+}
+
+.hosp-table-empty h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.hosp-table-empty p {
+  font-size: 0.84rem;
+}
+
+/* Form Row Helper */
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group.half {
+  flex: 1;
+}
+
+@media screen and (max-width: 640px) {
+  .form-row {
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+}

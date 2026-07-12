@@ -1,0 +1,121 @@
+/* ================================================================
+   BillingManagement.css — Hospital Portal Billing Ledger
+   Matches the MedicoBridge design token system (Healing Blue Theme)
+   ================================================================ */
+
+.hosp-bill-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Controls */
+.hosp-bill-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hosp-bill-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-bill-search input {
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background: transparent;
+  width: 100%;
+}
+
+.hosp-bill-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hosp-bill-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hosp-bill-id-badge {
+  font-weight: 700;
+  color: var(--secondary-color);
+  background-color: var(--secondary-light);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.74rem;
+}
+
+.hosp-bill-pat-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.hosp-bill-pat-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-bill-pat-id {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.hosp-bill-amount {
+  font-weight: 800;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+/* Statuses */
+.hosp-bill-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+}
+
+.status--paid    { background-color: #dcfce7; color: #16a34a; }
+.status--pending { background-color: #fffbeb; color: #d97706; }
+.status--unpaid  { background-color: #fee2e2; color: #dc2626; }
+
+/* Buttons */
+.hosp-btn-pay {
+  background-color: var(--secondary-color);
+  color: #fff;
+  border: none;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.hosp-btn-pay:hover {
+  background-color: var(--secondary-hover);
+}
+
+.hosp-bill-settled {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}

@@ -1,0 +1,211 @@
+/* ================================================================
+   HospitalAppointments.css — Hospital Portal Appointments Table
+   Matches the MedicoBridge design token system (Healing Blue Theme)
+   ================================================================ */
+
+.hosp-apts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Summary Grid */
+.hosp-apts-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.hosp-apts-summary-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  border-top: 3px solid var(--secondary-color);
+}
+
+.hosp-apts-summary-card.summary-card--confirmed { border-top-color: #16a34a; }
+.hosp-apts-summary-card.summary-card--pending   { border-top-color: #f59e0b; }
+.hosp-apts-summary-card.summary-card--completed { border-top-color: #8b5cf6; }
+
+.summary-val {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.summary-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 0.15rem;
+}
+
+/* Controls row */
+.hosp-apts-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hosp-apts-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-apts-search input {
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background: transparent;
+  width: 100%;
+}
+
+.hosp-apts-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.hosp-apts-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.hosp-apt-id-badge {
+  font-weight: 700;
+  color: var(--secondary-color);
+  background-color: var(--secondary-light);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.74rem;
+}
+
+.hosp-apt-pat-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-doc-info-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.hosp-doc-info-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-doc-info-spec {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.hosp-time-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.hosp-time-date {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hosp-time-hour {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+}
+
+/* Mode Badge */
+.hosp-mode-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.mode--in-person { background-color: #f1f5f9; color: var(--text-secondary); }
+.mode--video-call { background-color: var(--primary-light); color: var(--primary-color); }
+
+/* Statuses */
+.hosp-apt-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+}
+
+.status--pending   { background-color: #fffbeb; color: #d97706; }
+.status--confirmed { background-color: #dcfce7; color: #16a34a; }
+.status--completed { background-color: #f3e8ff; color: #8b5cf6; }
+.status--cancelled { background-color: #fee2e2; color: #dc2626; }
+
+/* Buttons inside tables */
+.hosp-action-buttons {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.hosp-btn-action {
+  background: none;
+  border: 1px solid var(--border-color);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: all var(--transition-fast);
+}
+
+.hosp-btn-action--confirm:hover {
+  background-color: #dcfce7;
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.hosp-btn-action--cancel:hover {
+  background-color: #fee2e2;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.hosp-btn-action--complete {
+  background-color: var(--secondary-light);
+  color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+.hosp-btn-action--complete:hover {
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+
+.hosp-action-done {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}

@@ -1,0 +1,433 @@
+/* ================================================================
+   HospitalDashboard.css — Hospital Portal Landing Dashboard
+   Matches the MedicoBridge blue-white color token system
+   ================================================================ */
+
+.hosp-dash-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+
+/* ─── KPI Grid ─── */
+.hosp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.hosp-kpi-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.hosp-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.hosp-kpi-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+
+/* KPI Accent Variations */
+.hosp-kpi-card--blue::before  { background-color: var(--secondary-color); }
+.hosp-kpi-card--teal::before  { background-color: var(--primary-color); }
+.hosp-kpi-card--purple::before { background-color: #8b5cf6; }
+.hosp-kpi-card--amber::before { background-color: #f59e0b; }
+
+.hosp-kpi-card--blue .hosp-kpi-icon-wrapper { background-color: var(--secondary-light); color: var(--secondary-color); }
+.hosp-kpi-card--teal .hosp-kpi-icon-wrapper { background-color: var(--primary-light); color: var(--primary-color); }
+.hosp-kpi-card--purple .hosp-kpi-icon-wrapper { background-color: #f5f3ff; color: #8b5cf6; }
+.hosp-kpi-card--amber .hosp-kpi-icon-wrapper { background-color: #fffbeb; color: #f59e0b; }
+
+.hosp-kpi-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.hosp-kpi-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.hosp-kpi-val {
+  font-family: var(--font-heading);
+  font-size: 1.85rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+.hosp-kpi-sub {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.hosp-kpi-icon-wrapper {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* ─── Card Design System ─── */
+.hosp-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-card-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.2px;
+}
+
+/* ─── Mid Section ─── */
+.hosp-mid-section {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+}
+
+.hosp-ward-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.hosp-ward-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hosp-ward-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+}
+
+.hosp-ward-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-ward-numbers {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.hosp-progress-track {
+  height: 7px;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.hosp-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hosp-progress-fill--red    { background-color: #ef4444; }
+.hosp-progress-fill--blue   { background-color: var(--secondary-color); }
+.hosp-progress-fill--teal   { background-color: var(--primary-color); }
+.hosp-progress-fill--amber  { background-color: #f59e0b; }
+
+/* Quick Ops */
+.hosp-ops-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.hosp-op-badge {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+  transition: all var(--transition-fast);
+}
+
+.hosp-op-badge:hover {
+  border-color: var(--secondary-color);
+  background-color: var(--secondary-light);
+}
+
+.hosp-op-badge--warning:hover {
+  border-color: #f59e0b;
+  background-color: #fffbeb;
+}
+
+.hosp-op-number {
+  font-family: var(--font-heading);
+  font-size: 1.65rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.hosp-op-badge:hover .hosp-op-number {
+  color: var(--secondary-color);
+}
+
+.hosp-op-badge--warning:hover .hosp-op-number {
+  color: #d97706;
+}
+
+.hosp-op-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Bottom Section ─── */
+.hosp-bottom-section {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+}
+
+/* Table styling */
+.hosp-table-wrapper {
+  overflow-x: auto;
+}
+
+.hosp-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.hosp-table th {
+  padding: 0.85rem 1rem;
+  background-color: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hosp-table td {
+  padding: 1.1rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.hosp-table tr:last-child td {
+  border-bottom: none;
+}
+
+.hosp-pat-id {
+  font-weight: 700;
+  color: var(--secondary-color);
+  background-color: var(--secondary-light);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.74rem;
+}
+
+.hosp-pat-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hosp-pat-name {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-pat-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Status Pills */
+.hosp-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: capitalize;
+}
+
+.hosp-status-pill--critical {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.hosp-status-pill--stable {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.hosp-status-pill--observation {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+/* Lab queue panel */
+.hosp-lab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.hosp-lab-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.hosp-lab-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.hosp-lab-patient {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.hosp-urgency-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.hosp-urgency-badge--high {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.hosp-urgency-badge--medium {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.hosp-urgency-badge--routine {
+  background-color: #f1f5f9;
+  color: var(--text-secondary);
+}
+
+.hosp-lab-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hosp-lab-test {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.hosp-lab-dept {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.hosp-lab-item-footer {
+  display: flex;
+  align-items: center;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.hosp-lab-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.hosp-spin {
+  animation: hosp-spin-keyframes 1.2s linear infinite;
+  color: var(--secondary-color);
+}
+
+@keyframes hosp-spin-keyframes {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media screen and (max-width: 1200px) {
+  .hosp-mid-section,
+  .hosp-bottom-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .hosp-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .hosp-ops-grid {
+    grid-template-columns: 1fr;
+  }
+}

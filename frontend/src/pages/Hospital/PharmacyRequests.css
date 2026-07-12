@@ -1,0 +1,227 @@
+/* ================================================================
+   PharmacyRequests.css — Hospital Portal Pharmacy Dispensary
+   Matches the MedicoBridge design token system (Healing Blue Theme)
+   ================================================================ */
+
+.hosp-pharma-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Controls */
+.hosp-pharma-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.hosp-pharma-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.55rem 0.95rem;
+  flex: 1;
+  min-width: 280px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-pharma-search input {
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background: transparent;
+  width: 100%;
+}
+
+.hosp-pharma-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Grid layout */
+.hosp-pharma-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.hosp-pharma-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.hosp-pharma-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.hosp-pharma-card--awaiting-dispense { border-top: 4px solid #f59e0b; }
+.hosp-pharma-card--dispensed { border-top: 4px solid #16a34a; }
+
+.hosp-pharma-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rx-id-badge {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+}
+
+.rx-status-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.rx-status-badge.status--awaiting-dispense { background-color: #fffbeb; color: #d97706; }
+.rx-status-badge.status--dispensed         { background-color: #dcfce7; color: #16a34a; }
+
+.hosp-pharma-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rx-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 0.35rem;
+}
+
+.rx-meta-lbl {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rx-meta-val {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.rx-medicines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+}
+
+.rx-medicines-list h4 {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.rx-med-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.15rem;
+}
+
+.med-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.med-qty {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.med-dose {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Card buttons */
+.hosp-pharma-btn {
+  width: 100%;
+  border: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.55rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  transition: all var(--transition-fast);
+}
+
+.hosp-pharma-btn--dispense {
+  background-color: var(--secondary-color);
+  color: #fff;
+}
+
+.hosp-pharma-btn--dispense:hover {
+  background-color: var(--secondary-hover);
+}
+
+.hosp-pharma-btn--print {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.hosp-pharma-btn--print:hover {
+  background-color: var(--border-color);
+}
+
+/* Empty */
+.hosp-pharma-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  background-color: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  text-align: center;
+  gap: 0.75rem;
+}
+
+.hosp-pharma-empty h3 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.hosp-pharma-empty p {
+  font-size: 0.84rem;
+}

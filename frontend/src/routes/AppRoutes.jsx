@@ -21,8 +21,20 @@ import HospitalRegister from "../pages/Register/HospitalRegister";
 import PharmacyRegister from "../pages/Register/PharmacyRegister";
 
 // Other dashboards (placeholders)
-import HospitalDashboard from "../pages/Hospital/HospitalDashboard";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+
+// ── Hospital Dashboard Layout & Pages ──────────────────────────
+import HospitalLayout from "../layouts/HospitalLayout/HospitalLayout";
+import HospitalDashboard from "../pages/Hospital/HospitalDashboard";
+import ManageDoctors from "../pages/Hospital/ManageDoctors";
+import ManagePatients from "../pages/Hospital/ManagePatients";
+import HospitalAppointments from "../pages/Hospital/HospitalAppointments";
+import BedManagement from "../pages/Hospital/BedManagement";
+import LabReports from "../pages/Hospital/LabReports";
+import PharmacyRequests from "../pages/Hospital/PharmacyRequests";
+import BillingManagement from "../pages/Hospital/BillingManagement";
+import HospitalNotifications from "../pages/Hospital/HospitalNotifications";
+import HospitalSettings from "../pages/Hospital/HospitalSettings";
 
 // ── Doctor Dashboard Layout & Pages ────────────────────────────
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
@@ -154,8 +166,20 @@ function AppRoutes() {
         <Route path="settings" element={<DoctorSettings />} />
       </Route>
 
-      {/* ── Other Dashboards ──────────────────────────────── */}
-      <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
+      {/* ── Hospital Dashboard (nested layout) ─────────────── */}
+      <Route path="/hospital" element={<HospitalLayout />}>
+        <Route path="dashboard" element={<HospitalDashboard />} />
+        <Route path="doctors" element={<ManageDoctors />} />
+        <Route path="patients" element={<ManagePatients />} />
+        <Route path="appointments" element={<HospitalAppointments />} />
+        <Route path="beds" element={<BedManagement />} />
+        <Route path="labs" element={<LabReports />} />
+        <Route path="pharmacy" element={<PharmacyRequests />} />
+        <Route path="billing" element={<BillingManagement />} />
+        <Route path="notifications" element={<HospitalNotifications />} />
+        <Route path="settings" element={<HospitalSettings />} />
+      </Route>
+
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
 
       {/* ── 404 Fallback ──────────────────────────────────── */}

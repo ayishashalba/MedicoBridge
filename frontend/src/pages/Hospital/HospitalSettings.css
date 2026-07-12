@@ -1,0 +1,268 @@
+/* ================================================================
+   HospitalSettings.css — Hospital Portal Configurations Panel
+   Matches the MedicoBridge design token system (Healing Blue Theme)
+   ================================================================ */
+
+.hosp-settings-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Save Toast Alert */
+.hosp-settings-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background-color: #0f172a;
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10000;
+  animation: toast-slide-up 0.25s ease-out;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+@keyframes toast-slide-up {
+  from { transform: translateY(15px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.toast-icon {
+  color: #16a34a;
+  font-size: 1rem;
+}
+
+/* Page Container Layout */
+.hosp-settings-container {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.hosp-settings-sidebar {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-settings-nav-btn {
+  background: none;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.hosp-settings-nav-btn:hover {
+  background-color: var(--bg-secondary);
+  color: var(--secondary-color);
+}
+
+.hosp-settings-nav-btn.active {
+  background-color: var(--secondary-light);
+  color: var(--secondary-color);
+}
+
+.hosp-settings-nav-btn svg {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+/* Forms Panel Content */
+.hosp-settings-content {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.hosp-settings-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.panel-header p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.panel-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panel-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.panel-body label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.panel-body input,
+.panel-body select,
+.panel-body textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.panel-body input:focus,
+.panel-body select:focus,
+.panel-body textarea:focus {
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.panel-body textarea {
+  resize: vertical;
+}
+
+.hosp-btn-save {
+  background-color: var(--secondary-color);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1.4rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+  align-self: flex-start;
+  transition: all var(--transition-fast);
+  margin-top: 0.5rem;
+}
+
+.hosp-btn-save:hover {
+  background-color: var(--secondary-hover);
+  transform: translateY(-1px);
+}
+
+/* Toggle Switch Row */
+.form-group-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px dashed var(--border-color);
+}
+
+.form-group-toggle:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.toggle-info h4 {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.15rem;
+}
+
+.toggle-info p {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Switch styling */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch input {
+  display: none;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 24px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.switch input:checked + .slider {
+  background-color: var(--secondary-color);
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+/* ================================================================
+   RESPONSIVE DESIGN
+   ================================================================ */
+
+@media screen and (max-width: 768px) {
+  .hosp-settings-container {
+    grid-template-columns: 1fr;
+  }
+}
