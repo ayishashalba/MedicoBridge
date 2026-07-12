@@ -58,11 +58,6 @@ const sidebarNavItems = [
     badge: 5,
   },
   {
-    label: "Reviews & Ratings",
-    icon: <FaStar />,
-    path: "/doctor/reviews",
-  },
-  {
     label: "Settings",
     icon: <FaCog />,
     path: "/doctor/settings",
