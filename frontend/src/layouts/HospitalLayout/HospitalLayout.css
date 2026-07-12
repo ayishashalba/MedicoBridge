@@ -3,6 +3,57 @@
    Matches the MedicoBridge design token system (Healing Blue Theme)
    ================================================================ */
 
+:root {
+
+  /* Primary Colors */
+
+  --primary-color: #063b33;
+  --primary-dark: #042e28;
+
+  --secondary-color: #0ea5e9;
+  --secondary-hover: #0284c7;
+  --secondary-light: #e0f2fe;
+
+  /* Background */
+
+  --bg-primary: #ffffff;
+  --bg-secondary: #f4f8fc;
+  --bg-page: #eef5fb;
+
+  /* Text */
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+
+  /* Border */
+
+  --border-color: #e2e8f0;
+
+  /* Radius */
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-full: 999px;
+
+  /* Shadow */
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, .06);
+  --shadow-xl: 0 12px 30px rgba(0, 0, 0, .12);
+
+  /* Transition */
+
+  --transition-fast: .25s ease;
+
+  /* Fonts */
+
+  --font-heading: "Poppins", sans-serif;
+  --font-sans: "Inter", sans-serif;
+
+}
+
 .hospital-layout {
   display: flex;
   min-height: 100vh;
@@ -116,7 +167,8 @@
 }
 
 .sidebar-close-btn {
-  display: none; /* Desktop hidden */
+  display: none;
+  /* Desktop hidden */
 }
 
 /* Hospital Profile Card */
@@ -157,7 +209,8 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background-color: #16a34a; /* Active Green */
+  background-color: #16a34a;
+  /* Active Green */
   border: 2px solid var(--bg-primary);
 }
 
@@ -285,7 +338,8 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: #dc2626; /* Warning Red */
+  color: #dc2626;
+  /* Warning Red */
   font-size: 0.87rem;
   font-weight: 600;
   padding: 0 0.85rem;
@@ -328,7 +382,8 @@
 .hospital-main {
   flex: 1;
   margin-left: 260px;
-  min-width: 0; /* Prevents layout blowout */
+  min-width: 0;
+  /* Prevents layout blowout */
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -365,7 +420,8 @@
   color: var(--text-secondary);
   cursor: pointer;
   font-size: 1.2rem;
-  display: none; /* Desktop hidden */
+  display: none;
+  /* Desktop hidden */
 }
 
 .topnav-title {
@@ -479,6 +535,7 @@
   .hospital-sidebar {
     width: 78px;
   }
+
   .sidebar-logo-text,
   .profile-info,
   .nav-link-label,
@@ -486,18 +543,22 @@
   .sidebar-logout-btn .nav-link-label {
     display: none;
   }
+
   .sidebar-profile-card {
     padding: 0.5rem;
     background-color: transparent;
     border-color: transparent;
     margin: 1rem auto 0.5rem auto;
   }
+
   .sidebar-collapse-btn {
     display: none;
   }
+
   .hospital-main {
     margin-left: 78px;
   }
+
   .sidebar-expand-btn {
     display: none;
   }
@@ -506,45 +567,59 @@
 @media screen and (max-width: 768px) {
   .hospital-sidebar {
     width: 260px;
-    left: -260px; /* Hide offscreen */
+    left: -260px;
+    /* Hide offscreen */
     transition: transform var(--transition-normal);
   }
+
   .sidebar-mobile-open {
     transform: translateX(260px);
   }
+
   .sidebar-logo-text,
   .profile-info,
   .nav-link-label,
   .sidebar-logout-btn .nav-link-label {
-    display: flex; /* Restore layout on mobile drawer */
+    display: flex;
+    /* Restore layout on mobile drawer */
   }
+
   .sidebar-nav-link .nav-link-badge {
     display: block;
   }
+
   .sidebar-profile-card {
     padding: 1.25rem;
     background-color: var(--bg-secondary);
     border-color: var(--border-color);
     margin: 1rem 1rem 0.5rem 1rem;
   }
+
   .sidebar-close-btn {
     display: flex;
   }
+
   .hospital-main {
     margin-left: 0 !important;
   }
+
   .topnav-hamburger {
     display: flex;
   }
+
   .topnav-profile-btn {
     padding: 0.25rem;
   }
+
   .topnav-profile-info {
-    display: none; /* Hide name/role labels */
+    display: none;
+    /* Hide name/role labels */
   }
+
   .hospital-topnav {
     padding: 0 1rem;
   }
+
   .hospital-content {
     padding: 1rem;
   }
