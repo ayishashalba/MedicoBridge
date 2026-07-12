@@ -1,3 +1,7 @@
+body {
+  background: red !important;
+}
+
 /* ================================================================
    HospitalLayout.css — Hospital Portal Sidebar & Main Container
    Matches the MedicoBridge design token system (Healing Blue Theme)
