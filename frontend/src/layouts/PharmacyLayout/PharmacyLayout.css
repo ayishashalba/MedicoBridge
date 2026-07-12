@@ -1,0 +1,562 @@
+/* ================================================================
+   PharmacyLayout.css — Sidebar + Layout for Pharmacy Portal
+   Theme: Deep Teal Gradient sidebar + White main area
+   ================================================================ */
+
+:root {
+  --ph-primary:        #0d9488;
+  --ph-primary-dark:   #0f766e;
+  --ph-secondary:      #0ea5e9;
+  --ph-secondary-hover:#0284c7;
+  --ph-secondary-light:#e0f2fe;
+  --ph-accent:         #6366f1;
+
+  --bg-primary:        #ffffff;
+  --bg-secondary:      #f4f8fc;
+  --bg-page:           #eef5fb;
+
+  --text-primary:      #0f172a;
+  --text-secondary:    #475569;
+  --text-muted:        #94a3b8;
+
+  --border-color:      #e2e8f0;
+
+  --radius-sm:         8px;
+  --radius-md:         12px;
+  --radius-lg:         18px;
+  --radius-xl:         22px;
+  --radius-full:       999px;
+
+  --shadow-sm:         0 4px 12px rgba(0,0,0,.06);
+  --shadow-md:         0 6px 20px rgba(0,0,0,.09);
+  --shadow-xl:         0 12px 30px rgba(0,0,0,.12);
+
+  --transition-fast:   .22s ease;
+  --transition-normal: .3s ease;
+
+  --font-heading:      "Poppins", sans-serif;
+  --font-sans:         "Inter", sans-serif;
+}
+
+/* ── Root layout ─────────────────────────────────────────────── */
+.pharmacy-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-page);
+  font-family: var(--font-sans);
+  position: relative;
+}
+
+/* ── Overlay (mobile) ────────────────────────────────────────── */
+.phlay-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.42);
+  z-index: 800;
+  backdrop-filter: blur(3px);
+  animation: fadeOverlay .2s ease;
+}
+
+@keyframes fadeOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.phlay-sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0c1a2e 0%, #0d2137 45%, #0a2940 100%);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 900;
+  transition: width var(--transition-normal), transform var(--transition-normal);
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0,0,0,.18);
+}
+
+.phlay-sidebar--collapsed {
+  width: 78px;
+}
+
+/* ── Sidebar Header ──────────────────────────────────────────── */
+.phlay-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+  gap: 0.5rem;
+  min-height: 72px;
+}
+
+.phlay-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.phlay-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--ph-primary), var(--ph-secondary));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(13,148,136,.35);
+}
+
+.phlay-logo-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.phlay-brand-name {
+  font-family: var(--font-heading);
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phlay-brand-tag {
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.phlay-collapse-btn,
+.phlay-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.74rem;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.phlay-collapse-btn:hover,
+.phlay-close-btn:hover {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+}
+
+.phlay-close-btn { display: none; } /* Desktop */
+
+/* ── Profile Card ────────────────────────────────────────────── */
+.phlay-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 1rem;
+  padding: 0.95rem 1rem;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.phlay-profile-card--collapsed {
+  justify-content: center;
+  padding: 0.5rem;
+  background: transparent;
+  border-color: transparent;
+  margin: 0.75rem auto;
+  width: 46px;
+}
+
+.phlay-profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.phlay-profile-avatar {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, var(--ph-primary), var(--ph-secondary));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.phlay-profile-dot {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #22c55e;
+  border: 2px solid #0c1a2e;
+}
+
+.phlay-profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.phlay-profile-name {
+  font-family: var(--font-heading);
+  font-size: 0.87rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phlay-profile-role {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,.5);
+  margin: 0.1rem 0 0.3rem;
+}
+
+.phlay-profile-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--ph-secondary);
+  background: rgba(14,165,233,.15);
+  padding: 0.12rem 0.5rem;
+  border-radius: var(--radius-full);
+  width: fit-content;
+  letter-spacing: 0.3px;
+}
+
+/* ── Nav Items ───────────────────────────────────────────────── */
+.phlay-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.08) transparent;
+}
+
+.phlay-nav::-webkit-scrollbar { width: 4px; }
+.phlay-nav::-webkit-scrollbar-track { background: transparent; }
+.phlay-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,.08); border-radius: 4px; }
+
+.phlay-nav-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.phlay-nav-item { margin: 0.18rem 0.75rem; }
+
+.phlay-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.72rem 1rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: rgba(255,255,255,.55);
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  position: relative;
+  white-space: nowrap;
+}
+
+.phlay-nav-link:hover {
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.9);
+}
+
+.phlay-nav-link--active {
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  font-weight: 700;
+  border-left: 3px solid var(--ph-secondary);
+}
+
+.phlay-nav-icon {
+  font-size: 0.96rem;
+  flex-shrink: 0;
+  width: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phlay-nav-label { flex: 1; }
+
+.phlay-nav-badge {
+  background: linear-gradient(135deg, var(--ph-primary), var(--ph-secondary));
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  text-align: center;
+}
+
+.phlay-nav-badge--dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border-radius: 50%;
+  min-width: unset;
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+/* ── Sidebar Footer ──────────────────────────────────────────── */
+.phlay-sidebar-footer {
+  padding: 1rem 0.75rem 1.25rem;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+.phlay-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.72rem 1rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: #f87171;
+  font-size: 0.87rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.phlay-logout-btn:hover {
+  background: rgba(248,113,113,.1);
+  color: #fca5a5;
+}
+
+/* ── Expand Button (desktop collapsed) ──────────────────────── */
+.phlay-expand-btn {
+  position: fixed;
+  top: 50%;
+  left: 78px;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 40px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-left: none;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  z-index: 890;
+  box-shadow: 2px 0 8px rgba(0,0,0,.08);
+  transition: all var(--transition-fast);
+}
+
+.phlay-expand-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--ph-secondary);
+}
+
+/* ── Main Area ───────────────────────────────────────────────── */
+.phlay-main {
+  flex: 1;
+  margin-left: 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left var(--transition-normal);
+}
+
+.phlay-main--expanded { margin-left: 78px; }
+
+/* ── Top Navbar ──────────────────────────────────────────────── */
+.phlay-topnav {
+  height: 64px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+.phlay-topnav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.phlay-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.phlay-topnav-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.phlay-topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.phlay-topnav-icon {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 1rem;
+  transition: all var(--transition-fast);
+}
+
+.phlay-topnav-icon:hover {
+  background: var(--ph-secondary-light);
+  color: var(--ph-secondary);
+  border-color: var(--ph-secondary);
+}
+
+.phlay-topnav-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, var(--ph-primary), var(--ph-secondary));
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-primary);
+}
+
+.phlay-topnav-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.phlay-topnav-profile:hover {
+  background: var(--ph-secondary-light);
+  border-color: var(--ph-secondary);
+}
+
+.phlay-topnav-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--ph-primary), var(--ph-secondary));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.phlay-topnav-profile-info { display: flex; flex-direction: column; }
+
+.phlay-topnav-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.phlay-topnav-role {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Content Area ────────────────────────────────────────────── */
+.phlay-content {
+  flex: 1;
+  padding: 1.75rem;
+  overflow-x: hidden;
+}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media screen and (max-width: 1100px) {
+  .phlay-sidebar { width: 78px; }
+  .phlay-brand-tag, .phlay-brand-name, .phlay-profile-info,
+  .phlay-nav-label, .phlay-logout-btn .phlay-nav-label { display: none; }
+  .phlay-profile-card { padding: 0.5rem; background: transparent; border-color: transparent; margin: 0.75rem auto; width: 46px; }
+  .phlay-collapse-btn { display: none; }
+  .phlay-main { margin-left: 78px; }
+  .phlay-expand-btn { display: none; }
+}
+
+@media screen and (max-width: 768px) {
+  .phlay-sidebar { width: 260px; left: -260px; transition: transform var(--transition-normal); }
+  .phlay-sidebar--open { transform: translateX(260px); }
+  .phlay-brand-tag, .phlay-brand-name, .phlay-profile-info,
+  .phlay-nav-label, .phlay-logout-btn .phlay-nav-label { display: flex; }
+  .phlay-nav-badge { display: block; }
+  .phlay-profile-card { padding: 1.25rem 1rem; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.1); margin: 1rem; width: auto; }
+  .phlay-close-btn { display: flex; }
+  .phlay-main { margin-left: 0 !important; }
+  .phlay-hamburger { display: flex; }
+  .phlay-topnav-profile-info { display: none; }
+  .phlay-topnav { padding: 0 1rem; }
+  .phlay-content { padding: 1rem; }
+}
