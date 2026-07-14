@@ -79,6 +79,18 @@ import PatientOrderSuccess from "../pages/Patient/PatientOrderSuccess/PatientOrd
 import PatientOrders from "../pages/Patient/PatientOrders/PatientOrders";
 import PatientOrderDetails from "../pages/Patient/PatientOrderDetails/PatientOrderDetails";
 
+// ── Pharmacy Dashboard Layout & Pages ─────────────────────────
+import PharmacyLayout from "../layouts/PharmacyLayout/PharmacyLayout";
+import PharmacyDashboard from "../pages/Pharmacy/PharmacyDashboard";
+import PrescriptionRequests from "../pages/Pharmacy/PrescriptionRequests";
+import MedicineInventory from "../pages/Pharmacy/MedicineInventory";
+import PharmacyOrders from "../pages/Pharmacy/PharmacyOrders";
+import PharmacyBilling from "../pages/Pharmacy/PharmacyBilling";
+import DeliveryTracking from "../pages/Pharmacy/DeliveryTracking";
+import PharmacyNotifications from "../pages/Pharmacy/PharmacyNotifications";
+import PharmacyProfile from "../pages/Pharmacy/PharmacyProfile";
+import PharmacySettings from "../pages/Pharmacy/PharmacySettings";
+
 // ── Inline placeholders ────────────────────────────────────────
 const AdminLoginPlaceholder = () => (
   <div style={{ padding: "120px 2rem", textAlign: "center" }}>
@@ -178,6 +190,19 @@ function AppRoutes() {
         <Route path="billing" element={<BillingManagement />} />
         <Route path="notifications" element={<HospitalNotifications />} />
         <Route path="settings" element={<HospitalSettings />} />
+      </Route>
+
+      {/* ── Pharmacy Dashboard (nested layout) ─────────────── */}
+      <Route path="/pharmacy" element={<PharmacyLayout />}>
+        <Route path="dashboard" element={<PharmacyDashboard />} />
+        <Route path="prescriptions" element={<PrescriptionRequests />} />
+        <Route path="inventory" element={<MedicineInventory />} />
+        <Route path="orders" element={<PharmacyOrders />} />
+        <Route path="billing" element={<PharmacyBilling />} />
+        <Route path="delivery" element={<DeliveryTracking />} />
+        <Route path="notifications" element={<PharmacyNotifications />} />
+        <Route path="profile" element={<PharmacyProfile />} />
+        <Route path="settings" element={<PharmacySettings />} />
       </Route>
 
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
