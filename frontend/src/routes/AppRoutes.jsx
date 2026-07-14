@@ -20,8 +20,19 @@ import DoctorRegister from "../pages/Register/DoctorRegister";
 import HospitalRegister from "../pages/Register/HospitalRegister";
 import PharmacyRegister from "../pages/Register/PharmacyRegister";
 
-// Other dashboards (placeholders)
+// ── Admin Dashboard Layout & Pages ─────────────────────────────
+import AdminLayout from "../layouts/AdminLayout/AdminLayout";
+import AdminLogin from "../pages/Admin/AdminLogin";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminUsers from "../pages/Admin/AdminUsers";
+import AdminApprovals from "../pages/Admin/AdminApprovals";
+import AdminAppointments from "../pages/Admin/AdminAppointments";
+import AdminReports from "../pages/Admin/AdminReports";
+import AdminSettings from "../pages/Admin/AdminSettings";
+import AdminNotifications from "../pages/Admin/AdminNotifications";
+import AdminFeedback from "../pages/Admin/AdminFeedback";
+import AdminLogs from "../pages/Admin/AdminLogs";
+import AdminProfile from "../pages/Admin/AdminProfile";
 
 // ── Hospital Dashboard Layout & Pages ──────────────────────────
 import HospitalLayout from "../layouts/HospitalLayout/HospitalLayout";
@@ -110,7 +121,7 @@ function AppRoutes() {
       <Route path="/login/doctor" element={<DoctorLogin />} />
       <Route path="/login/hospital" element={<HospitalLogin />} />
       <Route path="/login/pharmacy" element={<PharmacyLogin />} />
-      <Route path="/admin/login" element={<AdminLoginPlaceholder />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
 
       {/* ── Auth flows ────────────────────────────────────── */}
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -205,7 +216,19 @@ function AppRoutes() {
         <Route path="settings" element={<PharmacySettings />} />
       </Route>
 
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      {/* ── Admin Dashboard (nested layout) ───────────────── */}
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="approvals" element={<AdminApprovals />} />
+        <Route path="appointments" element={<AdminAppointments />} />
+        <Route path="reports" element={<AdminReports />} />
+        <Route path="settings" element={<AdminSettings />} />
+        <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="feedback" element={<AdminFeedback />} />
+        <Route path="logs" element={<AdminLogs />} />
+        <Route path="profile" element={<AdminProfile />} />
+      </Route>
 
       {/* ── 404 Fallback ──────────────────────────────────── */}
       <Route

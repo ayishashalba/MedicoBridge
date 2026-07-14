@@ -1,0 +1,567 @@
+/* ================================================================
+   AdminLayout.css — Sidebar + Layout for Admin Portal
+   Theme: Royal Slate + Indigo/Violet Accents
+   ================================================================ */
+
+:root {
+  --ad-primary:        #6366f1; /* Indigo */
+  --ad-primary-dark:   #4f46e5;
+  --ad-secondary:      #8b5cf6; /* Violet */
+  --ad-secondary-hover:#7c3aed;
+  --ad-secondary-light:#f5f3ff;
+  --ad-accent:         #0d9488; /* Teal */
+
+  --ad-bg-primary:     #ffffff;
+  --ad-bg-secondary:   #f8fafc;
+  --ad-bg-page:        #f1f5f9;
+
+  --ad-text-primary:   #0f172a;
+  --ad-text-secondary: #475569;
+  --ad-text-muted:     #94a3b8;
+
+  --ad-border-color:   #e2e8f0;
+
+  --ad-radius-sm:      8px;
+  --ad-radius-md:      12px;
+  --ad-radius-lg:      18px;
+  --ad-radius-xl:      22px;
+  --ad-radius-full:    999px;
+
+  --ad-shadow-sm:      0 4px 12px rgba(0,0,0,.04);
+  --ad-shadow-md:      0 6px 20px rgba(0,0,0,.06);
+  --ad-shadow-xl:      0 12px 30px rgba(0,0,0,.08);
+
+  --ad-transition-fast:   .22s ease;
+  --ad-transition-normal: .3s ease;
+}
+
+/* ── Root layout ─────────────────────────────────────────────── */
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--ad-bg-page);
+  font-family: var(--font-sans, "Inter", sans-serif);
+  position: relative;
+}
+
+/* ── Overlay (mobile) ────────────────────────────────────────── */
+.adlay-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,.4);
+  z-index: 800;
+  backdrop-filter: blur(3px);
+  animation: fadeAdOverlay .2s ease;
+}
+
+@keyframes fadeAdOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.adlay-sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 60%, #311042 100%);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 900;
+  transition: width var(--ad-transition-normal), transform var(--ad-transition-normal);
+  overflow: hidden;
+  box-shadow: 4px 0 24px rgba(0,0,0,.15);
+}
+
+.adlay-sidebar--collapsed {
+  width: 78px;
+}
+
+/* ── Sidebar Header ──────────────────────────────────────────── */
+.adlay-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  flex-shrink: 0;
+  gap: 0.5rem;
+  min-height: 72px;
+}
+
+.adlay-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.adlay-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, var(--ad-primary), var(--ad-secondary));
+  border-radius: var(--ad-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(99,102,241,.35);
+}
+
+.adlay-logo-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.adlay-brand-name {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.3px;
+}
+
+.adlay-brand-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255,255,255,.5);
+  letter-spacing: 0.8px;
+  white-space: nowrap;
+}
+
+.adlay-collapse-btn,
+.adlay-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--ad-transition-fast);
+}
+
+.adlay-collapse-btn:hover,
+.adlay-close-btn:hover {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+}
+
+.adlay-close-btn {
+  display: none;
+}
+
+/* ── Profile Card ────────────────────────────────────────────── */
+.adlay-profile-card {
+  padding: 1.25rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  transition: padding var(--ad-transition-normal);
+}
+
+.adlay-profile-card--collapsed {
+  padding: 1rem 0.5rem;
+  justify-content: center;
+}
+
+.adlay-profile-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.adlay-profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99,102,241,.15) 0%, rgba(139,92,246,.15) 100%);
+  border: 2px solid var(--ad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ad-primary);
+  font-size: 1.2rem;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(99,102,241,.2);
+}
+
+.adlay-profile-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #10b981;
+  border: 2px solid #0f172a;
+  border-radius: 50%;
+}
+
+.adlay-profile-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.adlay-profile-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adlay-profile-role {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0.05rem 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adlay-profile-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  background: rgba(99,102,241,.2);
+  color: #a5b4fc;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+/* ── Nav Items ───────────────────────────────────────────────── */
+.adlay-nav {
+  flex: 1;
+  padding: 1.25rem 0.75rem;
+  overflow-y: auto;
+}
+
+.adlay-nav::-webkit-scrollbar {
+  width: 4px;
+}
+.adlay-nav::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+}
+
+.adlay-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0;
+}
+
+.adlay-nav-link {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--ad-radius-md);
+  color: #94a3b8;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: all var(--ad-transition-fast);
+  text-decoration: none;
+  gap: 0.85rem;
+  position: relative;
+}
+
+.adlay-nav-link:hover {
+  background: rgba(255,255,255,.05);
+  color: #f1f5f9;
+}
+
+.adlay-nav-link--active {
+  background: linear-gradient(95deg, rgba(99,102,241,.15) 0%, rgba(139,92,246,.05) 100%);
+  color: #fff;
+  font-weight: 600;
+  border-left: 3px solid var(--ad-primary);
+  padding-left: calc(0.9rem - 3px);
+}
+
+.adlay-nav-icon {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.adlay-nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.adlay-nav-badge {
+  background: var(--ad-primary);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.adlay-nav-badge--dot {
+  width: 8px;
+  height: 8px;
+  background: var(--ad-primary);
+  border-radius: 50%;
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+/* ── Sidebar Footer / Logout ──────────────────────────────────── */
+.adlay-sidebar-footer {
+  padding: 1rem 0.75rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+
+.adlay-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--ad-radius-md);
+  color: #f43f5e;
+  background: transparent;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--ad-transition-fast);
+  gap: 0.85rem;
+  text-align: left;
+}
+
+.adlay-logout-btn:hover {
+  background: rgba(244,63,94,.08);
+}
+
+.adlay-expand-btn {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 58px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,.1);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,.25);
+  transition: left var(--ad-transition-normal);
+}
+
+/* ── Main Area ───────────────────────────────────────────────── */
+.adlay-main {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left var(--ad-transition-normal);
+  min-width: 0;
+}
+
+.adlay-main--expanded {
+  margin-left: 78px;
+}
+
+/* ── Topbar ──────────────────────────────────────────────────── */
+.adlay-topnav {
+  height: 72px;
+  background-color: #fff;
+  border-bottom: 1px solid var(--ad-border-color);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 700;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.adlay-topnav-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.adlay-hamburger {
+  display: none;
+  font-size: 1.25rem;
+  background: transparent;
+  border: none;
+  color: var(--ad-text-primary);
+  cursor: pointer;
+}
+
+.adlay-topnav-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ad-text-primary);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adlay-topnav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.adlay-topnav-icon {
+  position: relative;
+  font-size: 1.15rem;
+  color: var(--ad-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--ad-bg-secondary);
+  transition: all var(--ad-transition-fast);
+  cursor: pointer;
+}
+
+.adlay-topnav-icon:hover {
+  background: var(--ad-border-color);
+  color: var(--ad-text-primary);
+}
+
+.adlay-topnav-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #f43f5e;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+}
+
+.adlay-topnav-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--ad-border-color);
+}
+
+.adlay-topnav-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ad-primary), var(--ad-secondary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(99,102,241,.2);
+}
+
+.adlay-topnav-profile-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.adlay-topnav-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ad-text-primary);
+}
+
+.adlay-topnav-role {
+  font-size: 0.72rem;
+  color: var(--ad-text-secondary);
+}
+
+/* ── Content container ───────────────────────────────────────── */
+.adlay-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* ── Responsive adjustments ──────────────────────────────────── */
+@media (max-width: 1024px) {
+  .adlay-main {
+    margin-left: 0;
+  }
+  .adlay-main--expanded {
+    margin-left: 0;
+  }
+  .adlay-sidebar {
+    transform: translateX(-100%);
+  }
+  .adlay-sidebar--open {
+    transform: translateX(0);
+    width: 260px;
+  }
+  .adlay-hamburger {
+    display: block;
+  }
+  .adlay-close-btn {
+    display: flex;
+  }
+  .adlay-collapse-btn {
+    display: none;
+  }
+  .adlay-expand-btn {
+    display: none;
+  }
+  .adlay-topnav {
+    padding: 0 1.25rem;
+  }
+  .adlay-content {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .adlay-topnav-profile-info {
+    display: none;
+  }
+  .adlay-topnav-right {
+    gap: 0.75rem;
+  }
+}
