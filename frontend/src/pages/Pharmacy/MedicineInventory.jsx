@@ -2,52 +2,90 @@ import React, { useState } from "react";
 import { FaBoxes, FaSearch, FaFilter, FaPlus, FaTimes, FaEdit, FaExclamationTriangle } from "react-icons/fa";
 import "./PharmacyPages.css";
 
+const [editingId, setEditingId] = useState(null);
 const initialInventory = [
-  { id:"MED-001", name:"Paracetamol 500mg",    category:"Analgesic",      qty:18,   price:5,    expiry:"2027-03-01", manufacturer:"Sun Pharma",    status:"Low Stock"  },
-  { id:"MED-002", name:"Amoxicillin 250mg",    category:"Antibiotic",     qty:9,    price:35,   expiry:"2026-11-15", manufacturer:"Cipla",         status:"Low Stock"  },
-  { id:"MED-003", name:"Metformin 500mg",      category:"Antidiabetic",   qty:22,   price:12,   expiry:"2027-01-20", manufacturer:"Dr. Reddy's",   status:"Low Stock"  },
-  { id:"MED-004", name:"Atorvastatin 10mg",    category:"Statin",         qty:14,   price:28,   expiry:"2027-06-10", manufacturer:"Lupin",         status:"Low Stock"  },
-  { id:"MED-005", name:"Amlodipine 5mg",       category:"Antihypertensive",qty:120, price:18,   expiry:"2028-02-28", manufacturer:"Sun Pharma",    status:"In Stock"   },
-  { id:"MED-006", name:"Cetirizine 10mg",      category:"Antihistamine",  qty:95,   price:8,    expiry:"2027-09-05", manufacturer:"GSK",           status:"In Stock"   },
-  { id:"MED-007", name:"Losartan 50mg",        category:"Antihypertensive",qty:78,  price:22,   expiry:"2027-12-01", manufacturer:"Cipla",         status:"In Stock"   },
-  { id:"MED-008", name:"Omeprazole 20mg",      category:"Antacid",        qty:160,  price:14,   expiry:"2028-05-15", manufacturer:"Zydus",         status:"In Stock"   },
-  { id:"MED-009", name:"Doxycycline 100mg",    category:"Antibiotic",     qty:55,   price:42,   expiry:"2027-04-10", manufacturer:"Dr. Reddy's",   status:"In Stock"   },
-  { id:"MED-010", name:"Vitamin C 500mg",      category:"Supplement",     qty:200,  price:6,    expiry:"2028-01-01", manufacturer:"Himalaya",      status:"In Stock"   },
-  { id:"MED-011", name:"Ibuprofen 400mg",      category:"NSAID",          qty:0,    price:10,   expiry:"2026-08-20", manufacturer:"Abbott",        status:"Out of Stock"},
-  { id:"MED-012", name:"Aspirin 75mg",         category:"Antiplatelet",   qty:310,  price:4,    expiry:"2028-07-01", manufacturer:"Bayer",         status:"In Stock"   },
+  { id: "MED-001", name: "Paracetamol 500mg", category: "Analgesic", qty: 18, price: 5, expiry: "2027-03-01", manufacturer: "Sun Pharma", status: "Low Stock" },
+  { id: "MED-002", name: "Amoxicillin 250mg", category: "Antibiotic", qty: 9, price: 35, expiry: "2026-11-15", manufacturer: "Cipla", status: "Low Stock" },
+  { id: "MED-003", name: "Metformin 500mg", category: "Antidiabetic", qty: 22, price: 12, expiry: "2027-01-20", manufacturer: "Dr. Reddy's", status: "Low Stock" },
+  { id: "MED-004", name: "Atorvastatin 10mg", category: "Statin", qty: 14, price: 28, expiry: "2027-06-10", manufacturer: "Lupin", status: "Low Stock" },
+  { id: "MED-005", name: "Amlodipine 5mg", category: "Antihypertensive", qty: 120, price: 18, expiry: "2028-02-28", manufacturer: "Sun Pharma", status: "In Stock" },
+  { id: "MED-006", name: "Cetirizine 10mg", category: "Antihistamine", qty: 95, price: 8, expiry: "2027-09-05", manufacturer: "GSK", status: "In Stock" },
+  { id: "MED-007", name: "Losartan 50mg", category: "Antihypertensive", qty: 78, price: 22, expiry: "2027-12-01", manufacturer: "Cipla", status: "In Stock" },
+  { id: "MED-008", name: "Omeprazole 20mg", category: "Antacid", qty: 160, price: 14, expiry: "2028-05-15", manufacturer: "Zydus", status: "In Stock" },
+  { id: "MED-009", name: "Doxycycline 100mg", category: "Antibiotic", qty: 55, price: 42, expiry: "2027-04-10", manufacturer: "Dr. Reddy's", status: "In Stock" },
+  { id: "MED-010", name: "Vitamin C 500mg", category: "Supplement", qty: 200, price: 6, expiry: "2028-01-01", manufacturer: "Himalaya", status: "In Stock" },
+  { id: "MED-011", name: "Ibuprofen 400mg", category: "NSAID", qty: 0, price: 10, expiry: "2026-08-20", manufacturer: "Abbott", status: "Out of Stock" },
+  { id: "MED-012", name: "Aspirin 75mg", category: "Antiplatelet", qty: 310, price: 4, expiry: "2028-07-01", manufacturer: "Bayer", status: "In Stock" },
 ];
 
 const categories = ["All", "Analgesic", "Antibiotic", "Antidiabetic", "Statin", "Antihypertensive",
-                     "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement"];
+  "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement"];
 
 const statusColor = {
-  "In Stock":     { bg:"#dcfce7", color:"#16a34a" },
-  "Low Stock":    { bg:"#fef3c7", color:"#d97706" },
-  "Out of Stock": { bg:"#fee2e2", color:"#dc2626" },
+  "In Stock": { bg: "#dcfce7", color: "#16a34a" },
+  "Low Stock": { bg: "#fef3c7", color: "#d97706" },
+  "Out of Stock": { bg: "#fee2e2", color: "#dc2626" },
 };
 
-const emptyForm = { name:"", category:"Analgesic", qty:"", price:"", expiry:"", manufacturer:"", status:"In Stock" };
+const emptyForm = { name: "", category: "Analgesic", qty: "", price: "", expiry: "", manufacturer: "", status: "In Stock" };
 
 export default function MedicineInventory() {
   const [inventory, setInventory] = useState(initialInventory);
-  const [search,    setSearch]    = useState("");
+  const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
-  const [form,      setForm]      = useState(emptyForm);
+  const [form, setForm] = useState(emptyForm);
 
   const filtered = inventory.filter((m) => {
     const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase());
-    const matchCat    = catFilter === "All" || m.category === catFilter;
+    const matchCat = catFilter === "All" || m.category === catFilter;
     const matchStatus = statusFilter === "All" || m.status === statusFilter;
     return matchSearch && matchCat && matchStatus;
   });
 
-  const handleAdd = () => {
-    const newItem = { ...form, id: `MED-${String(inventory.length + 1).padStart(3,"0")}`, qty: Number(form.qty), price: Number(form.price) };
-    setInventory((prev) => [newItem, ...prev]);
+  const handleSubmit = () => {
+    if (editingId) {
+      setInventory((prev) =>
+        prev.map((item) =>
+          item.id === editingId
+            ? {
+              ...item,
+              ...form,
+              qty: Number(form.qty),
+              price: Number(form.price),
+            }
+            : item
+        )
+      );
+    } else {
+      const newItem = {
+        ...form,
+        id: `MED-${String(inventory.length + 1).padStart(3, "0")}`,
+        qty: Number(form.qty),
+        price: Number(form.price),
+      };
+
+      setInventory((prev) => [newItem, ...prev]);
+    }
+
     setShowModal(false);
+    setEditingId(null);
     setForm(emptyForm);
+  };
+
+  const handleEdit = (medicine) => {
+    setEditingId(medicine.id);
+    setForm({
+      name: medicine.name,
+      category: medicine.category,
+      qty: medicine.qty,
+      price: medicine.price,
+      expiry: medicine.expiry,
+      manufacturer: medicine.manufacturer,
+      status: medicine.status,
+    });
+    setShowModal(true);
   };
 
   return (
@@ -99,7 +137,7 @@ export default function MedicineInventory() {
             <thead>
               <tr>
                 <th>ID</th><th>Medicine Name</th><th>Category</th><th>Qty</th><th>Price (₹)</th>
-                <th>Expiry</th><th>Manufacturer</th><th>Status</th>
+                <th>Expiry</th><th>Manufacturer</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -121,7 +159,21 @@ export default function MedicineInventory() {
                     <td>{m.expiry}</td>
                     <td>{m.manufacturer}</td>
                     <td>
-                      <span className="ph-pill" style={{ background: s.bg, color: s.color }}>{m.status}</span>
+                      <span
+                        className="ph-pill"
+                        style={{ background: s.bg, color: s.color }}
+                      >
+                        {m.status}
+                      </span>
+                    </td>
+
+                    <td>
+                      <button
+                        className="ph-edit-btn"
+                        onClick={() => handleEdit(m)}
+                      >
+                        <FaEdit /> Edit
+                      </button>
                     </td>
                   </tr>
                 );
@@ -136,17 +188,17 @@ export default function MedicineInventory() {
         <div className="ph-modal-overlay" onClick={() => setShowModal(false)}>
           <div className="ph-modal" onClick={(e) => e.stopPropagation()}>
             <div className="ph-modal-header">
-              <h3>Add New Medicine</h3>
+              <h3>{editingId ? "Edit Medicine" : "Add New Medicine"}</h3>
               <button className="ph-modal-close" onClick={() => setShowModal(false)}><FaTimes /></button>
             </div>
             <div className="ph-modal-body">
               <div className="ph-form-grid">
                 {[
-                  { label:"Medicine Name",  key:"name",         type:"text"   },
-                  { label:"Manufacturer",   key:"manufacturer", type:"text"   },
-                  { label:"Quantity",       key:"qty",          type:"number" },
-                  { label:"Price (₹)",      key:"price",        type:"number" },
-                  { label:"Expiry Date",    key:"expiry",       type:"date"   },
+                  { label: "Medicine Name", key: "name", type: "text" },
+                  { label: "Manufacturer", key: "manufacturer", type: "text" },
+                  { label: "Quantity", key: "qty", type: "number" },
+                  { label: "Price (₹)", key: "price", type: "number" },
+                  { label: "Expiry Date", key: "expiry", type: "date" },
                 ].map(({ label, key, type }) => (
                   <div key={key} className="ph-form-group">
                     <label>{label}</label>
@@ -160,7 +212,17 @@ export default function MedicineInventory() {
                   </select>
                 </div>
               </div>
-              <button className="ph-btn-submit" onClick={handleAdd}><FaPlus /> Add Medicine</button>
+              <button className="ph-btn-submit" onClick={handleSubmit}>
+                {editingId ? (
+                  <>
+                    <FaEdit /> Update Medicine
+                  </>
+                ) : (
+                  <>
+                    <FaPlus /> Add Medicine
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
