@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { FaBoxes, FaSearch, FaFilter, FaPlus, FaTimes, FaEdit, FaExclamationTriangle } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const [editingId, setEditingId] = useState(null);
 const initialInventory = [
   { id: "MED-001", name: "Paracetamol 500mg", category: "Analgesic", qty: 18, price: 5, expiry: "2027-03-01", manufacturer: "Sun Pharma", status: "Low Stock" },
   { id: "MED-002", name: "Amoxicillin 250mg", category: "Antibiotic", qty: 9, price: 35, expiry: "2026-11-15", manufacturer: "Cipla", status: "Low Stock" },
@@ -30,6 +29,8 @@ const statusColor = {
 const emptyForm = { name: "", category: "Analgesic", qty: "", price: "", expiry: "", manufacturer: "", status: "In Stock" };
 
 export default function MedicineInventory() {
+  const [editingId, setEditingId] = useState(null);
+
   const [inventory, setInventory] = useState(initialInventory);
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
@@ -209,6 +210,23 @@ export default function MedicineInventory() {
                   <label>Category</label>
                   <select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}>
                     {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className="ph-form-group">
+                  <label>Status</label>
+
+                  <select
+                    value={form.status}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        status: e.target.value,
+                      }))
+                    }
+                  >
+                    <option>In Stock</option>
+                    <option>Low Stock</option>
+                    <option>Out of Stock</option>
                   </select>
                 </div>
               </div>
