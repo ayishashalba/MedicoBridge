@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import "./Navbar.css";
+import { toast } from "react-toastify";
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -12,9 +13,11 @@ function Navbar() {
   const handlePharmacyClick = () => {
     closeAllMenus();
 
-    alert("Please login as a Patient to access the Pharmacy.");
+    toast.info("🔒 Please login as a Patient to access the Pharmacy.");
 
-    navigate("/login/patient");
+    setTimeout(() => {
+      navigate("/login/patient");
+    }, 1500);
   };
 
   useEffect(() => {
