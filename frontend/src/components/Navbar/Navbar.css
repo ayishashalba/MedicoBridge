@@ -39,6 +39,19 @@
   padding: 0 2rem;
 }
 
+.pharmacy-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+.pharmacy-btn:hover {
+  color: var(--primary-color);
+}
+
 /* Logo styling */
 .navbar-logo {
   display: flex;
@@ -450,6 +463,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

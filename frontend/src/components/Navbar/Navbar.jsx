@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa";
 import "./Navbar.css";
 
@@ -7,6 +7,15 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null); // 'login', 'register', or null
+  const navigate = useNavigate();
+
+  const handlePharmacyClick = () => {
+    closeAllMenus();
+
+    alert("Please login as a Patient to access the Pharmacy.");
+
+    navigate("/login/patient");
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -102,26 +111,22 @@ function Navbar() {
               </a>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/hospitals"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
+              <a
+                href="/#hospitals"
+                className="nav-links"
                 onClick={closeAllMenus}
               >
                 Hospitals
-              </NavLink>
+              </a>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/pharmacy"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
-                onClick={closeAllMenus}
+              <button
+                type="button"
+                className="nav-links pharmacy-btn"
+                onClick={handlePharmacyClick}
               >
                 Pharmacy
-              </NavLink>
+              </button>
             </li>
             <li className="nav-item">
               <NavLink
@@ -144,15 +149,8 @@ function Navbar() {
               </a>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/contact"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
-                onClick={closeAllMenus}
-              >
-                Contact
-              </NavLink>
+              <a href="/#contact" className="nav-links" onClick={closeAllMenus}
+              >Contact</a>
             </li>
           </ul>
 

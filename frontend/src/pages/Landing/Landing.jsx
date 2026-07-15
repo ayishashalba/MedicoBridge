@@ -13,18 +13,28 @@ function Landing() {
     <div className="landing-page">
       <Navbar />
       <main>
-        <HeroSection />
-        <SearchSection />
-        <JoinSection />
-        <WhyChoose />
+        <section id="hero">
+          <HeroSection />
+        </section>
+        <section id="search">
+          <SearchSection />
+        </section>
+        <section id="join">
+          <JoinSection />
+        </section>
+        <section id="about">
+          <WhyChoose />
+        </section>
         <section id="find-doctors">
           <TopDoctors />
         </section>
-        <section id="top-hospitals">
+        <section id="hospitals">
           <TopHospitals />
         </section>
       </main>
-      <Footer />
+      <section id="contact">
+        <Footer />
+      </section>
     </div>
   );
 }
