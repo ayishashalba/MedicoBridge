@@ -13,11 +13,10 @@ function Navbar() {
   const handlePharmacyClick = () => {
     closeAllMenus();
 
-    toast.info("🔒 Please login as a Patient to access the Pharmacy.");
-
-    setTimeout(() => {
-      navigate("/login/patient");
-    }, 1500);
+    toast.info("🔒 Please login as a Patient to access the Pharmacy.", {
+      autoClose: 2000,
+      onClose: () => navigate("/login/patient"),
+    });
   };
 
   useEffect(() => {
