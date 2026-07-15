@@ -102,13 +102,6 @@ const departments = {
 function DepartmentsSection() {
     const [selectedCategory, setSelectedCategory] = useState(null);
 
-    const handleDepartmentClick = (dept) => {
-        toast.info(`🔒 Login to view doctors in ${dept}.`, {
-            position: "top-center",
-            autoClose: 2500,
-        });
-    };
-
     return (
         <section className="departments-section" id="departments">
             <h2>Explore Departments</h2>
@@ -118,57 +111,106 @@ function DepartmentsSection() {
                     {Object.entries(departments).map(([category, value]) => (
                         <div
                             key={category}
-                            className="department-row"
+                            className="department-card"
                             onClick={() => setSelectedCategory(category)}
                         >
                             <div className="department-left">
-                                <div className="department-icon">
-                                    {dept.icon}
+                                <div className="icon">
+                                    {value.icon}
                                 </div>
 
-                                <span className="department-title">
-                                    {dept.name}
-                                </span>
+                                <div>
+                                    <div className="department-title">
+                                        {category}
+                                    </div>
+
+                                    <p className="department-description">
+                                        {category === "Medical Specialties" &&
+                                            "Explore physicians for internal medicine."}
+
+                                        {category === "Surgical Departments" &&
+                                            "General, ENT, Plastic & more."}
+
+                                        {category === "Women's Health" &&
+                                            "Complete care for women."}
+
+                                        {category === "Child Care" &&
+                                            "Pediatric specialists for children."}
+
+                                        {category === "Brain & Nervous System" &&
+                                            "Neurology & Neurosurgery experts."}
+
+                                        {category === "Heart Care" &&
+                                            "Cardiology & cardiac surgery."}
+
+                                        {category === "Dental Care" &&
+                                            "Advanced dental treatments."}
+
+                                        {category === "Diagnostic Services" &&
+                                            "Laboratory & imaging services."}
+                                    </p>
+                                </div>
                             </div>
 
                             <div className="department-arrow">
                                 <FaChevronRight />
                             </div>
-
-                            <FaChevronRight />
                         </div>
                     ))}
                 </div>
             ) : (
                 <>
-                    <button
-                        className="back-btn"
-                        onClick={() => setSelectedCategory(null)}
-                    >
-                        <FaArrowLeft /> Back
-                    </button>
+                    <>
+                        <button
+                            className="back-btn"
+                            onClick={() => setSelectedCategory(null)}
+                        >
+                            <FaArrowLeft />
+                            Back
+                        </button>
 
-                    <h3>{selectedCategory}</h3>
+                        <div className="subcategory-header">
+                            <h3>
+                                {departments[selectedCategory].icon}
+                                {" "}
+                                {selectedCategory}
+                            </h3>
 
-                    <div className="subcategory-header">
-                        <h3>{selected.icon} {selected.name}</h3>
+                            <p>Select a specialization</p>
+                        </div>
 
-                        <p>
-                            Select a speciality to explore available doctors.
-                        </p>
-                    </div>
+                        <div className="department-list">
+                            {departments[selectedCategory].items.map((item) => (
+                                <div
+                                    key={item}
+                                    className="department-card"
+                                    onClick={() =>
+                                        toast.info(
+                                            `🔒 Login to view doctors in ${item}.`,
+                                            {
+                                                position: "top-center",
+                                                autoClose: 2500,
+                                            }
+                                        )
+                                    }
+                                >
+                                    <div className="department-left">
+                                        <div className="icon">
+                                            🩺
+                                        </div>
 
-                    <div className="subcategory-list">
-                        {selected.items.map((item) => (
-                            <div
-                                key={item}
-                                className="subcategory-item"
-                                onClick={() => toast.info(`🔒 Login to view doctors in ${item}.`)}
-                            >
-                                {item}
-                            </div>
-                        ))}
-                    </div>
+                                        <div className="department-title">
+                                            {item}
+                                        </div>
+                                    </div>
+
+                                    <div className="department-arrow">
+                                        <FaChevronRight />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 </>
             )}
         </section>
