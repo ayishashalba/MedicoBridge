@@ -47,12 +47,6 @@
   position: relative;
 }
 
-.admin-sidebar {
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
 /* ── Overlay (mobile) ────────────────────────────────────────── */
 .adlay-overlay {
   position: fixed;
@@ -76,7 +70,7 @@
 /* ── Sidebar ─────────────────────────────────────────────────── */
 .adlay-sidebar {
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 60%, #311042 100%);
   display: flex;
   flex-direction: column;
@@ -85,7 +79,8 @@
   left: 0;
   z-index: 900;
   transition: width var(--ad-transition-normal), transform var(--ad-transition-normal);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   box-shadow: 4px 0 24px rgba(0, 0, 0, .15);
 }
 
@@ -263,7 +258,6 @@
 .adlay-nav {
   flex: 1;
   padding: 1.25rem 0.75rem;
-  overflow-y: auto;
 }
 
 .adlay-nav::-webkit-scrollbar {
@@ -350,7 +344,10 @@
 .adlay-sidebar-footer {
   padding: 1rem 0.75rem;
   border-top: 1px solid rgba(255, 255, 255, .06);
-  flex-shrink: 0;
+  margin-top: auto;
+  background: inherit;
+  position: sticky;
+  bottom: 0;
 }
 
 .adlay-logout-btn {
