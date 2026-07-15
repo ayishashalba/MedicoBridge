@@ -21,11 +21,10 @@
 ================================= */
 
 .department-description {
-    margin-top: 6px;
-    font-size: 15px;
+    font-size: 20px;
     color: #64748b;
-    font-weight: 400;
-    line-height: 1.5;
+    line-height: 1.7;
+    max-width: 330px;
 }
 
 .subcategory-header {
@@ -59,28 +58,31 @@
 }
 
 .department-list {
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    gap: 28px;
 }
 
 .department-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px;
+    min-height: 230px;
+
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 22px 26px;
-    background: #fff;
-    border-radius: 18px;
-    border: 1px solid #edf2f7;
+    align-items: flex-start;
+
+    border: 1px solid #d8f1ef;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, .08);
+
     cursor: pointer;
-    transition: .3s;
-    box-shadow: 0 8px 25px rgba(15, 23, 42, .06);
+    transition: .35s;
 }
 
 .department-card:hover {
-    transform: translateY(-5px);
-    border-color: #6366f1;
-    box-shadow: 0 15px 35px rgba(99, 102, 241, .18);
+    transform: translateY(-8px);
+    box-shadow: 0 22px 45px rgba(99, 102, 241, .18);
 }
 
 .department-card.active {
@@ -90,36 +92,23 @@
 
 .department-left {
     display: flex;
-    align-items: center;
-    gap: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
 }
 
-.department-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 15px;
-    background: #eef2ff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #6366f1;
-    font-size: 22px;
-    transition: .3s;
-}
-
-.department-card.active .department-icon {
-    background: rgba(255, 255, 255, .18);
-    color: #fff;
-}
 
 .department-title {
-    font-size: 1.15rem;
+    font-size: 2rem;
     font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
 }
 
 .department-arrow {
-    font-size: 22px;
-    transition: .3s;
+    font-size: 30px;
+    color: #0f172a;
+    margin-top: 8px;
 }
 
 .department-card:hover .department-arrow {
