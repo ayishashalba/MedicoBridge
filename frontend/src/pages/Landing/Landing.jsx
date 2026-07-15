@@ -7,6 +7,7 @@ import WhyChoose from "../../components/WhyChoose/WhyChoose";
 import TopDoctors from "../../components/TopDoctors/TopDoctors";
 import TopHospitals from "../../components/TopHospitals/TopHospitals";
 import Footer from "../../components/Footer/Footer";
+import DepartmentsSection from "../../components/DepartmentsSection/DepartmentsSection";
 
 function Landing() {
   return (
@@ -25,6 +26,8 @@ function Landing() {
         <section id="about">
           <WhyChoose />
         </section>
+
+        <DepartmentsSection />
         <section id="find-doctors">
           <TopDoctors />
         </section>

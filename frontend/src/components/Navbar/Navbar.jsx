@@ -130,15 +130,13 @@ function Navbar() {
               </button>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/departments"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
+              <a
+                href="/#departments"
+                className="nav-links"
                 onClick={closeAllMenus}
               >
                 Departments
-              </NavLink>
+              </a>
             </li>
             <li className="nav-item">
               <a
