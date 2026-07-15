@@ -210,6 +210,15 @@
   border-radius: var(--radius-md);
   font-weight: 600;
   margin-top: 0.5rem;
+  transition: transform 0.25s ease;
+}
+
+.doctor-view-btn:hover {
+  background-color: transparent !important;
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  transform: translateY(-3px);
+  box-shadow: none !important;
 }
 
 .doctor-nav {

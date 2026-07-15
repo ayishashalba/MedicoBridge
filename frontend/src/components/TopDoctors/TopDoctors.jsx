@@ -2,8 +2,24 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FaStar, FaMapMarkerAlt, FaBriefcase } from "react-icons/fa";
 import "./TopDoctors.css";
+import { toast } from "react-toastify";
 
 function TopDoctors() {
+  const handleViewDetails = () => {
+    const joinSection = document.getElementById("join");
+
+    if (joinSection) {
+      joinSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+
+    toast.info("🔒 Sign up to view doctor details.", {
+      position: "top-center",
+      autoClose: 2500,
+    });
+  };
   const [startIndex, setStartIndex] = useState(0);
   const visibleCount = 3;
 
@@ -27,16 +43,6 @@ function TopDoctors() {
       location: "Bangalore, India",
       image:
         "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=600",
-    },
-    {
-      id: 3,
-      name: "Dr. Meera Iyer",
-      specialty: "General Physician",
-      experience: "10+ Years",
-      rating: "4.7",
-      location: "Chennai, India",
-      image:
-        "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=600",
     },
     {
       id: 4,
@@ -116,12 +122,12 @@ function TopDoctors() {
                     </div>
                   </div>
 
-                  <Link
-                    to={`/doctor/profile/${doctor.id}`}
-                    className="btn-outline doctor-card-btn"
+                  <button
+                    className="btn-outline doctor-card-btn doctor-view-btn"
+                    onClick={handleViewDetails}
                   >
-                    View Profile
-                  </Link>
+                    View Details
+                  </button>
                 </div>
               </div>
             ))}
