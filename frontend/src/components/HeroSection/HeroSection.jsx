@@ -34,12 +34,12 @@ function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="hero-ctas">
-            <Link to="/find-doctors" className="btn-primary hero-btn">
+            <a href="#find-doctors" className="btn-primary hero-btn">
               Find Doctors
-            </Link>
-            <Link to="/hospitals" className="btn-outline hero-btn">
+            </a>
+            <a href="/#hospitals" className="btn-outline hero-btn">
               Find Hospitals
-            </Link>
+            </a>
           </div>
 
           {/* Features Grid */}
