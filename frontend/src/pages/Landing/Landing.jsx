@@ -17,10 +17,11 @@ function Landing() {
         <SearchSection />
         <JoinSection />
         <WhyChoose />
-        <TopDoctors />
-        <TopHospitals />
-        <section id="about">
-          <About />
+        <section id="find-doctors">
+          <TopDoctors />
+        </section>
+        <section id="top-hospitals">
+          <TopHospitals />
         </section>
       </main>
       <Footer />

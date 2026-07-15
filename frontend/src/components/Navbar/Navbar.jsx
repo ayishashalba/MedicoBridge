@@ -93,15 +93,13 @@ function Navbar() {
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/find-doctors"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
+              <a
+                href="/#find-doctors"
+                className="nav-links"
                 onClick={closeAllMenus}
               >
                 Find Doctors
-              </NavLink>
+              </a>
             </li>
             <li className="nav-item">
               <NavLink
