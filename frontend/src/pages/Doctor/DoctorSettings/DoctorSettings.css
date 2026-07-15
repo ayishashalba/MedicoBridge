@@ -21,14 +21,14 @@
     width: 54px;
     height: 54px;
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #0d9488, #0284c7);
+    background: linear-gradient(135deg, #0057cc, #00B0FF);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-size: 1.5rem;
     flex-shrink: 0;
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.28);
+    box-shadow: 0 4px 14px rgba(0, 107, 214, 0.28);
 }
 
 .ds-header-text {
@@ -226,13 +226,13 @@
 .ds-panel-hero--notifications { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; }
 .ds-panel-hero--password      { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: #fff; }
 .ds-panel-hero--privacy       { background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: #fff; }
-.ds-panel-hero--language      { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); color: #fff; }
+.ds-panel-hero--language      { background: linear-gradient(135deg, #0057cc 0%, #00B0FF 100%); color: #fff; }
 .ds-panel-hero--theme         { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: #fff; }
 .ds-panel-hero--reviews       { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: #fff; }
-.ds-panel-hero--analytics     { background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%); color: #fff; }
+.ds-panel-hero--analytics     { background: linear-gradient(135deg, #0057cc 0%, #00B0FF 100%); color: #fff; }
 .ds-panel-hero--help          { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); color: #fff; }
 .ds-panel-hero--faq           { background: linear-gradient(135deg, #9333ea 0%, #7c3aed 100%); color: #fff; }
-.ds-panel-hero--about         { background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%); color: #fff; }
+.ds-panel-hero--about         { background: linear-gradient(135deg, #0057cc 0%, #00B0FF 100%); color: #fff; }
 
 .ds-panel-hero-icon {
     width: 58px;
@@ -413,7 +413,7 @@
 
 .ds-text-input:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .ds-text-input--time {
@@ -469,7 +469,7 @@
 
 .ds-select:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .ds-textarea {
@@ -489,7 +489,7 @@
 
 .ds-textarea:focus {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 /* ── Save Button ─────────────────────────────────────────────── */
@@ -498,7 +498,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: linear-gradient(135deg, #0d9488, #0284c7);
+    background: linear-gradient(135deg, #0057cc, #00B0FF);
     color: #fff;
     font-weight: 700;
     font-size: 0.88rem;
@@ -506,14 +506,14 @@
     border-radius: var(--radius-md);
     border: none;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+    box-shadow: 0 4px 14px rgba(0, 107, 214, 0.25);
     transition: all var(--transition-fast);
     align-self: flex-start;
 }
 
 .ds-save-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+    box-shadow: 0 6px 20px rgba(0, 107, 214, 0.35);
     filter: brightness(1.06);
 }
 
@@ -705,7 +705,7 @@
 .ds-theme-card--active {
     border-color: var(--primary-color);
     background: var(--bg-accent);
-    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.15);
+    box-shadow: 0 0 0 2px rgba(0, 176, 255, 0.15);
 }
 
 .ds-theme-card input[type="radio"] {
@@ -962,7 +962,7 @@
 
 .ds-bar-fill {
     width: 100%;
-    background: linear-gradient(180deg, #0d9488, #0284c7);
+    background: linear-gradient(180deg, #0057cc, #00B0FF);
     border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     transition: height 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -1167,7 +1167,7 @@
     width: 52px;
     height: 52px;
     border-radius: var(--radius-md);
-    background: linear-gradient(135deg, #0d9488, #0284c7);
+    background: linear-gradient(135deg, #0057cc, #00B0FF);
     display: flex;
     align-items: center;
     justify-content: center;

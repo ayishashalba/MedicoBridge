@@ -10,14 +10,14 @@
 
 /* ── Welcome Banner ──────────────────────────────────────────── */
 .doctor-welcome {
-  background: linear-gradient(135deg, #054c3c 0%, #0d9488 50%, #0284c7 100%);
+  background: linear-gradient(135deg, #003d99 0%, #0057cc 45%, #00B0FF 100%);
   border-radius: var(--radius-lg);
   padding: 2rem 2.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  box-shadow: 0 8px 32px rgba(5, 76, 60, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 61, 153, 0.28);
   position: relative;
   overflow: hidden;
 }
@@ -410,8 +410,8 @@
 }
 
 .type-badge--inperson {
-  background: #ccfbf1;
-  color: #0d9488;
+  background: #E3F2FD;
+  color: #1565C0;
 }
 
 /* Status badges */
@@ -455,7 +455,7 @@
 }
 
 .appt-action-btn--join {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
 }
 .appt-action-btn--join:hover { filter: brightness(1.1); transform: scale(1.03); }
@@ -470,7 +470,7 @@
 .appt-action-btn--view {
   background: var(--bg-accent);
   color: var(--primary-color);
-  border: 1px solid rgba(13, 148, 136, 0.25);
+  border: 1px solid rgba(0, 176, 255, 0.25);
 }
 .appt-action-btn--view:hover { background: var(--primary-color); color: #fff; }
 

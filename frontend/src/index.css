@@ -2,14 +2,14 @@
 
 :root {
   /* Colors */
-  --primary-color: #0d9488;
-  /* Premium Teal */
-  --primary-hover: #0f766e;
-  --primary-light: #ccfbf1;
-  --secondary-color: #0284c7;
-  /* Healing Blue */
-  --secondary-hover: #0369a1;
-  --secondary-light: #e0f2fe;
+  --primary-color: #00B0FF;
+  /* Indigo Sky Blue */
+  --primary-hover: #0091EA;
+  --primary-light: #E1F5FE;
+  --secondary-color: #1565C0;
+  /* Deep Indigo Blue */
+  --secondary-hover: #0D47A1;
+  --secondary-light: #E3F2FD;
 
   --accent-color: #f59e0b;
   /* Amber warning/alerts */
@@ -24,8 +24,8 @@
   --bg-primary: #ffffff;
   --bg-secondary: #f8fafc;
   /* Cool white */
-  --bg-accent: #f0fdfa;
-  /* Teal 50 */
+  --bg-accent: #E8F4FD;
+  /* Blue 50 */
 
   /* Borders & Shadows */
   --border-color: #e2e8f0;

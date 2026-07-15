@@ -57,14 +57,14 @@
 
 /* Average Rating Card */
 .drr-avg-card {
-    background: linear-gradient(145deg, #0d9488 0%, #0284c7 100%);
+    background: linear-gradient(145deg, #0057cc 0%, #00B0FF 100%);
     border-radius: var(--radius-lg);
     padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.6rem;
-    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.28);
+    box-shadow: 0 8px 24px rgba(0, 107, 214, 0.28);
     color: #fff;
     text-align: center;
     position: relative;
@@ -312,7 +312,7 @@
 
 .drr-search:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .drr-search-icon {
@@ -366,7 +366,7 @@
 
 .drr-filter-wrap:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .drr-filter-icon {
@@ -425,7 +425,7 @@
     bottom: 0;
     width: 4px;
     border-radius: 2px 0 0 2px;
-    background: linear-gradient(180deg, #0d9488, #0284c7);
+    background: linear-gradient(180deg, #0057cc, #00B0FF);
 }
 
 .drr-card:hover {
@@ -498,8 +498,8 @@
 }
 
 .drr-type-badge--hospital {
-    background: #e0f2fe;
-    color: #0369a1;
+    background: var(--secondary-light);
+    color: var(--secondary-color);
 }
 
 /* Card Rating Row */

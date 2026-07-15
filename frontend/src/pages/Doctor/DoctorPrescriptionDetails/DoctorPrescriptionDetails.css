@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    DoctorPrescriptionDetails.css
    ================================================================ */
 
@@ -66,7 +66,7 @@
 
 /* ── Card Header ─────────────────────────────────────────────── */
 .prx-card-header {
-  background: linear-gradient(135deg, #054c3c 0%, #0d9488 55%, #0284c7 100%);
+  background: linear-gradient(135deg, #003d99 0%, #0057cc 55%, #00B0FF 100%);
   padding: 2rem 2.5rem;
   display: flex;
   align-items: flex-start;
@@ -272,7 +272,7 @@
   font-weight: 600;
   color: var(--text-primary);
   background: var(--bg-accent);
-  border: 1px solid rgba(13,148,136,0.2);
+  border: 1px solid rgba(0,176,255,0.2);
   border-left: 3px solid var(--primary-color);
   border-radius: var(--radius-md);
   padding: 0.9rem 1.1rem;
@@ -504,15 +504,15 @@
 }
 
 .prx-action-btn--send {
-  background: linear-gradient(135deg, #0d9488, #0284c7);
+  background: linear-gradient(135deg, #0057cc, #00B0FF);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(13,148,136,0.25);
+  box-shadow: 0 4px 14px rgba(0,107,214,0.25);
   margin-left: auto;
 }
 .prx-action-btn--send:hover {
   filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(13,148,136,0.35);
+  box-shadow: 0 8px 24px rgba(0,107,214,0.35);
 }
 
 /* ── Print Styles ────────────────────────────────────────────── */

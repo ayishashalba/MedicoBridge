@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    DoctorMedicalRecords.css
    ================================================================ */
 
@@ -140,7 +140,7 @@
 }
 .mr-search:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
+    box-shadow: 0 0 0 3px rgba(0,176,255,0.12);
 }
 .mr-search-icon { color: var(--text-muted); font-size: 0.85rem; flex-shrink: 0; }
 .mr-search input {
@@ -365,7 +365,7 @@
 .mr-btn--view {
     background: var(--bg-accent);
     color: var(--primary-color);
-    border: 1px solid rgba(13,148,136,0.25);
+    border: 1px solid rgba(0,176,255,0.25);
 }
 .mr-btn--view:hover {
     background: var(--primary-color);

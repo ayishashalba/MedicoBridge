@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    DoctorConsultation.css — Online Consultations Page
    ================================================================ */
 
@@ -98,7 +98,7 @@
 
 .dc-search:focus-within {
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+    box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .dc-search-icon {
@@ -425,29 +425,29 @@
 }
 
 .dc-btn--join {
-    background: linear-gradient(135deg, #7c3aed, #6d28d9);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #fff;
     flex: 1;
     justify-content: center;
-    box-shadow: 0 3px 10px rgba(124,58,237,0.25);
+    box-shadow: 0 3px 10px rgba(37,99,235,0.25);
 }
 .dc-btn--join:hover {
     filter: brightness(1.1);
     transform: scale(1.02);
-    box-shadow: 0 5px 16px rgba(124,58,237,0.35);
+    box-shadow: 0 5px 16px rgba(37,99,235,0.35);
 }
 
 .dc-btn--rx {
-    background: linear-gradient(135deg, #0d9488, #0284c7);
+    background: linear-gradient(135deg, #0057cc, #00B0FF);
     color: #fff;
     flex: 1;
     justify-content: center;
-    box-shadow: 0 3px 10px rgba(13,148,136,0.22);
+    box-shadow: 0 3px 10px rgba(0,107,214,0.22);
 }
 .dc-btn--rx:hover {
     filter: brightness(1.1);
     transform: scale(1.02);
-    box-shadow: 0 5px 16px rgba(13,148,136,0.35);
+    box-shadow: 0 5px 16px rgba(0,107,214,0.35);
 }
 
 /* ── Spin animation ──────────────────────────────────────────── */

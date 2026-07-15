@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    DoctorPrescriptions.css — Prescriptions Hub Page
    ================================================================ */
 
@@ -41,7 +41,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #0d9488, #0284c7);
+  background: linear-gradient(135deg, #0057cc, #00B0FF);
   border: none;
   color: #fff;
   font-size: 0.85rem;
@@ -49,13 +49,13 @@
   padding: 0.65rem 1.35rem;
   border-radius: var(--radius-md);
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(13, 148, 136, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 107, 214, 0.25);
   transition: all var(--transition-fast);
 }
 
 .create-prescription-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 107, 214, 0.35);
   filter: brightness(1.05);
 }
 
@@ -148,7 +148,7 @@
 
 .search-box:focus-within {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .search-box svg {
@@ -409,7 +409,7 @@
 .action-btn--view {
   background: var(--bg-accent);
   color: var(--primary-color);
-  border: 1px solid rgba(13, 148, 136, 0.2);
+  border: 1px solid rgba(0, 176, 255, 0.2);
 }
 
 .action-btn--view:hover {

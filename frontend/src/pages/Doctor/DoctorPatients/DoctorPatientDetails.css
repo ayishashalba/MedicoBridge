@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    DoctorPatientDetails.css — Patient Details Page
    ================================================================ */
 
@@ -35,14 +35,14 @@
 
 /* ── Hero Card ───────────────────────────────────────────────── */
 .pd-hero-card {
-  background: linear-gradient(135deg, #054c3c 0%, #0d9488 55%, #0284c7 100%);
+  background: linear-gradient(135deg, #003d99 0%, #0057cc 55%, #00B0FF 100%);
   border-radius: var(--radius-lg);
   padding: 2rem 2.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
-  box-shadow: 0 8px 32px rgba(5, 76, 60, 0.28);
+  box-shadow: 0 8px 32px rgba(0, 61, 153, 0.25);
   position: relative;
   overflow: hidden;
 }
@@ -373,9 +373,9 @@
   box-shadow: var(--shadow-md);
 }
 
-.pd-stat-tile--height { background: linear-gradient(135deg,#e0f2fe,#f0fdfa); color: #0284c7; }
+.pd-stat-tile--height { background: linear-gradient(135deg,#E3F2FD,#E8F4FD); color: #0057cc; }
 .pd-stat-tile--weight { background: linear-gradient(135deg,#ede9fe,#fdf4ff); color: #7c3aed; }
-.pd-stat-tile--bmi    { background: linear-gradient(135deg,#ccfbf1,#f0fdf4); color: #0d9488; }
+.pd-stat-tile--bmi    { background: linear-gradient(135deg,#E1F5FE,#E3F2FD); color: #00B0FF; }
 
 .pd-stat-val {
   font-family: var(--font-heading);
@@ -513,7 +513,7 @@
   margin-top: 0.25rem;
 }
 
-.pd-appt-type-badge--inperson { background: #ccfbf1; color: #0d9488; }
+.pd-appt-type-badge--inperson { background: var(--primary-light); color: var(--primary-color); }
 .pd-appt-type-badge--video    { background: #ede9fe; color: #7c3aed; }
 
 /* ── Recent Prescriptions ────────────────────────────────────── */
@@ -618,7 +618,7 @@
   background: var(--primary-color);
   color: #fff;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13,148,136,0.3);
+  box-shadow: 0 6px 20px rgba(0,176,255,0.3);
 }
 
 .pd-action-btn--prescriptions {
@@ -634,14 +634,14 @@
 }
 
 .pd-action-btn--consult {
-  background: linear-gradient(135deg, #0d9488, #0284c7);
+  background: linear-gradient(135deg, #0057cc, #00B0FF);
   color: #fff;
-  box-shadow: 0 4px 14px rgba(13,148,136,0.25);
+  box-shadow: 0 4px 14px rgba(0,107,214,0.25);
 }
 .pd-action-btn--consult:hover {
   filter: brightness(1.08);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(13,148,136,0.35);
+  box-shadow: 0 8px 24px rgba(0,107,214,0.35);
 }
 
 /* ================================================================

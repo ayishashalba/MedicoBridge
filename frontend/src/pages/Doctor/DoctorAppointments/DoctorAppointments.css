@@ -61,7 +61,7 @@
 
 .search-box:focus-within {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 176, 255, 0.12);
 }
 
 .search-box svg {
@@ -298,7 +298,7 @@
 }
 
 .status-pill--completed {
-  background: #f0fdf4;
+  background: var(--primary-light);
   color: var(--primary-color);
 }
 
@@ -388,7 +388,7 @@
 .action-btn--view {
   background: var(--bg-accent);
   color: var(--primary-color);
-  border: 1px solid rgba(13, 148, 136, 0.2);
+  border: 1px solid rgba(0, 176, 255, 0.2);
 }
 
 .action-btn--view:hover {
@@ -397,29 +397,29 @@
 }
 
 .action-btn--start {
-  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: #fff;
   flex: 1;
-  box-shadow: 0 3px 8px rgba(124, 58, 237, 0.2);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.2);
 }
 
 .action-btn--start:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .action-btn--prescription {
-  background: linear-gradient(135deg, #0d9488, #0284c7);
+  background: linear-gradient(135deg, #0057cc, #00B0FF);
   color: #fff;
   flex: 1;
-  box-shadow: 0 3px 8px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 3px 8px rgba(0, 107, 214, 0.2);
 }
 
 .action-btn--prescription:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 107, 214, 0.3);
 }
 
 .action-btn--full {
