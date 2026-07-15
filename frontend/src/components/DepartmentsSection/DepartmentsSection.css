@@ -45,16 +45,17 @@
 }
 
 .department-card .icon {
-    width: 70px;
-    height: 70px;
+    width: 72px;
+    height: 72px;
     border-radius: 18px;
-    background: linear-gradient(135deg, #dff8f5, #bdf4eb);
-    color: #0f4d46;
+    background: linear-gradient(135deg, #dff8f5, #c8f4eb);
+
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
-    flex-shrink: 0;
+
+    font-size: 30px;
+    color: #134e4a;
 }
 
 .department-list {
@@ -96,7 +97,6 @@
     align-items: flex-start;
     gap: 22px;
 }
-
 
 .department-title {
     font-size: 2rem;
