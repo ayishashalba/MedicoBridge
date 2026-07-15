@@ -44,6 +44,12 @@
     font-size: 16px;
 }
 
+.icon {
+    width: 55px;
+    height: 55px;
+    font-size: 24px;
+}
+
 .department-card .icon {
     width: 72px;
     height: 72px;
@@ -60,7 +66,7 @@
 
 .department-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 28px;
 }
 
@@ -68,7 +74,7 @@
     background: #fff;
     border-radius: 24px;
     padding: 30px;
-    min-height: 230px;
+    min-height: 100px;
 
     display: flex;
     justify-content: space-between;
