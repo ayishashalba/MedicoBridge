@@ -1,6 +1,7 @@
 .top-hospitals-section {
   position: relative;
-  background-color: #f8fafc; /* Alternating soft backdrop */
+  background-color: #f8fafc;
+  /* Alternating soft backdrop */
   padding: 5.5rem 2rem;
   border-top: 1px solid rgba(226, 232, 240, 0.6);
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
@@ -36,21 +37,22 @@
 
 /* Hospital Cards Grid */
 .top-hospitals-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 /* Hospital Card Frame */
 .hospital-card {
-  background-color: var(--white);
+  width: 280px;
+  min-height: 350px;
+  background: #fff;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
-  transition: all var(--transition-normal);
+  transition: all .3s ease;
 }
 
 .hospital-card:hover {
@@ -61,11 +63,7 @@
 
 /* Image Wrapper with scales */
 .hospital-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 220px;
-  overflow: hidden;
-  background-color: var(--bg-secondary);
+  height: 200px;
 }
 
 .hospital-img {
@@ -107,11 +105,8 @@
 
 /* Info section content */
 .hospital-info {
-  padding: 1.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  flex-grow: 1;
+  padding: 1rem;
+  gap: 0.5rem;
 }
 
 .hospital-name {
@@ -133,25 +128,18 @@
 }
 
 .hospital-description {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
+  font-size: 0.82rem;
   line-height: 1.5;
-  margin: 0.2rem 0;
-  flex-grow: 1;
+  color: var(--text-secondary);
+  min-height: 72px;
+  /* keeps all descriptions same height */
+  margin: 0.25rem 0;
 }
 
 /* Location Tag metadata */
 .hospital-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-  padding: 0.6rem 0;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 0.5rem;
+  padding: .5rem 0;
+  margin: 0;
 }
 
 .meta-icon {
@@ -161,13 +149,16 @@
 
 /* Details card button */
 .hospital-card-btn {
-  text-align: center;
+  margin-top: .2rem;
   width: 100%;
-  padding: 0.75rem;
-  font-size: 0.9rem;
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  margin-top: 0.5rem;
+}
+
+.hospital-view-btn:hover {
+  background: transparent !important;
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+  transform: translateY(-3px);
+  box-shadow: none !important;
 }
 
 /* Responsive Queries */

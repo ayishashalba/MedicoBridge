@@ -1,9 +1,22 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 import { FaStar, FaMapMarkerAlt } from "react-icons/fa";
 import "./TopHospitals.css";
 
 function TopHospitals() {
+  const [startIndex, setStartIndex] = useState(0);
+  const visibleCount = 3;
+
+  const handleViewDetails = () => {
+    document.getElementById("join")?.scrollIntoView({
+      behavior: "smooth",
+    });
+
+    toast.info("🔒 Sign up to view hospital details.", {
+      position: "top-center",
+      autoClose: 2500,
+    });
+  };
   const hospitals = [
     {
       id: 1,
@@ -28,17 +41,6 @@ function TopHospitals() {
         "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=600",
     },
     {
-      id: 3,
-      name: "KIMS Hospital",
-      specialty: "Multi-Specialty & Trauma",
-      location: "Trivandrum, India",
-      rating: "4.7",
-      description:
-        "A trusted name for affordable, high-quality healthcare and trauma services.",
-      image:
-        "https://images.unsplash.com/photo-1586773860418-d3b3adb998c0?auto=format&fit=crop&q=80&w=600",
-    },
-    {
       id: 4,
       name: "Amrita Hospital",
       specialty: "Multi-Specialty & Oncology",
@@ -48,17 +50,6 @@ function TopHospitals() {
         "A massive medical research center equipped with state-of-the-art diagnostic labs.",
       image:
         "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=600",
-    },
-    {
-      id: 5,
-      name: "Fortis Hospital",
-      specialty: "Multi-Specialty & Ortho",
-      location: "Delhi, India",
-      rating: "4.6",
-      description:
-        "An internationally acclaimed clinic specializing in bone and joint treatments.",
-      image:
-        "https://images.unsplash.com/photo-1584515901107-568315ea0776?auto=format&fit=crop&q=80&w=600",
     },
     {
       id: 6,
@@ -87,42 +78,65 @@ function TopHospitals() {
 
         {/* Hospital Cards Grid */}
         <div className="top-hospitals-grid">
-          {hospitals.map((hospital) => (
-            <div key={hospital.id} className="hospital-card">
-              {/* Card Image Header */}
-              <div className="hospital-image-wrapper">
-                <img
-                  src={hospital.image}
-                  alt={hospital.name}
-                  className="hospital-img"
-                />
-                <div className="hospital-rating-badge">
-                  <FaStar className="star-icon" />
-                  <span>{hospital.rating}</span>
-                </div>
-              </div>
-
-              {/* Card Body */}
-              <div className="hospital-info">
-                <h3 className="hospital-name">{hospital.name}</h3>
-                <span className="hospital-specialty">{hospital.specialty}</span>
-
-                <p className="hospital-description">{hospital.description}</p>
-
-                <div className="hospital-meta">
-                  <FaMapMarkerAlt className="meta-icon" />
-                  <span>{hospital.location}</span>
+          {hospitals
+            .slice(startIndex, startIndex + visibleCount)
+            .map((hospital) => (
+              <div key={hospital.id} className="hospital-card">
+                {/* Card Image Header */}
+                <div className="hospital-image-wrapper">
+                  <img
+                    src={hospital.image}
+                    alt={hospital.name}
+                    className="hospital-img"
+                  />
+                  <div className="hospital-rating-badge">
+                    <FaStar className="star-icon" />
+                    <span>{hospital.rating}</span>
+                  </div>
                 </div>
 
-                <Link
-                  to={`/hospital/details/${hospital.id}`}
-                  className="btn-outline hospital-card-btn"
-                >
-                  View Details
-                </Link>
+                {/* Card Body */}
+                <div className="hospital-info">
+                  <h3 className="hospital-name">{hospital.name}</h3>
+                  <span className="hospital-specialty">{hospital.specialty}</span>
+
+                  <p className="hospital-description">{hospital.description}</p>
+
+                  <div className="hospital-meta">
+                    <FaMapMarkerAlt className="meta-icon" />
+                    <span>{hospital.location}</span>
+                  </div>
+
+                  <button
+                    className="btn-outline hospital-card-btn hospital-view-btn"
+                    onClick={handleViewDetails}
+                  >
+                    View Details
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+        </div>
+        <div className="doctor-nav">
+          <button
+            className="nav-btn"
+            onClick={() =>
+              setStartIndex((prev) => Math.max(prev - 1, 0))
+            }
+          >
+            ◀
+          </button>
+
+          <button
+            className="nav-btn"
+            onClick={() =>
+              setStartIndex((prev) =>
+                prev + visibleCount < hospitals.length ? prev + 1 : prev
+              )
+            }
+          >
+            ▶
+          </button>
         </div>
       </div>
     </section>
