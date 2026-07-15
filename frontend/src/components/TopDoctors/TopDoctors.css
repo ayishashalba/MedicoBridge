@@ -1,13 +1,58 @@
 .top-doctors-section {
   position: relative;
   background-color: var(--white);
-  padding: 5.5rem 2rem;
+  padding: 5.0rem 2rem;
 }
 
 .top-doctors-container {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
+}
+
+/* Image */
+.doctor-image-wrapper {
+  height: 100px;
+  /* before 300px */
+}
+
+/* Card Content */
+.doctor-info {
+  padding: 1.3rem;
+  /* before 2rem */
+  gap: 0.75rem;
+}
+
+.doctor-name {
+  font-size: 1.05rem;
+  margin: 0;
+}
+
+.doctor-specialty {
+  margin: 0;
+}
+
+.doctor-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.5rem 0;
+  margin: 0;
+}
+
+.meta-item {
+  font-size: 0.8rem;
+}
+
+.meta-icon {
+  font-size: 0.85rem;
+}
+
+/* Button */
+.doctor-card-btn {
+  margin-top: 0.2rem;
+  padding: 0.55rem;
+  font-size: 0.82rem;
 }
 
 /* Section Header */
@@ -34,23 +79,23 @@
 
 /* Doctor Cards Grid */
 .top-doctors-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
-  gap: 2.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 /* Doctor Card */
 .doctor-card {
-  background-color: var(--white);
+  width: 280px;
+  /* before full width */
+  min-height: 350px;
+  background: #fff;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
   overflow: hidden;
-  min-height: 420px;
-  /* Critical for wrapping image border-radius */
-  transition: all var(--transition-normal);
+  transition: all .3s ease;
 }
 
 .doctor-card:hover {
@@ -63,16 +108,14 @@
 .doctor-image-wrapper {
   position: relative;
   width: 100%;
-  height: 300px;
+  height: 200px;
   overflow: hidden;
-  background-color: var(--bg-secondary);
 }
 
 .doctor-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform var(--transition-slow);
 }
 
 .doctor-card:hover .doctor-img {
@@ -108,11 +151,11 @@
 
 /* Info Section styling */
 .doctor-info {
-  padding: 2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  flex-grow: 1;
+  gap: 0.5rem;
+  flex-grow: 0;
 }
 
 .doctor-name {
@@ -196,6 +239,7 @@
 
 /* Responsive Queries */
 @media screen and (max-width: 992px) {
+
   .top-doctors-section {
     padding: 4.5rem 1.5rem;
   }
@@ -211,6 +255,11 @@
 }
 
 @media screen and (max-width: 600px) {
+  .doctor-image-wrapper {
+    height: 200px;
+    /* before 240px */
+  }
+
   .top-doctors-grid {
     grid-template-columns: 1fr;
   }
@@ -225,7 +274,4 @@
     width: 100%;
   }
 
-  .doctor-image-wrapper {
-    height: 240px;
-  }
 }

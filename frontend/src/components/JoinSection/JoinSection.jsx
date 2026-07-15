@@ -21,7 +21,7 @@ function JoinSection() {
       description:
         "Manage patients, offer online consultation, grow your practice",
       buttonText: "Join as Doctor",
-      link: "/apply/doctor",
+      link: "/register/doctor",
       icon: <FaUserMd />,
       colorClass: "doctor-theme",
     },
