@@ -179,33 +179,21 @@ function DepartmentsSection() {
                             <p>Select a specialization</p>
                         </div>
 
-                        <div className="department-list">
+                        <div className="subcategory-list">
                             {departments[selectedCategory].items.map((item) => (
                                 <div
                                     key={item}
-                                    className="department-card"
+                                    className="subcategory-item"
                                     onClick={() =>
-                                        toast.info(
-                                            `🔒 Login to view doctors in ${item}.`,
-                                            {
-                                                position: "top-center",
-                                                autoClose: 2500,
-                                            }
-                                        )
+                                        toast.info(`🔒 Login to view doctors in ${item}.`)
                                     }
                                 >
-                                    <div className="department-left">
-                                        <div className="icon">
-                                            🩺
-                                        </div>
+                                    <div className="sub-icon">🩺</div>
 
-                                        <div className="department-title">
-                                            {item}
-                                        </div>
-                                    </div>
+                                    <div className="sub-title">{item}</div>
 
-                                    <div className="department-arrow">
-                                        <FaChevronRight />
+                                    <div className="sub-desc">
+                                        View specialists in {item}.
                                     </div>
                                 </div>
                             ))}
