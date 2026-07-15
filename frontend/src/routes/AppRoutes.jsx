@@ -3,15 +3,6 @@ import { Routes, Route } from "react-router-dom";
 
 // Public / Landing
 import Landing from "../pages/Landing/Landing";
-
-// Landing Navbar Pages
-import FindDoctors from "../pages/Landing/FindDoctors";
-import Hospitals from "../pages/Landing/Hospitals";
-import Pharmacy from "../pages/Landing/Pharmacy";
-import Departments from "../pages/Landing/Departments";
-import About from "../pages/Landing/About";
-import Contact from "../pages/Landing/Contact";
-
 // Auth pages
 import Login from "../pages/Login/Login";
 import PatientLogin from "../pages/Login/PatientLogin";
@@ -124,14 +115,6 @@ function AppRoutes() {
       {/* ── Public ────────────────────────────────────────── */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
-
-      {/* ── Navbar pages ────────────────────────────────────── */}
-      <Route path="/find-doctors" element={<FindDoctors />} />
-      <Route path="/hospitals" element={<Hospitals />} />
-      <Route path="/pharmacy" element={<Pharmacy />} />
-      <Route path="/departments" element={<Departments />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/contact" element={<Contact />} />
 
       {/* ── Role Login ────────────────────────────────────── */}
       <Route path="/login/patient" element={<PatientLogin />} />

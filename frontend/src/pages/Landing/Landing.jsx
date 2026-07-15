@@ -19,6 +19,9 @@ function Landing() {
         <WhyChoose />
         <TopDoctors />
         <TopHospitals />
+        <section id="about">
+          <About />
+        </section>
       </main>
       <Footer />
     </div>

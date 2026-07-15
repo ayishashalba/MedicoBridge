@@ -137,15 +137,13 @@ function Navbar() {
               </NavLink>
             </li>
             <li className="nav-item">
-              <NavLink
-                to="/about"
-                className={({ isActive }) =>
-                  `nav-links ${isActive ? "active-link" : ""}`
-                }
+              <a
+                href="/#about"
+                className="nav-links"
                 onClick={closeAllMenus}
               >
                 About Us
-              </NavLink>
+              </a>
             </li>
             <li className="nav-item">
               <NavLink
@@ -175,9 +173,8 @@ function Navbar() {
             <div className="dropdown-wrapper">
               <button
                 type="button"
-                className={`btn-outline dropdown-trigger ${
-                  activeDropdown === "login" ? "active" : ""
-                }`}
+                className={`btn-outline dropdown-trigger ${activeDropdown === "login" ? "active" : ""
+                  }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleDropdown("login");
@@ -223,9 +220,8 @@ function Navbar() {
             <div className="dropdown-wrapper">
               <button
                 type="button"
-                className={`btn-primary dropdown-trigger ${
-                  activeDropdown === "register" ? "active" : ""
-                }`}
+                className={`btn-primary dropdown-trigger ${activeDropdown === "register" ? "active" : ""
+                  }`}
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleDropdown("register");
