@@ -13,10 +13,9 @@ function Navbar() {
   const handlePharmacyClick = () => {
     closeAllMenus();
 
-    toast.info("🔒 Please login as a Patient to access the Pharmacy.", {
-      autoClose: 2000,
-      onClose: () => navigate("/login/patient"),
-    });
+    toast.info(
+      "🔒 Pharmacy services are available only for registered patients. Please login to continue."
+    );
   };
 
   useEffect(() => {
