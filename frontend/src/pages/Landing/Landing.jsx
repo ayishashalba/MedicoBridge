@@ -1,7 +1,6 @@
 import React from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import HeroSection from "../../components/HeroSection/HeroSection";
-import SearchSection from "../../components/SearchSection/SearchSection";
 import JoinSection from "../../components/JoinSection/JoinSection";
 import WhyChoose from "../../components/WhyChoose/WhyChoose";
 import TopDoctors from "../../components/TopDoctors/TopDoctors";
@@ -17,9 +16,6 @@ function Landing() {
       <main>
         <section id="hero">
           <HeroSection />
-        </section>
-        <section id="search">
-          <SearchSection />
         </section>
         <section id="join">
           <JoinSection />
