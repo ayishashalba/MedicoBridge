@@ -409,8 +409,8 @@
   gap: 0.85rem;
   padding: 0.72rem 0.9rem;
   border-radius: var(--radius-md);
-  color: rgba(255, 100, 100, 0.7);
-  font-size: 0.88rem;
+  color: rgb(255, 0, 0);
+  font-size: 4rem;
   font-weight: 500;
   background: transparent;
   border: none;
@@ -422,8 +422,8 @@
 }
 
 .sidebar-logout-btn:hover {
-  background: rgba(239, 68, 68, 0.12);
-  color: #f87171;
+  background: rgb(255, 0, 0);
+  color: #ff0202;
 }
 
 /* ── Mobile Overlay ──────────────────────────────────────── */
