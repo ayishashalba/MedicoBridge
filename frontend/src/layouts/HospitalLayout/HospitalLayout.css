@@ -4,31 +4,27 @@
    ================================================================ */
 
 :root {
+  /* Primary */
+  --primary-color: #059669;
+  --primary-dark: #047857;
 
-  /* Primary Colors */
-
-  --primary-color: #063b33;
-  --primary-dark: #042e28;
-
-  --secondary-color: #0ea5e9;
-  --secondary-hover: #0284c7;
-  --secondary-light: #e0f2fe;
+  /* Accent */
+  --secondary-color: #10b981;
+  --secondary-hover: #059669;
+  --secondary-light: #d1fae5;
 
   /* Background */
-
   --bg-primary: #ffffff;
-  --bg-secondary: #f4f8fc;
-  --bg-page: #eef5fb;
+  --bg-secondary: #f0fdf4;
+  --bg-page: #ecfdf5;
 
   /* Text */
-
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
 
   /* Border */
-
-  --border-color: #e2e8f0;
+  --border-color: #d1fae5;
 
   /* Radius */
 
@@ -78,7 +74,7 @@
   bottom: 0;
   left: 0;
   width: 260px;
-  /* background: linear-gradient(180deg, #0ea5e9, #0284c7); */
+  background: linear-gradient(135deg, #059669, #10b981);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -86,18 +82,15 @@
   transition: width var(--transition-normal);
 }
 
-.hospital-sidebar {
-  background: linear-gradient(180deg, #1e3a5f, #172554);
-}
-
 .sidebar-nav-link--active {
-  background: rgba(255, 255, 255, 0.15);
-  border-left: 4px solid #93c5fd;
+  background: rgba(255, 255, 255, .18);
+  border-left: 4px solid #a7f3d0;
+  color: #fff;
 }
 
 .sidebar-profile-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 /* Sidebar Collapsed State */
@@ -126,13 +119,13 @@
   width: 38px;
   height: 38px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--secondary-color), #0369a1);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.15rem;
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.2);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
   flex-shrink: 0;
 }
 
@@ -206,13 +199,17 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background-color: var(--secondary-light);
-  color: var(--secondary-color);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
   border: 2px solid var(--bg-primary);
+}
+
+.profile-avatar,
+.topnav-avatar {
+  background: #d1fae5;
+  color: #059669;
 }
 
 .profile-status-dot {
@@ -294,8 +291,8 @@
 }
 
 .sidebar-nav-link:hover {
-  background-color: var(--bg-secondary);
-  color: var(--secondary-color);
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
 }
 
 .sidebar-nav-link--active {
@@ -505,8 +502,6 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--secondary-light);
-  color: var(--secondary-color);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -559,8 +554,9 @@
 
   .sidebar-profile-card {
     padding: 0.5rem;
-    background-color: transparent;
-    border-color: transparent;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .2);
+    backdrop-filter: blur(10px);
     margin: 1rem auto 0.5rem auto;
   }
 

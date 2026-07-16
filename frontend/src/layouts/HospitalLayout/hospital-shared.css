@@ -58,7 +58,6 @@
 
 /* ── Shared Add / Action Button ──────────────────────────── */
 .hosp-btn-add {
-  background-color: var(--secondary-color);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
@@ -69,14 +68,23 @@
   align-items: center;
   gap: 0.45rem;
   cursor: pointer;
-  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.2);
   transition: all var(--transition-fast);
   white-space: nowrap;
 }
 
 .hosp-btn-add:hover {
-  background-color: var(--secondary-hover);
   transform: translateY(-1px);
+}
+
+.hosp-btn-add,
+.hosp-btn-submit {
+  background: linear-gradient(135deg, #059669, #10b981);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, .25);
+}
+
+.hosp-btn-add:hover,
+.hosp-btn-submit:hover {
+  background: linear-gradient(135deg, #047857, #059669);
 }
 
 /* ── Shared Table Styles ─────────────────────────────────── */
@@ -149,9 +157,20 @@
   white-space: nowrap;
 }
 
-.hosp-status-pill--critical    { background-color: #fee2e2; color: #dc2626; }
-.hosp-status-pill--stable      { background-color: #dcfce7; color: #16a34a; }
-.hosp-status-pill--observation { background-color: #fffbeb; color: #d97706; }
+.hosp-status-pill--critical {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.hosp-status-pill--stable {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.hosp-status-pill--observation {
+  background-color: #fffbeb;
+  color: #d97706;
+}
 
 /* ── Shared Empty State ──────────────────────────────────── */
 .hosp-table-empty {
@@ -203,8 +222,15 @@
 }
 
 @keyframes modal-zoom-in {
-  from { transform: scale(0.95); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .hosp-modal-header {
@@ -281,7 +307,6 @@
 }
 
 .hosp-btn-submit {
-  background-color: var(--secondary-color);
   color: #fff;
   border: none;
   border-radius: var(--radius-md);
@@ -293,13 +318,11 @@
   justify-content: center;
   gap: 0.5rem;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
   margin-top: 0.5rem;
   transition: all var(--transition-fast);
 }
 
 .hosp-btn-submit:hover {
-  background-color: var(--secondary-hover);
   transform: translateY(-1px);
 }
 
