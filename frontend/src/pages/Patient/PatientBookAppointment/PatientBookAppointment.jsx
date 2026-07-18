@@ -397,21 +397,114 @@ function PatientBookAppointment() {
   /* ── Form State ─────────────────────────────────────────────── */
   const today = new Date().toISOString().split("T")[0];
 
-  const [selectedDay, setSelectedDay] = useState(preState.day || doctor.availableDays[0]);
+  // Helper: Find next date for weekday
+  const getNextDateForDay = (dayName) => {
+    const todayDate = new Date();
+    const targetDayIndex = DAYS_ORDER.indexOf(dayName);
+    const jsTargetDay = targetDayIndex === 6 ? 0 : targetDayIndex + 1; // 0=Sunday, 1=Monday...
+    const currentDay = todayDate.getDay();
+    let daysToAdd = (jsTargetDay - currentDay + 7) % 7;
+    
+    const targetDate = new Date();
+    targetDate.setDate(todayDate.getDate() + daysToAdd);
+    return targetDate.toISOString().split("T")[0];
+  };
+
+  const initialDay = preState.day || doctor.availableDays[0];
+  const initialDate = preState.date || getNextDateForDay(initialDay);
+
+  const [selectedDay, setSelectedDay] = useState(initialDay);
   const [selectedSlot, setSelectedSlot] = useState(preState.slot || "");
   const [consultationType, setConsultationType] = useState("in-person");
-  const [appointmentDate, setAppointmentDate] = useState(preState.date || "");
+  const [appointmentDate, setAppointmentDate] = useState(initialDate);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState({});
-  const [booking, setBooking] = useState(null);
+
+  // New States
+  const [bookingFor, setBookingFor] = useState("self");
+  const [familyMemberName, setFamilyMemberName] = useState("");
+  const [familyRelation, setFamilyRelation] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("hospital");
+  const [agreePolicy, setAgreePolicy] = useState(false);
+
+  // File Upload states
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
+
+  // Helper for slots left
+  const getRemainingSlotsCount = () => {
+    if (!appointmentDate) return null;
+    const daySeed = new Date(appointmentDate).getDate() || 1;
+    return (daySeed % 4) + 2; // Returns 2, 3, 4 or 5
+  };
+
+  const handleFileUpload = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    setUploading(true);
+    setTimeout(() => {
+      const newFiles = files.map((f) => ({
+        name: f.name,
+        size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
+      }));
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+      setUploading(false);
+    }, 1000);
+  };
+
+  const handleRemoveFile = (index) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDateChange = (val) => {
+    setAppointmentDate(val);
+    if (!val) {
+      setErrors((prev) => ({ ...prev, date: "Please select an appointment date." }));
+      return;
+    }
+
+    const dateObj = new Date(val);
+    const dayOfWeekIndex = dateObj.getDay();
+    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = dayNames[dayOfWeekIndex];
+
+    if (val < today) {
+      setErrors((prev) => ({ ...prev, date: "Past dates are not allowed." }));
+    } else if (!doctor.availableDays.includes(dayName)) {
+      setErrors((prev) => ({
+        ...prev,
+        date: `Dr. ${doctor.name} is not available on ${dayName}s. Available days: ${doctor.availableDays.join(", ")}`,
+      }));
+    } else {
+      setErrors((prev) => ({ ...prev, date: "" }));
+      setSelectedDay(dayName);
+    }
+  };
 
   /* ── Validation ─────────────────────────────────────────────── */
   const validate = () => {
     const errs = {};
-    if (!appointmentDate) errs.date = "Please select an appointment date.";
+    if (!appointmentDate) {
+      errs.date = "Please select an appointment date.";
+    } else {
+      const dateObj = new Date(appointmentDate);
+      const dayOfWeekIndex = dateObj.getDay();
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const dayName = dayNames[dayOfWeekIndex];
+      if (appointmentDate < today) {
+        errs.date = "Past dates are not allowed.";
+      } else if (!doctor.availableDays.includes(dayName)) {
+        errs.date = `Doctor is not available on ${dayName}s.`;
+      }
+    }
     if (!selectedSlot) errs.slot = "Please choose an available time slot.";
     if (!reason) errs.reason = "Please select a reason for your visit.";
+    if (bookingFor === "family") {
+      if (!familyMemberName.trim()) errs.familyMemberName = "Please enter the family member's name.";
+      if (!familyRelation) errs.familyRelation = "Please select a relationship.";
+    }
+    if (!agreePolicy) errs.agreePolicy = "You must agree to the appointment & cancellation policy.";
     return errs;
   };
 
@@ -420,8 +513,10 @@ function PatientBookAppointment() {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
-      const firstErrorEl = document.querySelector(".bk-field-error");
-      if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      setTimeout(() => {
+        const firstErrorEl = document.querySelector(".bk-field-error");
+        if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
       return;
     }
     setErrors({});
@@ -433,27 +528,26 @@ function PatientBookAppointment() {
       year: "numeric",
     });
 
-    setBooking({
-      appointmentId: generateAppointmentId(),
-      date: formatted,
-      slot: selectedSlot,
-      consultationType,
-      reason,
-      notes,
+    // Redirect to success page
+    navigate("/patient/booking-success", {
+      state: {
+        booking: {
+          appointmentId: generateAppointmentId(),
+          date: formatted,
+          slot: selectedSlot,
+          consultationType,
+          paymentMethod,
+          bookingFor,
+          familyMemberName,
+          familyRelation,
+          uploadedFiles,
+          reason,
+          notes,
+        },
+        doctor,
+      },
     });
   };
-
-  /* ── Success screen ─────────────────────────────────────────── */
-  if (booking) {
-    return (
-      <BookingSuccessCard
-        booking={booking}
-        doctor={doctor}
-        onGoHome={() => navigate("/patient/dashboard")}
-        onGoAppointments={() => navigate("/patient/appointments")}
-      />
-    );
-  }
 
   return (
     <div className="bk-page">
@@ -503,28 +597,107 @@ function PatientBookAppointment() {
               <FaUser className="bk-section-icon" />
               Patient Information
             </h2>
-            <div className="bk-form-grid bk-form-grid--2">
-              <div className="bk-field">
-                <label className="bk-label" htmlFor="bk-patient-name">
-                  Patient Name
-                </label>
-                <div className="bk-readonly-field" id="bk-patient-name" aria-readonly="true">
-                  <FaUser className="bk-field-prefix-icon" />
-                  <span>John Doe</span>
-                  <span className="bk-readonly-badge">Auto-filled</span>
-                </div>
-              </div>
-              <div className="bk-field">
-                <label className="bk-label" htmlFor="bk-patient-id">
-                  Patient ID
-                </label>
-                <div className="bk-readonly-field" id="bk-patient-id" aria-readonly="true">
-                  <FaIdCard className="bk-field-prefix-icon" />
-                  <span>#PT-20041</span>
-                  <span className="bk-readonly-badge">Auto-filled</span>
-                </div>
+
+            <div className="bk-field">
+              <label className="bk-label">Booking For</label>
+              <div className="bk-booking-for-group">
+                <button
+                  type="button"
+                  className={`bk-booking-for-btn ${bookingFor === "self" ? "active" : ""}`}
+                  onClick={() => setBookingFor("self")}
+                >
+                  Self
+                </button>
+                <button
+                  type="button"
+                  className={`bk-booking-for-btn ${bookingFor === "family" ? "active" : ""}`}
+                  onClick={() => setBookingFor("family")}
+                >
+                  Family Member
+                </button>
               </div>
             </div>
+
+            {bookingFor === "self" ? (
+              <div className="bk-form-grid bk-form-grid--2">
+                <div className="bk-field">
+                  <label className="bk-label" htmlFor="bk-patient-name">
+                    Patient Name
+                  </label>
+                  <div className="bk-readonly-field" id="bk-patient-name" aria-readonly="true">
+                    <FaUser className="bk-field-prefix-icon" />
+                    <span>John Doe</span>
+                    <span className="bk-readonly-badge">Auto-filled</span>
+                  </div>
+                </div>
+                <div className="bk-field">
+                  <label className="bk-label" htmlFor="bk-patient-id">
+                    Patient ID
+                  </label>
+                  <div className="bk-readonly-field" id="bk-patient-id" aria-readonly="true">
+                    <FaIdCard className="bk-field-prefix-icon" />
+                    <span>#PT-20041</span>
+                    <span className="bk-readonly-badge">Auto-filled</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bk-form-grid bk-form-grid--2 bk-fade-in">
+                <div className="bk-field">
+                  <label className="bk-label" htmlFor="bk-family-name">
+                    Family Member Name <span className="bk-required">*</span>
+                  </label>
+                  <div className={`bk-input-wrapper ${errors.familyMemberName ? "bk-input--error" : ""}`}>
+                    <FaUser className="bk-input-icon" />
+                    <input
+                      type="text"
+                      id="bk-family-name"
+                      className="bk-input"
+                      placeholder="Enter full name"
+                      value={familyMemberName}
+                      onChange={(e) => {
+                        setFamilyMemberName(e.target.value);
+                        if (errors.familyMemberName) setErrors((prev) => ({ ...prev, familyMemberName: "" }));
+                      }}
+                    />
+                  </div>
+                  {errors.familyMemberName && (
+                    <p className="bk-field-error" role="alert">
+                      <FaTimesCircle /> {errors.familyMemberName}
+                    </p>
+                  )}
+                </div>
+                <div className="bk-field">
+                  <label className="bk-label" htmlFor="bk-family-relation">
+                    Relationship <span className="bk-required">*</span>
+                  </label>
+                  <div className={`bk-input-wrapper ${errors.familyRelation ? "bk-input--error" : ""}`}>
+                    <FaUser className="bk-input-icon" />
+                    <select
+                      id="bk-family-relation"
+                      className="bk-select"
+                      value={familyRelation}
+                      onChange={(e) => {
+                        setFamilyRelation(e.target.value);
+                        if (errors.familyRelation) setErrors((prev) => ({ ...prev, familyRelation: "" }));
+                      }}
+                    >
+                      <option value="">Select Relationship...</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Child">Child</option>
+                      <option value="Parent">Parent</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  {errors.familyRelation && (
+                    <p className="bk-field-error" role="alert">
+                      <FaTimesCircle /> {errors.familyRelation}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* ── Section: Date & Time ─────────────────────── */}
@@ -547,10 +720,7 @@ function PatientBookAppointment() {
                   className="bk-input"
                   min={today}
                   value={appointmentDate}
-                  onChange={(e) => {
-                    setAppointmentDate(e.target.value);
-                    if (errors.date) setErrors((prev) => ({ ...prev, date: "" }));
-                  }}
+                  onChange={(e) => handleDateChange(e.target.value)}
                   aria-describedby={errors.date ? "bk-date-error" : undefined}
                   aria-invalid={!!errors.date}
                 />
@@ -571,7 +741,13 @@ function PatientBookAppointment() {
                     key={day}
                     type="button"
                     className={`bk-day-chip ${selectedDay === day ? "bk-day-chip--active" : ""}`}
-                    onClick={() => { setSelectedDay(day); setSelectedSlot(""); }}
+                    onClick={() => {
+                      setSelectedDay(day);
+                      setSelectedSlot("");
+                      const nextDate = getNextDateForDay(day);
+                      setAppointmentDate(nextDate);
+                      setErrors((prev) => ({ ...prev, date: "" }));
+                    }}
                     aria-pressed={selectedDay === day}
                   >
                     {day.slice(0, 3)}
@@ -582,8 +758,15 @@ function PatientBookAppointment() {
 
             {/* Time Slots */}
             <div className="bk-field">
-              <label className="bk-label">
-                Time Slot — {selectedDay} <span className="bk-required">*</span>
+              <label className="bk-label" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
+                <span>
+                  Time Slot — {selectedDay} <span className="bk-required">*</span>
+                </span>
+                {appointmentDate && !errors.date && (
+                  <span className="bk-slots-remaining" style={{ color: "#16a34a", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem" }}>
+                    🟢 {getRemainingSlotsCount()} slots left {appointmentDate === today ? "today" : "for this day"}
+                  </span>
+                )}
               </label>
               <div
                 className={`bk-slot-grid ${errors.slot ? "bk-slot-grid--error" : ""}`}
@@ -640,7 +823,7 @@ function PatientBookAppointment() {
                 </div>
                 <div className="bk-consult-info">
                   <p className="bk-consult-title">In-Person Visit</p>
-                  <p className="bk-consult-desc">Visit the doctor at the clinic / hospital</p>
+                  <p className="bk-consult-desc">Visit the doctor at the clinic / hospital (⏱ 20–30 mins)</p>
                 </div>
                 <div className="bk-consult-check">
                   <FaCheckCircle />
@@ -665,9 +848,68 @@ function PatientBookAppointment() {
                 </div>
                 <div className="bk-consult-info">
                   <p className="bk-consult-title">Video Consultation</p>
-                  <p className="bk-consult-desc">Consult online via video call from home</p>
+                  <p className="bk-consult-desc">Consult online via video call from home (⏱ 20–30 mins)</p>
                 </div>
                 <div className="bk-consult-check">
+                  <FaCheckCircle />
+                </div>
+              </label>
+            </div>
+          </section>
+
+          {/* ── Section: Payment Option ─────────────────── */}
+          <section className="bk-form-section" aria-labelledby="bk-payment-heading">
+            <h2 id="bk-payment-heading" className="bk-section-title">
+              <FaMoneyBillWave className="bk-section-icon" />
+              Payment Option
+            </h2>
+            <div className="bk-payment-options" role="radiogroup" aria-label="Choose payment option">
+              <label
+                className={`bk-payment-card ${paymentMethod === "hospital" ? "bk-payment-card--active" : ""}`}
+                htmlFor="bk-pay-hospital"
+              >
+                <input
+                  type="radio"
+                  id="bk-pay-hospital"
+                  name="paymentMethod"
+                  value="hospital"
+                  className="bk-radio-hidden"
+                  checked={paymentMethod === "hospital"}
+                  onChange={() => setPaymentMethod("hospital")}
+                />
+                <div className="bk-payment-icon bk-payment-icon--hospital">
+                  <FaHospital />
+                </div>
+                <div className="bk-payment-info">
+                  <p className="bk-payment-title">Pay at Hospital</p>
+                  <p className="bk-payment-desc">Pay at reception desk during your visit</p>
+                </div>
+                <div className="bk-payment-check">
+                  <FaCheckCircle />
+                </div>
+              </label>
+
+              <label
+                className={`bk-payment-card ${paymentMethod === "online" ? "bk-payment-card--active" : ""}`}
+                htmlFor="bk-pay-online"
+              >
+                <input
+                  type="radio"
+                  id="bk-pay-online"
+                  name="paymentMethod"
+                  value="online"
+                  className="bk-radio-hidden"
+                  checked={paymentMethod === "online"}
+                  onChange={() => setPaymentMethod("online")}
+                />
+                <div className="bk-payment-icon bk-payment-icon--online">
+                  <FaMoneyBillWave />
+                </div>
+                <div className="bk-payment-info">
+                  <p className="bk-payment-title">Pay Online</p>
+                  <p className="bk-payment-desc">Pay securely online using card/UPI</p>
+                </div>
+                <div className="bk-payment-check">
                   <FaCheckCircle />
                 </div>
               </label>
@@ -732,10 +974,96 @@ function PatientBookAppointment() {
               </div>
               <p className="bk-char-count">{notes.length}/500 characters</p>
             </div>
+
+            {/* Optional File Upload */}
+            <div className="bk-field" style={{ marginTop: "0.5rem" }}>
+              <label className="bk-label">📄 Upload Previous Reports <span className="bk-optional">(optional)</span></label>
+              <div className="bk-upload-container">
+                <label htmlFor="bk-file-upload" className="bk-upload-dropzone">
+                  <FaFileAlt className="bk-upload-icon" />
+                  <span>Click to upload or drag files here</span>
+                  <span className="bk-upload-subtext">PDF, JPEG, or PNG up to 10MB</span>
+                  <input
+                    type="file"
+                    id="bk-file-upload"
+                    className="bk-file-input"
+                    multiple
+                    onChange={handleFileUpload}
+                    disabled={uploading}
+                  />
+                </label>
+
+                {uploading && (
+                  <div className="bk-upload-progress">
+                    <div className="bk-upload-spinner" />
+                    <span>Uploading file(s)...</span>
+                  </div>
+                )}
+
+                {uploadedFiles.length > 0 && (
+                  <ul className="bk-uploaded-list">
+                    {uploadedFiles.map((file, index) => (
+                      <li key={index} className="bk-uploaded-item">
+                        <FaFileAlt className="bk-file-item-icon" />
+                        <div className="bk-file-details">
+                          <span className="bk-file-name">{file.name}</span>
+                          <span className="bk-file-size">{file.size}</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="bk-file-remove-btn"
+                          onClick={() => handleRemoveFile(index)}
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          <FaTimesCircle />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </section>
 
+          {/* Policy Checkbox */}
+          <div className="bk-field bk-policy-wrapper" style={{ marginTop: "0.5rem" }}>
+            <label className="bk-checkbox-label" style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                className="bk-checkbox"
+                style={{ marginTop: "0.2rem" }}
+                checked={agreePolicy}
+                onChange={(e) => {
+                  setAgreePolicy(e.target.checked);
+                  if (errors.agreePolicy) setErrors((prev) => ({ ...prev, agreePolicy: "" }));
+                }}
+              />
+              <span className="bk-checkbox-text" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+                I agree to the{" "}
+                <a
+                  href="#policy"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert(
+                      "Appointment & Cancellation Policy:\n\n1. Cancellations or rescheduling requests can be made up to 24 hours prior to the appointment time.\n2. In case of Pay Online, refunds will be credited to the original payment method within 5-7 working days.\n3. Late arrivals (more than 15 minutes) may result in automatic cancellation of the slot."
+                    );
+                  }}
+                  style={{ color: "var(--primary-color)", fontWeight: "600", textDecoration: "underline" }}
+                >
+                  appointment &amp; cancellation policy
+                </a>
+                <span className="bk-required">*</span>
+              </span>
+            </label>
+            {errors.agreePolicy && (
+              <p className="bk-field-error" role="alert" style={{ marginTop: "0.25rem" }}>
+                <FaTimesCircle /> {errors.agreePolicy}
+              </p>
+            )}
+          </div>
+
           {/* ── Action Buttons ───────────────────────────── */}
-          <div className="bk-form-actions">
+          <div className="bk-form-actions" style={{ marginTop: "1rem" }}>
             <button
               type="button"
               className="bk-btn bk-btn--cancel"
@@ -819,6 +1147,16 @@ function PatientBookAppointment() {
                 </dt>
                 <dd>{consultationType === "video" ? "Video Call" : "In-Person"}</dd>
               </div>
+              <div className="bk-summary-row">
+                <dt><FaClock className="bk-si" /> Est. Duration</dt>
+                <dd>⏱ 20–30 mins</dd>
+              </div>
+              <div className="bk-summary-row">
+                <dt><FaClock className="bk-si" /> Est. Confirmation</dt>
+                <dd style={{ color: "var(--primary-color)", fontWeight: "700" }}>
+                  {isHospital ? "1–2 Hours" : "Under 30 mins"}
+                </dd>
+              </div>
               {selectedSlot && (
                 <div className="bk-summary-row">
                   <dt><FaClock className="bk-si" /> Time Slot</dt>
@@ -841,6 +1179,26 @@ function PatientBookAppointment() {
                 <FaMapMarkerAlt className="bk-si bk-si--loc" /> Full Address
               </p>
               <p className="bk-summary-address-text">{doctor.address}</p>
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  doctor.name + ", " + doctor.hospital + ", " + doctor.address
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bk-maps-link"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  fontSize: "0.75rem",
+                  fontWeight: "700",
+                  color: "var(--primary-color)",
+                  marginTop: "0.4rem",
+                  textDecoration: "underline",
+                }}
+              >
+                📍 View on Google Maps
+              </a>
             </div>
 
             {/* Booking type notice (right column) */}

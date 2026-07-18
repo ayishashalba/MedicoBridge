@@ -1138,3 +1138,275 @@
     display: none;
   }
 }
+
+/* ================================================================
+   ── ADDED ENHANCEMENT STYLES ────────────────────────────────────
+   ================================================================ */
+
+/* Booking for toggle buttons */
+.bk-booking-for-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.bk-booking-for-btn {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.bk-booking-for-btn:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  background: var(--bg-accent);
+}
+
+.bk-booking-for-btn.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(13, 148, 136, 0.25);
+}
+
+/* Payment Options (matching consultation option layout) */
+.bk-payment-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.bk-payment-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  position: relative;
+  transition: all var(--transition-fast);
+}
+
+.bk-payment-card:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-accent);
+}
+
+.bk-payment-card--active {
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.bk-payment-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.bk-payment-icon--hospital {
+  background: var(--secondary-light);
+  color: var(--secondary-color);
+}
+
+.bk-payment-icon--online {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.bk-payment-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bk-payment-title {
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.bk-payment-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.15rem;
+}
+
+.bk-payment-check {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all var(--transition-fast);
+}
+
+.bk-payment-card--active .bk-payment-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Upload reports dropzone */
+.bk-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.bk-upload-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.bk-upload-dropzone:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-accent);
+}
+
+.bk-upload-icon {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.bk-upload-dropzone span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.bk-upload-subtext {
+  font-size: 0.72rem;
+  color: var(--text-muted) !important;
+  margin-top: 0.2rem;
+}
+
+.bk-file-input {
+  display: none;
+}
+
+.bk-upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.bk-upload-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: bkSpinner 0.8s linear infinite;
+}
+
+@keyframes bkSpinner {
+  to { transform: rotate(360deg); }
+}
+
+.bk-uploaded-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.bk-uploaded-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  animation: bkFadeIn 0.3s ease-out;
+}
+
+.bk-file-item-icon {
+  font-size: 1rem;
+  color: var(--primary-color);
+}
+
+.bk-file-details {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+}
+
+.bk-file-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.bk-file-size {
+  color: var(--text-muted);
+  margin-left: 0.5rem;
+}
+
+.bk-file-remove-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: color var(--transition-fast);
+}
+
+.bk-file-remove-btn:hover {
+  color: #ef4444;
+}
+
+/* Checkbox alignment */
+.bk-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+/* Animations */
+.bk-fade-in {
+  animation: bkFadeIn 0.3s ease-out forwards;
+}
+
+@media screen and (max-width: 768px) {
+  .bk-payment-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
