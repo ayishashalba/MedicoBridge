@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -273,6 +273,7 @@ function PatientDoctorProfile() {
   const [selectedDay, setSelectedDay] = useState(doctor.availableDays[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookingMsg, setBookingMsg] = useState("");
+  const [isSaved, setIsSaved] = useState(false);
 
   const isHospital = doctor.type === "hospital";
 
@@ -285,17 +286,69 @@ function PatientDoctorProfile() {
     });
   };
 
+  const handleSaveDoctor = () => {
+    setIsSaved(!isSaved);
+    setBookingMsg(isSaved ? "Doctor removed from saved list" : "Doctor saved to your profile!");
+    setTimeout(() => setBookingMsg(""), 3000);
+  };
+
+  const handleShareProfile = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setBookingMsg("Profile link copied to clipboard!");
+    } else {
+      setBookingMsg("Profile link: " + window.location.href);
+    }
+    setTimeout(() => setBookingMsg(""), 3000);
+  };
+
+  const similarDoctors = useMemo(() => {
+    let filtered = doctorsData.filter((d) => d.id !== doctor.id && d.specialization === doctor.specialization);
+    if (filtered.length === 0) {
+      filtered = doctorsData.filter((d) => d.id !== doctor.id);
+    }
+    return filtered.slice(0, 3);
+  }, [doctor]);
+
   return (
     <div className="dp-page">
-      {/* ── Back Button ───────────────────────────────────────── */}
-      <button
-        className="dp-back-btn"
-        onClick={() => navigate("/patient/find-doctors")}
-        aria-label="Back to Find Doctors"
-      >
-        <FaArrowLeft />
-        <span>Back to Find Doctors</span>
-      </button>
+      {/* ── Back Button & Actions Row ───────────────────────── */}
+      <div className="dp-header-nav-row">
+        <button
+          className="dp-back-btn"
+          onClick={() => navigate("/patient/find-doctors")}
+          aria-label="Back to Find Doctors"
+        >
+          <FaArrowLeft />
+          <span>Back to Find Doctors</span>
+        </button>
+
+        <div className="dp-header-actions">
+          <button
+            className={`dp-header-action-btn ${isSaved ? "dp-header-action-btn--saved" : ""}`}
+            onClick={handleSaveDoctor}
+            aria-label={isSaved ? "Remove saved doctor" : "Save doctor"}
+          >
+            {isSaved ? "❤️ Saved" : "🤍 Save Doctor"}
+          </button>
+          <button
+            className="dp-header-action-btn"
+            onClick={handleShareProfile}
+            aria-label="Share profile link"
+          >
+            🔗 Share Profile
+          </button>
+        </div>
+      </div>
+
+      {/* ── Availability Banner ─────────────────────────────── */}
+      <div className={`dp-availability-banner ${doctor.available ? "dp-banner--avail" : "dp-banner--unavail"}`}>
+        {doctor.available ? (
+          <span>🟢 Next Available: <strong>{doctor.availableDays[0]}</strong> at <strong>{doctor.slots[0]}</strong></span>
+        ) : (
+          <span>🔴 Currently Unavailable</span>
+        )}
+      </div>
 
       {/* ── Hero Section ──────────────────────────────────────── */}
       <section className="dp-hero" aria-label="Doctor profile hero">
@@ -374,13 +427,20 @@ function PatientDoctorProfile() {
                   <span className="dp-stat-lbl">Languages</span>
                 </div>
               </div>
+              <div className="dp-stat-chip">
+                <span className="dp-inline-icon" style={{ fontSize: "1.1rem" }}>⏱</span>
+                <div>
+                  <span className="dp-stat-val">20–30 mins</span>
+                  <span className="dp-stat-lbl">Avg. Duration</span>
+                </div>
+              </div>
             </div>
 
             {/* Languages */}
             <div className="dp-lang-chips">
               {doctor.languages.map((lang) => (
                 <span key={lang} className="dp-lang-chip">
-                  {lang}
+                  🌐 {lang}
                 </span>
               ))}
             </div>
@@ -398,15 +458,13 @@ function PatientDoctorProfile() {
               <button
                 className="dp-btn dp-btn--outline"
                 aria-label="Start online consultation (UI only)"
+                onClick={() => {
+                  setBookingMsg("Starting video consultation call room...");
+                  setTimeout(() => setBookingMsg(""), 3000);
+                }}
               >
                 <FaVideo />
                 Start Consultation
-              </button>
-              <button
-                className="dp-btn dp-btn--ghost"
-                aria-label="Share profile"
-              >
-                <FaShareAlt />
               </button>
             </div>
 
@@ -484,6 +542,51 @@ function PatientDoctorProfile() {
                 </span>
               ))}
             </div>
+          </section>
+
+          {/* Consultation Options */}
+          <section className="dp-card" aria-labelledby="dp-consultation-heading">
+            <div className="dp-card-header">
+              <FaVideo className="dp-card-header-icon dp-icon--svc" style={{ color: "#3b82f6" }} />
+              <h2 id="dp-consultation-heading" className="dp-card-title">Consultation Options</h2>
+            </div>
+            <div className="dp-consultation-options">
+              <div className="dp-consult-option-item">
+                <span className="dp-consult-icon">🏥</span>
+                <div>
+                  <p className="dp-consult-title">Hospital Visit</p>
+                  <p className="dp-consult-desc">In-person consultation at {doctor.hospital}</p>
+                </div>
+              </div>
+              <div className="dp-consult-option-item">
+                <span className="dp-consult-icon">📹</span>
+                <div>
+                  <p className="dp-consult-title">Video Call</p>
+                  <p className="dp-consult-desc">Face-to-face online consultation</p>
+                </div>
+              </div>
+              <div className="dp-consult-option-item">
+                <span className="dp-consult-icon">📞</span>
+                <div>
+                  <p className="dp-consult-title">Audio Call</p>
+                  <p className="dp-consult-desc">Voice-only consultation for quick checks</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Insurance Accepted */}
+          <section className="dp-card" aria-labelledby="dp-insurance-heading">
+            <div className="dp-card-header">
+              <FaCheckCircle className="dp-card-header-icon dp-icon--edu" style={{ color: "#10b981" }} />
+              <h2 id="dp-insurance-heading" className="dp-card-title">Insurance Accepted</h2>
+            </div>
+            <ul className="dp-insurance-list">
+              <li className="dp-insurance-item">✓ Star Health Insurance</li>
+              <li className="dp-insurance-item">✓ HDFC Ergo Health Insurance</li>
+              <li className="dp-insurance-item">✓ ICICI Lombard General Insurance</li>
+              <li className="dp-insurance-item">✓ Niva Bupa Health Insurance</li>
+            </ul>
           </section>
 
           {/* Patient Reviews */}
@@ -582,7 +685,31 @@ function PatientDoctorProfile() {
               </div>
               <div className="dp-practice-item">
                 <dt className="dp-prac-label">Full Address</dt>
-                <dd className="dp-prac-value dp-prac-address">{doctor.address}</dd>
+                <dd className="dp-prac-value dp-prac-address">
+                  <span>{doctor.address}</span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(doctor.hospital + ", " + doctor.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="dp-maps-link"
+                  >
+                    📍 View on Google Maps
+                  </a>
+                </dd>
+              </div>
+              <div className="dp-practice-item">
+                <dt className="dp-prac-label">Hospital Hours</dt>
+                <dd className="dp-prac-value">
+                  <FaClock className="dp-prac-icon" style={{ color: "var(--primary-color)" }} />
+                  <span>Mon - Sat: 09:00 AM - 06:00 PM (Sun: Closed)</span>
+                </dd>
+              </div>
+              <div className="dp-practice-item">
+                <dt className="dp-prac-label">Avg. Consultation Duration</dt>
+                <dd className="dp-prac-value">
+                  <span className="dp-prac-icon">⏱</span>
+                  <span>20–30 mins</span>
+                </dd>
               </div>
             </dl>
           </section>
@@ -680,6 +807,65 @@ function PatientDoctorProfile() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* ── Similar Doctors Section ──────────────────────────── */}
+      {similarDoctors.length > 0 && (
+        <section className="dp-card dp-similar-section">
+          <div className="dp-card-header">
+            <FaUserMd className="dp-card-header-icon dp-icon--about" />
+            <h2 className="dp-card-title">Similar Doctors</h2>
+          </div>
+          <div className="dp-similar-grid">
+            {similarDoctors.map((simDoc) => (
+              <div
+                key={simDoc.id}
+                className="dp-similar-card"
+                onClick={() => {
+                  navigate(`/patient/doctor-profile/${simDoc.id}`);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <div
+                  className="dp-similar-avatar"
+                  style={{
+                    background: `linear-gradient(135deg, ${simDoc.color}cc, ${simDoc.color}66)`,
+                  }}
+                >
+                  {simDoc.initials}
+                </div>
+                <div className="dp-similar-info">
+                  <h4 className="dp-similar-name">{simDoc.name}</h4>
+                  <p className="dp-similar-spec">{simDoc.specialization}</p>
+                  <p className="dp-similar-hosp">{simDoc.hospital}</p>
+                  <div className="dp-similar-rating">
+                    <FaStar className="dp-stat-star" style={{ color: "#f59e0b" }} />
+                    <span>{simDoc.rating} ({simDoc.reviews} reviews)</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Sticky Bottom Action Bar on Mobile */}
+      <div className="dp-mobile-action-bar">
+        <button
+          className="dp-mobile-action-btn dp-mobile-action-btn--primary"
+          onClick={handleBookAppointment}
+        >
+          <FaCalendarCheck /> Book Appointment
+        </button>
+        <button
+          className="dp-mobile-action-btn dp-mobile-action-btn--outline"
+          onClick={() => {
+            setBookingMsg("Starting video consultation call room...");
+            setTimeout(() => setBookingMsg(""), 3000);
+          }}
+        >
+          <FaVideo /> Start Consultation
+        </button>
       </div>
 
       {/* Floating booking toast */}
