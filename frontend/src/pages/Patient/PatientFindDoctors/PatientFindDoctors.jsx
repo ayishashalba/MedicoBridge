@@ -330,16 +330,72 @@ function PatientFindDoctors() {
   const [activeFilter, setActiveFilter] = useState("All Doctors");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // New location feature states
+  const [selectedCity, setSelectedCity] = useState("All");
+  const [locationMessage, setLocationMessage] = useState("");
+  const [isLocationError, setIsLocationError] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+
+  // Dynamically compute list of unique cities from doctors data
+  const uniqueCities = useMemo(() => {
+    return Array.from(new Set(doctorsData.map((doc) => doc.city))).sort();
+  }, []);
+
+  // Offline mock mapping from lat/lng to one of the cities
+  const getMockCityFromCoords = (lat, lng) => {
+    const sum = Math.abs(lat + lng);
+    const index = Math.floor(sum) % uniqueCities.length;
+    return uniqueCities[index];
+  };
+
+  const handleUseMyLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationMessage("Location access denied. Please select your city manually.");
+      setIsLocationError(true);
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationMessage("");
+    setIsLocationError(false);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const detectedCity = getMockCityFromCoords(latitude, longitude);
+        setSelectedCity(detectedCity);
+        setLocationMessage(`📍 Showing doctors near ${detectedCity}`);
+        setIsLocationError(false);
+        setIsLocating(false);
+      },
+      (error) => {
+        setLocationMessage("Location access denied. Please select your city manually.");
+        setIsLocationError(true);
+        setIsLocating(false);
+      },
+      { timeout: 10000 }
+    );
+  };
+
+  const handleCityChange = (city) => {
+    setSelectedCity(city);
+    setLocationMessage(""); // Clear status message on manual select
+    setIsLocationError(false);
+  };
+
   /* Clear all search inputs */
   const handleClearSearch = () => {
     setSearchName("");
     setSearchSpec("");
     setSearchHospital("");
     setSearchCity("");
+    setSelectedCity("All");
+    setLocationMessage("");
+    setIsLocationError(false);
   };
 
   const hasSearch =
-    searchName || searchSpec || searchHospital || searchCity;
+    searchName || searchSpec || searchHospital || searchCity || selectedCity !== "All";
 
   /* Filtered list */
   const filteredDoctors = useMemo(() => {
@@ -358,10 +414,12 @@ function PatientFindDoctors() {
         .toLowerCase()
         .includes(q(searchHospital));
       const matchCity = doc.city.toLowerCase().includes(q(searchCity));
+      const matchSelectedCity =
+        selectedCity === "All" || doc.city.toLowerCase() === selectedCity.toLowerCase();
 
-      return matchType && matchName && matchSpec && matchHosp && matchCity;
+      return matchType && matchName && matchSpec && matchHosp && matchCity && matchSelectedCity;
     });
-  }, [activeFilter, searchName, searchSpec, searchHospital, searchCity]);
+  }, [activeFilter, searchName, searchSpec, searchHospital, searchCity, selectedCity]);
 
   return (
     <div className="fd-page">
@@ -376,13 +434,51 @@ function PatientFindDoctors() {
         <div className="fd-header-count">
           <span className="fd-count-badge">
             <FaUserMd />
-            {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? "s" : ""} found
+            Showing {filteredDoctors.length} of {doctorsData.length} doctors
           </span>
         </div>
       </header>
 
       {/* ── Search & Filter Panel ────────────────────────────── */}
       <section className="fd-search-panel" aria-label="Doctor search and filters">
+        {/* Location Row */}
+        <div className="fd-location-row">
+          <button
+            type="button"
+            className={`fd-location-btn ${isLocating ? "fd-location-btn--locating" : ""}`}
+            onClick={handleUseMyLocation}
+            disabled={isLocating}
+          >
+            <span>{isLocating ? "Locating..." : "📍 Use My Location"}</span>
+          </button>
+
+          <div className="fd-city-dropdown-container">
+            <span className="fd-dropdown-label">City:</span>
+            <select
+              id="fd-city-select"
+              className="fd-city-select"
+              value={selectedCity}
+              onChange={(e) => handleCityChange(e.target.value)}
+              aria-label="Filter doctors by city dropdown"
+            >
+              <option value="All">All Locations</option>
+              {uniqueCities.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {locationMessage && (
+            <span
+              className={`fd-location-message ${isLocationError ? "fd-location-message--error" : "fd-location-message--success"}`}
+            >
+              {locationMessage}
+            </span>
+          )}
+        </div>
+
         {/* Search bar row */}
         <div className="fd-search-row">
           <div className="fd-search-grid">
