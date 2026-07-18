@@ -936,3 +936,141 @@
     font-size: 0.8rem;
   }
 }
+
+/* ================================================================
+   ── ADDED ENHANCEMENT STYLES ────────────────────────────────────
+   ================================================================ */
+
+/* Countdown tag on card */
+.appt-countdown-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+/* Timeline step styles inside modal */
+.appt-timeline-wrapper {
+  padding: 1.25rem 1.5rem 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-primary);
+}
+
+.appt-timeline-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  margin-bottom: 0.75rem;
+}
+
+.appt-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.appt-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 1;
+}
+
+.appt-timeline-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: 2px solid var(--border-color);
+  background: var(--bg-primary);
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.appt-timeline-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.appt-timeline-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border-color);
+  margin-bottom: 1rem; /* align line with dots */
+  transition: all var(--transition-fast);
+}
+
+/* Timeline States */
+.appt-timeline-step--completed .appt-timeline-dot {
+  background: #22c55e;
+  border-color: #22c55e;
+  color: #fff;
+}
+
+.appt-timeline-step--completed .appt-timeline-label {
+  color: #16a34a;
+}
+
+.appt-timeline-step--active .appt-timeline-dot {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  animation: apptTimelinePulse 2s infinite;
+}
+
+.appt-timeline-step--active .appt-timeline-label {
+  color: var(--primary-color);
+}
+
+.appt-timeline-step--cancelled .appt-timeline-dot {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.appt-timeline-step--cancelled .appt-timeline-label {
+  color: #dc2626;
+}
+
+.appt-timeline-line--active {
+  background: #22c55e;
+}
+
+@keyframes apptTimelinePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* Filters row selectors */
+.appt-filters-row {
+  margin-top: 0.5rem;
+}
+
+.appt-filter-select {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.appt-filter-select:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+/* Reschedule modal adjustments */
+.appt-reschedule-modal {
+  max-width: 440px !important;
+}
+
+.appt-load-more-btn {
+  transition: all var(--transition-fast);
+}
