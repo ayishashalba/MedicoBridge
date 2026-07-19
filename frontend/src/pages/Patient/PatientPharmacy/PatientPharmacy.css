@@ -305,24 +305,26 @@
 }
 
 .medicine-image {
-    font-size: 24px;
-    color: var(--primary-color);
-    background: var(--bg-secondary);
-    width: 35px;
-    height: 48px;
-    border-radius: var(--radius-md);
+    width: 130px !important;
+    height: 120px !important;
+    margin: 0 auto 3px;
+    border-radius: 16px;
     display: flex;
-    justify-content: center;
     align-items: center;
-    margin-bottom: 16px;
+    justify-content: center;
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
+    font-size: 42px;
+    flex-shrink: 0;
 }
 
 .medicine-card h4 {
     font-size: 1.15rem;
     color: var(--text-primary);
-    margin: 0 0 8px 0;
+    margin: 0 0 4px !important;
     font-weight: 700;
+    min-height: 50px;
+    line-height: 1.4;
 }
 
 .medicine-card p {
@@ -541,15 +543,22 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
     animation: pharm-fadeUp 0.3s ease-out;
     border-left: 4px solid var(--primary-color);
     max-width: 340px;
 }
 
 @keyframes pharm-fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ── Controls bar (search + filter + sort) ──────────────────── */
@@ -782,8 +791,21 @@
 
 /* ── Enhanced Medicine Card ──────────────────────────────────── */
 .medicine-card.enhanced {
-    position: relative;
-    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start !important;
+    min-height: 500px;
+    /* ആവശ്യത്തിന് adjust ചെയ്യാം */
+    /* height: 30% !important; */
+}
+
+.medicine-card.enhanced {
+    display: flex;
+    flex-direction: column;
+}
+
+.medicine-btn {
+    margin-top: auto !important;
 }
 
 .medicine-card--oos {
@@ -880,6 +902,24 @@
     border-radius: var(--radius-md);
     padding: 10px 12px;
     border: 1px solid var(--border-color);
+    min-height: 120px;
+
+}
+
+.med-cart-row {
+    margin-top: auto;
+}
+
+.med-cart-row {
+    min-height: 48px;
+}
+
+.med-subs-section {
+    min-height: 80px;
+}
+
+.medicine-btn {
+    margin-top: auto;
 }
 
 .med-detail-lbl {
@@ -1382,8 +1422,13 @@
 }
 
 @keyframes spin-anim {
-    from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* ── Responsive additions ────────────────────────────────────── */

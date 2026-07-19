@@ -324,7 +324,7 @@ function MedicineCard({ medicine, onAddToCart }) {
       </span>
 
       {/* Compact details */}
-      <div className="med-details-grid">
+      {/* <div className="med-details-grid">
         <span className="med-detail-lbl">Manufacturer</span>
         <span className="med-detail-val">{medicine.manufacturer}</span>
         <span className="med-detail-lbl">Dosage</span>
@@ -333,13 +333,13 @@ function MedicineCard({ medicine, onAddToCart }) {
         <span className="med-detail-val">{medicine.expiry}</span>
         <span className="med-detail-lbl">Stock</span>
         <span className="med-detail-val">{outOfStock ? "—" : `${medicine.stock} units`}</span>
-      </div>
+      </div> */}
 
       {/* Delivery estimate */}
-      <div className="med-delivery-info">
+      {/* <div className="med-delivery-info">
         <FaTruck className="med-delivery-icon" />
         <span>Delivery in 45–90 mins · <strong>Free above ₹299</strong></span>
-      </div>
+      </div> */}
 
       {/* Prescription required notice */}
       {medicine.requiresPrescription && (
@@ -374,7 +374,7 @@ function MedicineCard({ medicine, onAddToCart }) {
       )}
 
       {/* Substitutes toggle */}
-      {medicine.substitutes.length > 0 && (
+      {/* {medicine.substitutes.length > 0 && (
         <div className="med-subs-section">
           <button
             className="med-subs-toggle"
@@ -396,12 +396,12 @@ function MedicineCard({ medicine, onAddToCart }) {
             </div>
           )}
         </div>
-      )}
+      )} */}
 
       <button
         className="medicine-btn"
         style={{ marginTop: "0.75rem" }}
-        onClick={() => {}}
+        onClick={() => { }}
       >
         View Details <FaArrowRight />
       </button>
