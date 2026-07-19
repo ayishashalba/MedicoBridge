@@ -40,8 +40,8 @@ const defaultMedicine = medicinesDB[1];
 const discountPct = (price, mrp) => Math.round(((mrp - price) / mrp) * 100);
 
 const stockConfig = {
-  "in-stock":     { label: "In Stock",     icon: "✓", cls: "medicine-details-stock--in" },
-  "low-stock":    { label: "Low Stock",    icon: "⚠", cls: "medicine-details-stock--low" },
+  "in-stock": { label: "In Stock", icon: "✓", cls: "medicine-details-stock--in" },
+  "low-stock": { label: "Low Stock", icon: "⚠", cls: "medicine-details-stock--low" },
   "out-of-stock": { label: "Out of Stock", icon: "✕", cls: "medicine-details-stock--out" },
 };
 
@@ -73,8 +73,7 @@ export default function PatientMedicineDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const medicine = (location.state && location.state.medicine) || medicinesDB[parseInt(id)] || defaultMedicine;
-
+  const medicine = medicinesDB[parseInt(id)] || defaultMedicine;
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
@@ -204,7 +203,7 @@ export default function PatientMedicineDetails() {
 
         <InfoBlock icon={<FaExclamationTriangle />} title="Side Effects">
           <ul className="medicine-details-side-effects-list">
-            {medicine.sideEffects.map((effect, i) => (
+            {(medicine.sideEffects || []).map((effect, i) => (
               <li key={i} className="medicine-details-side-effect-item"><span className="medicine-details-dot" />{effect}</li>
             ))}
           </ul>
@@ -226,7 +225,7 @@ export default function PatientMedicineDetails() {
           <InfoBlock icon={<FaFlask />} title="Generic Alternatives">
             <p className="medicine-details-generics-note">The following generics contain the same active ingredient and may be substituted as advised by your doctor:</p>
             <div className="medicine-details-generics-grid">
-              {medicine.genericAlternatives.map((alt, i) => (
+              {(medicine.genericAlternatives || []).map((alt, i) => (
                 <div key={i} className="medicine-details-generic-card">
                   <div className="medicine-details-generic-info">
                     <span className="medicine-details-generic-name">{alt.name}</span>
