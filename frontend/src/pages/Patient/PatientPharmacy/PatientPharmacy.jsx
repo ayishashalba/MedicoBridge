@@ -23,6 +23,7 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import "./PatientPharmacy.css";
+import FeaturedMedicines from "./FeaturedMedicines";
 
 /* ─── Static Data ───────────────────────────────────────────────── */
 const categories = [
@@ -331,6 +332,9 @@ function PatientPharmacy() {
           ))}
         </div>
       </section>
+
+      {/* ── Featured Medicines ─────────────────────────────────────── */}
+      <FeaturedMedicines />
 
       {/* ── Nearby Pharmacies (with contact + maps) ──────────────── */}
       <section className="pharmacy-section">
