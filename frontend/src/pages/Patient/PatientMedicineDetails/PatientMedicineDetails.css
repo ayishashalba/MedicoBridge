@@ -1,203 +1,728 @@
-.medicine-details {
-    padding: 30px;
-    background: #f8fafc;
-    min-height: 100vh;
+﻿/* =====================================================================
+   PatientMedicineDetails.css
+   All class names prefixed with: medicine-details-
+   Apollo Pharmacy / Tata 1mg-inspired clean professional design
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ── Page Wrapper ─────────────────────────────────────────────────── */
+.medicine-details-page {
+  font-family: 'Inter', sans-serif;
+  background: #f4f6fb;
+  min-height: 100vh;
+  padding-bottom: 90px; /* space for sticky bar */
 }
 
-/* Back Button */
-
-.back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #0ea5e9;
-    color: #fff;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    margin-bottom: 25px;
-    transition: .3s;
+/* ── Top Nav Bar ──────────────────────────────────────────────────── */
+.medicine-details-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border-bottom: 1px solid #e8edf2;
+  padding: 14px 28px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
-.back-btn:hover {
-    background: #0284c7;
+.medicine-details-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1.5px solid #2563eb;
+  color: #2563eb;
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+.medicine-details-back-btn:hover {
+  background: #2563eb;
+  color: #fff;
 }
 
-/* Main Card */
-
-.medicine-card {
-    display: flex;
-    gap: 40px;
-    background: #fff;
-    border-radius: 18px;
-    padding: 0 px 5px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+.medicine-details-topbar-actions {
+  display: flex;
+  gap: 10px;
 }
 
-/* Medicine Image */
+.medicine-details-wishlist-btn,
+.medicine-details-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+.medicine-details-wishlist-btn:hover { border-color: #ef4444; color: #ef4444; background: #fff5f5; }
+.medicine-details-wishlist-btn--active { border-color: #ef4444; color: #ef4444; background: #fff1f2; }
+.medicine-details-share-btn:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
 
-.medicine-image {
-    width: 260px;
-    height: 260px;
-    border-radius: 18px;
-    background: #e0f2fe;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 110px;
-    flex-shrink: 0;
+/* ── Hero Container ───────────────────────────────────────────────── */
+.medicine-details-container {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 0;
+  background: #ffffff;
+  margin: 24px 28px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 
-/* Right Side */
-
-.medicine-info {
-    flex: 1;
+/* ── Left Panel ───────────────────────────────────────────────────── */
+.medicine-details-left {
+  background: #f8faff;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  border-right: 1px solid #f0f4f8;
 }
 
-.medicine-info h2 {
-    color: #0f172a;
-    margin-bottom: 12px;
-    font-size: 32px;
+.medicine-details-image-wrap {
+  width: 260px;
+  height: 260px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+.medicine-details-image-wrap:hover { transform: scale(1.02); }
+
+.medicine-details-emoji {
+  font-size: 90px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.15));
+  animation: medicine-details-float 3s ease-in-out infinite;
 }
 
-.brand {
-    color: #64748b;
-    margin-bottom: 15px;
+@keyframes medicine-details-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
 }
 
-.medicine-info h3 {
-    color: #0ea5e9;
-    font-size: 30px;
-    margin-bottom: 18px;
+.medicine-details-ribbon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(239,68,68,0.4);
+  letter-spacing: 0.3px;
 }
 
-.stock {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #dcfce7;
-    color: #166534;
-    padding: 8px 16px;
-    border-radius: 25px;
-    font-weight: 600;
-    margin-bottom: 20px;
+.medicine-details-cat-chip {
+  position: absolute;
+  bottom: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
 }
 
-.description {
-    color: #475569;
-    line-height: 1.7;
-    margin-bottom: 25px;
+/* Trust badges */
+.medicine-details-trust-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.medicine-details-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e8edf2;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #374151;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.medicine-details-trust-item:hover { border-color: #2563eb; background: #eff6ff; }
+.medicine-details-trust-icon { color: #2563eb; font-size: 0.9rem; flex-shrink: 0; }
+
+/* ── Right Panel ──────────────────────────────────────────────────── */
+.medicine-details-right {
+  padding: 32px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
-/* Quantity */
-
-.quantity-box {
-    margin-bottom: 30px;
+/* Badge row */
+.medicine-details-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.quantity-box label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 10px;
+.medicine-details-rx-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.medicine-details-rx-badge--rx {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+.medicine-details-rx-badge--otc {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+.medicine-details-cat-badge {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
 }
 
-.quantity-box input {
-    width: 100px;
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    outline: none;
-    font-size: 16px;
+/* Name */
+.medicine-details-name {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+  margin: 0 0 10px;
+  letter-spacing: -0.5px;
 }
 
-/* Buttons */
+.medicine-details-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.medicine-details-brand,
+.medicine-details-manufacturer {
+  font-size: 0.85rem;
+  color: #475569;
+}
+.medicine-details-brand strong,
+.medicine-details-manufacturer strong { color: #1e293b; }
 
-.button-group {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+/* Stars */
+.medicine-details-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+.medicine-details-star { color: #d1d5db; font-size: 0.95rem; }
+.medicine-details-star--filled { color: #f59e0b; }
+.medicine-details-rating-val {
+  margin-left: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.medicine-details-review-count {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 16px;
 }
 
-.cart-btn,
-.buy-btn {
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    transition: .3s;
+.medicine-details-divider {
+  border: none;
+  border-top: 1px solid #f1f5f9;
+  margin: 6px 0 16px;
 }
 
-.cart-btn {
-    background: #0ea5e9;
-    color: #fff;
+/* Pricing */
+.medicine-details-pricing {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.medicine-details-price {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -1px;
+}
+.medicine-details-mrp {
+  font-size: 1rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+.medicine-details-discount-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+.medicine-details-incl-tax {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0 0 14px;
 }
 
-.cart-btn:hover {
-    background: #0284c7;
+/* Stock badge */
+.medicine-details-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+.medicine-details-stock-icon { font-size: 0.85rem; }
+.medicine-details-stock--in { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+.medicine-details-stock--low { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+.medicine-details-stock--out { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Expiry row */
+.medicine-details-expiry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.83rem;
+  color: #475569;
+  margin-bottom: 20px;
+}
+.medicine-details-expiry-icon { color: #6366f1; font-size: 0.85rem; }
+.medicine-details-expiry strong { color: #1e293b; }
+
+/* Qty Section */
+.medicine-details-qty-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.medicine-details-qty-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #374151;
+}
+.medicine-details-qty-ctrl {
+  display: flex;
+  align-items: center;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+.medicine-details-qty-btn {
+  background: none;
+  border: none;
+  width: 40px;
+  height: 40px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2563eb;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.medicine-details-qty-btn:hover:not(:disabled) { background: #eff6ff; }
+.medicine-details-qty-btn:disabled { color: #cbd5e1; cursor: not-allowed; }
+.medicine-details-qty-val {
+  min-width: 44px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
+  padding: 0 6px;
+  line-height: 40px;
+}
+.medicine-details-qty-total {
+  font-size: 0.88rem;
+  color: #475569;
+  background: #f8faff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+.medicine-details-qty-total strong { color: #1e293b; }
+
+/* Actions */
+.medicine-details-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.medicine-details-cart-btn,
+.medicine-details-buy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.2px;
+  flex: 1;
+  justify-content: center;
+  min-width: 160px;
+}
+.medicine-details-cart-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+}
+.medicine-details-cart-btn:hover:not(:disabled) { background: linear-gradient(135deg, #1d4ed8, #1e40af); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37,99,235,0.45); }
+.medicine-details-cart-btn--added { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16,185,129,0.35); }
+.medicine-details-cart-btn:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+.medicine-details-buy-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.35);
+}
+.medicine-details-buy-btn:hover:not(:disabled) { background: linear-gradient(135deg, #d97706, #b45309); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245,158,11,0.45); }
+.medicine-details-buy-btn:disabled { background: #94a3b8; box-shadow: none; cursor: not-allowed; transform: none; }
+
+.medicine-details-oos-msg {
+  font-size: 0.83rem;
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff1f2;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  margin-top: 4px;
 }
 
-.buy-btn {
-    background: #10b981;
-    color: #fff;
+/* ── Info Sections ────────────────────────────────────────────────── */
+.medicine-details-sections {
+  margin: 0 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.buy-btn:hover {
-    background: #059669;
+.medicine-details-info-block {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+}
+.medicine-details-info-block:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+
+.medicine-details-info-block-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbff;
+}
+.medicine-details-info-block-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+.medicine-details-info-block-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+.medicine-details-info-block-body {
+  padding: 20px 24px;
 }
 
-/* Responsive */
-
-@media (max-width: 900px) {
-
-    .medicine-card {
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-    }
-
-    .medicine-image {
-        width: 200px;
-        height: 200px;
-        font-size: 90px;
-    }
-
-    .button-group {
-        justify-content: center;
-    }
-
-    .quantity-box input {
-        width: 120px;
-    }
-
+.medicine-details-description {
+  font-size: 0.9rem;
+  color: #475569;
+  line-height: 1.75;
+  margin: 0;
 }
 
-@media (max-width: 600px) {
+/* Side effects */
+.medicine-details-side-effects-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.medicine-details-side-effect-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.87rem;
+  color: #374151;
+  background: #fef3f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.medicine-details-dot {
+  width: 7px;
+  height: 7px;
+  background: #ef4444;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.medicine-details-side-effects-note {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin: 0;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+}
 
-    .medicine-details {
-        padding: 20px;
-    }
+/* Expiry detail */
+.medicine-details-expiry-detail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  color: #166534;
+}
+.medicine-details-expiry-detail-icon { color: #059669; font-size: 1rem; }
 
-    .medicine-card {
-        padding: 20px;
-    }
+/* Generics */
+.medicine-details-generics-note {
+  font-size: 0.83rem;
+  color: #64748b;
+  margin: 0 0 14px;
+  line-height: 1.6;
+}
+.medicine-details-generics-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.medicine-details-generic-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8faff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.medicine-details-generic-card:hover { border-color: #2563eb; background: #eff6ff; }
+.medicine-details-generic-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.medicine-details-generic-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.medicine-details-generic-brand {
+  font-size: 0.78rem;
+  color: #64748b;
+}
+.medicine-details-generic-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2563eb;
+}
 
-    .medicine-info h2 {
-        font-size: 24px;
-    }
+/* Product grid */
+.medicine-details-product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0;
+  border: 1px solid #e8edf2;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.medicine-details-product-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-right: 1px solid #e8edf2;
+  border-bottom: 1px solid #e8edf2;
+  background: #fff;
+  transition: background 0.15s;
+}
+.medicine-details-product-item:hover { background: #f8faff; }
+.medicine-details-product-key {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.medicine-details-product-val {
+  font-size: 0.87rem;
+  font-weight: 600;
+  color: #1e293b;
+}
 
-    .medicine-info h3 {
-        font-size: 24px;
-    }
+/* ── Sticky Bottom Bar ────────────────────────────────────────────── */
+.medicine-details-sticky-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #e8edf2;
+  padding: 12px 20px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 200;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+}
+.medicine-details-sticky-price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.medicine-details-sticky-price span:first-child {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.medicine-details-sticky-off {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #10b981;
+}
+.medicine-details-sticky-actions {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  max-width: 320px;
+}
+.medicine-details-sticky-cart,
+.medicine-details-sticky-buy {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+}
+.medicine-details-sticky-cart { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; }
+.medicine-details-sticky-buy { background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; }
+.medicine-details-sticky-cart:disabled,
+.medicine-details-sticky-buy:disabled { background: #94a3b8; cursor: not-allowed; }
 
-    .cart-btn,
-    .buy-btn {
-        width: 100%;
-        justify-content: center;
-    }
+/* ── Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .medicine-details-container {
+    grid-template-columns: 280px 1fr;
+    margin: 16px 16px;
+  }
+  .medicine-details-sections { margin: 0 16px 24px; }
+}
 
+@media (max-width: 768px) {
+  .medicine-details-topbar { padding: 12px 16px; }
+  .medicine-details-back-btn span { display: none; }
+  .medicine-details-wishlist-btn span,
+  .medicine-details-share-btn span { display: none; }
+
+  .medicine-details-container {
+    grid-template-columns: 1fr;
+    margin: 12px;
+  }
+  .medicine-details-left { border-right: none; border-bottom: 1px solid #f0f4f8; padding: 24px 16px; }
+  .medicine-details-image-wrap { width: 200px; height: 200px; }
+  .medicine-details-emoji { font-size: 70px; }
+  .medicine-details-trust-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .medicine-details-trust-item { flex: 1; min-width: 120px; }
+  .medicine-details-right { padding: 24px 20px; }
+  .medicine-details-name { font-size: 1.5rem; }
+  .medicine-details-price { font-size: 1.7rem; }
+  .medicine-details-actions { flex-direction: column; }
+  .medicine-details-cart-btn,
+  .medicine-details-buy-btn { width: 100%; }
+  .medicine-details-sections { margin: 0 12px 100px; }
+  .medicine-details-sticky-bar { display: flex; }
+  .medicine-details-page { padding-bottom: 80px; }
+}
+
+@media (max-width: 480px) {
+  .medicine-details-topbar { padding: 10px 12px; }
+  .medicine-details-container { margin: 8px; border-radius: 14px; }
+  .medicine-details-sections { margin: 0 8px 100px; gap: 10px; }
+  .medicine-details-name { font-size: 1.3rem; }
+  .medicine-details-pricing { gap: 8px; }
+  .medicine-details-price { font-size: 1.5rem; }
+  .medicine-details-info-block-header { padding: 14px 16px; }
+  .medicine-details-info-block-body { padding: 16px; }
+  .medicine-details-side-effects-list { grid-template-columns: 1fr 1fr; }
+  .medicine-details-product-grid { grid-template-columns: 1fr; }
 }

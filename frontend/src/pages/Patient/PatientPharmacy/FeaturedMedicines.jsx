@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./FeaturedMedicines.css";
 
 /* ─── Medicine Data ─────────────────────────────────────────────── */
@@ -120,6 +121,7 @@ const stockConfig = {
 
 /* ─── Single Medicine Card ───────────────────────────────────────── */
 function MedicineCard({ med }) {
+  const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [wishlist, setWishlist] = useState(false);
@@ -230,6 +232,7 @@ function MedicineCard({ med }) {
           className="featured-detail-btn"
           id={`view-details-${med.id}`}
           aria-label={`View details for ${med.name}`}
+          onClick={() => navigate(`/patient/medicine/${med.id}`, { state: { medicine: med } })}
         >
           View Details
         </button>
