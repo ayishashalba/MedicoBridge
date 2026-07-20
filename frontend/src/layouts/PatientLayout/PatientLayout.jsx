@@ -17,6 +17,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaSearch,
+  FaShoppingCart,
   FaMoon,
   FaSun,
 } from "react-icons/fa";
@@ -247,7 +248,15 @@ function PatientLayout() {
               <FaBell />
               <span className="topnav-badge">3</span>
             </NavLink>
-
+            {/* Cart */}
+            <NavLink
+              to="/patient/cart"
+              className="topnav-icon-btn"
+              aria-label="Cart"
+            >
+              <FaShoppingCart />
+              <span className="topnav-badge">2</span>
+            </NavLink>
             {/* Settings */}
             <NavLink
               to="/patient/settings"
