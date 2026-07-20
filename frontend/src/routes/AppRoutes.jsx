@@ -90,6 +90,10 @@ import PatientCheckout from "../pages/Patient/PatientCheckout/PatientCheckout";
 import PatientOrderSuccess from "../pages/Patient/PatientOrderSuccess/PatientOrderSuccess";
 import PatientOrders from "../pages/Patient/PatientOrders/PatientOrders";
 import PatientOrderDetails from "../pages/Patient/PatientOrderDetails/PatientOrderDetails";
+import ConsultationDetails from "../pages/Patient/PatientRecordDetails/ConsultationDetails";
+import PrescriptionDetails from "../pages/Patient/PatientRecordDetails/PrescriptionDetails";
+import LabReportDetails from "../pages/Patient/PatientRecordDetails/LabReportDetails";
+import DocumentDetails from "../pages/Patient/PatientRecordDetails/DocumentDetails";
 
 // ── Pharmacy Dashboard Layout & Pages ─────────────────────────
 import PharmacyLayout from "../layouts/PharmacyLayout/PharmacyLayout";
@@ -157,6 +161,10 @@ function AppRoutes() {
         <Route path="orders" element={<PatientOrders />} />
         <Route path="order-details/:id" element={<PatientOrderDetails />} />
         <Route path="medical-records" element={<PatientMedicalRecords />} />
+        <Route path="medical-records/consultation/:id" element={<ConsultationDetails />} />
+        <Route path="medical-records/prescription/:id" element={<PrescriptionDetails />} />
+        <Route path="medical-records/lab-report/:id" element={<LabReportDetails />} />
+        <Route path="medical-records/document/:id" element={<DocumentDetails />} />
         <Route path="notifications" element={<PatientNotifications />} />
         <Route path="settings" element={<PatientSettings />} />
 
