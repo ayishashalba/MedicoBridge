@@ -1,123 +1,645 @@
+/* ============================================================
+   PatientOrders — Modern Order Management UI
+   Theme: Patient Pharmacy | Brand: MedicoBridge
+   ============================================================ */
+
+/* ── Page Container ── */
 .patient-orders {
-    padding: 30px;
-    background: #f8fafc;
+    padding: 32px 28px;
+    background: #f0f4f8;
     min-height: 100vh;
+    font-family: var(--font-sans, 'Inter', sans-serif);
 }
 
+/* ── Header ── */
 .orders-header {
-    margin-bottom: 30px;
-}
-
-.orders-header h2 {
     display: flex;
     align-items: center;
-    gap: 10px;
-    color: #0f172a;
-    margin-bottom: 10px;
-}
-
-.orders-header p {
-    color: #64748b;
-}
-
-.order-card {
-    background: #fff;
-    border-radius: 16px;
-    padding: 22px;
-    margin-bottom: 20px;
-    display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.orders-header-left {
+    display: flex;
     align-items: center;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-    transition: 0.3s;
+    gap: 16px;
+}
+
+.orders-header-icon {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, #00b0ff 0%, #1565c0 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0, 176, 255, 0.35);
+    flex-shrink: 0;
+}
+
+.orders-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.orders-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 400;
+}
+
+.orders-stats-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #00b0ff15, #1565c020);
+    border: 1.5px solid #00b0ff40;
+    color: #1565c0;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Controls (Search) ── */
+.orders-controls {
+    margin-bottom: 16px;
+}
+
+.orders-search-wrapper {
+    position: relative;
+    max-width: 560px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.orders-search-input {
+    width: 100%;
+    padding: 13px 46px 13px 44px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #0f172a;
+    background: #ffffff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+
+.orders-search-input::placeholder {
+    color: #94a3b8;
+}
+
+.orders-search-input:focus {
+    border-color: #00b0ff;
+    box-shadow: 0 0 0 4px rgba(0, 176, 255, 0.12);
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.search-clear-btn:hover {
+    color: #ef4444;
+}
+
+/* ── Filter Tabs ── */
+.orders-filter-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+
+.filter-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 2px solid #e2e8f0;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.filter-tab:hover {
+    border-color: #00b0ff;
+    color: #00b0ff;
+    background: #e1f5fe;
+}
+
+.filter-tab--active {
+    background: linear-gradient(135deg, #00b0ff, #1565c0);
+    border-color: transparent;
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(0, 176, 255, 0.4);
+}
+
+.filter-tab--active:hover {
+    background: linear-gradient(135deg, #0091ea, #0d47a1);
+    color: #ffffff;
+}
+
+.filter-tab-count {
+    background: rgba(255, 255, 255, 0.25);
+    color: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    line-height: 1.6;
+}
+
+.filter-tab:not(.filter-tab--active) .filter-tab-count {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Status-specific inactive tints */
+.filter-tab--pending:not(.filter-tab--active):hover {
+    border-color: #f59e0b;
+    color: #d97706;
+    background: #fef3c7;
+}
+
+.filter-tab--shipped:not(.filter-tab--active):hover {
+    border-color: #3b82f6;
+    color: #2563eb;
+    background: #dbeafe;
+}
+
+.filter-tab--delivered:not(.filter-tab--active):hover {
+    border-color: #22c55e;
+    color: #16a34a;
+    background: #dcfce7;
+}
+
+.filter-tab--cancelled:not(.filter-tab--active):hover {
+    border-color: #ef4444;
+    color: #dc2626;
+    background: #fee2e2;
+}
+
+/* ── Orders List ── */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ── Order Card ── */
+.order-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.07);
+    border: 1.5px solid #e8eef5;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.25s;
 }
 
 .order-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 176, 255, 0.14);
+    border-color: #00b0ff40;
 }
 
-.order-left h3 {
+/* Card Body */
+.order-card-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 22px 24px 18px;
+}
+
+/* Medicine Thumbnails */
+.order-medicine-thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.medicine-thumb {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 2px 8px rgba(0, 176, 255, 0.12);
+    border: 2px solid #fff;
+    cursor: default;
+    transition: transform 0.2s;
+    margin-bottom: 2px;
+}
+
+.medicine-thumb:hover {
+    transform: scale(1.08);
+}
+
+.medicine-thumb--more {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1565c0;
+    background: #e3f2fd;
+}
+
+/* Order Info */
+.order-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.order-info-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.order-id {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    letter-spacing: 0.01em;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.status-badge--delivered {
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    color: #065f46;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.status-badge--shipped {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: #1e40af;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.status-badge--pending {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.status-badge--cancelled {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #991b1b;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+/* Medicines List */
+.order-medicines-list {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+}
+
+.order-medicines-list .order-meta-icon {
+    color: #00b0ff;
+    font-size: 13px;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+/* Meta Row */
+.order-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.order-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.order-meta-item strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.order-meta-icon {
+    color: #94a3b8;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* Card Footer */
+.order-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px 16px;
+    border-top: 1.5px solid #f1f5f9;
+    background: linear-gradient(180deg, #fafcff 0%, #f8fafc 100%);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.order-amount {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.order-amount-label {
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.order-amount-value {
+    font-size: 20px;
+    font-weight: 800;
+    color: #0f172a;
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    background: linear-gradient(135deg, #00b0ff, #1565c0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* View Order Button */
+.view-order-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #00b0ff 0%, #1565c0 100%);
+    color: #fff;
+    border: none;
+    padding: 11px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(0, 176, 255, 0.35);
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.view-order-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0);
+    transition: background 0.2s;
+}
+
+.view-order-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 176, 255, 0.45);
+}
+
+.view-order-btn:hover::before {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.view-order-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 176, 255, 0.3);
+}
+
+.btn-arrow {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.view-order-btn:hover .btn-arrow {
+    transform: translateX(3px);
+}
+
+/* ── Empty State ── */
+.orders-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 72px 24px;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 24px;
+    border: 2px dashed #cbd5e1;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+.empty-state-illustration {
+    width: 96px;
+    height: 96px;
+    background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    color: #00b0ff;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0, 176, 255, 0.18);
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.empty-state-title {
+    font-family: var(--font-heading, 'Outfit', sans-serif);
+    font-size: 24px;
+    font-weight: 800;
     color: #0f172a;
     margin-bottom: 10px;
 }
 
-.order-left p {
+.empty-state-subtitle {
+    font-size: 15px;
     color: #64748b;
-    margin: 6px 0;
+    max-width: 420px;
+    line-height: 1.7;
+    margin-bottom: 32px;
 }
 
-.order-left h4 {
-    margin-top: 12px;
-    color: #0ea5e9;
-}
-
-.order-right {
+.empty-state-actions {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 15px;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 15px;
-    border-radius: 30px;
+.empty-clear-btn {
+    padding: 11px 22px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
     font-size: 14px;
     font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-.status.delivered {
-    background: #dcfce7;
-    color: #15803d;
+.empty-clear-btn:hover {
+    border-color: #00b0ff;
+    color: #00b0ff;
+    background: #e1f5fe;
 }
 
-.status.shipped {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.status.pending {
-    background: #fef3c7;
-    color: #d97706;
-}
-
-.view-btn {
-    display: flex;
+.empty-browse-btn {
+    display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #0ea5e9;
+    background: linear-gradient(135deg, #00b0ff 0%, #1565c0 100%);
     color: #fff;
     border: none;
-    padding: 10px 18px;
-    border-radius: 10px;
+    padding: 12px 26px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.3s;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.25s;
+    box-shadow: 0 6px 20px rgba(0, 176, 255, 0.35);
 }
 
-.view-btn:hover {
-    background: #0284c7;
+.empty-browse-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(0, 176, 255, 0.45);
 }
 
+/* ── Responsive ── */
 @media (max-width: 768px) {
-
     .patient-orders {
-        padding: 20px;
+        padding: 20px 16px;
     }
 
-    .order-card {
+    .orders-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 20px;
     }
 
-    .order-right {
-        width: 100%;
+    .orders-stats-pill {
+        align-self: flex-start;
+    }
+
+    .orders-search-wrapper {
+        max-width: 100%;
+    }
+
+    .order-card-body {
+        flex-direction: column;
+        gap: 16px;
+        padding: 18px 18px 14px;
+    }
+
+    .order-medicine-thumbnails {
+        flex-direction: row;
+    }
+
+    .medicine-thumb {
+        width: 42px;
+        height: 42px;
+        font-size: 20px;
+    }
+
+    .order-info-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .order-meta-row {
+        gap: 10px;
+    }
+
+    .order-card-footer {
+        flex-direction: column;
         align-items: stretch;
+        padding: 14px 18px 16px;
     }
 
-    .view-btn {
+    .view-order-btn {
         justify-content: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .orders-title {
+        font-size: 22px;
+    }
+
+    .filter-tab {
+        padding: 7px 13px;
+        font-size: 12.5px;
+    }
+
+    .empty-state-illustration {
+        width: 76px;
+        height: 76px;
+        font-size: 36px;
+    }
+
+    .empty-state-title {
+        font-size: 20px;
     }
 }
