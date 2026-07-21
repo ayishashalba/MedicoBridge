@@ -286,3 +286,83 @@ input:checked + .ps-slider:before {
     width: 100%;
   }
 }
+
+/* Modal Styling */
+.ps-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: psFadeIn 0.2s ease-out;
+  backdrop-filter: blur(2px);
+}
+
+.ps-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: psModalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes psModalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.ps-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem 0;
+}
+
+.ps-modal-desc {
+  color: #475569;
+  font-size: 0.95rem;
+  margin: 0 0 2rem 0;
+  line-height: 1.5;
+}
+
+.ps-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.ps-btn-cancel, .ps-btn-confirm {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ps-btn-cancel {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.ps-btn-cancel:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.ps-btn-confirm {
+  background-color: #ef4444;
+  color: white;
+}
+
+.ps-btn-confirm:hover {
+  background-color: #dc2626;
+}

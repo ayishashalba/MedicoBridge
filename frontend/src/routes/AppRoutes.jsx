@@ -94,6 +94,8 @@ import ConsultationDetails from "../pages/Patient/PatientRecordDetails/Consultat
 import PrescriptionDetails from "../pages/Patient/PatientRecordDetails/PrescriptionDetails";
 import LabReportDetails from "../pages/Patient/PatientRecordDetails/LabReportDetails";
 import DocumentDetails from "../pages/Patient/PatientRecordDetails/DocumentDetails";
+import PatientAddresses from "../pages/Patient/PatientAddresses/PatientAddresses";
+import PatientChangePassword from "../pages/Patient/PatientChangePassword/PatientChangePassword";
 
 // ── Pharmacy Dashboard Layout & Pages ─────────────────────────
 import PharmacyLayout from "../layouts/PharmacyLayout/PharmacyLayout";
@@ -167,7 +169,8 @@ function AppRoutes() {
         <Route path="medical-records/document/:id" element={<DocumentDetails />} />
         <Route path="notifications" element={<PatientNotifications />} />
         <Route path="settings" element={<PatientSettings />} />
-
+        <Route path="addresses" element={<PatientAddresses />} />
+        <Route path="change-password" element={<PatientChangePassword />} />
       </Route>
 
       {/* ── Doctor Dashboard (nested layout) ─────────────── */}

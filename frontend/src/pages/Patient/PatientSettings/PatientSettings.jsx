@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   FaLock,
   FaBell,
@@ -13,6 +14,8 @@ import {
 import "./PatientSettings.css";
 
 function PatientSettings() {
+  const navigate = useNavigate();
+  
   // Toggle states
   const [emailNotif, setEmailNotif] = useState(true);
   const [smsNotif, setSmsNotif] = useState(false);
@@ -24,12 +27,18 @@ function PatientSettings() {
 
   const [language, setLanguage] = useState("en");
   const [toastMessage, setToastMessage] = useState("");
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const triggerToast = (message) => {
     setToastMessage(message);
     setTimeout(() => {
       setToastMessage("");
     }, 3500);
+  };
+
+  const handleToggle = (setter, value, name) => {
+    setter(value);
+    triggerToast(`${name} preferences saved`);
   };
 
   const handleLanguageChange = (e) => {
@@ -40,7 +49,12 @@ function PatientSettings() {
       es: "Spanish",
       ar: "Arabic"
     };
-    triggerToast(`Language changed to ${langNames[e.target.value]} (UI simulation only)`);
+    triggerToast(`Language changed to ${langNames[e.target.value]}`);
+  };
+
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    triggerToast("Successfully logged out (Simulation)");
   };
 
   return (
@@ -50,6 +64,21 @@ function PatientSettings() {
         <div className="ps-toast">
           <FaInfoCircle style={{ color: "#0d9488" }} />
           <span>{toastMessage}</span>
+        </div>,
+        document.body
+      )}
+
+      {/* Logout Modal (Portal) */}
+      {showLogoutModal && createPortal(
+        <div className="ps-modal-overlay">
+          <div className="ps-modal">
+            <h2 className="ps-modal-title">Confirm Logout</h2>
+            <p className="ps-modal-desc">Are you sure you want to log out of your account?</p>
+            <div className="ps-modal-actions">
+              <button className="ps-btn-cancel" onClick={() => setShowLogoutModal(false)}>Cancel</button>
+              <button className="ps-btn-confirm" onClick={handleLogoutConfirm}>Log Out</button>
+            </div>
+          </div>
         </div>,
         document.body
       )}
@@ -66,7 +95,7 @@ function PatientSettings() {
         
         <div 
           className="ps-row ps-row-clickable" 
-          onClick={() => triggerToast("Change Password page is approved but under construction")}
+          onClick={() => navigate("/patient/change-password")}
         >
           <div className="ps-meta-wrapper">
             <div className="ps-icon-box ps-icon--security">
@@ -102,7 +131,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={emailNotif} 
-                onChange={(e) => setEmailNotif(e.target.checked)} 
+                onChange={(e) => handleToggle(setEmailNotif, e.target.checked, 'Email Notifications')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -124,7 +153,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={smsNotif} 
-                onChange={(e) => setSmsNotif(e.target.checked)} 
+                onChange={(e) => handleToggle(setSmsNotif, e.target.checked, 'SMS Notifications')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -146,7 +175,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={apptReminders} 
-                onChange={(e) => setApptReminders(e.target.checked)} 
+                onChange={(e) => handleToggle(setApptReminders, e.target.checked, 'Appointment Reminders')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -165,7 +194,7 @@ function PatientSettings() {
             </div>
             <div className="ps-text-group">
               <span className="ps-item-title">Profile Visibility</span>
-              <span className="ps-item-desc">Allow verified MedicoBridge doctors to view your profile and medical history</span>
+              <span className="ps-item-desc">Allow verified doctors to view your profile and medical history</span>
             </div>
           </div>
           <div className="ps-control-wrapper">
@@ -173,7 +202,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={profileVis} 
-                onChange={(e) => setProfileVis(e.target.checked)} 
+                onChange={(e) => handleToggle(setProfileVis, e.target.checked, 'Profile Visibility')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -195,7 +224,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={shareRecords} 
-                onChange={(e) => setShareRecords(e.target.checked)} 
+                onChange={(e) => handleToggle(setShareRecords, e.target.checked, 'Research Sharing')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -217,7 +246,7 @@ function PatientSettings() {
               <input 
                 type="checkbox" 
                 checked={twoFactor} 
-                onChange={(e) => setTwoFactor(e.target.checked)} 
+                onChange={(e) => handleToggle(setTwoFactor, e.target.checked, 'Two-Factor Auth')} 
               />
               <span className="ps-slider"></span>
             </label>
@@ -231,7 +260,7 @@ function PatientSettings() {
 
         <div 
           className="ps-row ps-row-clickable"
-          onClick={() => triggerToast("Address Manager drawer is approved but under construction")}
+          onClick={() => navigate("/patient/addresses")}
         >
           <div className="ps-meta-wrapper">
             <div className="ps-icon-box ps-icon--addresses">
@@ -243,7 +272,7 @@ function PatientSettings() {
             </div>
           </div>
           <div className="ps-control-wrapper">
-            <span style={{ fontSize: "0.85rem", color: "#64748b", marginRight: "0.5rem" }}>1 Address</span>
+            <span style={{ fontSize: "0.85rem", color: "#64748b", marginRight: "0.5rem" }}>2 Addresses</span>
             <FaChevronRight className="ps-chevron" />
           </div>
         </div>
@@ -280,7 +309,7 @@ function PatientSettings() {
 
         <div 
           className="ps-row ps-row-clickable"
-          onClick={() => triggerToast("Session logout requested (auth middleware simulation)")}
+          onClick={() => setShowLogoutModal(true)}
         >
           <div className="ps-meta-wrapper">
             <div className="ps-icon-box ps-icon--logout">
