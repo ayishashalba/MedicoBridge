@@ -31,9 +31,22 @@ function DoctorLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      console.log("Doctor logging in:", { email, password, rememberMe });
-      navigate("/doctor/dashboard");
+
+      // Hospital doctor
+      if (email === "hospitaldoctor@gmail.com") {
+        navigate("/doctor/dashboard");
+      }
+
+      // Private clinic doctor
+      else if (email === "clinicdoctor@gmail.com") {
+        navigate("/doctor/dashboard?type=clinic");
+      }
+
+      else {
+        alert("Invalid doctor account");
+      }
     }
   };
 
@@ -84,9 +97,8 @@ function DoctorLogin() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="doctor-password"
-                  className={`doctor-form-input ${
-                    errors.password ? "doctor-input-error" : ""
-                  }`}
+                  className={`doctor-form-input ${errors.password ? "doctor-input-error" : ""
+                    }`}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

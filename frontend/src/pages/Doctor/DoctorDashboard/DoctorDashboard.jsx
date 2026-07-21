@@ -1,4 +1,5 @@
 import React from "react";
+import { useLocation } from "react-router-dom";
 import {
   FaCalendarCheck,
   FaUsers,
@@ -212,6 +213,7 @@ const recentActivity = [
 /* ─── Helper Components ──────────────────────────────────────── */
 
 function StatusBadge({ status }) {
+
   const map = {
     completed: { label: "Completed", icon: <FaCheckCircle />, cls: "status--completed" },
     "in-progress": { label: "In Progress", icon: <FaSpinner className="spin-icon" />, cls: "status--inprogress" },
@@ -262,9 +264,11 @@ function ActionButton({ type, status }) {
 /* ─── Main Component ──────────────────────────────────────────── */
 
 // Toggle this to "Clinic" to test Private Clinic Doctor view
-const DOCTOR_TYPE = "Hospital";
 
 function DoctorDashboard() {
+  const location = useLocation();
+
+  const DOCTOR_TYPE = location.state?.doctorType || "Hospital";
   const currentHour = new Date().getHours();
   const greeting =
     currentHour < 12 ? "Good Morning" : currentHour < 18 ? "Good Afternoon" : "Good Evening";
