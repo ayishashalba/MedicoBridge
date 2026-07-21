@@ -261,6 +261,9 @@ function ActionButton({ type, status }) {
 
 /* ─── Main Component ──────────────────────────────────────────── */
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital"; 
+
 function DoctorDashboard() {
   const currentHour = new Date().getHours();
   const greeting =
@@ -294,14 +297,23 @@ function DoctorDashboard() {
               <p className="badge-label">Today's Date</p>
               <p className="badge-value">{today}</p>
             </div>
-          </div>
-          <div className="welcome-badge welcome-badge--phone">
-            <span className="badge-icon">🩺</span>
-            <div>
-              <p className="badge-label">Specialty</p>
-              <p className="badge-value">Cardiologist</p>
+          {DOCTOR_TYPE === "Hospital" ? (
+            <div className="welcome-badge welcome-badge--phone">
+              <span className="badge-icon">🏥</span>
+              <div>
+                <p className="badge-label">Hospital</p>
+                <p className="badge-value">Apollo Hospital</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="welcome-badge welcome-badge--phone">
+              <span className="badge-icon">🏥</span>
+              <div>
+                <p className="badge-label">Clinic</p>
+                <p className="badge-value">HeartCare Clinic</p>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

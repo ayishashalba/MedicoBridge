@@ -439,6 +439,9 @@ function ReviewsPanel({ onBack }) {
   );
 }
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 /* 7. Analytics & Reports */
 function AnalyticsPanel({ onBack }) {
   const metrics = [
@@ -498,7 +501,7 @@ function AnalyticsPanel({ onBack }) {
         <div className="ds-donut-legend">
           {[
             { label: "Online / Video", pct: 58, color: "#0d9488" },
-            { label: "Hospital Visit", pct: 42, color: "#0284c7" },
+            { label: DOCTOR_TYPE === "Hospital" ? "Hospital Visit" : "Clinic Visit", pct: 42, color: "#0284c7" },
           ].map((d, i) => (
             <div className="ds-legend-row" key={i}>
               <span className="ds-legend-dot" style={{ background: d.color }} />

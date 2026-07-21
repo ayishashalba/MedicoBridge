@@ -18,6 +18,9 @@ import {
 } from "react-icons/fa";
 import "./DoctorAppointments.css";
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 /* ─── Static Dummy Data ─────────────────────────────────────── */
 const appointmentsData = [
   {
@@ -243,7 +246,7 @@ function DoctorAppointments() {
                           ) : (
                             <>
                               <FaHospital className="type-icon--hospital" />
-                              <span>Hospital Visit</span>
+                              <span>{DOCTOR_TYPE === "Hospital" ? "Hospital Visit" : "Clinic Visit"}</span>
                             </>
                           )}
                         </div>

@@ -1,6 +1,9 @@
 import React from "react";
 import "./DoctorEditProfile.css";
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 function DoctorEditProfile() {
     return (
         <div className="edit-profile-page">
@@ -31,10 +34,43 @@ function DoctorEditProfile() {
                         <input type="text" defaultValue="12 Years" />
                     </div>
 
-                    <div className="form-group">
-                        <label>Hospital / Clinic</label>
-                        <input type="text" defaultValue="Apollo Hospital, Kochi" />
-                    </div>
+                    {DOCTOR_TYPE === "Hospital" ? (
+                        <>
+                            <div className="form-group">
+                                <label>Hospital Name</label>
+                                <input type="text" defaultValue="Apollo Hospital, Kochi" />
+                            </div>
+                            <div className="form-group">
+                                <label>Department</label>
+                                <input type="text" defaultValue="Cardiology" />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="form-group">
+                                <label>Clinic Name</label>
+                                <input type="text" defaultValue="HeartCare Clinic" />
+                            </div>
+                            <div className="form-group">
+                                <label>Clinic Address</label>
+                                <input type="text" defaultValue="123 Main St, Kochi" />
+                            </div>
+                            <div className="form-group">
+                                <label>Clinic Timings</label>
+                                <input type="text" defaultValue="Mon-Sat, 9:00 AM - 5:00 PM" />
+                            </div>
+                            <div className="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" defaultChecked /> Walk-in Available
+                                </label>
+                            </div>
+                            <div className="form-group checkbox-group">
+                                <label>
+                                    <input type="checkbox" defaultChecked /> Online Consultation Available
+                                </label>
+                            </div>
+                        </>
+                    )}
 
                     <div className="form-group">
                         <label>Registration Number</label>

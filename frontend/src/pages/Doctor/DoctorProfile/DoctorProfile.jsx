@@ -15,6 +15,9 @@ import {
 import "./DoctorProfile.css";
 import { useNavigate } from "react-router-dom";
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 function DoctorProfile() {
 
   const navigate = useNavigate();
@@ -23,7 +26,6 @@ function DoctorProfile() {
     specialization: "Cardiologist",
     qualification: "MBBS, MD (Cardiology)",
     experience: "12 Years",
-    hospital: "Apollo Hospital, Kochi",
     registration: "KLMC 458721",
     consultationFee: "₹800",
     languages: "English, Malayalam, Hindi",
@@ -32,6 +34,20 @@ function DoctorProfile() {
     address: "Kochi, Kerala",
     about:
       "Experienced Cardiologist specializing in preventive cardiology, heart failure management, and non-invasive cardiac procedures. Dedicated to providing compassionate and patient-centered care.",
+    // Conditional Data
+    type: DOCTOR_TYPE,
+    ...(DOCTOR_TYPE === "Hospital"
+      ? {
+          hospital: "Apollo Hospital",
+          department: "Cardiology",
+        }
+      : {
+          clinicName: "HeartCare Clinic",
+          clinicAddress: "123 Main St, Kochi",
+          clinicTimings: "Mon-Sat, 9:00 AM - 5:00 PM",
+          walkInAvailable: true,
+          onlineConsultationAvailable: true,
+        }),
   };
 
   return (
@@ -77,10 +93,36 @@ function DoctorProfile() {
             <strong> Experience:</strong> {doctor.experience}
           </p>
 
-          <p>
-            <FaHospital />
-            <strong> Hospital:</strong> {doctor.hospital}
-          </p>
+          {doctor.type === "Hospital" ? (
+            <>
+              <p>
+                <FaHospital />
+                <strong> Hospital:</strong> {doctor.hospital}
+              </p>
+              <p>
+                <FaUserMd />
+                <strong> Department:</strong> {doctor.department}
+              </p>
+            </>
+          ) : (
+            <>
+              <p>
+                <FaHospital />
+                <strong> Clinic Name:</strong> {doctor.clinicName}
+              </p>
+              <p>
+                <FaMapMarkerAlt />
+                <strong> Clinic Address:</strong> {doctor.clinicAddress}
+              </p>
+              <p>
+                <FaBriefcase />
+                <strong> Timings:</strong> {doctor.clinicTimings}
+              </p>
+              <p>
+                <strong> Walk-in:</strong> {doctor.walkInAvailable ? "Yes" : "No"} | <strong> Online:</strong> {doctor.onlineConsultationAvailable ? "Available" : "Not Available"}
+              </p>
+            </>
+          )}
 
           <p>
             <FaIdCard />

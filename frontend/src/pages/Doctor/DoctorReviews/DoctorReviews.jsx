@@ -13,6 +13,9 @@ import {
 import "./DoctorReviews.css";
 
 /* ─── Static Dummy Data ─────────────────────────────────────── */
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 const REVIEWS = [
     {
         id: 1,
@@ -166,7 +169,7 @@ function ReviewCard({ review }) {
                 </div>
                 <span className={`drr-type-badge drr-type-badge--${review.consultationType.toLowerCase()}`}>
                     {review.consultationType === "Online" ? <FaVideo /> : <FaHospital />}
-                    {review.consultationType}
+                    {review.consultationType === "Hospital" && DOCTOR_TYPE === "Clinic" ? "Clinic" : review.consultationType}
                 </span>
             </div>
 
@@ -299,7 +302,7 @@ function DoctorReviews() {
                     </div>
                     <div className="drr-qstat">
                         <span className="drr-qstat-val">{REVIEWS.filter((r) => r.consultationType === "Hospital").length}</span>
-                        <span className="drr-qstat-lbl">Hospital Visits</span>
+                        <span className="drr-qstat-lbl">{DOCTOR_TYPE === "Hospital" ? "Hospital Visits" : "Clinic Visits"}</span>
                     </div>
                     <div className="drr-qstat drr-qstat--highlight">
                         <span className="drr-qstat-val">{avgRating}</span>

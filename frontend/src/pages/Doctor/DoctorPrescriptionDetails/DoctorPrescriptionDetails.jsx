@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -23,6 +23,9 @@ import {
 import "./DoctorPrescriptionDetails.css";
 
 /* ─── Static Dummy Data ─────────────────────────────────────── */
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 const prescriptionData = {
   rxId: "RX-4521",
   status: "sent",
@@ -38,7 +41,11 @@ const prescriptionData = {
   doctor: {
     name: "Dr. Ayisha Shalba",
     specialization: "Cardiologist",
-    hospital: "MedicoBridge Hospital",
+    type: DOCTOR_TYPE,
+    ...(DOCTOR_TYPE === "Hospital" 
+        ? { hospital: "MedicoBridge Hospital" } 
+        : { clinicName: "HeartCare Clinic", clinicAddress: "123 Main St, Kochi" }
+    ),
     regNo: "MCI-KL-20849",
   },
   diagnosis: "Type 2 Diabetes Mellitus – Routine Quarterly Review",
@@ -159,7 +166,14 @@ function DoctorPrescriptionDetails() {
             <span className="prx-party-label">Prescribing Doctor</span>
             <span className="prx-party-name">{prescriptionData.doctor.name}</span>
             <span className="prx-party-sub">{prescriptionData.doctor.specialization}</span>
-            <span className="prx-party-sub">{prescriptionData.doctor.hospital}</span>
+            {prescriptionData.doctor.type === "Hospital" ? (
+                <span className="prx-party-sub">{prescriptionData.doctor.hospital}</span>
+            ) : (
+                <>
+                    <span className="prx-party-sub">{prescriptionData.doctor.clinicName}</span>
+                    <span className="prx-party-sub">{prescriptionData.doctor.clinicAddress}</span>
+                </>
+            )}
             <span className="prx-party-reg">
               <FaIdBadge /> Reg. {prescriptionData.doctor.regNo}
             </span>

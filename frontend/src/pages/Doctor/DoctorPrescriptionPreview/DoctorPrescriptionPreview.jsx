@@ -14,6 +14,9 @@ import {
 } from "react-icons/fa";
 import "./DoctorPrescriptionPreview.css";
 
+// Toggle this to "Clinic" to test Private Clinic Doctor view
+const DOCTOR_TYPE = "Hospital";
+
 function DoctorPrescriptionPreview() {
     const navigate = useNavigate();
 
@@ -34,7 +37,14 @@ function DoctorPrescriptionPreview() {
                 <div className="doctor-info">
                     <h3>Dr. Ayisha Shalba</h3>
                     <p>Cardiologist</p>
-                    <p>MedicoBridge Hospital</p>
+                    {DOCTOR_TYPE === "Hospital" ? (
+                        <p>MedicoBridge Hospital</p>
+                    ) : (
+                        <>
+                            <p>HeartCare Clinic</p>
+                            <p>123 Main St, Kochi</p>
+                        </>
+                    )}
                 </div>
 
                 <div className="patient-details">
