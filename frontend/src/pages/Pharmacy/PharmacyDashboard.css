@@ -2,11 +2,15 @@
    PharmacyDashboard.css
    ================================================================ */
 
-.ph-dashboard { display: flex; flex-direction: column; gap: 1.5rem; }
+.ph-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
 /* Welcome Banner */
 .ph-welcome-banner {
-  background: linear-gradient(135deg, #0c1a2e 0%, #0d9488 100%);
+  background: linear-gradient(135deg, #0c1a2e 0%, #a855f7 100%);
   border-radius: var(--radius-xl);
   padding: 1.75rem 2rem;
   display: flex;
@@ -14,7 +18,7 @@
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  box-shadow: 0 8px 24px rgba(13,148,136,.25);
+  box-shadow: 0 8px 24px rgba(13, 148, 136, .25);
 }
 
 .ph-welcome-text h2 {
@@ -27,16 +31,20 @@
 
 .ph-welcome-text p {
   font-size: 0.87rem;
-  color: rgba(255,255,255,.7);
+  color: rgba(255, 255, 255, .7);
   margin: 0;
 }
 
-.ph-welcome-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.ph-welcome-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
 
 .ph-btn-primary {
-  background: rgba(255,255,255,.18);
+  background: rgba(255, 255, 255, .18);
   color: #fff;
-  border: 1px solid rgba(255,255,255,.3);
+  border: 1px solid rgba(255, 255, 255, .3);
   border-radius: var(--radius-md);
   padding: 0.6rem 1.2rem;
   font-size: 0.84rem;
@@ -50,12 +58,14 @@
   backdrop-filter: blur(4px);
 }
 
-.ph-btn-primary:hover { background: rgba(255,255,255,.28); }
+.ph-btn-primary:hover {
+  background: rgba(255, 255, 255, .28);
+}
 
 .ph-btn-outline {
   background: transparent;
-  color: rgba(255,255,255,.85);
-  border: 1px solid rgba(255,255,255,.25);
+  color: rgba(255, 255, 255, .85);
+  border: 1px solid rgba(255, 255, 255, .25);
   border-radius: var(--radius-md);
   padding: 0.6rem 1.2rem;
   font-size: 0.84rem;
@@ -68,7 +78,9 @@
   transition: all var(--transition-fast);
 }
 
-.ph-btn-outline:hover { background: rgba(255,255,255,.1); }
+.ph-btn-outline:hover {
+  background: rgba(255, 255, 255, .1);
+}
 
 /* KPI Grid */
 .ph-kpi-grid {
@@ -89,7 +101,10 @@
   transition: all var(--transition-fast);
 }
 
-.ph-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.ph-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
 .ph-kpi-icon {
   width: 52px;
@@ -102,7 +117,11 @@
   flex-shrink: 0;
 }
 
-.ph-kpi-body { display: flex; flex-direction: column; min-width: 0; }
+.ph-kpi-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
 .ph-kpi-label {
   font-size: 0.74rem;
@@ -130,8 +149,13 @@
   gap: 0.25rem;
 }
 
-.ph-kpi-delta.up   { color: #16a34a; }
-.ph-kpi-delta.down { color: #f59e0b; }
+.ph-kpi-delta.up {
+  color: #16a34a;
+}
+
+.ph-kpi-delta.down {
+  color: #f59e0b;
+}
 
 /* Two-column grid */
 .ph-grid-2 {
@@ -168,7 +192,9 @@
   gap: 0.5rem;
 }
 
-.ph-warn-icon { color: #f59e0b; }
+.ph-warn-icon {
+  color: #f59e0b;
+}
 
 .ph-link-sm {
   font-size: 0.78rem;
@@ -181,10 +207,15 @@
   transition: all var(--transition-fast);
 }
 
-.ph-link-sm:hover { background: var(--ph-secondary, #0ea5e9); color: #fff; }
+.ph-link-sm:hover {
+  background: var(--ph-secondary, #0ea5e9);
+  color: #fff;
+}
 
 /* Tables */
-.ph-table-wrap { overflow-x: auto; }
+.ph-table-wrap {
+  overflow-x: auto;
+}
 
 .ph-table {
   width: 100%;
@@ -212,8 +243,13 @@
   vertical-align: middle;
 }
 
-.ph-table tr:last-child td { border-bottom: none; }
-.ph-table tr:hover td { background: var(--bg-secondary); }
+.ph-table tr:last-child td {
+  border-bottom: none;
+}
+
+.ph-table tr:hover td {
+  background: var(--bg-secondary);
+}
 
 .ph-id-badge {
   font-weight: 700;
@@ -240,9 +276,18 @@
 }
 
 /* Low Stock */
-.ph-low-stock-list { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
+.ph-low-stock-list {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
 
-.ph-low-stock-item { display: flex; flex-direction: column; gap: 0.45rem; }
+.ph-low-stock-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
 
 .ph-low-stock-info {
   display: flex;
@@ -276,11 +321,22 @@
 
 /* Responsive */
 @media screen and (max-width: 1100px) {
-  .ph-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .ph-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media screen and (max-width: 768px) {
-  .ph-kpi-grid { grid-template-columns: 1fr; }
-  .ph-grid-2 { grid-template-columns: 1fr; }
-  .ph-welcome-banner { flex-direction: column; align-items: flex-start; }
+  .ph-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ph-grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .ph-welcome-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

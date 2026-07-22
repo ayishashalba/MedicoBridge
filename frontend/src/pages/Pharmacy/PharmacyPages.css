@@ -973,20 +973,20 @@
 }
 
 .ph-profile-banner {
-  background: linear-gradient(135deg, #0c1a2e 0%, #0d9488 100%);
+  background: linear-gradient(135deg, #0c1a2e 0%, #a855f7 100%);
   border-radius: var(--radius-xl);
   padding: 2.2rem 2.5rem;
   display: flex;
   align-items: center;
   gap: 2rem;
-  box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
+  box-shadow: 0 10px 25px #8e44ad3a;
   color: #ffffff;
 }
 
 .ph-profile-avatar-lg {
   width: 90px;
   height: 90px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(200, 22, 224, 0.178);
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-xl);
   display: flex;
