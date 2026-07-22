@@ -57,6 +57,14 @@ export default function AdminDashboard() {
     { label: "Pharmacies", count: "1,020", pct: 4, color: "#f59e0b" },
   ];
 
+  const specializedDistribution = [
+    { label: "Hospital Doctors", count: "2,850", pct: 69, color: "#6366f1" },
+    { label: "Clinic Doctors", count: "1,270", pct: 31, color: "#818cf8" },
+    { label: "Retail Pharmacies", count: "850", pct: 83, color: "#f59e0b" },
+    { label: "Hospital Pharmacies", count: "110", pct: 11, color: "#fbbf24" },
+    { label: "Wholesale Pharmacies", count: "60", pct: 6, color: "#fcd34d" },
+  ];
+
   const systemAlerts = [
     { id: 1, type: "Warning", msg: "Backup failed: Disk space low on server Node-3.", time: "10 mins ago" },
     { id: 2, type: "Info", msg: "API traffic spike: Payment processor latency at 240ms.", time: "45 mins ago" },
@@ -139,7 +147,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Analytics Charts Row */}
-      <div className="ad-grid-2">
+      <div className="ad-grid-3">
         {/* Registration Analytics */}
         <div className="ad-card">
           <div className="ad-card-header">
@@ -179,6 +187,36 @@ export default function AdminDashboard() {
                   <span style={{ fontWeight: "700" }}>{d.label}</span>
                   <span style={{ color: "var(--ad-text-secondary)" }}>
                     <strong>{d.count}</strong> ({d.pct}%)
+                  </span>
+                </div>
+                <div style={{ height: "8px", background: "var(--ad-bg-secondary)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div style={{
+                    width: `${d.pct}%`,
+                    height: "100%",
+                    background: d.color,
+                    borderRadius: "999px"
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Specialized Roles Distribution */}
+        <div className="ad-card">
+          <div className="ad-card-header">
+            <h3 className="ad-card-title">Provider Types</h3>
+            <span style={{ fontSize: "0.75rem", background: "var(--ad-bg-secondary)", padding: "0.25rem 0.5rem", borderRadius: "4px", fontWeight: "600" }}>
+              Detailed Split
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.1rem", paddingTop: "0.5rem" }}>
+            {specializedDistribution.map((d, idx) => (
+              <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem" }}>
+                  <span style={{ fontWeight: "700" }}>{d.label}</span>
+                  <span style={{ color: "var(--ad-text-secondary)" }}>
+                    <strong>{d.count}</strong>
                   </span>
                 </div>
                 <div style={{ height: "8px", background: "var(--ad-bg-secondary)", borderRadius: "999px", overflow: "hidden" }}>

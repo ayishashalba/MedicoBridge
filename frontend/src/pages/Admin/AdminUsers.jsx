@@ -3,31 +3,31 @@ import { FaSearch, FaEye, FaBan, FaCheck, FaFilter, FaTimes } from "react-icons/
 import "./AdminPages.css";
 
 const initialPatients = [
-  { id: "PAT-101", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "+91 98765 43210", city: "Mumbai", status: "Active", joined: "10 Mar 2026" },
-  { id: "PAT-102", name: "Sunita Rao", email: "sunita.rao@example.com", phone: "+91 87654 32109", city: "Bangalore", status: "Active", joined: "12 Mar 2026" },
-  { id: "PAT-103", name: "Rohan Verma", email: "rohan.verma@example.com", phone: "+91 76543 21098", city: "Delhi", status: "Blocked", joined: "15 Apr 2026" },
-  { id: "PAT-104", name: "Lakshmi Nair", email: "lakshmi.nair@example.com", phone: "+91 65432 10987", city: "Kochi", status: "Active", joined: "22 May 2026" },
-  { id: "PAT-105", name: "Karan Malhotra", email: "karan.m@example.com", phone: "+91 54321 09876", city: "Pune", status: "Active", joined: "01 Jun 2026" },
+  { id: "PAT-101", name: "Aarav Sharma", email: "aarav.sharma@example.com", phone: "+91 98765 43210", city: "Mumbai", status: "Active", joined: "10 Mar 2026", assignedDoctorType: "Hospital Doctor", assignedFacility: "City Care Hospital" },
+  { id: "PAT-102", name: "Sunita Rao", email: "sunita.rao@example.com", phone: "+91 87654 32109", city: "Bangalore", status: "Active", joined: "12 Mar 2026", assignedDoctorType: "Clinic Doctor", assignedFacility: "Wellness Clinic" },
+  { id: "PAT-103", name: "Rohan Verma", email: "rohan.verma@example.com", phone: "+91 76543 21098", city: "Delhi", status: "Blocked", joined: "15 Apr 2026", assignedDoctorType: "None", assignedFacility: "None" },
+  { id: "PAT-104", name: "Lakshmi Nair", email: "lakshmi.nair@example.com", phone: "+91 65432 10987", city: "Kochi", status: "Active", joined: "22 May 2026", assignedDoctorType: "Hospital Doctor", assignedFacility: "Metro General Hospital" },
+  { id: "PAT-105", name: "Karan Malhotra", email: "karan.m@example.com", phone: "+91 54321 09876", city: "Pune", status: "Active", joined: "01 Jun 2026", assignedDoctorType: "Clinic Doctor", assignedFacility: "Pune Care Clinic" },
 ];
 
 const initialDoctors = [
-  { id: "DOC-201", name: "Dr. Priya Mehta", email: "priya.mehta@example.com", specialty: "Pediatrics", phone: "+91 99112 23344", status: "Active", verified: "Yes" },
-  { id: "DOC-202", name: "Dr. Anil Kumar", email: "anil.kumar@example.com", specialty: "Dermatology", phone: "+91 88223 34455", status: "Active", verified: "Yes" },
-  { id: "DOC-203", name: "Dr. Sara Thomas", email: "sara.thomas@example.com", specialty: "General Medicine", phone: "+91 77334 45566", status: "Pending", verified: "No" },
-  { id: "DOC-204", name: "Dr. Rajiv Kapoor", email: "rajiv.kapoor@example.com", specialty: "Orthopedics", phone: "+91 66445 56677", status: "Blocked", verified: "Yes" },
+  { id: "DOC-201", name: "Dr. Priya Mehta", email: "priya.mehta@example.com", specialty: "Pediatrics", phone: "+91 99112 23344", status: "Active", verified: "Yes", doctorType: "Hospital Doctor" },
+  { id: "DOC-202", name: "Dr. Anil Kumar", email: "anil.kumar@example.com", specialty: "Dermatology", phone: "+91 88223 34455", status: "Active", verified: "Yes", doctorType: "Clinic Doctor" },
+  { id: "DOC-203", name: "Dr. Sara Thomas", email: "sara.thomas@example.com", specialty: "General Medicine", phone: "+91 77334 45566", status: "Pending", verified: "No", doctorType: "Hospital Doctor" },
+  { id: "DOC-204", name: "Dr. Rajiv Kapoor", email: "rajiv.kapoor@example.com", specialty: "Orthopedics", phone: "+91 66445 56677", status: "Blocked", verified: "Yes", doctorType: "Clinic Doctor" },
 ];
 
 const initialHospitals = [
-  { id: "HSP-301", name: "City Care Hospital", email: "contact@citycare.org", city: "Chennai", beds: "120", status: "Active", verified: "Yes" },
-  { id: "HSP-302", name: "St. Stephens Clinic", email: "info@ststephens.com", city: "Delhi", beds: "45", status: "Pending", verified: "No" },
-  { id: "HSP-303", name: "Metro General Hospital", email: "metro.hosp@metro.in", city: "Hyderabad", beds: "350", status: "Active", verified: "Yes" },
-  { id: "HSP-304", name: "Fortis Health Clinic", email: "reachus@fortis.com", city: "Mumbai", beds: "80", status: "Blocked", verified: "Yes" },
+  { id: "HSP-301", name: "City Care Hospital", email: "contact@citycare.org", city: "Chennai", beds: "120", status: "Active", verified: "Yes", linkedDoctors: 15, linkedPharmacies: 2 },
+  { id: "HSP-302", name: "St. Stephens Clinic", email: "info@ststephens.com", city: "Delhi", beds: "45", status: "Pending", verified: "No", linkedDoctors: 5, linkedPharmacies: 0 },
+  { id: "HSP-303", name: "Metro General Hospital", email: "metro.hosp@metro.in", city: "Hyderabad", beds: "350", status: "Active", verified: "Yes", linkedDoctors: 42, linkedPharmacies: 4 },
+  { id: "HSP-304", name: "Fortis Health Clinic", email: "reachus@fortis.com", city: "Mumbai", beds: "80", status: "Blocked", verified: "Yes", linkedDoctors: 12, linkedPharmacies: 1 },
 ];
 
 const initialPharmacies = [
-  { id: "PHR-401", name: "MediCare Pharmacy", email: "medicare.rx@gmail.com", license: "LIC-PH-99411", city: "Kolkata", status: "Active", verified: "Yes" },
-  { id: "PHR-402", name: "Apollo Pharmacy Store", email: "apollo.store5@apollo.in", license: "LIC-PH-82410", city: "Bangalore", status: "Active", verified: "Yes" },
-  { id: "PHR-403", name: "Wellness Chemist", email: "wellness.chemist@wellness.com", license: "LIC-PH-77241", city: "Noida", status: "Pending", verified: "No" },
+  { id: "PHR-401", name: "MediCare Pharmacy", email: "medicare.rx@gmail.com", license: "LIC-PH-99411", city: "Kolkata", status: "Active", verified: "Yes", pharmacyType: "Retail Pharmacy" },
+  { id: "PHR-402", name: "Apollo Pharmacy Store", email: "apollo.store5@apollo.in", license: "LIC-PH-82410", city: "Bangalore", status: "Active", verified: "Yes", pharmacyType: "Hospital Pharmacy" },
+  { id: "PHR-403", name: "Wellness Chemist", email: "wellness.chemist@wellness.com", license: "LIC-PH-77241", city: "Noida", status: "Pending", verified: "No", pharmacyType: "Wholesale Pharmacy" },
 ];
 
 export default function AdminUsers() {
@@ -160,6 +160,7 @@ export default function AdminUsers() {
                   <th>Doctor ID</th>
                   <th>Name</th>
                   <th>Email</th>
+                  <th>Type</th>
                   <th>Specialty</th>
                   <th>Verified</th>
                   <th>Status</th>
@@ -181,6 +182,7 @@ export default function AdminUsers() {
                 <tr>
                   <th>Pharmacy ID</th>
                   <th>Pharmacy Name</th>
+                  <th>Type</th>
                   <th>License Number</th>
                   <th>Email</th>
                   <th>City</th>
@@ -212,6 +214,7 @@ export default function AdminUsers() {
 
                     {activeTab === "Doctors" && (
                       <>
+                        <td>{user.doctorType}</td>
                         <td>{user.specialty}</td>
                         <td>
                           <span className="ad-pill" style={{
@@ -231,6 +234,7 @@ export default function AdminUsers() {
 
                     {activeTab === "Pharmacies" && (
                       <>
+                        <td>{user.pharmacyType}</td>
                         <td><code>{user.license}</code></td>
                         <td>{user.city}</td>
                       </>
@@ -314,8 +318,25 @@ export default function AdminUsers() {
                     </div>
                   )}
 
+                  {activeTab === "Patients" && selectedUser.assignedFacility !== "None" && (
+                    <>
+                      <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Assigned Doctor Type</span>
+                        <span>{selectedUser.assignedDoctorType}</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Assigned Facility</span>
+                        <span>{selectedUser.assignedFacility}</span>
+                      </div>
+                    </>
+                  )}
+
                   {activeTab === "Doctors" && (
                     <>
+                      <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Doctor Type</span>
+                        <span>{selectedUser.doctorType}</span>
+                      </div>
                       <div>
                         <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Specialty / Area</span>
                         <span>{selectedUser.specialty}</span>
@@ -330,6 +351,14 @@ export default function AdminUsers() {
                   {activeTab === "Hospitals" && (
                     <>
                       <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Linked Doctors</span>
+                        <span>{selectedUser.linkedDoctors} Doctors</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Linked Pharmacies</span>
+                        <span>{selectedUser.linkedPharmacies} Pharmacies</span>
+                      </div>
+                      <div>
                         <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Bed Capacity</span>
                         <span>{selectedUser.beds} Intensive & General Beds</span>
                       </div>
@@ -342,6 +371,10 @@ export default function AdminUsers() {
 
                   {activeTab === "Pharmacies" && (
                     <>
+                      <div>
+                        <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Pharmacy Type</span>
+                        <span>{selectedUser.pharmacyType}</span>
+                      </div>
                       <div>
                         <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)", display: "block" }}>Pharmacy license</span>
                         <span><code>{selectedUser.license}</code></span>

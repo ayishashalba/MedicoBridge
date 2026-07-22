@@ -7,6 +7,7 @@ const initialQueue = [
     id: "APP-901",
     name: "Dr. Sandeep Reddy",
     type: "Doctor",
+    doctorType: "Hospital Doctor",
     specialty: "Cardiology",
     email: "sandeep.reddy@heartcare.com",
     license: "MCI-44912",
@@ -31,6 +32,7 @@ const initialQueue = [
     id: "APP-903",
     name: "MedPlus Pharmacy",
     type: "Pharmacy",
+    pharmacyType: "Retail Pharmacy",
     specialty: "Retail Pharmacy",
     email: "license@medplusrx.com",
     license: "DL-2415-A",
@@ -43,6 +45,7 @@ const initialQueue = [
     id: "APP-904",
     name: "Dr. Neha Gokhale",
     type: "Doctor",
+    doctorType: "Clinic Doctor",
     specialty: "Pediatrics",
     email: "neha.gokhale@kidscare.com",
     license: "MCI-55248",
@@ -183,7 +186,9 @@ export default function AdminApprovals() {
                     background: selectedApp.type === "Doctor" ? "#e0f2fe" : selectedApp.type === "Hospital" ? "#ccfbf1" : "#fef3c7",
                     color: selectedApp.type === "Doctor" ? "#0369a1" : selectedApp.type === "Hospital" ? "#0f766e" : "#d97706",
                     marginBottom: "0.35rem"
-                  }}>{selectedApp.type}</span>
+                  }}>
+                    {selectedApp.type === "Doctor" ? selectedApp.doctorType : selectedApp.type === "Pharmacy" ? selectedApp.pharmacyType : selectedApp.type}
+                  </span>
                   <h3 style={{ fontSize: "1.25rem", margin: 0 }}>{selectedApp.name}</h3>
                 </div>
                 <span className="ad-id-badge">{selectedApp.id}</span>

@@ -184,8 +184,8 @@ function PharmacyLayout() {
             <div className="phlay-topnav-profile">
               <div className="phlay-topnav-avatar"><FaPills /></div>
               <div className="phlay-topnav-profile-info">
-                <span className="phlay-topnav-name">{details.name}</span>
-                <span className="phlay-topnav-role">{details.role}</span>
+                <span className="phlay-topnav-name">{info.name}</span>
+                <span className="phlay-topnav-role">{info.role}</span>
               </div>
             </div>
           </div>
