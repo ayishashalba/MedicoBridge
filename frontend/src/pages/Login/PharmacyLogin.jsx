@@ -31,14 +31,30 @@ function PharmacyLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     if (validateForm()) {
-      let type = "Retail";
-      if (email.toLowerCase() === "hospitalpharmacy@gmail.com") type = "Hospital";
-      else if (email.toLowerCase() === "wholesalepharmacy@gmail.com") type = "Wholesale";
-      
-      localStorage.setItem("pharmacyType", type);
-      console.log(`Pharmacy logging in as ${type}:`, { email, password, rememberMe });
-      navigate("/pharmacy/dashboard");
+
+      // Retail Pharmacy
+      if (email === "retailpharmacy@gmail.com") {
+        localStorage.setItem("pharmacyType", "Retail");
+        navigate("/pharmacy/dashboard");
+      }
+
+      // Hospital Pharmacy
+      else if (email === "hospitalpharmacy@gmail.com") {
+        localStorage.setItem("pharmacyType", "Hospital");
+        navigate("/pharmacy/dashboard");
+      }
+
+      // Wholesale Pharmacy
+      else if (email === "wholesalepharmacy@gmail.com") {
+        localStorage.setItem("pharmacyType", "Wholesale");
+        navigate("/pharmacy/dashboard");
+      }
+
+      else {
+        alert("Invalid Pharmacy Account");
+      }
     }
   };
 
@@ -90,9 +106,8 @@ function PharmacyLogin() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="pharm-password"
-                  className={`pharm-form-input ${
-                    errors.password ? "pharm-input-error" : ""
-                  }`}
+                  className={`pharm-form-input ${errors.password ? "pharm-input-error" : ""
+                    }`}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}

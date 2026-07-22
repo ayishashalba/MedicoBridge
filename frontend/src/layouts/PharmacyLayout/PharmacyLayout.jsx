@@ -20,63 +20,60 @@ import {
 import "./PharmacyLayout.css";
 
 const sidebarNavItems = [
-  { label: "Dashboard",            icon: <FaTachometerAlt />,      path: "/pharmacy/dashboard" },
-  { label: "Prescriptions",        icon: <FaFilePrescription />,    path: "/pharmacy/prescriptions" },
-  { label: "Medicine Inventory",   icon: <FaBoxes />,              path: "/pharmacy/inventory" },
-  { label: "Orders",               icon: <FaShoppingCart />,       path: "/pharmacy/orders" },
-  { label: "Billing & Payments",   icon: <FaFileInvoiceDollar />,  path: "/pharmacy/billing" },
-  { label: "Delivery Tracking",    icon: <FaTruck />,              path: "/pharmacy/delivery" },
-  { label: "Notifications",        icon: <FaBell />,               path: "/pharmacy/notifications", badge: 4 },
-  { label: "Profile",              icon: <FaUserCircle />,         path: "/pharmacy/profile" },
-  { label: "Settings",             icon: <FaCog />,                path: "/pharmacy/settings" },
+  { label: "Dashboard", icon: <FaTachometerAlt />, path: "/pharmacy/dashboard" },
+  { label: "Prescriptions", icon: <FaFilePrescription />, path: "/pharmacy/prescriptions" },
+  { label: "Medicine Inventory", icon: <FaBoxes />, path: "/pharmacy/inventory" },
+  { label: "Orders", icon: <FaShoppingCart />, path: "/pharmacy/orders" },
+  { label: "Billing & Payments", icon: <FaFileInvoiceDollar />, path: "/pharmacy/billing" },
+  { label: "Delivery Tracking", icon: <FaTruck />, path: "/pharmacy/delivery" },
+  { label: "Notifications", icon: <FaBell />, path: "/pharmacy/notifications", badge: 4 },
+  { label: "Profile", icon: <FaUserCircle />, path: "/pharmacy/profile" },
+  { label: "Settings", icon: <FaCog />, path: "/pharmacy/settings" },
 ];
 
 function PharmacyLayout() {
-  const navigate   = useNavigate();
-  const location   = useLocation();
-  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const pharmacyType =
+    localStorage.getItem("pharmacyType") || "Retail";
+
+  const pharmacyInfo = {
+    Retail: {
+      portal: "Pharmacy Portal",
+      name: "MediCare Pharmacy",
+      role: "Chief Pharmacist",
+      id: "#PH-8841",
+    },
+
+    Hospital: {
+      portal: "Hospital Pharmacy",
+      name: "Apollo Hospital Pharmacy",
+      role: "Hospital Pharmacist",
+      id: "#HP-1201",
+    },
+
+    Wholesale: {
+      portal: "Wholesale Pharmacy",
+      name: "Medico Wholesale Distributors",
+      role: "Supply Manager",
+      id: "#WS-5002",
+    },
+  };
+
+  const info = pharmacyInfo[pharmacyType];
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const toggleMobileSidebar = () => setSidebarOpen((p) => !p);
-  const closeMobileSidebar  = () => setSidebarOpen(false);
-  const toggleCollapse      = () => setSidebarCollapsed((p) => !p);
+  const closeMobileSidebar = () => setSidebarOpen(false);
+  const toggleCollapse = () => setSidebarCollapsed((p) => !p);
 
   const handleLogout = () => navigate("/login/pharmacy");
 
-  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
-
-  const getPharmacyDetails = () => {
-    switch (pharmacyType) {
-      case "Hospital":
-        return {
-          portalName: "Hospital Pharmacy",
-          name: "Apollo Hospital Pharmacy",
-          role: "Hospital Pharmacist",
-          id: "#HP-1201"
-        };
-      case "Wholesale":
-        return {
-          portalName: "Wholesale Pharmacy",
-          name: "Medico Wholesale Distributors",
-          role: "Supply Manager",
-          id: "#WS-5002"
-        };
-      case "Retail":
-      default:
-        return {
-          portalName: "Pharmacy Portal",
-          name: "MediCare Pharmacy",
-          role: "Chief Pharmacist",
-          id: "#PH-8841"
-        };
-    }
-  };
-
-  const details = getPharmacyDetails();
 
   const getPageTitle = () => {
     const matched = sidebarNavItems.find((i) => i.path === location.pathname);
-    return matched ? matched.label : details.portalName;
+    return matched ? matched.label : info.portal;
   };
 
   return (
@@ -96,8 +93,10 @@ function PharmacyLayout() {
             <div className="phlay-logo-icon"><FaPills /></div>
             {!sidebarCollapsed && (
               <div className="phlay-logo-text">
-                <span className="phlay-brand-name">MedicoBridge</span>
-                <span className="phlay-brand-tag">{details.portalName}</span>
+                <span className="sidebar-brand-name">MedicoBridge</span>
+                <span className="sidebar-brand-tagline">
+                  {info.portal}
+                </span>
               </div>
             )}
           </NavLink>
@@ -120,9 +119,9 @@ function PharmacyLayout() {
           </div>
           {!sidebarCollapsed && (
             <div className="phlay-profile-info">
-              <p className="phlay-profile-name">{details.name}</p>
-              <p className="phlay-profile-role">{details.role}</p>
-              <span className="phlay-profile-badge">ID: {details.id}</span>
+              <p className="phlay-profile-name">{info.name}</p>
+              <p className="phlay-profile-role">{info.role}</p>
+              <span className="phlay-profile-badge">ID: {info.id}</span>
             </div>
           )}
         </div>
@@ -141,7 +140,7 @@ function PharmacyLayout() {
                   <span className="phlay-nav-icon">{item.icon}</span>
                   {!sidebarCollapsed && <span className="phlay-nav-label">{item.label}</span>}
                   {!sidebarCollapsed && item.badge && <span className="phlay-nav-badge">{item.badge}</span>}
-                  {sidebarCollapsed  && item.badge && <span className="phlay-nav-badge phlay-nav-badge--dot" />}
+                  {sidebarCollapsed && item.badge && <span className="phlay-nav-badge phlay-nav-badge--dot" />}
                 </NavLink>
               </li>
             ))}

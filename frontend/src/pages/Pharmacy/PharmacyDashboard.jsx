@@ -9,13 +9,13 @@ import {
 import "./PharmacyDashboard.css";
 
 const statusColor = {
-  Pending:    { bg: "#fef3c7", color: "#d97706" },
-  Dispensed:  { bg: "#dcfce7", color: "#16a34a" },
-  "On Hold":  { bg: "#fee2e2", color: "#dc2626" },
-  Delivered:  { bg: "#dcfce7", color: "#16a34a" },
+  Pending: { bg: "#fef3c7", color: "#d97706" },
+  Dispensed: { bg: "#dcfce7", color: "#16a34a" },
+  "On Hold": { bg: "#fee2e2", color: "#dc2626" },
+  Delivered: { bg: "#dcfce7", color: "#16a34a" },
   Processing: { bg: "#ede9fe", color: "#6d28d9" },
-  Shipped:    { bg: "#e0f2fe", color: "#0284c7" },
-  Approved:   { bg: "#dcfce7", color: "#16a34a" },
+  Shipped: { bg: "#e0f2fe", color: "#0284c7" },
+  Approved: { bg: "#dcfce7", color: "#16a34a" },
 };
 
 function StatusPill({ status }) {
@@ -27,10 +27,11 @@ function StatusPill({ status }) {
 }
 
 export default function PharmacyDashboard() {
-  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+  const pharmacyType =
+    localStorage.getItem("pharmacyType") || "Retail";
 
   const getDashboardData = () => {
-    switch(pharmacyType) {
+    switch (pharmacyType) {
       case "Hospital":
         return {
           title: "Good Morning, Apollo Hospital Pharmacy 👋",
