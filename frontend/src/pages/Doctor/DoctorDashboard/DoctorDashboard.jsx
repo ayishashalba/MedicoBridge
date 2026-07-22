@@ -266,9 +266,7 @@ function ActionButton({ type, status }) {
 // Toggle this to "Clinic" to test Private Clinic Doctor view
 
 function DoctorDashboard() {
-  const location = useLocation();
-
-  const DOCTOR_TYPE = location.state?.doctorType || "Hospital";
+  const DOCTOR_TYPE = localStorage.getItem("doctorType") || "Hospital";
   const currentHour = new Date().getHours();
   const greeting =
     currentHour < 12 ? "Good Morning" : currentHour < 18 ? "Good Afternoon" : "Good Evening";

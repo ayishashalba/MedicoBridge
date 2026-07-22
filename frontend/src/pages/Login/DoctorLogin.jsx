@@ -36,12 +36,14 @@ function DoctorLogin() {
 
       // Hospital doctor
       if (email === "hospitaldoctor@gmail.com") {
+        localStorage.setItem("doctorType", "Hospital");
         navigate("/doctor/dashboard");
       }
 
       // Private clinic doctor
       else if (email === "clinicdoctor@gmail.com") {
-        navigate("/doctor/dashboard?type=clinic");
+        localStorage.setItem("doctorType", "Clinic");
+        navigate("/doctor/dashboard");
       }
 
       else {

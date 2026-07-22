@@ -16,9 +16,10 @@ import "./DoctorProfile.css";
 import { useNavigate } from "react-router-dom";
 
 // Toggle this to "Clinic" to test Private Clinic Doctor view
-const DOCTOR_TYPE = "Hospital";
+// const DOCTOR_TYPE = "Hospital";
 
 function DoctorProfile() {
+  const doctorType = localStorage.getItem("doctorType") || "Hospital";
 
   const navigate = useNavigate();
   const doctor = {
@@ -35,19 +36,19 @@ function DoctorProfile() {
     about:
       "Experienced Cardiologist specializing in preventive cardiology, heart failure management, and non-invasive cardiac procedures. Dedicated to providing compassionate and patient-centered care.",
     // Conditional Data
-    type: DOCTOR_TYPE,
-    ...(DOCTOR_TYPE === "Hospital"
+    type: doctorType,
+    ...(doctorType === "Hospital"
       ? {
-          hospital: "Apollo Hospital",
-          department: "Cardiology",
-        }
+        hospital: "Apollo Hospital",
+        department: "Cardiology",
+      }
       : {
-          clinicName: "HeartCare Clinic",
-          clinicAddress: "123 Main St, Kochi",
-          clinicTimings: "Mon-Sat, 9:00 AM - 5:00 PM",
-          walkInAvailable: true,
-          onlineConsultationAvailable: true,
-        }),
+        clinicName: "HeartCare Clinic",
+        clinicAddress: "123 Main St, Kochi",
+        clinicTimings: "Mon-Sat, 9:00 AM - 5:00 PM",
+        walkInAvailable: true,
+        onlineConsultationAvailable: true,
+      }),
   };
 
   return (
