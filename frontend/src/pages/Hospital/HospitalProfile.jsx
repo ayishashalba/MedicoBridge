@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     FaHospital,
     FaEnvelope,
@@ -9,9 +9,19 @@ import {
     FaUserMd,
     FaEdit,
 } from "react-icons/fa";
+
 import "./HospitalProfile.css";
 
 function HospitalProfile() {
+    const [editing, setEditing] = useState(false);
+
+    const [hospital, setHospital] = useState({
+        name: "City General Hospital",
+        admin: "Admin Center",
+        email: "admin@cityhospital.com",
+        phone: "+91 9876543210",
+        address: "MG Road, Kochi",
+    });
     return (
         <div className="hospital-profile-page">
             <div className="hospital-profile-card">
@@ -23,13 +33,29 @@ function HospitalProfile() {
                     </div>
 
                     <div className="hospital-profile-details">
-                        <h2>City General Hospital</h2>
+                        {
+                            editing ? (
+                                <input
+                                    className="profile-input"
+                                    value={hospital.name}
+                                    onChange={(e) =>
+                                        setHospital({ ...hospital, name: e.target.value })
+                                    }
+                                />
+                            ) : (
+                                <h2>{hospital.name}</h2>
+                            )
+                        }
                         <p>Hospital Administration</p>
                         <span className="hospital-id">Hospital ID : #HOSP-5021</span>
                     </div>
 
-                    <button className="edit-profile-btn">
-                        <FaEdit /> Edit Profile
+                    <button
+                        className="edit-profile-btn"
+                        onClick={() => setEditing(!editing)}
+                    >
+                        <FaEdit />
+                        {editing ? "Save Profile" : "Edit Profile"}
                     </button>
                 </div>
 
@@ -40,7 +66,19 @@ function HospitalProfile() {
                         <FaEnvelope className="profile-icon" />
                         <div>
                             <h4>Email</h4>
-                            <p>citygeneralhospital@gmail.com</p>
+                            {
+                                editing ? (
+                                    <input
+                                        className="profile-input"
+                                        value={hospital.email}
+                                        onChange={(e) =>
+                                            setHospital({ ...hospital, email: e.target.value })
+                                        }
+                                    />
+                                ) : (
+                                    <p>{hospital.email}</p>
+                                )
+                            }
                         </div>
                     </div>
 
@@ -48,7 +86,19 @@ function HospitalProfile() {
                         <FaPhone className="profile-icon" />
                         <div>
                             <h4>Phone</h4>
-                            <p>+91 9876543210</p>
+                            {
+                                editing ? (
+                                    <input
+                                        className="profile-input"
+                                        value={hospital.phone}
+                                        onChange={(e) =>
+                                            setHospital({ ...hospital, phone: e.target.value })
+                                        }
+                                    />
+                                ) : (
+                                    <p>{hospital.phone}</p>
+                                )
+                            }
                         </div>
                     </div>
 
@@ -56,7 +106,19 @@ function HospitalProfile() {
                         <FaMapMarkerAlt className="profile-icon" />
                         <div>
                             <h4>Location</h4>
-                            <p>Kochi, Kerala</p>
+                            {
+                                editing ? (
+                                    <input
+                                        className="profile-input"
+                                        value={hospital.address}
+                                        onChange={(e) =>
+                                            setHospital({ ...hospital, address: e.target.value })
+                                        }
+                                    />
+                                ) : (
+                                    <p>{hospital.address}</p>
+                                )
+                            }
                         </div>
                     </div>
 

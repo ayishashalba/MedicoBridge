@@ -46,7 +46,7 @@ import PharmacyRequests from "../pages/Hospital/PharmacyRequests";
 import BillingManagement from "../pages/Hospital/BillingManagement";
 import HospitalNotifications from "../pages/Hospital/HospitalNotifications";
 import HospitalSettings from "../pages/Hospital/HospitalSettings";
-import HospitalProfile from "./pages/hospital/HospitalProfile";
+import HospitalProfile from "../pages/Hospital/HospitalProfile";
 
 // ── Doctor Dashboard Layout & Pages ────────────────────────────
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
