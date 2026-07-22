@@ -1,0 +1,136 @@
+.hospital-profile-page {
+    padding: 30px;
+}
+
+.hospital-profile-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.hospital-profile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid #ececec;
+    padding-bottom: 25px;
+}
+
+.hospital-profile-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 36px;
+}
+
+.hospital-profile-details {
+    flex: 1;
+}
+
+.hospital-profile-details h2 {
+    margin: 0;
+    color: #1e293b;
+    font-size: 28px;
+}
+
+.hospital-profile-details p {
+    margin: 8px 0;
+    color: #64748b;
+}
+
+.hospital-id {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+.edit-profile-btn {
+    border: none;
+    background: #2563eb;
+    color: white;
+    padding: 12px 22px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: .3s;
+}
+
+.edit-profile-btn:hover {
+    background: #1d4ed8;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+    margin-top: 35px;
+}
+
+.profile-item {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 18px;
+    transition: .3s;
+}
+
+.profile-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .08);
+}
+
+.profile-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    padding: 14px;
+}
+
+.profile-item h4 {
+    margin: 0;
+    color: #334155;
+    font-size: 15px;
+}
+
+.profile-item p {
+    margin-top: 6px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+@media(max-width:768px) {
+
+    .hospital-profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .edit-profile-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+}

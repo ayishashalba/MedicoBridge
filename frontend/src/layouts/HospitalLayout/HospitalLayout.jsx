@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   FaTachometerAlt,
   FaUserMd,
@@ -149,7 +149,10 @@ function HospitalLayout() {
         </div>
 
         {/* Hospital Info Card */}
-        <div className={`sidebar-profile-card ${sidebarCollapsed ? "profile-card-collapsed" : ""}`}>
+        <Link
+          to="/hospital/profile"
+          className={`sidebar-profile-card ${sidebarCollapsed ? "profile-card-collapsed" : ""}`}
+        >
           <div className="profile-avatar-wrapper">
             <div className="profile-avatar">
               <FaHospital />
@@ -163,7 +166,7 @@ function HospitalLayout() {
               <span className="profile-id-badge">ID: #HOSP-5021</span>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Nav Items */}
         <nav className="sidebar-nav" aria-label="Hospital menu">

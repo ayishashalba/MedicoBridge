@@ -46,6 +46,7 @@ import PharmacyRequests from "../pages/Hospital/PharmacyRequests";
 import BillingManagement from "../pages/Hospital/BillingManagement";
 import HospitalNotifications from "../pages/Hospital/HospitalNotifications";
 import HospitalSettings from "../pages/Hospital/HospitalSettings";
+import HospitalProfile from "./pages/hospital/HospitalProfile";
 
 // ── Doctor Dashboard Layout & Pages ────────────────────────────
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
@@ -216,6 +217,10 @@ function AppRoutes() {
         <Route path="billing" element={<BillingManagement />} />
         <Route path="notifications" element={<HospitalNotifications />} />
         <Route path="settings" element={<HospitalSettings />} />
+        <Route
+          path="/hospital/profile"
+          element={<HospitalProfile />}
+        />
       </Route>
 
       {/* ── Pharmacy Dashboard (nested layout) ─────────────── */}
