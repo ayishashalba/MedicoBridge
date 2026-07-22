@@ -2,15 +2,22 @@ import React, { useState } from "react";
 import { FaBell, FaCheck, FaTimes, FaExclamationTriangle, FaInfoCircle, FaCheckCircle, FaTruck } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const initialNotifications = [
-  { id:1, type:"alert",   icon:<FaExclamationTriangle />, title:"Low Stock Warning",            message:"Amoxicillin 250mg has only 9 units remaining. Reorder immediately.",   time:"5 min ago",  read:false },
-  { id:2, type:"info",    icon:<FaInfoCircle />,          title:"New Prescription Received",     message:"Prescription RX-007 from Dr. Sara Thomas for Arjun Mehta is awaiting dispatch.", time:"18 min ago", read:false },
-  { id:3, type:"success", icon:<FaCheckCircle />,         title:"Order Delivered",               message:"Order ORD-444 for Vijay Kumar has been marked as delivered.",           time:"1 hr ago",   read:false },
-  { id:4, type:"alert",   icon:<FaExclamationTriangle />, title:"Expiry Date Alert",             message:"Ibuprofen 400mg batch expires on 2026-08-20. Consider immediate action.", time:"2 hr ago",   read:true  },
-  { id:5, type:"info",    icon:<FaTruck />,               title:"Delivery Agent Assigned",       message:"Ramu Kumar has been assigned to deliver ORD-443 to Priya Patel.",       time:"3 hr ago",   read:true  },
-  { id:6, type:"success", icon:<FaCheckCircle />,         title:"Payment Received",              message:"₹950 payment received from Vijay Kumar for invoice INV-2204.",          time:"4 hr ago",   read:true  },
-  { id:7, type:"alert",   icon:<FaExclamationTriangle />, title:"Inventory Discrepancy",         message:"Metformin 500mg stock count doesn't match records. Please verify.",      time:"Yesterday",  read:true  },
-  { id:8, type:"info",    icon:<FaInfoCircle />,          title:"System Maintenance Scheduled",  message:"Scheduled system maintenance on 15 Jul 2026, 2:00 AM – 4:00 AM IST.",   time:"Yesterday",  read:true  },
+const retailNotifications = [
+  { id:1, type:"info",    icon:<FaInfoCircle />,          title:"New Prescription",              message:"Prescription RX-007 from Dr. Sara Thomas for Arjun Mehta is awaiting dispatch.", time:"18 min ago", read:false },
+  { id:2, type:"success", icon:<FaCheckCircle />,         title:"Order Ready",                   message:"Order ORD-444 for Vijay Kumar is ready for pickup.",                    time:"1 hr ago",   read:false },
+  { id:3, type:"alert",   icon:<FaExclamationTriangle />, title:"Low Stock",                     message:"Amoxicillin 250mg has only 9 units remaining. Reorder immediately.",   time:"5 min ago",  read:false },
+];
+
+const hospitalNotifications = [
+  { id:1, type:"info",    icon:<FaInfoCircle />,          title:"Ward Medicine Request",         message:"ICU A requested Adrenaline and Saline.", time:"10 min ago", read:false },
+  { id:2, type:"alert",   icon:<FaExclamationTriangle />, title:"Emergency Stock Request",       message:"Emergency ward needs 5 units of O-negative blood substitutes.", time:"2 min ago",   read:false },
+  { id:3, type:"info",    icon:<FaInfoCircle />,          title:"Doctor Prescription",           message:"Dr. A. Menon sent a prescription for Ramesh Iyer (Bed 102).",   time:"30 min ago",  read:false },
+];
+
+const wholesaleNotifications = [
+  { id:1, type:"info",    icon:<FaInfoCircle />,          title:"Retail Order Received",         message:"MediCare Pharmacy placed a new order for ₹45,000.", time:"15 min ago", read:false },
+  { id:2, type:"info",    icon:<FaInfoCircle />,          title:"Hospital Bulk Order",           message:"Apollo Hospital placed a bulk order for IV fluids.", time:"1 hr ago",   read:false },
+  { id:3, type:"success", icon:<FaTruck />,               title:"Dispatch Completed",            message:"Shipment dispatched for City Health Pharma.",   time:"2 hrs ago",  read:false },
 ];
 
 const typeStyle = {
@@ -20,7 +27,18 @@ const typeStyle = {
 };
 
 export default function PharmacyNotifications() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+  
+  const getInitialNotifs = () => {
+    switch (pharmacyType) {
+      case "Hospital": return hospitalNotifications;
+      case "Wholesale": return wholesaleNotifications;
+      case "Retail":
+      default: return retailNotifications;
+    }
+  };
+
+  const [notifications, setNotifications] = useState(getInitialNotifs());
   const [filter, setFilter] = useState("All");
 
   const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));

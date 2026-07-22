@@ -145,15 +145,25 @@ const panels = {
 };
 
 export default function PharmacySettings() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
   const [activeKey, setActiveKey] = useState(null);
   const Panel = activeKey ? panels[activeKey] : null;
+
+  const getTitle = () => {
+    switch (pharmacyType) {
+      case "Hospital": return "Hospital Pharmacy Settings";
+      case "Wholesale": return "Wholesale Settings";
+      case "Retail":
+      default: return "Retail Settings";
+    }
+  };
 
   return (
     <div className="ph-page">
       <div className="ph-page-header">
         <div>
-          <h2 className="ph-page-title"><FaCog /> Settings</h2>
-          <p className="ph-page-sub">Manage your pharmacy preferences and configurations</p>
+          <h2 className="ph-page-title"><FaCog /> {getTitle()}</h2>
+          <p className="ph-page-sub">Manage your {pharmacyType.toLowerCase()} pharmacy preferences and configurations</p>
         </div>
         {activeKey && (
           <button className="ph-btn-outline-dark" onClick={() => setActiveKey(null)}>

@@ -43,9 +43,40 @@ function PharmacyLayout() {
 
   const handleLogout = () => navigate("/login/pharmacy");
 
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+
+  const getPharmacyDetails = () => {
+    switch (pharmacyType) {
+      case "Hospital":
+        return {
+          portalName: "Hospital Pharmacy",
+          name: "Apollo Hospital Pharmacy",
+          role: "Hospital Pharmacist",
+          id: "#HP-1201"
+        };
+      case "Wholesale":
+        return {
+          portalName: "Wholesale Pharmacy",
+          name: "Medico Wholesale Distributors",
+          role: "Supply Manager",
+          id: "#WS-5002"
+        };
+      case "Retail":
+      default:
+        return {
+          portalName: "Pharmacy Portal",
+          name: "MediCare Pharmacy",
+          role: "Chief Pharmacist",
+          id: "#PH-8841"
+        };
+    }
+  };
+
+  const details = getPharmacyDetails();
+
   const getPageTitle = () => {
     const matched = sidebarNavItems.find((i) => i.path === location.pathname);
-    return matched ? matched.label : "Pharmacy Portal";
+    return matched ? matched.label : details.portalName;
   };
 
   return (
@@ -66,7 +97,7 @@ function PharmacyLayout() {
             {!sidebarCollapsed && (
               <div className="phlay-logo-text">
                 <span className="phlay-brand-name">MedicoBridge</span>
-                <span className="phlay-brand-tag">Pharmacy Portal</span>
+                <span className="phlay-brand-tag">{details.portalName}</span>
               </div>
             )}
           </NavLink>
@@ -89,9 +120,9 @@ function PharmacyLayout() {
           </div>
           {!sidebarCollapsed && (
             <div className="phlay-profile-info">
-              <p className="phlay-profile-name">MediCare Pharmacy</p>
-              <p className="phlay-profile-role">Chief Pharmacist</p>
-              <span className="phlay-profile-badge">ID: #PH-8841</span>
+              <p className="phlay-profile-name">{details.name}</p>
+              <p className="phlay-profile-role">{details.role}</p>
+              <span className="phlay-profile-badge">ID: {details.id}</span>
             </div>
           )}
         </div>
@@ -154,8 +185,8 @@ function PharmacyLayout() {
             <div className="phlay-topnav-profile">
               <div className="phlay-topnav-avatar"><FaPills /></div>
               <div className="phlay-topnav-profile-info">
-                <span className="phlay-topnav-name">MediCare Pharmacy</span>
-                <span className="phlay-topnav-role">Chief Pharmacist</span>
+                <span className="phlay-topnav-name">{details.name}</span>
+                <span className="phlay-topnav-role">{details.role}</span>
               </div>
             </div>
           </div>

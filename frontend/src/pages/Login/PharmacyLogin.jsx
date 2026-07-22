@@ -32,14 +32,20 @@ function PharmacyLogin() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log("Pharmacy logging in:", { email, password, rememberMe });
+      let type = "Retail";
+      if (email.toLowerCase() === "hospitalpharmacy@gmail.com") type = "Hospital";
+      else if (email.toLowerCase() === "wholesalepharmacy@gmail.com") type = "Wholesale";
+      
+      localStorage.setItem("pharmacyType", type);
+      console.log(`Pharmacy logging in as ${type}:`, { email, password, rememberMe });
       navigate("/pharmacy/dashboard");
     }
   };
 
   const handleGoogleLogin = () => {
     console.log("Pharmacy Google login initiated");
-    window.location.href = "https://accounts.google.com";
+    localStorage.setItem("pharmacyType", "Retail");
+    navigate("/pharmacy/dashboard");
   };
 
   return (

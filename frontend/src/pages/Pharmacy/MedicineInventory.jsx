@@ -2,23 +2,27 @@ import React, { useState } from "react";
 import { FaBoxes, FaSearch, FaFilter, FaPlus, FaTimes, FaEdit, FaExclamationTriangle } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const initialInventory = [
+const retailInventory = [
   { id: "MED-001", name: "Paracetamol 500mg", category: "Analgesic", qty: 18, price: 5, expiry: "2027-03-01", manufacturer: "Sun Pharma", status: "Low Stock" },
   { id: "MED-002", name: "Amoxicillin 250mg", category: "Antibiotic", qty: 9, price: 35, expiry: "2026-11-15", manufacturer: "Cipla", status: "Low Stock" },
   { id: "MED-003", name: "Metformin 500mg", category: "Antidiabetic", qty: 22, price: 12, expiry: "2027-01-20", manufacturer: "Dr. Reddy's", status: "Low Stock" },
   { id: "MED-004", name: "Atorvastatin 10mg", category: "Statin", qty: 14, price: 28, expiry: "2027-06-10", manufacturer: "Lupin", status: "Low Stock" },
   { id: "MED-005", name: "Amlodipine 5mg", category: "Antihypertensive", qty: 120, price: 18, expiry: "2028-02-28", manufacturer: "Sun Pharma", status: "In Stock" },
-  { id: "MED-006", name: "Cetirizine 10mg", category: "Antihistamine", qty: 95, price: 8, expiry: "2027-09-05", manufacturer: "GSK", status: "In Stock" },
-  { id: "MED-007", name: "Losartan 50mg", category: "Antihypertensive", qty: 78, price: 22, expiry: "2027-12-01", manufacturer: "Cipla", status: "In Stock" },
-  { id: "MED-008", name: "Omeprazole 20mg", category: "Antacid", qty: 160, price: 14, expiry: "2028-05-15", manufacturer: "Zydus", status: "In Stock" },
-  { id: "MED-009", name: "Doxycycline 100mg", category: "Antibiotic", qty: 55, price: 42, expiry: "2027-04-10", manufacturer: "Dr. Reddy's", status: "In Stock" },
-  { id: "MED-010", name: "Vitamin C 500mg", category: "Supplement", qty: 200, price: 6, expiry: "2028-01-01", manufacturer: "Himalaya", status: "In Stock" },
-  { id: "MED-011", name: "Ibuprofen 400mg", category: "NSAID", qty: 0, price: 10, expiry: "2026-08-20", manufacturer: "Abbott", status: "Out of Stock" },
-  { id: "MED-012", name: "Aspirin 75mg", category: "Antiplatelet", qty: 310, price: 4, expiry: "2028-07-01", manufacturer: "Bayer", status: "In Stock" },
+];
+
+const hospitalInventory = [
+  { id: "HMED-101", name: "Adrenaline Injection", category: "Emergency", qty: 50, price: 150, expiry: "2026-10-10", manufacturer: "Neon Labs", status: "In Stock" },
+  { id: "HMED-102", name: "Saline IV Fluid", category: "IV Fluids", qty: 8, price: 40, expiry: "2028-01-12", manufacturer: "Baxter", status: "Low Stock" },
+  { id: "HMED-103", name: "Propofol", category: "Anesthetic", qty: 0, price: 500, expiry: "2026-09-30", manufacturer: "Fresenius", status: "Out of Stock" },
+];
+
+const wholesaleInventory = [
+  { id: "WMED-501", name: "Paracetamol (Bulk Pack)", category: "Analgesic", qty: 5000, price: 1, expiry: "2028-05-01", manufacturer: "Sun Pharma", status: "In Stock" },
+  { id: "WMED-502", name: "Amoxicillin (Bulk Pack)", category: "Antibiotic", qty: 200, price: 15, expiry: "2027-11-20", manufacturer: "Cipla", status: "Low Stock" },
 ];
 
 const categories = ["All", "Analgesic", "Antibiotic", "Antidiabetic", "Statin", "Antihypertensive",
-  "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement"];
+  "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement", "Emergency", "IV Fluids", "Anesthetic"];
 
 const statusColor = {
   "In Stock": { bg: "#dcfce7", color: "#16a34a" },
@@ -29,9 +33,19 @@ const statusColor = {
 const emptyForm = { name: "", category: "Analgesic", qty: "", price: "", expiry: "", manufacturer: "", status: "In Stock" };
 
 export default function MedicineInventory() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
   const [editingId, setEditingId] = useState(null);
 
-  const [inventory, setInventory] = useState(initialInventory);
+  const getInitialInventory = () => {
+    switch (pharmacyType) {
+      case "Hospital": return hospitalInventory;
+      case "Wholesale": return wholesaleInventory;
+      case "Retail":
+      default: return retailInventory;
+    }
+  };
+
+  const [inventory, setInventory] = useState(getInitialInventory());
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");

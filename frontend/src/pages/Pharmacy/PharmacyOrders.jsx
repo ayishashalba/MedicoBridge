@@ -2,14 +2,21 @@ import React, { useState } from "react";
 import { FaShoppingCart, FaSearch, FaFilter, FaEye, FaTimes } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const ordersData = [
+const retailOrders = [
   { id:"ORD-441", patient:"Anita Singh",   phone:"9876543210", date:"12 Jul 2026", type:"Home Delivery", amount:640,  status:"Delivered",  items:["Cetirizine 10mg x2","Vitamin C 500mg x1"]                         },
   { id:"ORD-442", patient:"Mohan Das",     phone:"9823456781", date:"12 Jul 2026", type:"Pickup",        amount:1200, status:"Processing", items:["Metformin 500mg x3","Atorvastatin 10mg x2","Losartan 50mg x1"]     },
   { id:"ORD-443", patient:"Priya Patel",   phone:"9811234567", date:"11 Jul 2026", type:"Home Delivery", amount:380,  status:"Shipped",    items:["Paracetamol 500mg x4","Ibuprofen 400mg x2"]                        },
   { id:"ORD-444", patient:"Vijay Kumar",   phone:"9800000001", date:"11 Jul 2026", type:"Pickup",        amount:950,  status:"Delivered",  items:["Amlodipine 5mg x1","Aspirin 75mg x2","Omeprazole 20mg x1"]        },
-  { id:"ORD-445", patient:"Nisha Gupta",   phone:"9876000002", date:"10 Jul 2026", type:"Home Delivery", amount:1850, status:"Pending",    items:["Doxycycline 100mg x2","Amoxicillin 250mg x1","Probiotics x2"]      },
-  { id:"ORD-446", patient:"Ravi Shankar",  phone:"9876000003", date:"10 Jul 2026", type:"Pickup",        amount:220,  status:"Cancelled",  items:["Paracetamol 500mg x2"]                                             },
-  { id:"ORD-447", patient:"Sonia Bhatia",  phone:"9876000004", date:"09 Jul 2026", type:"Home Delivery", amount:760,  status:"Delivered",  items:["Cetirizine 10mg x1","Montelukast 10mg x1","Vitamin C 500mg x2"]   },
+];
+
+const hospitalOrders = [
+  { id:"HORD-101", patient:"ICU Ward",     phone:"Ext 101",    date:"12 Jul 2026", type:"Internal",      amount:4500, status:"Processing", items:["Adrenaline Injection x50"]                                        },
+  { id:"HORD-102", patient:"ER Dept",      phone:"Ext 202",    date:"11 Jul 2026", type:"Internal",      amount:1200, status:"Delivered",  items:["Saline IV Fluid x30"]                                             },
+];
+
+const wholesaleOrders = [
+  { id:"WORD-501", patient:"Apollo Pharmacy", phone:"022-1234", date:"12 Jul 2026", type:"Bulk Dispatch", amount:45000, status:"Processing", items:["Paracetamol Bulk 1000x","Amoxicillin Bulk 500x"] },
+  { id:"WORD-502", patient:"City Health",     phone:"022-5678", date:"11 Jul 2026", type:"Bulk Dispatch", amount:12500, status:"Shipped",    items:["Metformin Bulk 2000x"] },
 ];
 
 const statusColor = {
@@ -21,6 +28,19 @@ const statusColor = {
 };
 
 export default function PharmacyOrders() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+  
+  const getInitialOrders = () => {
+    switch (pharmacyType) {
+      case "Hospital": return hospitalOrders;
+      case "Wholesale": return wholesaleOrders;
+      case "Retail":
+      default: return retailOrders;
+    }
+  };
+
+  const ordersData = getInitialOrders();
+
   const [search,    setSearch]    = useState("");
   const [filter,    setFilter]    = useState("All");
   const [typeFilter,setTypeFilter]= useState("All");

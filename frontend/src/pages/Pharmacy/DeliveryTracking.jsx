@@ -2,11 +2,21 @@ import React, { useState } from "react";
 import { FaTruck, FaSearch, FaFilter, FaMapMarkerAlt, FaCheckCircle } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const deliveries = [
+const retailDeliveries = [
   { id:"DEL-001", order:"ORD-441", patient:"Anita Singh",   address:"14, MG Road, Bangalore",       assigned:"Ramu Kumar",   phone:"9812341234", date:"12 Jul 2026", eta:"3:30 PM",   status:"Delivered",  steps:["Order Placed","Packed","Dispatched","Delivered"] },
   { id:"DEL-002", order:"ORD-443", patient:"Priya Patel",   address:"22, Park Street, Mumbai",       assigned:"Suresh Rao",   phone:"9823453456", date:"11 Jul 2026", eta:"5:00 PM",   status:"Out for Delivery", steps:["Order Placed","Packed","Dispatched"] },
   { id:"DEL-003", order:"ORD-445", patient:"Nisha Gupta",   address:"8, Civil Lines, Delhi",         assigned:"—",            phone:"—",          date:"10 Jul 2026", eta:"Tomorrow",  status:"Packed",     steps:["Order Placed","Packed"] },
   { id:"DEL-004", order:"ORD-447", patient:"Sonia Bhatia",  address:"33, Jubilee Hills, Hyderabad", assigned:"Mohan Lal",    phone:"9867896789", date:"09 Jul 2026", eta:"Delivered", status:"Delivered",  steps:["Order Placed","Packed","Dispatched","Delivered"] },
+];
+
+const hospitalDeliveries = [
+  { id:"HDEL-101", order:"HORD-101", patient:"ICU Ward",   address:"Building A, Floor 3", assigned:"Ward Boy Suresh", phone:"Ext 105", date:"12 Jul 2026", eta:"10 Mins", status:"Out for Delivery", steps:["Order Placed","Packed","Dispatched"] },
+  { id:"HDEL-102", order:"HORD-102", patient:"ER Dept",    address:"Ground Floor, Emergency", assigned:"Nurse Priya", phone:"Ext 200", date:"11 Jul 2026", eta:"Delivered", status:"Delivered", steps:["Order Placed","Packed","Dispatched","Delivered"] },
+];
+
+const wholesaleDeliveries = [
+  { id:"WDEL-501", order:"WORD-501", patient:"Apollo Pharmacy", address:"45, Health St, Pune", assigned:"Express Cargo", phone:"1800-111-222", date:"12 Jul 2026", eta:"2 Days", status:"Dispatched", steps:["Order Placed","Packed","Dispatched"] },
+  { id:"WDEL-502", order:"WORD-502", patient:"City Health", address:"90, Ring Road, Surat", assigned:"Safe Logistics", phone:"1800-333-444", date:"11 Jul 2026", eta:"Tomorrow", status:"Packed", steps:["Order Placed","Packed"] },
 ];
 
 const allSteps = ["Order Placed","Packed","Dispatched","Out for Delivery","Delivered"];
@@ -19,6 +29,19 @@ const statusColor = {
 };
 
 export default function DeliveryTracking() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+  
+  const getInitialDeliveries = () => {
+    switch (pharmacyType) {
+      case "Hospital": return hospitalDeliveries;
+      case "Wholesale": return wholesaleDeliveries;
+      case "Retail":
+      default: return retailDeliveries;
+    }
+  };
+
+  const deliveries = getInitialDeliveries();
+
   const [search,   setSearch]   = useState("");
   const [filter,   setFilter]   = useState("All");
   const [selected, setSelected] = useState(null);

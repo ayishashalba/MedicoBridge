@@ -2,17 +2,21 @@ import React, { useState } from "react";
 import { FaFileInvoiceDollar, FaSearch, FaFilter, FaEye, FaTimes, FaCheckCircle, FaDownload } from "react-icons/fa";
 import "./PharmacyPages.css";
 
-const billsData = [
+const retailBills = [
   { id:"INV-2201", patient:"Anita Singh",   order:"ORD-441", date:"12 Jul 2026", subtotal:600,  tax:40,   discount:0,   total:640,  method:"UPI",         status:"Paid"    },
   { id:"INV-2202", patient:"Mohan Das",     order:"ORD-442", date:"12 Jul 2026", subtotal:1100, tax:110,  discount:10,  total:1200, method:"Cash",        status:"Pending" },
   { id:"INV-2203", patient:"Priya Patel",   order:"ORD-443", date:"11 Jul 2026", subtotal:360,  tax:20,   discount:0,   total:380,  method:"Card",        status:"Paid"    },
-  { id:"INV-2204", patient:"Vijay Kumar",   order:"ORD-444", date:"11 Jul 2026", subtotal:900,  tax:50,   discount:0,   total:950,  method:"UPI",         status:"Paid"    },
-  { id:"INV-2205", patient:"Nisha Gupta",   order:"ORD-445", date:"10 Jul 2026", subtotal:1750, tax:100,  discount:0,   total:1850, method:"Insurance",   status:"Pending" },
-  { id:"INV-2206", patient:"Ravi Shankar",  order:"ORD-446", date:"10 Jul 2026", subtotal:220,  tax:0,    discount:0,   total:220,  method:"—",           status:"Cancelled"},
-  { id:"INV-2207", patient:"Sonia Bhatia",  order:"ORD-447", date:"09 Jul 2026", subtotal:720,  tax:40,   discount:0,   total:760,  method:"Card",        status:"Paid"    },
 ];
 
-const totalRevenue = billsData.filter((b) => b.status === "Paid").reduce((s,b) => s + b.total, 0);
+const hospitalBills = [
+  { id:"HINV-101", patient:"ICU Ward",      order:"HORD-101", date:"12 Jul 2026", subtotal:4000, tax:500, discount:0, total:4500, method:"Internal Transfer", status:"Paid" },
+  { id:"HINV-102", patient:"ER Dept",       order:"HORD-102", date:"11 Jul 2026", subtotal:1100, tax:100, discount:0, total:1200, method:"Internal Transfer", status:"Paid" },
+];
+
+const wholesaleBills = [
+  { id:"WINV-501", patient:"Apollo Pharmacy", order:"WORD-501", date:"12 Jul 2026", subtotal:40000, tax:5000, discount:0, total:45000, method:"Bank Transfer", status:"Pending" },
+  { id:"WINV-502", patient:"City Health",     order:"WORD-502", date:"11 Jul 2026", subtotal:11000, tax:1500, discount:0, total:12500, method:"Card",          status:"Paid"    },
+];
 
 const statusColor = {
   Paid:      { bg:"#dcfce7", color:"#16a34a" },
@@ -21,10 +25,24 @@ const statusColor = {
 };
 
 export default function PharmacyBilling() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+  
+  const getInitialBills = () => {
+    switch (pharmacyType) {
+      case "Hospital": return hospitalBills;
+      case "Wholesale": return wholesaleBills;
+      case "Retail":
+      default: return retailBills;
+    }
+  };
+
+  const initialBills = getInitialBills();
+  const totalRevenue = initialBills.filter((b) => b.status === "Paid").reduce((s,b) => s + b.total, 0);
+
   const [search,   setSearch]   = useState("");
   const [filter,   setFilter]   = useState("All");
   const [selected, setSelected] = useState(null);
-  const [bills,    setBills]    = useState(billsData);
+  const [bills,    setBills]    = useState(initialBills);
 
   const filtered = bills.filter((b) => {
     const matchSearch = b.patient.toLowerCase().includes(search.toLowerCase()) || b.id.toLowerCase().includes(search.toLowerCase());

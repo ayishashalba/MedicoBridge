@@ -4,38 +4,9 @@ import {
   FaFilePrescription, FaBoxes, FaShoppingCart,
   FaFileInvoiceDollar, FaTruck, FaBell,
   FaCheckCircle, FaExclamationTriangle, FaClock, FaChartLine,
-  FaPills, FaArrowUp, FaArrowDown,
+  FaPills, FaArrowUp, FaArrowDown, FaUserInjured, FaHospitalUser, FaTruckLoading, FaHospital
 } from "react-icons/fa";
 import "./PharmacyDashboard.css";
-
-const kpiCards = [
-  { label: "Pending Prescriptions", value: "14",   icon: <FaFilePrescription />, color: "#0ea5e9", bg: "#e0f2fe", delta: "+3 today",    up: true  },
-  { label: "Medicines in Stock",    value: "1,248", icon: <FaBoxes />,           color: "#0d9488", bg: "#ccfbf1", delta: "12 low stock",  up: false },
-  { label: "Orders Today",          value: "38",   icon: <FaShoppingCart />,    color: "#6366f1", bg: "#ede9fe", delta: "+7 vs yesterday",up: true  },
-  { label: "Revenue Today",         value: "₹18,400",icon:<FaFileInvoiceDollar />,color:"#f59e0b",bg: "#fef3c7", delta: "+₹2,100",      up: true  },
-];
-
-const recentPrescriptions = [
-  { id: "RX-001", patient: "Aarav Sharma",   doctor: "Dr. Priya Mehta",  date: "12 Jul 2026", status: "Pending",    items: 3 },
-  { id: "RX-002", patient: "Sunita Rao",     doctor: "Dr. Anil Kumar",   date: "12 Jul 2026", status: "Dispensed",  items: 5 },
-  { id: "RX-003", patient: "Rohan Verma",    doctor: "Dr. Sara Thomas",  date: "11 Jul 2026", status: "Pending",    items: 2 },
-  { id: "RX-004", patient: "Lakshmi Nair",   doctor: "Dr. Rajiv Kapoor", date: "11 Jul 2026", status: "Dispensed",  items: 4 },
-  { id: "RX-005", patient: "Karan Malhotra", doctor: "Dr. Priya Mehta",  date: "10 Jul 2026", status: "On Hold",    items: 1 },
-];
-
-const lowStockItems = [
-  { name: "Paracetamol 500mg",  qty: 18,  threshold: 50 },
-  { name: "Amoxicillin 250mg",  qty: 9,   threshold: 30 },
-  { name: "Metformin 500mg",    qty: 22,  threshold: 40 },
-  { name: "Atorvastatin 10mg",  qty: 14,  threshold: 35 },
-];
-
-const recentOrders = [
-  { id: "ORD-441", patient: "Anita Singh",   amount: "₹640",   status: "Delivered",  type: "Home Delivery" },
-  { id: "ORD-442", patient: "Mohan Das",     amount: "₹1,200", status: "Processing", type: "Pickup"        },
-  { id: "ORD-443", patient: "Priya Patel",   amount: "₹380",   status: "Shipped",    type: "Home Delivery" },
-  { id: "ORD-444", patient: "Vijay Kumar",   amount: "₹950",   status: "Delivered",  type: "Pickup"        },
-];
 
 const statusColor = {
   Pending:    { bg: "#fef3c7", color: "#d97706" },
@@ -44,6 +15,7 @@ const statusColor = {
   Delivered:  { bg: "#dcfce7", color: "#16a34a" },
   Processing: { bg: "#ede9fe", color: "#6d28d9" },
   Shipped:    { bg: "#e0f2fe", color: "#0284c7" },
+  Approved:   { bg: "#dcfce7", color: "#16a34a" },
 };
 
 function StatusPill({ status }) {
@@ -55,12 +27,133 @@ function StatusPill({ status }) {
 }
 
 export default function PharmacyDashboard() {
+  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+
+  const getDashboardData = () => {
+    switch(pharmacyType) {
+      case "Hospital":
+        return {
+          title: "Good Morning, Apollo Hospital Pharmacy 👋",
+          kpiCards: [
+            { label: "Hospital Prescriptions", value: "45", icon: <FaFilePrescription />, color: "#0ea5e9", bg: "#e0f2fe", delta: "+5 today", up: true },
+            { label: "Ward Requests", value: "12", icon: <FaHospitalUser />, color: "#f59e0b", bg: "#fef3c7", delta: "3 urgent", up: false },
+            { label: "Emergency Medicine Requests", value: "4", icon: <FaBell />, color: "#ef4444", bg: "#fee2e2", delta: "Immediate action", up: false },
+            { label: "IP Patients", value: "120", icon: <FaUserInjured />, color: "#8b5cf6", bg: "#ede9fe", delta: "Stable", up: true },
+            { label: "Medicine Inventory", value: "5,432", icon: <FaBoxes />, color: "#0d9488", bg: "#ccfbf1", delta: "Healthy", up: true },
+            { label: "Today's Dispensed Medicines", value: "89", icon: <FaCheckCircle />, color: "#10b981", bg: "#d1fae5", delta: "+15% vs yesterday", up: true },
+          ],
+          table1Title: "Hospital Prescriptions",
+          table1Icon: <FaFilePrescription />,
+          table1Data: [
+            { id: "HP-RX-001", patient: "Ramesh Iyer", doctor: "Dr. A. Menon", items: 4, status: "Pending" },
+            { id: "HP-RX-002", patient: "Sneha Patil", doctor: "Dr. S. Kulkarni", items: 2, status: "Dispensed" },
+            { id: "HP-RX-003", patient: "Amitabh C.", doctor: "Dr. P. Sharma", items: 5, status: "On Hold" },
+          ],
+          table2Title: "Ward Requests",
+          table2Icon: <FaHospitalUser />,
+          table2Data: [
+            { id: "WR-101", ward: "ICU A", requester: "Nurse Anjali", items: "Adrenaline, Saline", status: "Processing" },
+            { id: "WR-102", ward: "General B", requester: "Nurse David", items: "Paracetamol, Bandages", status: "Delivered" },
+            { id: "WR-103", ward: "Pediatrics", requester: "Nurse Sunita", items: "Cough Syrup, Inhalers", status: "Pending" },
+          ],
+          table2Headers: ["Request ID", "Ward", "Requester", "Items", "Status"],
+          table2Cols: (row) => (
+            <>
+              <td><span className="ph-id-badge">{row.id}</span></td>
+              <td><span className="ph-name">{row.ward}</span></td>
+              <td>{row.requester}</td>
+              <td>{row.items}</td>
+              <td><StatusPill status={row.status} /></td>
+            </>
+          )
+        };
+      case "Wholesale":
+        return {
+          title: "Good Morning, Medico Wholesale Distributors 👋",
+          kpiCards: [
+            { label: "Retail Orders", value: "24", icon: <FaShoppingCart />, color: "#0ea5e9", bg: "#e0f2fe", delta: "+8 today", up: true },
+            { label: "Hospital Orders", value: "7", icon: <FaHospital />, color: "#8b5cf6", bg: "#ede9fe", delta: "+2 today", up: true },
+            { label: "Inventory", value: "1,24,500", icon: <FaBoxes />, color: "#0d9488", bg: "#ccfbf1", delta: "Optimized", up: true },
+            { label: "Dispatch", value: "14", icon: <FaTruckLoading />, color: "#f59e0b", bg: "#fef3c7", delta: "Processing", up: true },
+            { label: "Pending Deliveries", value: "5", icon: <FaTruck />, color: "#ef4444", bg: "#fee2e2", delta: "In transit", up: false },
+            { label: "Revenue", value: "₹4,50,000", icon: <FaFileInvoiceDollar />, color: "#10b981", bg: "#d1fae5", delta: "+₹25K", up: true },
+          ],
+          table1Title: "Retail Orders",
+          table1Icon: <FaShoppingCart />,
+          table1Data: [
+            { id: "RO-5001", patient: "MediCare Pharmacy", amount: "₹45,000", items: 200, status: "Processing" },
+            { id: "RO-5002", patient: "City Health Pharma", amount: "₹12,500", items: 50, status: "Shipped" },
+            { id: "RO-5003", patient: "Apollo Pharmacy", amount: "₹38,000", items: 150, status: "Delivered" },
+          ],
+          table2Title: "Hospital Orders",
+          table2Icon: <FaHospital />,
+          table2Data: [
+            { id: "HO-901", hospital: "Fortis Hospital", amount: "₹1,20,000", status: "Approved" },
+            { id: "HO-902", hospital: "Max Super Speciality", amount: "₹85,000", status: "Processing" },
+            { id: "HO-903", hospital: "Apollo Hospital", amount: "₹2,50,000", status: "Delivered" },
+          ],
+          table2Headers: ["Order ID", "Hospital", "Amount", "Status"],
+          table2Cols: (row) => (
+            <>
+              <td><span className="ph-id-badge">{row.id}</span></td>
+              <td><span className="ph-name">{row.hospital}</span></td>
+              <td><strong>{row.amount}</strong></td>
+              <td><StatusPill status={row.status} /></td>
+            </>
+          )
+        };
+      case "Retail":
+      default:
+        return {
+          title: "Good Morning, MediCare Pharmacy 👋",
+          kpiCards: [
+            { label: "Pending Prescriptions", value: "14", icon: <FaFilePrescription />, color: "#0ea5e9", bg: "#e0f2fe", delta: "+3 today", up: true },
+            { label: "Medicine Inventory", value: "1,248", icon: <FaBoxes />, color: "#0d9488", bg: "#ccfbf1", delta: "12 low stock", up: false },
+            { label: "Orders", value: "38", icon: <FaShoppingCart />, color: "#6366f1", bg: "#ede9fe", delta: "+7 vs yesterday", up: true },
+            { label: "Revenue", value: "₹18,400", icon: <FaFileInvoiceDollar />, color: "#f59e0b", bg: "#fef3c7", delta: "+₹2,100", up: true },
+          ],
+          table1Title: "Recent Prescriptions",
+          table1Icon: <FaFilePrescription />,
+          table1Data: [
+            { id: "RX-001", patient: "Aarav Sharma", doctor: "Dr. Priya Mehta", items: 3, status: "Pending" },
+            { id: "RX-002", patient: "Sunita Rao", doctor: "Dr. Anil Kumar", items: 5, status: "Dispensed" },
+            { id: "RX-003", patient: "Rohan Verma", doctor: "Dr. Sara Thomas", items: 2, status: "Pending" },
+          ],
+          table2Title: "Recent Orders",
+          table2Icon: <FaShoppingCart />,
+          table2Data: [
+            { id: "ORD-441", patient: "Anita Singh", type: "Home Delivery", amount: "₹640", status: "Delivered" },
+            { id: "ORD-442", patient: "Mohan Das", type: "Pickup", amount: "₹1,200", status: "Processing" },
+            { id: "ORD-443", patient: "Priya Patel", type: "Home Delivery", amount: "₹380", status: "Shipped" },
+          ],
+          table2Headers: ["Order ID", "Patient", "Type", "Amount", "Status"],
+          table2Cols: (row) => (
+            <>
+              <td><span className="ph-id-badge">{row.id}</span></td>
+              <td><span className="ph-name">{row.patient}</span></td>
+              <td>{row.type}</td>
+              <td><strong>{row.amount}</strong></td>
+              <td><StatusPill status={row.status} /></td>
+            </>
+          ),
+          showLowStock: true,
+          lowStockItems: [
+            { name: "Paracetamol 500mg", qty: 18, threshold: 50 },
+            { name: "Amoxicillin 250mg", qty: 9, threshold: 30 },
+            { name: "Metformin 500mg", qty: 22, threshold: 40 },
+          ]
+        };
+    }
+  };
+
+  const data = getDashboardData();
+
   return (
     <div className="ph-dashboard">
       {/* Welcome Banner */}
       <div className="ph-welcome-banner">
         <div className="ph-welcome-text">
-          <h2>Good Morning, MediCare Pharmacy 👋</h2>
+          <h2>{data.title}</h2>
           <p>Here's what's happening at your pharmacy today.</p>
         </div>
         <div className="ph-welcome-actions">
@@ -75,7 +168,7 @@ export default function PharmacyDashboard() {
 
       {/* KPI Cards */}
       <div className="ph-kpi-grid">
-        {kpiCards.map((k) => (
+        {data.kpiCards.map((k) => (
           <div key={k.label} className="ph-kpi-card">
             <div className="ph-kpi-icon" style={{ background: k.bg, color: k.color }}>
               {k.icon}
@@ -91,33 +184,35 @@ export default function PharmacyDashboard() {
         ))}
       </div>
 
-      {/* Two-column grid */}
+      {/* Two-column grid for Table 1 and Low Stock (if Retail) / or just grids */}
       <div className="ph-grid-2">
-        {/* Recent Prescriptions */}
+        {/* Table 1 */}
         <div className="ph-card">
           <div className="ph-card-header">
-            <h3 className="ph-card-title"><FaFilePrescription /> Recent Prescriptions</h3>
+            <h3 className="ph-card-title">{data.table1Icon} {data.table1Title}</h3>
             <NavLink to="/pharmacy/prescriptions" className="ph-link-sm">View All</NavLink>
           </div>
           <div className="ph-table-wrap">
             <table className="ph-table">
               <thead>
                 <tr>
-                  <th>Rx ID</th>
-                  <th>Patient</th>
-                  <th>Doctor</th>
+                  <th>ID</th>
+                  <th>{pharmacyType === 'Wholesale' ? 'Pharmacy' : 'Patient'}</th>
+                  {pharmacyType !== 'Wholesale' && <th>Doctor</th>}
+                  {pharmacyType === 'Wholesale' && <th>Amount</th>}
                   <th>Items</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
-                {recentPrescriptions.map((rx) => (
-                  <tr key={rx.id}>
-                    <td><span className="ph-id-badge">{rx.id}</span></td>
-                    <td><span className="ph-name">{rx.patient}</span></td>
-                    <td>{rx.doctor}</td>
-                    <td>{rx.items}</td>
-                    <td><StatusPill status={rx.status} /></td>
+                {data.table1Data.map((row) => (
+                  <tr key={row.id}>
+                    <td><span className="ph-id-badge">{row.id}</span></td>
+                    <td><span className="ph-name">{row.patient}</span></td>
+                    {pharmacyType !== 'Wholesale' && <td>{row.doctor}</td>}
+                    {pharmacyType === 'Wholesale' && <td><strong>{row.amount}</strong></td>}
+                    <td>{row.items}</td>
+                    <td><StatusPill status={row.status} /></td>
                   </tr>
                 ))}
               </tbody>
@@ -125,65 +220,84 @@ export default function PharmacyDashboard() {
           </div>
         </div>
 
-        {/* Low Stock Alert */}
-        <div className="ph-card">
-          <div className="ph-card-header">
-            <h3 className="ph-card-title"><FaExclamationTriangle className="ph-warn-icon" /> Low Stock Alert</h3>
-            <NavLink to="/pharmacy/inventory" className="ph-link-sm">Manage</NavLink>
-          </div>
-          <div className="ph-low-stock-list">
-            {lowStockItems.map((item) => {
-              const pct = Math.round((item.qty / item.threshold) * 100);
-              return (
-                <div key={item.name} className="ph-low-stock-item">
-                  <div className="ph-low-stock-info">
-                    <span className="ph-low-stock-name">{item.name}</span>
-                    <span className="ph-low-stock-qty">{item.qty} left / {item.threshold} min</span>
+        {/* Low Stock Alert (Retail only) OR Table 2 (Hospital/Wholesale) */}
+        {data.showLowStock ? (
+          <div className="ph-card">
+            <div className="ph-card-header">
+              <h3 className="ph-card-title"><FaExclamationTriangle className="ph-warn-icon" /> Low Stock Alert</h3>
+              <NavLink to="/pharmacy/inventory" className="ph-link-sm">Manage</NavLink>
+            </div>
+            <div className="ph-low-stock-list">
+              {data.lowStockItems.map((item) => {
+                const pct = Math.round((item.qty / item.threshold) * 100);
+                return (
+                  <div key={item.name} className="ph-low-stock-item">
+                    <div className="ph-low-stock-info">
+                      <span className="ph-low-stock-name">{item.name}</span>
+                      <span className="ph-low-stock-qty">{item.qty} left / {item.threshold} min</span>
+                    </div>
+                    <div className="ph-progress-bar-bg">
+                      <div
+                        className="ph-progress-bar-fill"
+                        style={{ width: `${pct}%`, background: pct < 35 ? "#dc2626" : "#f59e0b" }}
+                      />
+                    </div>
                   </div>
-                  <div className="ph-progress-bar-bg">
-                    <div
-                      className="ph-progress-bar-fill"
-                      style={{ width: `${pct}%`, background: pct < 35 ? "#dc2626" : "#f59e0b" }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="ph-card">
+            <div className="ph-card-header">
+              <h3 className="ph-card-title">{data.table2Icon} {data.table2Title}</h3>
+              <NavLink to="/pharmacy/orders" className="ph-link-sm">View All</NavLink>
+            </div>
+            <div className="ph-table-wrap">
+              <table className="ph-table">
+                <thead>
+                  <tr>
+                    {data.table2Headers.map(h => <th key={h}>{h}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.table2Data.map((row) => (
+                    <tr key={row.id}>
+                      {data.table2Cols(row)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Recent Orders */}
-      <div className="ph-card">
-        <div className="ph-card-header">
-          <h3 className="ph-card-title"><FaShoppingCart /> Recent Orders</h3>
-          <NavLink to="/pharmacy/orders" className="ph-link-sm">View All</NavLink>
-        </div>
-        <div className="ph-table-wrap">
-          <table className="ph-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Patient</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map((o) => (
-                <tr key={o.id}>
-                  <td><span className="ph-id-badge">{o.id}</span></td>
-                  <td><span className="ph-name">{o.patient}</span></td>
-                  <td>{o.type}</td>
-                  <td><strong>{o.amount}</strong></td>
-                  <td><StatusPill status={o.status} /></td>
+      {/* Table 2 for Retail */}
+      {data.showLowStock && (
+        <div className="ph-card">
+          <div className="ph-card-header">
+            <h3 className="ph-card-title">{data.table2Icon} {data.table2Title}</h3>
+            <NavLink to="/pharmacy/orders" className="ph-link-sm">View All</NavLink>
+          </div>
+          <div className="ph-table-wrap">
+            <table className="ph-table">
+              <thead>
+                <tr>
+                  {data.table2Headers.map(h => <th key={h}>{h}</th>)}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.table2Data.map((row) => (
+                  <tr key={row.id}>
+                    {data.table2Cols(row)}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
