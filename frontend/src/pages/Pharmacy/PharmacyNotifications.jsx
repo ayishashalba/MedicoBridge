@@ -14,11 +14,7 @@ const hospitalNotifications = [
   { id:3, type:"info",    icon:<FaInfoCircle />,          title:"Doctor Prescription",           message:"Dr. A. Menon sent a prescription for Ramesh Iyer (Bed 102).",   time:"30 min ago",  read:false },
 ];
 
-const wholesaleNotifications = [
-  { id:1, type:"info",    icon:<FaInfoCircle />,          title:"Retail Order Received",         message:"MediCare Pharmacy placed a new order for ₹45,000.", time:"15 min ago", read:false },
-  { id:2, type:"info",    icon:<FaInfoCircle />,          title:"Hospital Bulk Order",           message:"Apollo Hospital placed a bulk order for IV fluids.", time:"1 hr ago",   read:false },
-  { id:3, type:"success", icon:<FaTruck />,               title:"Dispatch Completed",            message:"Shipment dispatched for City Health Pharma.",   time:"2 hrs ago",  read:false },
-];
+
 
 const typeStyle = {
   alert:   { bg:"#fef3c7", color:"#d97706", border:"#fcd34d" },
@@ -32,7 +28,7 @@ export default function PharmacyNotifications() {
   const getInitialNotifs = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalNotifications;
-      case "Wholesale": return wholesaleNotifications;
+
       case "Retail":
       default: return retailNotifications;
     }

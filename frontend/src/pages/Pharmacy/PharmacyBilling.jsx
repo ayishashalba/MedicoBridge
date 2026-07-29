@@ -13,10 +13,7 @@ const hospitalBills = [
   { id:"HINV-102", patient:"ER Dept",       order:"HORD-102", date:"11 Jul 2026", subtotal:1100, tax:100, discount:0, total:1200, method:"Internal Transfer", status:"Paid" },
 ];
 
-const wholesaleBills = [
-  { id:"WINV-501", patient:"Apollo Pharmacy", order:"WORD-501", date:"12 Jul 2026", subtotal:40000, tax:5000, discount:0, total:45000, method:"Bank Transfer", status:"Pending" },
-  { id:"WINV-502", patient:"City Health",     order:"WORD-502", date:"11 Jul 2026", subtotal:11000, tax:1500, discount:0, total:12500, method:"Card",          status:"Paid"    },
-];
+
 
 const statusColor = {
   Paid:      { bg:"#dcfce7", color:"#16a34a" },
@@ -30,7 +27,7 @@ export default function PharmacyBilling() {
   const getInitialBills = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalBills;
-      case "Wholesale": return wholesaleBills;
+
       case "Retail":
       default: return retailBills;
     }

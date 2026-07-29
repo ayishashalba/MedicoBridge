@@ -14,10 +14,7 @@ const hospitalOrders = [
   { id:"HORD-102", patient:"ER Dept",      phone:"Ext 202",    date:"11 Jul 2026", type:"Internal",      amount:1200, status:"Delivered",  items:["Saline IV Fluid x30"]                                             },
 ];
 
-const wholesaleOrders = [
-  { id:"WORD-501", patient:"Apollo Pharmacy", phone:"022-1234", date:"12 Jul 2026", type:"Bulk Dispatch", amount:45000, status:"Processing", items:["Paracetamol Bulk 1000x","Amoxicillin Bulk 500x"] },
-  { id:"WORD-502", patient:"City Health",     phone:"022-5678", date:"11 Jul 2026", type:"Bulk Dispatch", amount:12500, status:"Shipped",    items:["Metformin Bulk 2000x"] },
-];
+
 
 const statusColor = {
   Delivered:  { bg:"#dcfce7", color:"#16a34a" },
@@ -33,7 +30,7 @@ export default function PharmacyOrders() {
   const getInitialOrders = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalOrders;
-      case "Wholesale": return wholesaleOrders;
+
       case "Retail":
       default: return retailOrders;
     }

@@ -62,7 +62,6 @@ export default function AdminDashboard() {
     { label: "Clinic Doctors", count: "1,270", pct: 31, color: "#818cf8" },
     { label: "Retail Pharmacies", count: "850", pct: 83, color: "#f59e0b" },
     { label: "Hospital Pharmacies", count: "110", pct: 11, color: "#fbbf24" },
-    { label: "Wholesale Pharmacies", count: "60", pct: 6, color: "#fcd34d" },
   ];
 
   const systemAlerts = [

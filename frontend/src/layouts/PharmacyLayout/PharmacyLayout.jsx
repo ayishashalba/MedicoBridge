@@ -49,13 +49,6 @@ function PharmacyLayout() {
       role: "Hospital Pharmacist",
       id: "#HP-1201",
     },
-
-    Wholesale: {
-      portal: "Wholesale Pharmacy",
-      name: "Medico Wholesale Distributors",
-      role: "Supply Manager",
-      id: "#WS-5002",
-    },
   };
 
   const info = pharmacyInfo[pharmacyType];

@@ -14,10 +14,6 @@ const hospitalDeliveries = [
   { id:"HDEL-102", order:"HORD-102", patient:"ER Dept",    address:"Ground Floor, Emergency", assigned:"Nurse Priya", phone:"Ext 200", date:"11 Jul 2026", eta:"Delivered", status:"Delivered", steps:["Order Placed","Packed","Dispatched","Delivered"] },
 ];
 
-const wholesaleDeliveries = [
-  { id:"WDEL-501", order:"WORD-501", patient:"Apollo Pharmacy", address:"45, Health St, Pune", assigned:"Express Cargo", phone:"1800-111-222", date:"12 Jul 2026", eta:"2 Days", status:"Dispatched", steps:["Order Placed","Packed","Dispatched"] },
-  { id:"WDEL-502", order:"WORD-502", patient:"City Health", address:"90, Ring Road, Surat", assigned:"Safe Logistics", phone:"1800-333-444", date:"11 Jul 2026", eta:"Tomorrow", status:"Packed", steps:["Order Placed","Packed"] },
-];
 
 const allSteps = ["Order Placed","Packed","Dispatched","Out for Delivery","Delivered"];
 
@@ -34,7 +30,7 @@ export default function DeliveryTracking() {
   const getInitialDeliveries = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalDeliveries;
-      case "Wholesale": return wholesaleDeliveries;
+
       case "Retail":
       default: return retailDeliveries;
     }

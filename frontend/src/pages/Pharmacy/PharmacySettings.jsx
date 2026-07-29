@@ -152,7 +152,7 @@ export default function PharmacySettings() {
   const getTitle = () => {
     switch (pharmacyType) {
       case "Hospital": return "Hospital Pharmacy Settings";
-      case "Wholesale": return "Wholesale Settings";
+
       case "Retail":
       default: return "Retail Settings";
     }

@@ -16,10 +16,6 @@ const hospitalInventory = [
   { id: "HMED-103", name: "Propofol", category: "Anesthetic", qty: 0, price: 500, expiry: "2026-09-30", manufacturer: "Fresenius", status: "Out of Stock" },
 ];
 
-const wholesaleInventory = [
-  { id: "WMED-501", name: "Paracetamol (Bulk Pack)", category: "Analgesic", qty: 5000, price: 1, expiry: "2028-05-01", manufacturer: "Sun Pharma", status: "In Stock" },
-  { id: "WMED-502", name: "Amoxicillin (Bulk Pack)", category: "Antibiotic", qty: 200, price: 15, expiry: "2027-11-20", manufacturer: "Cipla", status: "Low Stock" },
-];
 
 const categories = ["All", "Analgesic", "Antibiotic", "Antidiabetic", "Statin", "Antihypertensive",
   "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement", "Emergency", "IV Fluids", "Anesthetic"];
@@ -39,7 +35,7 @@ export default function MedicineInventory() {
   const getInitialInventory = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalInventory;
-      case "Wholesale": return wholesaleInventory;
+
       case "Retail":
       default: return retailInventory;
     }

@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import "./PharmacyRegister.css";
 
-const PHARMACY_TYPES = ["Retail Pharmacy", "Hospital Pharmacy", "Wholesale Pharmacy"];
+const PHARMACY_TYPES = ["Retail Pharmacy", "Hospital Pharmacy"];
 
 const INITIAL_FORM_STATE = {
   pharmacyName: "",

@@ -16,10 +16,7 @@ const hospitalRx = [
   { id:"HP-RX-003", patient:"Amitabh C.",    age:68, doctor:"Dr. P. Sharma",   date:"11 Jul 2026", status:"On Hold",   items:["Insulin Glargine x1"], type:"Inpatient"  },
 ];
 
-const wholesaleRx = [
-  { id:"WR-001", patient:"Apollo Pharmacy", age:"N/A", doctor:"N/A", date:"12 Jul 2026", status:"Pending", items:["Paracetamol Bulk 1000x","Amoxicillin Bulk 500x"], type:"Bulk Order" },
-  { id:"WR-002", patient:"City Health", age:"N/A", doctor:"N/A", date:"11 Jul 2026", status:"Dispensed", items:["Metformin Bulk 2000x"], type:"Bulk Order" },
-];
+
 
 const statusColor = {
   Pending:   { bg:"#fef3c7", color:"#d97706" },
@@ -33,7 +30,7 @@ export default function PrescriptionRequests() {
   const getInitialRx = () => {
     switch (pharmacyType) {
       case "Hospital": return hospitalRx;
-      case "Wholesale": return wholesaleRx;
+
       case "Retail":
       default: return retailRx;
     }

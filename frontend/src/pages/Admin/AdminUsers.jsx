@@ -27,7 +27,6 @@ const initialHospitals = [
 const initialPharmacies = [
   { id: "PHR-401", name: "MediCare Pharmacy", email: "medicare.rx@gmail.com", license: "LIC-PH-99411", city: "Kolkata", status: "Active", verified: "Yes", pharmacyType: "Retail Pharmacy" },
   { id: "PHR-402", name: "Apollo Pharmacy Store", email: "apollo.store5@apollo.in", license: "LIC-PH-82410", city: "Bangalore", status: "Active", verified: "Yes", pharmacyType: "Hospital Pharmacy" },
-  { id: "PHR-403", name: "Wellness Chemist", email: "wellness.chemist@wellness.com", license: "LIC-PH-77241", city: "Noida", status: "Pending", verified: "No", pharmacyType: "Wholesale Pharmacy" },
 ];
 
 export default function AdminUsers() {

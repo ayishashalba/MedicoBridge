@@ -68,41 +68,7 @@ export default function PharmacyDashboard() {
             </>
           )
         };
-      case "Wholesale":
-        return {
-          title: "Good Morning, Medico Wholesale Distributors 👋",
-          kpiCards: [
-            { label: "Retail Orders", value: "24", icon: <FaShoppingCart />, color: "#0ea5e9", bg: "#e0f2fe", delta: "+8 today", up: true },
-            { label: "Hospital Orders", value: "7", icon: <FaHospital />, color: "#8b5cf6", bg: "#ede9fe", delta: "+2 today", up: true },
-            { label: "Inventory", value: "1,24,500", icon: <FaBoxes />, color: "#0d9488", bg: "#ccfbf1", delta: "Optimized", up: true },
-            { label: "Dispatch", value: "14", icon: <FaTruckLoading />, color: "#f59e0b", bg: "#fef3c7", delta: "Processing", up: true },
-            { label: "Pending Deliveries", value: "5", icon: <FaTruck />, color: "#ef4444", bg: "#fee2e2", delta: "In transit", up: false },
-            { label: "Revenue", value: "₹4,50,000", icon: <FaFileInvoiceDollar />, color: "#10b981", bg: "#d1fae5", delta: "+₹25K", up: true },
-          ],
-          table1Title: "Retail Orders",
-          table1Icon: <FaShoppingCart />,
-          table1Data: [
-            { id: "RO-5001", patient: "MediCare Pharmacy", amount: "₹45,000", items: 200, status: "Processing" },
-            { id: "RO-5002", patient: "City Health Pharma", amount: "₹12,500", items: 50, status: "Shipped" },
-            { id: "RO-5003", patient: "Apollo Pharmacy", amount: "₹38,000", items: 150, status: "Delivered" },
-          ],
-          table2Title: "Hospital Orders",
-          table2Icon: <FaHospital />,
-          table2Data: [
-            { id: "HO-901", hospital: "Fortis Hospital", amount: "₹1,20,000", status: "Approved" },
-            { id: "HO-902", hospital: "Max Super Speciality", amount: "₹85,000", status: "Processing" },
-            { id: "HO-903", hospital: "Apollo Hospital", amount: "₹2,50,000", status: "Delivered" },
-          ],
-          table2Headers: ["Order ID", "Hospital", "Amount", "Status"],
-          table2Cols: (row) => (
-            <>
-              <td><span className="ph-id-badge">{row.id}</span></td>
-              <td><span className="ph-name">{row.hospital}</span></td>
-              <td><strong>{row.amount}</strong></td>
-              <td><StatusPill status={row.status} /></td>
-            </>
-          )
-        };
+
       case "Retail":
       default:
         return {
@@ -198,9 +164,8 @@ export default function PharmacyDashboard() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>{pharmacyType === 'Wholesale' ? 'Pharmacy' : 'Patient'}</th>
-                  {pharmacyType !== 'Wholesale' && <th>Doctor</th>}
-                  {pharmacyType === 'Wholesale' && <th>Amount</th>}
+                  <th>Patient</th>
+                  <th>Doctor</th>
                   <th>Items</th>
                   <th>Status</th>
                 </tr>
@@ -210,8 +175,7 @@ export default function PharmacyDashboard() {
                   <tr key={row.id}>
                     <td><span className="ph-id-badge">{row.id}</span></td>
                     <td><span className="ph-name">{row.patient}</span></td>
-                    {pharmacyType !== 'Wholesale' && <td>{row.doctor}</td>}
-                    {pharmacyType === 'Wholesale' && <td><strong>{row.amount}</strong></td>}
+                    <td>{row.doctor}</td>
                     <td>{row.items}</td>
                     <td><StatusPill status={row.status} /></td>
                   </tr>
@@ -221,7 +185,7 @@ export default function PharmacyDashboard() {
           </div>
         </div>
 
-        {/* Low Stock Alert (Retail only) OR Table 2 (Hospital/Wholesale) */}
+        {/* Low Stock Alert (Retail only) OR Table 2 (Hospital) */}
         {data.showLowStock ? (
           <div className="ph-card">
             <div className="ph-card-header">

@@ -46,12 +46,6 @@ function PharmacyLogin() {
         navigate("/pharmacy/dashboard");
       }
 
-      // Wholesale Pharmacy
-      else if (email === "wholesalepharmacy@gmail.com") {
-        localStorage.setItem("pharmacyType", "Wholesale");
-        navigate("/pharmacy/dashboard");
-      }
-
       else {
         alert("Invalid Pharmacy Account");
       }

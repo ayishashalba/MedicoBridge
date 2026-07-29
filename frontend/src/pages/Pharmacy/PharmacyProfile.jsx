@@ -26,18 +26,6 @@ const defaultProfiles = {
     gst:          "27AAACA1234F1Z9",
     owner:        "Dr. Rajiv Desai",
     hours:        "24/7",
-  },
-  Wholesale: {
-    name:         "Medico Wholesale Distributors",
-    role:         "Supply Manager",
-    id:           "#WS-5002",
-    email:        "wholesalepharmacy@gmail.com",
-    phone:        "+91 99887 76655",
-    address:      "Phase 2, MIDC, Andheri East, Mumbai — 400093",
-    license:      "DL-MH-WHL-2010-0921",
-    gst:          "27AAACM9876G1Z2",
-    owner:        "Mr. Sanjay Patel",
-    hours:        "Mon–Sat: 9:00 AM – 7:00 PM | Sun: Closed",
   }
 };
 
