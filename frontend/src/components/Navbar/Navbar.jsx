@@ -205,7 +205,7 @@ function Navbar() {
                     className="dropdown-item"
                     onClick={closeAllMenus}
                   >
-                    💊 Pharmacy Login
+                    💊 Retail Pharmacy Login
                   </Link>
                 </div>
               )}
@@ -252,7 +252,7 @@ function Navbar() {
                     className="dropdown-item"
                     onClick={closeAllMenus}
                   >
-                    💊 Join as Pharmacy
+                    💊 Join as Retail Pharmacy
                   </Link>
                 </div>
               )}

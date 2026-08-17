@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import "./PharmacyRegister.css";
 
-const PHARMACY_TYPES = ["Retail Pharmacy", "Hospital Pharmacy"];
+const PHARMACY_TYPES = ["Retail Pharmacy"];
 
 const INITIAL_FORM_STATE = {
   pharmacyName: "",
@@ -21,7 +21,7 @@ const INITIAL_FORM_STATE = {
   address: "",
   city: "",
   state: "",
-  pharmacyType: "",
+  pharmacyType: "Retail Pharmacy",
   password: "",
   confirmPassword: "",
   acceptTerms: false,
@@ -152,8 +152,8 @@ function PharmacyRegister() {
             <div className="ph-reg-icon-circle">
               <FaPills />
             </div>
-            <h2>Register Pharmacy</h2>
-            <p>Join MedicoBridge to manage prescriptions, inventory, and deliver smart pharmacy care</p>
+            <h2>Register Retail Pharmacy</h2>
+            <p>Join MedicoBridge to manage retail prescriptions, inventory, and deliver smart pharmacy care</p>
           </div>
 
           <form onSubmit={handleSubmit} className="ph-reg-form" noValidate>
@@ -334,14 +334,14 @@ function PharmacyRegister() {
 
             {/* Submit Button */}
             <button type="submit" className="ph-reg-submit-btn">
-              Register Pharmacy
+              Register Retail Pharmacy
             </button>
           </form>
 
           {/* Footer link to login */}
           <div className="ph-reg-footer">
             <p>
-              Already have a pharmacy account?{" "}
+              Already have a retail pharmacy account?{" "}
               <Link to="/login/pharmacy" className="ph-reg-login-link">
                 Login here
               </Link>

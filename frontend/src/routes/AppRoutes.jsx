@@ -43,6 +43,8 @@ import HospitalAppointments from "../pages/Hospital/HospitalAppointments";
 import BedManagement from "../pages/Hospital/BedManagement";
 import LabReports from "../pages/Hospital/LabReports";
 import PharmacyRequests from "../pages/Hospital/PharmacyRequests";
+import HospitalPharmacy from "../pages/Hospital/HospitalPharmacy";
+import HospitalDepartments from "../pages/Hospital/HospitalDepartments";
 import BillingManagement from "../pages/Hospital/BillingManagement";
 import HospitalNotifications from "../pages/Hospital/HospitalNotifications";
 import HospitalSettings from "../pages/Hospital/HospitalSettings";
@@ -210,10 +212,11 @@ function AppRoutes() {
         <Route path="dashboard" element={<HospitalDashboard />} />
         <Route path="doctors" element={<ManageDoctors />} />
         <Route path="patients" element={<ManagePatients />} />
+        <Route path="departments" element={<HospitalDepartments />} />
         <Route path="appointments" element={<HospitalAppointments />} />
         <Route path="beds" element={<BedManagement />} />
         <Route path="labs" element={<LabReports />} />
-        <Route path="pharmacy" element={<PharmacyRequests />} />
+        <Route path="pharmacy" element={<HospitalPharmacy />} />
         <Route path="billing" element={<BillingManagement />} />
         <Route path="notifications" element={<HospitalNotifications />} />
         <Route path="settings" element={<HospitalSettings />} />

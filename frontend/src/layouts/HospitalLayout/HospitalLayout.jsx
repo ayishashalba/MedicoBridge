@@ -17,6 +17,8 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaHospital,
+  FaBuilding,
+  FaUserCircle,
 } from "react-icons/fa";
 import "./HospitalLayout.css";
 import "./hospital-shared.css";
@@ -28,7 +30,7 @@ const sidebarNavItems = [
     path: "/hospital/dashboard",
   },
   {
-    label: "Manage Doctors",
+    label: "Doctors",
     icon: <FaUserMd />,
     path: "/hospital/doctors",
   },
@@ -38,35 +40,24 @@ const sidebarNavItems = [
     path: "/hospital/patients",
   },
   {
+    label: "Departments",
+    icon: <FaBuilding />,
+    path: "/hospital/departments",
+  },
+  {
     label: "Appointments",
     icon: <FaCalendarCheck />,
     path: "/hospital/appointments",
   },
   {
-    label: "Bed Management",
-    icon: <FaBed />,
-    path: "/hospital/beds",
-  },
-  {
-    label: "Lab Reports",
-    icon: <FaFlask />,
-    path: "/hospital/labs",
-  },
-  {
-    label: "Pharmacy Requests",
+    label: "Hospital Pharmacy",
     icon: <FaPills />,
     path: "/hospital/pharmacy",
   },
   {
-    label: "Billing & Invoices",
-    icon: <FaFileInvoiceDollar />,
-    path: "/hospital/billing",
-  },
-  {
-    label: "Notifications",
-    icon: <FaBell />,
-    path: "/hospital/notifications",
-    badge: 3,
+    label: "Profile",
+    icon: <FaUserCircle />,
+    path: "/hospital/profile",
   },
   {
     label: "Settings",

@@ -33,27 +33,18 @@ function PharmacyLogin() {
     e.preventDefault();
 
     if (validateForm()) {
-
-      // Retail Pharmacy
-      if (email === "retailpharmacy@gmail.com") {
+      // Retail Pharmacy Login
+      if (email === "retailpharmacy@gmail.com" || email === "pharmacy@gmail.com") {
         localStorage.setItem("pharmacyType", "Retail");
         navigate("/pharmacy/dashboard");
-      }
-
-      // Hospital Pharmacy
-      else if (email === "hospitalpharmacy@gmail.com") {
-        localStorage.setItem("pharmacyType", "Hospital");
-        navigate("/pharmacy/dashboard");
-      }
-
-      else {
-        alert("Invalid Pharmacy Account");
+      } else {
+        alert("Invalid Retail Pharmacy Account");
       }
     }
   };
 
   const handleGoogleLogin = () => {
-    console.log("Pharmacy Google login initiated");
+    console.log("Retail Pharmacy Google login initiated");
     localStorage.setItem("pharmacyType", "Retail");
     navigate("/pharmacy/dashboard");
   };
@@ -72,7 +63,7 @@ function PharmacyLogin() {
         {/* Card Body */}
         <div className="pharm-login-card">
           <div className="pharm-login-card-header">
-            <h2>Welcome Back, Pharmacy</h2>
+            <h2>Welcome Back, Retail Pharmacy</h2>
             <p>Access your dispensing dashboard, inventory, and prescriptions</p>
           </div>
 
@@ -84,7 +75,7 @@ function PharmacyLogin() {
                 type="email"
                 id="pharm-email"
                 className={`pharm-form-input ${errors.email ? "pharm-input-error" : ""}`}
-                placeholder="Enter your pharmacy email address"
+                placeholder="Enter your retail pharmacy email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -100,8 +91,7 @@ function PharmacyLogin() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="pharm-password"
-                  className={`pharm-form-input ${errors.password ? "pharm-input-error" : ""
-                    }`}
+                  className={`pharm-form-input ${errors.password ? "pharm-input-error" : ""}`}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -137,7 +127,7 @@ function PharmacyLogin() {
 
             {/* Submit Button */}
             <button type="submit" className="pharm-form-submit-btn">
-              Login as Pharmacy
+              Login as Retail Pharmacy
             </button>
           </form>
 
@@ -161,7 +151,7 @@ function PharmacyLogin() {
             <p>
               New to MedicoBridge?{" "}
               <Link to="/register/pharmacy" className="pharm-footer-redirect-link">
-                Register Your Pharmacy
+                Register Your Retail Pharmacy
               </Link>
             </p>
           </div>
