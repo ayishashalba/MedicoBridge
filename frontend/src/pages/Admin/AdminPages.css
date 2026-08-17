@@ -724,3 +724,413 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* ================================================================
+   AdminUsers — Detail Drawer Styles
+   ================================================================ */
+
+/* Drawer Backdrop (reuses modal backdrop concept) */
+.adv-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: adModalFadeIn 0.2s ease;
+}
+
+/* Drawer Panel — slides from right */
+.adv-drawer {
+  background: #fff;
+  width: 560px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.12);
+  animation: advDrawerSlide 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
+}
+
+.adv-drawer-wide {
+  width: 640px;
+}
+
+@keyframes advDrawerSlide {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 700px) {
+  .adv-drawer,
+  .adv-drawer-wide {
+    width: 100%;
+  }
+}
+
+/* Drawer Header */
+.adv-drawer-header {
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  border-bottom: 1px solid var(--ad-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.adv-drawer-header-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.adv-drawer-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ad-text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+/* Avatar variants */
+.adv-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--ad-primary), var(--ad-secondary, #8b5cf6));
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.adv-avatar-doc {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+}
+
+.adv-avatar-hosp {
+  background: linear-gradient(135deg, #10b981, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  font-size: 1.3rem;
+}
+
+.adv-avatar-pharm {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  font-size: 1.3rem;
+}
+
+/* Drawer Body */
+.adv-drawer-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Drawer Footer */
+.adv-drawer-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--ad-border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  background: #fafbfc;
+}
+
+.adv-drawer-footer-wrap {
+  flex-wrap: wrap;
+}
+
+/* Section Title */
+.adv-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ad-text-primary);
+  padding: 0.85rem 0 0.5rem 0;
+  margin-top: 0.5rem;
+  border-bottom: 1px solid var(--ad-border-color);
+  margin-bottom: 0.75rem;
+}
+
+.adv-section-icon {
+  color: var(--ad-primary);
+  font-size: 0.92rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Detail Grid */
+.adv-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+
+@media (max-width: 500px) {
+  .adv-detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Detail Row */
+.adv-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.adv-detail-row:hover {
+  background: rgba(99, 102, 241, 0.03);
+}
+
+.adv-detail-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ad-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.adv-detail-value {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ad-text-primary);
+  word-break: break-word;
+}
+
+/* Blood Group Badge */
+.adv-blood-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--ad-radius-full);
+  border: 1px solid #fecaca;
+}
+
+/* Type Badge */
+.adv-type-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--ad-radius-full);
+  border: 1px solid #bfdbfe;
+}
+
+/* Stat Cards */
+.adv-stat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.adv-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: var(--ad-bg-secondary);
+  border-radius: var(--ad-radius-md);
+  border: 1px solid var(--ad-border-color);
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.adv-stat-card:hover {
+  border-color: var(--ad-primary);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+}
+
+.adv-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--ad-text-primary);
+  font-family: var(--font-heading, inherit);
+  line-height: 1.1;
+}
+
+.adv-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ad-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-top: 0.3rem;
+}
+
+.adv-stat-success .adv-stat-value {
+  color: #16a34a;
+}
+
+.adv-stat-danger .adv-stat-value {
+  color: #dc2626;
+}
+
+/* Mini Tables (inside drawer) */
+.adv-history-table-wrap {
+  border: 1px solid var(--ad-border-color);
+  border-radius: var(--ad-radius-md);
+  overflow-x: auto;
+  margin-bottom: 0.5rem;
+}
+
+.adv-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.adv-mini-table th {
+  background: var(--ad-bg-secondary);
+  font-weight: 600;
+  color: var(--ad-text-secondary);
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--ad-border-color);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.adv-mini-table td {
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1px solid var(--ad-border-color);
+  color: var(--ad-text-primary);
+}
+
+.adv-mini-table tr:last-child td {
+  border-bottom: none;
+}
+
+.adv-mini-table tr:hover td {
+  background: rgba(99, 102, 241, 0.03);
+}
+
+/* Record Cards (Medical Records) */
+.adv-records-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.adv-record-card {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ad-border-color);
+  border-radius: var(--ad-radius-md);
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.adv-record-card:hover {
+  border-color: var(--ad-primary);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.08);
+}
+
+.adv-record-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.adv-record-type {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--ad-primary);
+  background: #eef2ff;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--ad-radius-full);
+}
+
+.adv-record-date {
+  font-size: 0.72rem;
+  color: var(--ad-text-muted);
+  font-weight: 600;
+}
+
+.adv-record-notes {
+  font-size: 0.82rem;
+  color: var(--ad-text-secondary);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Tags (Departments, etc.) */
+.adv-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.adv-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--ad-radius-full);
+  background: #eef2ff;
+  color: var(--ad-primary);
+  border: 1px solid #c7d2fe;
+}
+
+/* Empty message */
+.adv-empty-msg {
+  font-size: 0.82rem;
+  color: var(--ad-text-muted);
+  padding: 1rem;
+  text-align: center;
+  background: var(--ad-bg-secondary);
+  border-radius: var(--ad-radius-md);
+  margin-bottom: 0.5rem;
+}
+
+/* Action Buttons: Approve / Reject */
+.adv-btn-approve {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.adv-btn-approve:hover {
+  background: #bbf7d0;
+}
+
+.adv-btn-reject {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.adv-btn-reject:hover {
+  background: #fecaca;
+}
+
