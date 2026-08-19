@@ -28,13 +28,20 @@
 }
 
 @keyframes hospFadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Header Banner */
 .hosp-ph-header-banner {
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
   border-radius: 16px;
   padding: 1.75rem 2rem;
@@ -58,14 +65,14 @@
   width: 58px;
   height: 58px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #059669, #10b981);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.8rem;
   flex-shrink: 0;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+  box-shadow: 0 4px 15px #06f1a6;
 }
 
 .hosp-ph-header-badge-row {
@@ -150,7 +157,7 @@
 .hosp-ph-kpi-lbl {
   font-size: 0.68rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #01fa71;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   margin-top: 0.3rem;
@@ -190,7 +197,7 @@
 }
 
 .hosp-ph-tab-btn.active {
-  background: #4f46e5;
+  background: #059669;
   color: #fff;
   box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
 }
@@ -298,7 +305,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.55rem 1rem;
-  background: #4f46e5;
+  background: #059669;
   color: #fff;
   font-size: 0.82rem;
   font-weight: 600;
@@ -310,7 +317,7 @@
 }
 
 .hosp-ph-primary-btn:hover {
-  background: #4338ca;
+  background: #059669;
 }
 
 .hosp-ph-secondary-btn {
@@ -331,16 +338,26 @@
 
 /* Table Container */
 .hosp-ph-table-container {
+  width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
 }
 
+/* Full table should be allowed to become wider than container */
 .hosp-ph-table {
-  width: 100%;
+  width: max-content;
+  min-width: 1200px;
   border-collapse: collapse;
   font-size: 0.84rem;
   text-align: left;
+}
+
+/* Keep every column on one line */
+.hosp-ph-table th,
+.hosp-ph-table td {
+  white-space: nowrap;
 }
 
 .hosp-ph-table th {
@@ -474,14 +491,45 @@
   border-radius: 20px;
 }
 
-.status-pending { background: #fef3c7; color: #d97706; }
-.status-verified { background: #e0f2fe; color: #0284c7; }
-.status-approved { background: #ede9fe; color: #6d28d9; }
-.status-preparing { background: #fef3c7; color: #d97706; }
-.status-ready { background: #e0f2fe; color: #0284c7; }
-.status-dispensed { background: #dcfce7; color: #16a34a; }
-.status-rejected { background: #fee2e2; color: #dc2626; }
-.status-cancelled { background: #fee2e2; color: #dc2626; }
+.status-pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-verified {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.status-approved {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.status-preparing {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-ready {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.status-dispensed {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-rejected {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.status-cancelled {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
 /* Action Buttons */
 .hosp-ph-action-btns {
@@ -543,31 +591,46 @@
   color: #4f46e5;
   border: 1px solid #c7d2fe;
 }
-.hosp-ph-btn-view:hover { background: #e0e7ff; }
+
+.hosp-ph-btn-view:hover {
+  background: #e0e7ff;
+}
 
 .hosp-ph-btn-verify {
   background: #e0f2fe;
   color: #0369a1;
 }
-.hosp-ph-btn-verify:hover { background: #bae6fd; }
+
+.hosp-ph-btn-verify:hover {
+  background: #bae6fd;
+}
 
 .hosp-ph-btn-approve {
   background: #dcfce7;
   color: #15803d;
 }
-.hosp-ph-btn-approve:hover { background: #bbf7d0; }
+
+.hosp-ph-btn-approve:hover {
+  background: #bbf7d0;
+}
 
 .hosp-ph-btn-dispense {
   background: #16a34a;
   color: #fff;
 }
-.hosp-ph-btn-dispense:hover { background: #15803d; }
+
+.hosp-ph-btn-dispense:hover {
+  background: #15803d;
+}
 
 .hosp-ph-btn-reject {
   background: #fee2e2;
   color: #dc2626;
 }
-.hosp-ph-btn-reject:hover { background: #fecaca; }
+
+.hosp-ph-btn-reject:hover {
+  background: #fecaca;
+}
 
 .hosp-ph-status-select {
   padding: 0.35rem 0.55rem;
@@ -732,8 +795,13 @@
 }
 
 @keyframes hospSlideLeft {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 
 .hosp-ph-drawer-header {

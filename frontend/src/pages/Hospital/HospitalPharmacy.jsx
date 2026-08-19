@@ -567,19 +567,19 @@ export default function HospitalPharmacy() {
             <span className="hosp-ph-kpi-lbl">Total Stock Units</span>
           </div>
           <div className="hosp-ph-kpi-card">
-            <span className="hosp-ph-kpi-val" style={{ color: "#f59e0b" }}>
+            <span className="hosp-ph-kpi-val" style={{ color: "#ffa200ff" }}>
               {prescriptions.filter((r) => r.status === "Pending").length}
             </span>
             <span className="hosp-ph-kpi-lbl">Pending Rx Requests</span>
           </div>
           <div className="hosp-ph-kpi-card">
-            <span className="hosp-ph-kpi-val" style={{ color: "#3b82f6" }}>
+            <span className="hosp-ph-kpi-val" style={{ color: "#0e68f8ff" }}>
               {orders.filter((o) => o.status === "Preparing" || o.status === "Approved").length}
             </span>
             <span className="hosp-ph-kpi-lbl">Active Orders</span>
           </div>
           <div className="hosp-ph-kpi-card">
-            <span className="hosp-ph-kpi-val" style={{ color: "#10b981" }}>
+            <span className="hosp-ph-kpi-val" style={{ color: "#00ffe5ff" }}>
               {prescriptions.filter((r) => r.status === "Dispensed").length}
             </span>
             <span className="hosp-ph-kpi-lbl">Dispensed Today</span>
