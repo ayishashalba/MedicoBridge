@@ -65,6 +65,11 @@ const sidebarNavItems = [
     path: "/hospital/pharmacy",
   },
   {
+    label: "Billing & Invoices",
+    icon: <FaFileInvoiceDollar />,
+    path: "/hospital/billing",
+  },
+  {
     label: "Profile",
     icon: <FaUserCircle />,
     path: "/hospital/profile",
