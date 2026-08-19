@@ -1,234 +1,995 @@
 /* ================================================================
-   BedManagement.css — Hospital Portal Bed Allocation Controls
-   Matches the MedicoBridge design token system (Healing Blue Theme)
+   BedManagement.css — Hospital Portal Bed Management Module
+   Matches the MedicoBridge design token system (Healing Blue/Emerald Theme)
    ================================================================ */
 
 .hosp-beds-page {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding-bottom: 2rem;
 }
 
-/* Beds Stats row */
-.hosp-beds-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-}
-
-.hosp-beds-summary-card {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 1.2rem;
+/* ── Floating Notification Toast ─────────────────────────── */
+.hosp-bed-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #0f172a;
+  color: #ffffff;
+  padding: 0.9rem 1.4rem;
+  border-radius: 10px;
+  z-index: 10050;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-sm);
-  border-top: 3px solid var(--secondary-color);
+  gap: 0.75rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  font-size: 0.88rem;
+  font-weight: 600;
+  animation: bedToastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-left: 4px solid #10b981;
 }
 
-.hosp-beds-summary-card.summary-card--occupied   { border-top-color: #ef4444; }
-.hosp-beds-summary-card.summary-card--available  { border-top-color: #16a34a; }
-.hosp-beds-summary-card.summary-card--maintenance { border-top-color: #f59e0b; }
+.toast-icon-check {
+  color: #10b981;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
 
-/* Control row */
-.hosp-beds-controls {
+@keyframes bedToastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Header Banner ───────────────────────────────────────── */
+.hosp-bed-header-banner {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f766e 100%);
+  color: #ffffff;
+  border-radius: var(--radius-xl, 16px);
+  padding: 1.6rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 10px 25px rgba(2, 132, 199, 0.2);
+  flex-wrap: wrap;
+}
+
+.banner-info {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.banner-icon-box {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #ffffff;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.banner-title {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.3px;
+}
+
+.banner-subtitle {
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 620px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.hosp-btn-assign-top {
+  background: #ffffff;
+  color: #0369a1;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.7rem 1.35rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hosp-btn-assign-top:hover {
+  background: #f0fdf4;
+  color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+/* ── 4 SUMMARY STAT CARDS ────────────────────────────────── */
+.hosp-beds-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.hosp-stat-card {
+  background-color: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem 1.35rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.05));
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-top: 3.5px solid transparent;
+}
+
+.hosp-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.08));
+}
+
+.hosp-stat-card.card-total {
+  border-top-color: #0284c7;
+}
+
+.hosp-stat-card.card-available {
+  border-top-color: #10b981;
+}
+
+.hosp-stat-card.card-occupied {
+  border-top-color: #ef4444;
+}
+
+.hosp-stat-card.card-icu {
+  border-top-color: #8b5cf6;
+}
+
+.stat-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.stat-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #64748b);
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+}
+
+.stat-icon--total {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.stat-icon--available {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-icon--occupied {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.stat-icon--icu {
+  background: #ede9fe;
+  color: #8b5cf6;
+}
+
+.stat-value {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  line-height: 1.1;
+  margin: 0.35rem 0 0.5rem;
+}
+
+.stat-value.text-success {
+  color: #10b981;
+}
+
+.stat-value.text-danger {
+  color: #ef4444;
+}
+
+.stat-value.text-primary-color {
+  color: #8b5cf6;
+}
+
+.stat-meta {
+  font-size: 0.76rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.meta-highlight {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.meta-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.meta-badge--success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.meta-badge--danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.meta-substat {
+  font-size: 0.76rem;
+  color: var(--text-secondary, #334155);
+}
+
+/* ── CONTROLS PANEL (CATEGORY TABS & SEARCH) ─────────────── */
+.hosp-beds-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.15rem 1.4rem;
+}
+
+.hosp-bed-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  padding-bottom: 0.75rem;
+}
+
+.category-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.category-tab-btn:hover {
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-primary, #0f172a);
+}
+
+.category-tab-btn--active {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+  font-weight: 700;
+}
+
+.category-count-badge {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.07);
+  color: inherit;
+  font-weight: 700;
+}
+
+.category-tab-btn--active .category-count-badge {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.hosp-bed-filters-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
 }
 
-.hosp-beds-search {
+.hosp-bed-search-box {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  gap: 0.65rem;
+  background-color: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
   padding: 0.55rem 0.95rem;
   flex: 1;
   min-width: 280px;
-  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
 }
 
-.hosp-beds-search input {
+.hosp-bed-search-box:focus-within {
+  background-color: var(--bg-primary, #ffffff);
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
+.hosp-bed-search-box input {
   border: none;
   outline: none;
-  font-size: 0.86rem;
-  color: var(--text-primary);
+  font-size: 0.85rem;
+  color: var(--text-primary, #0f172a);
   background: transparent;
   width: 100%;
 }
 
-.hosp-beds-filters {
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary, #0f172a);
+}
+
+.hosp-bed-filter-select {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.55rem 0.85rem;
+}
+
+.hosp-bed-filter-select select {
+  border: none;
+  outline: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary, #334155);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ── BED DIRECTORY TABLE CARD ────────────────────────────── */
+.hosp-bed-table-card {
+  padding: 1.4rem;
+}
+
+.hosp-table-header-bar {
+  margin-bottom: 1.1rem;
+}
+
+.table-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+.hosp-bed-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hosp-bed-table th {
+  padding: 0.85rem 1rem;
+  background-color: var(--bg-secondary, #f8fafc);
+  color: var(--text-muted, #64748b);
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.hosp-bed-table td {
+  padding: 0.95rem 1rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  font-size: 0.85rem;
+  color: var(--text-secondary, #334155);
+  vertical-align: middle;
+}
+
+.bed-row:hover td {
+  background-color: rgba(241, 245, 249, 0.6);
+}
+
+/* Bed Number Cell */
+.bed-number-cell {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-/* Beds layout grid */
-.hosp-beds-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
-}
-
-.hosp-bed-card {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
-}
-
-.hosp-bed-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-/* Bed Status Border Accents */
-.hosp-bed-card--occupied { border-left: 4px solid #ef4444; }
-.hosp-bed-card--available { border-left: 4px solid #16a34a; }
-.hosp-bed-card--maintenance { border-left: 4px solid #f59e0b; }
-
-.hosp-bed-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.hosp-bed-number {
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.hosp-bed-ward-type {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-}
-
-.hosp-bed-card-body {
+.bed-cell-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #475569;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--border-color);
-}
-
-.hosp-bed-visual-icon {
-  font-size: 1.85rem;
+  justify-content: center;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
-.hosp-bed-card--occupied .hosp-bed-visual-icon { color: #fca5a5; }
-.hosp-bed-card--available .hosp-bed-visual-icon { color: #a7f3d0; }
-.hosp-bed-card--maintenance .hosp-bed-visual-icon { color: #fde68a; }
+.status-row--occupied .bed-cell-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
 
-.hosp-bed-occupant-info {
+.status-row--available .bed-cell-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-row--reserved .bed-cell-icon {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.status-row--maintenance .bed-cell-icon {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.bed-id-text {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: var(--text-primary, #0f172a);
+  display: block;
+}
+
+.bed-room-text {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  display: block;
+}
+
+/* Category Badges */
+.hosp-bed-category-pill {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 6px;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.category-general {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.category-icu {
+  background: #ede9fe;
+  color: #7c3aed;
+}
+
+.category-private {
+  background: #fdf4ff;
+  color: #c026d3;
+}
+
+/* Patient Cell */
+.bed-patient-cell {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
+  gap: 0.15rem;
 }
 
-.occupant-name {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.occupant-id {
+.bed-patient-doctor {
   font-size: 0.72rem;
-  color: var(--text-muted);
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
-/* Card actions */
-.hosp-bed-card-actions {
+.mini-icon {
+  font-size: 0.72rem;
+}
+
+.text-muted-dash {
+  color: var(--text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+/* Status Badges */
+.hosp-bed-status-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.hosp-bed-status--available {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.hosp-bed-status--occupied {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.hosp-bed-status--reserved {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.hosp-bed-status--maintenance {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px dashed #cbd5e1;
+}
+
+/* Admission Date Cell */
+.bed-date-cell {
   display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* Actions Cell */
+.hosp-bed-actions-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   gap: 0.45rem;
 }
 
-.hosp-bed-btn {
-  flex: 1;
-  border: none;
-  font-size: 0.74rem;
-  font-weight: 700;
-  padding: 0.45rem;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  display: flex;
+.hosp-bed-action-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  transition: all var(--transition-fast);
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.hosp-bed-btn--allocate {
-  background-color: var(--secondary-color);
-  color: #fff;
+.btn-view-details {
+  background-color: var(--bg-secondary, #f8fafc);
+  color: var(--text-secondary, #334155);
+  border-color: var(--border-color, #e2e8f0);
 }
 
-.hosp-bed-btn--allocate:hover {
-  background-color: var(--secondary-hover);
+.btn-view-details:hover {
+  background-color: #f1f5f9;
+  color: var(--text-primary, #0f172a);
+  border-color: #cbd5e1;
 }
 
-.hosp-bed-btn--discharge {
+.btn-assign-bed {
+  background-color: #0284c7;
+  color: #ffffff;
+}
+
+.btn-assign-bed:hover {
+  background-color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.btn-release-bed {
   background-color: #fee2e2;
   color: #dc2626;
-  border: 1px solid #fca5a5;
+  border-color: #fca5a5;
 }
 
-.hosp-bed-btn--discharge:hover {
+.btn-release-bed:hover {
   background-color: #dc2626;
-  color: #fff;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 
-.hosp-bed-btn--ready {
+.btn-maintenance-ready {
   background-color: #dcfce7;
   color: #16a34a;
-  border: 1px solid #a7f3d0;
+  border-color: #86efac;
 }
 
-.hosp-bed-btn--ready:hover {
+.btn-maintenance-ready:hover {
   background-color: #16a34a;
-  color: #fff;
+  color: #ffffff;
 }
 
-.hosp-bed-btn-icon {
-  background-color: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
+/* ── MODALS SPECIFIC STYLING ─────────────────────────────── */
+.hosp-bed-assign-modal,
+.hosp-bed-details-modal {
+  max-width: 580px;
+}
+
+.hosp-bed-release-modal {
+  max-width: 480px;
+}
+
+.modal-title-wrap {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.65rem;
+}
+
+.modal-header-icon {
+  font-size: 1.15rem;
+  color: #0284c7;
+}
+
+.modal-header--warning .modal-header-icon {
+  color: #d97706;
+}
+
+.patient-source-toggle {
+  display: flex;
+  gap: 0.5rem;
+  background: var(--bg-secondary, #f8fafc);
+  padding: 0.25rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.source-toggle-btn {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: transparent;
+  color: var(--text-secondary, #64748b);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.source-toggle-btn--active {
+  background: #ffffff;
+  color: #0284c7;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.hosp-modal-textarea {
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.84rem;
+  color: var(--text-primary, #0f172a);
+  background-color: var(--bg-primary, #ffffff);
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.15s ease;
+}
+
+.hosp-modal-textarea:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.hosp-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.btn-modal-cancel {
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #cbd5e1);
+  background: transparent;
+  color: var(--text-secondary, #475569);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-modal-cancel:hover {
+  background: #f1f5f9;
+  color: var(--text-primary, #0f172a);
+}
+
+.btn-modal-danger {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-md, 8px);
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  transition: all 0.15s ease;
+}
+
+.btn-modal-danger:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* ── Release Bed Confirmation Modal Body ─────────────────── */
+.release-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.release-warning-text {
+  font-size: 0.95rem;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+}
+
+.release-patient-summary {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.84rem;
+}
+
+.summary-label {
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.summary-val-text {
+  color: var(--text-primary, #0f172a);
+}
+
+.release-notice-box {
+  background: #eff6ff;
+  border-left: 3.5px solid #3b82f6;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #1e40af;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.notice-icon {
+  font-size: 0.95rem;
+  margin-top: 0.1rem;
   flex-shrink: 0;
 }
 
-.hosp-bed-btn-icon:hover {
-  background-color: #fffbeb;
-  color: #d97706;
-  border-color: #fde68a;
+/* ── View Details Modal Body ─────────────────────────────── */
+.details-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.details-top-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary, #f8fafc);
+  padding: 0.85rem 1.15rem;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.details-bed-id {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  display: block;
+}
+
+.details-room-id {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+}
+
+.details-badges {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.details-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.details-section-title {
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: var(--bg-primary, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 0.9rem 1rem;
+}
+
+.details-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.details-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.item-label {
+  font-size: 0.74rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 600;
+}
+
+.item-value {
+  font-size: 0.84rem;
+  color: var(--text-primary, #0f172a);
+}
+
+.text-secondary-info {
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.details-patient-box {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+}
+
+.patient-box-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #dcfce7;
+  padding-bottom: 0.65rem;
+}
+
+.patient-box-name {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #166534;
+  margin: 0 0 0.25rem 0;
+}
+
+.patient-demographics {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.details-empty-patient {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px dashed var(--border-color, #cbd5e1);
+  border-radius: var(--radius-md, 8px);
+  padding: 1.25rem;
+  color: var(--text-secondary, #475569);
+}
+
+.empty-bed-icon {
+  font-size: 2rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* ── RESPONSIVE MEDIA QUERIES ────────────────────────────── */
+@media screen and (max-width: 1024px) {
+  .hosp-beds-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .hosp-beds-summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .hosp-bed-header-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .hosp-btn-assign-top {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
 }
