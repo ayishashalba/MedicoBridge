@@ -52,13 +52,14 @@
     padding: 6px 14px;
     border-radius: 20px;
     background: #eff6ff;
+    /* linear-gradient(135deg, #059669, #10b981) */
     color: #2563eb;
     font-weight: 600;
 }
 
 .edit-profile-btn {
     border: none;
-    background: #2563eb;
+    background: #059669;
     color: white;
     padding: 12px 22px;
     border-radius: 10px;
@@ -71,7 +72,7 @@
 }
 
 .edit-profile-btn:hover {
-    background: #1d4ed8;
+    background: #059669;
 }
 
 .profile-grid {
@@ -100,7 +101,7 @@
     width: 50px;
     height: 50px;
     border-radius: 50%;
-    background: #2563eb;
+    background: #059669;
     color: white;
     display: flex;
     align-items: center;

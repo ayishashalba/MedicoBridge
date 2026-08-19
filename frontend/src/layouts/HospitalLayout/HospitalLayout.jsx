@@ -55,6 +55,11 @@ const sidebarNavItems = [
     path: "/hospital/beds",
   },
   {
+    label: "Lab Reports",
+    icon: <FaFlask />,
+    path: "/hospital/labs",
+  },
+  {
     label: "Hospital Pharmacy",
     icon: <FaPills />,
     path: "/hospital/pharmacy",
