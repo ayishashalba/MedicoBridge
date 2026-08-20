@@ -74,7 +74,7 @@
   bottom: 0;
   left: 0;
   width: 260px;
-  background: linear-gradient(135deg, #059669, #10b981);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcfa 100%);
   border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
@@ -89,7 +89,7 @@
 }
 
 .sidebar-profile-card {
-  background: rgba(255, 255, 255, 0.3);
+  background: #e4f4e8;
   border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
@@ -212,6 +212,14 @@
   color: #059669;
 }
 
+.hospital-layout .sidebar-logo-icon,
+.hospital-layout .profile-avatar,
+.hospital-layout .topnav-avatar {
+  background: linear-gradient(135deg,
+      #0B8F6A,
+      #14B8A6) !important;
+}
+
 .profile-status-dot {
   position: absolute;
   bottom: 0;
@@ -307,6 +315,10 @@
   justify-content: center;
   flex-shrink: 0;
   width: 22px;
+}
+
+.sidebar-nav-link--active .nav-link-icon {
+  color: #059669 !important;
 }
 
 .nav-link-label {

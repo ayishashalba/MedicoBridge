@@ -341,6 +341,12 @@
   font-weight: 600;
 }
 
+.sidebar-logo-icon,
+.profile-avatar,
+.topnav-avatar {
+  background: linear-gradient(135deg, #047954, #10b981) !important;
+}
+
 .sidebar-nav-link--active::before {
   content: "";
   position: absolute;

@@ -370,6 +370,12 @@
   justify-content: center;
 }
 
+.sidebar-logo-icon,
+.profile-avatar,
+.topnav-avatar {
+  background: linear-gradient(135deg, #0057CC, #1AA7E7) !important;
+}
+
 .nav-link-label {
   flex: 1;
   overflow: hidden;
@@ -744,6 +750,50 @@
   background: rgba(0, 87, 204, 0.10);
   color: #0057CC;
   border: 1px solid rgba(0, 87, 204, 0.18);
+}
+
+/* =========================================================
+   DOCTOR SIDEBAR — BLUE THEME OVERRIDE
+   ========================================================= */
+
+.doctor-layout .sidebar-nav-link--active {
+  background: rgba(0, 87, 204, 0.10) !important;
+  color: #0057CC !important;
+  border: 1px solid rgba(0, 87, 204, 0.18) !important;
+  font-weight: 600;
+}
+
+.doctor-layout .sidebar-nav-link--active::before {
+  background: #0057CC !important;
+}
+
+.doctor-layout .sidebar-nav-link--active .nav-link-icon {
+  color: #0057CC !important;
+}
+
+/* Hover */
+.doctor-layout .sidebar-nav-link:hover {
+  background: rgba(0, 87, 204, 0.07);
+  color: #0057CC;
+}
+
+/* Profile */
+.doctor-layout .profile-card-active {
+  background: rgba(0, 87, 204, 0.08) !important;
+  border-color: rgba(0, 87, 204, 0.30) !important;
+}
+
+/* ID badge */
+.doctor-layout .profile-id-badge {
+  color: #0057CC;
+  background: rgba(0, 87, 204, 0.08);
+  border-color: rgba(0, 87, 204, 0.20);
+}
+
+/* Status */
+.doctor-layout .profile-status-dot {
+  background: #0057CC !important;
+  border-color: #ffffff;
 }
 
 /* Active left indicator */
