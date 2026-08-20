@@ -35,6 +35,7 @@
     opacity: 0;
     transform: translateY(12px) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -43,7 +44,7 @@
 
 /* ── Header Banner ───────────────────────────────────────── */
 .hosp-bill-header-banner {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #065f46 100%);
+  background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
   color: #ffffff;
   border-radius: var(--radius-xl, 16px);
   padding: 1.6rem 2rem;

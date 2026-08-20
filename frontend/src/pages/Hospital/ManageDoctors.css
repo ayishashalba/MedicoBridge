@@ -614,6 +614,149 @@
   color: var(--text-primary, #0f172a);
 }
 
+/* ─── Add Doctor Modal & Form Layout ─── */
+.hosp-doc-add-modal {
+  max-width: 660px;
+  width: 95%;
+}
+
+.hosp-doc-form-scrollable {
+  max-height: 78vh;
+  overflow-y: auto;
+  padding: 1.5rem 1.6rem 1.8rem 1.6rem;
+}
+
+/* System-Generated Identifiers Notice Banner */
+.doc-system-gen-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
+  border: 1px solid #99f6e4;
+  border-radius: var(--radius-md, 8px);
+  padding: 0.85rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.sys-gen-icon-wrap {
+  width: 34px;
+  height: 34px;
+  background-color: #ccfbf1;
+  color: #0f766e;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.sys-gen-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.sys-gen-title {
+  font-family: var(--font-heading, "Outfit", sans-serif);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #115e59;
+}
+
+.sys-gen-desc {
+  font-size: 0.78rem;
+  color: #0f766e;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.sys-gen-desc strong {
+  color: #134e4a;
+}
+
+/* Form Required Indicator */
+.req-star {
+  color: #ef4444;
+  font-weight: 800;
+  margin-left: 0.15rem;
+}
+
+/* Validation Feedback */
+.input-field-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.input-field-error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.doc-field-error-msg {
+  color: #dc2626;
+  font-size: 0.73rem;
+  font-weight: 600;
+  margin-top: -0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Availability Schedule Header & Presets */
+.schedule-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.schedule-hint-text {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+}
+
+.schedule-preset-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.35rem;
+}
+
+.schedule-preset-chip {
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+}
+
+.schedule-preset-chip:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: var(--text-primary, #0f172a);
+}
+
+.schedule-preset-chip.chip-active {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+  font-weight: 700;
+}
+
+.chip-icon {
+  font-size: 0.68rem;
+  color: #0284c7;
+}
+
 /* ─── Responsive Media Queries ─── */
 @media screen and (max-width: 640px) {
   .doc-stats-grid {
@@ -636,5 +779,10 @@
 
   .doc-quick-chips {
     justify-content: center;
+  }
+
+  .hosp-doc-form-scrollable {
+    padding: 1.1rem;
+    max-height: 82vh;
   }
 }
