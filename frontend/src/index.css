@@ -21,10 +21,11 @@
   ========================================================= */
 
   --patient-accent: #10B981;
-  --doctor-accent: #00B0FF;
+  --doctor-accent: #0057CC;
   --hospital-accent: #14B8A6;
   --pharmacy-accent: #8B5CF6;
   --admin-accent: #F59E0B;
+
 
   /* General accent */
   --accent-color: #F59E0B;

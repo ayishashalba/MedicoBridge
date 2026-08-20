@@ -17,7 +17,7 @@
 .doctor-sidebar {
   width: 260px;
   min-height: 100vh;
-  background: linear-gradient(135deg, #003d99, #0057cc, #00B0FF);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fcfa 100%);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -146,7 +146,7 @@
 
 .sidebar-expand-btn:hover {
   transform: scale(1.1);
-  background: #00B0FF;
+  background: var(--doctor-accent);
 }
 
 /* Close button (mobile only) */
@@ -165,12 +165,10 @@
   color: #fff;
 }
 
-.sidebar-logo-icon {
-  background: linear-gradient(135deg, #063b33, #1aa7e7) !important;
-}
-
-.profile-avatar {
-  background: linear-gradient(135deg, #063b33, #1aa7e7) !important;
+.sidebar-logo-icon,
+.profile-avatar,
+.topnav-avatar {
+  background: linear-gradient(135deg, #0057CC, #1AA7E7) !important;
 }
 
 /* ── Profile Card ────────────────────────────────────────── */
@@ -260,7 +258,7 @@
   font-family: var(--font-heading);
   font-size: 0.88rem;
   font-weight: 700;
-  color: #f0f9ff;
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -324,7 +322,7 @@
   gap: 0.85rem;
   padding: 0.72rem 0.9rem;
   border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.55);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   font-weight: 500;
   text-decoration: none;
@@ -335,15 +333,15 @@
 }
 
 .sidebar-nav-link:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  background: rgba(0, 176, 255, 0.07);
+  color: var(--doctor-accent);
   transform: translateX(3px);
 }
 
 .sidebar-nav-link--active {
-  background: rgba(255, 255, 255, .18);
-  color: white;
-  border: none;
+  background: rgba(0, 176, 255, 0.10);
+  color: var(--doctor-accent);
+  border: 1px solid rgba(0, 176, 255, 0.18);
   font-weight: 600;
 }
 
@@ -355,7 +353,7 @@
   transform: translateY(-50%);
   width: 3px;
   height: 60%;
-  background: white;
+  background: var(--doctor-accent);
   border-radius: 0 2px 2px 0;
 }
 
@@ -609,7 +607,6 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #063b33, #1aa7e7) !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -726,4 +723,85 @@
   .doctor-content {
     padding: 1.25rem 1rem;
   }
+}
+
+/* =========================================================
+   DOCTOR SIDEBAR — BLUE THEME
+   ========================================================= */
+
+.doctor-sidebar {
+  box-shadow: 4px 0 24px rgba(0, 87, 204, 0.14);
+}
+
+/* Sidebar nav hover */
+.sidebar-nav-link:hover {
+  background: rgba(0, 87, 204, 0.07);
+  color: #0057CC;
+}
+
+/* Active nav item */
+.sidebar-nav-link--active {
+  background: rgba(0, 87, 204, 0.10);
+  color: #0057CC;
+  border: 1px solid rgba(0, 87, 204, 0.18);
+}
+
+/* Active left indicator */
+.sidebar-nav-link--active::before {
+  background: #0057CC;
+}
+
+/* Active icon also blue */
+.sidebar-nav-link--active .nav-link-icon {
+  color: #0057CC;
+}
+
+/* Sidebar collapse button */
+.sidebar-collapse-btn:hover {
+  background: rgba(0, 87, 204, 0.10);
+  color: #0057CC;
+  border-color: rgba(0, 87, 204, 0.25);
+}
+
+/* Expand button */
+.sidebar-expand-btn {
+  background: #0057CC;
+}
+
+.sidebar-expand-btn:hover {
+  background: #0046A8;
+}
+
+/* Profile active/hover */
+.sidebar-profile-card:hover {
+  border-color: rgba(0, 87, 204, 0.25);
+}
+
+.profile-card-active {
+  background: rgba(0, 87, 204, 0.08) !important;
+  border-color: rgba(0, 87, 204, 0.30) !important;
+}
+
+/* Profile ID */
+.profile-id-badge {
+  color: #0057CC;
+  background: rgba(0, 87, 204, 0.08);
+  border-color: rgba(0, 87, 204, 0.20);
+}
+
+/* Profile status */
+.profile-status-dot {
+  background: #0057CC !important;
+  border-color: #ffffff;
+}
+
+/* Top navbar icons */
+.topnav-icon-btn:hover {
+  color: #0057CC;
+  background: rgba(0, 87, 204, 0.06);
+}
+
+/* Notification badge */
+.topnav-badge {
+  background: #0057CC;
 }
