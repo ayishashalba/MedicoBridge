@@ -1,53 +1,96 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  /* Colors */
-  --primary-color: #00B0FF;
-  /* Indigo Sky Blue */
-  --primary-hover: #0091EA;
-  --primary-light: #E1F5FE;
-  --secondary-color: #1565C0;
-  /* Deep Indigo Blue */
-  --secondary-hover: #0D47A1;
-  --secondary-light: #E3F2FD;
+  /* =========================================================
+     MEDICOBRIDGE BRAND COLORS
+  ========================================================= */
 
-  --accent-color: #f59e0b;
-  /* Amber warning/alerts */
+  /* Main brand - used across the whole application */
+  --primary-color: #0B8F6A;
+  --primary-hover: #087A5B;
+  --primary-light: #E8F8F3;
 
-  --text-primary: #0f172a;
-  /* Slate 900 */
-  --text-secondary: #475569;
-  /* Slate 600 */
-  --text-muted: #94a3b8;
-  /* Slate 400 */
+  --secondary-color: #19B88A;
+  --secondary-hover: #139A73;
+  --secondary-light: #E8FAF4;
 
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  /* Cool white */
-  --bg-accent: #E8F4FD;
-  /* Blue 50 */
+  /* =========================================================
+     ROLE-BASED ACCENT COLORS
+     Use these only for active states, highlights, icons,
+     badges, charts, etc. Do not replace the main brand.
+  ========================================================= */
 
-  /* Borders & Shadows */
-  --border-color: #e2e8f0;
-  /* Slate 200 */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
-  --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
-  --shadow-inset: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+  --patient-accent: #10B981;
+  --doctor-accent: #00B0FF;
+  --hospital-accent: #14B8A6;
+  --pharmacy-accent: #8B5CF6;
+  --admin-accent: #F59E0B;
 
-  /* Radius */
+  /* General accent */
+  --accent-color: #F59E0B;
+
+  /* =========================================================
+     TEXT
+  ========================================================= */
+
+  --text-primary: #123B46;
+  --text-secondary: #475F66;
+  --text-muted: #94A3A8;
+
+  /* =========================================================
+     BACKGROUNDS
+  ========================================================= */
+
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F7FCFA;
+  --bg-accent: #EAF8F4;
+
+  /* =========================================================
+     BORDERS & SHADOWS
+  ========================================================= */
+
+  --border-color: #DCEBE6;
+
+  --shadow-sm: 0 1px 2px 0 rgba(18, 59, 70, 0.05);
+
+  --shadow-md:
+    0 4px 6px -1px rgba(18, 59, 70, 0.05),
+    0 2px 4px -2px rgba(18, 59, 70, 0.05);
+
+  --shadow-lg:
+    0 10px 15px -3px rgba(18, 59, 70, 0.08),
+    0 4px 6px -4px rgba(18, 59, 70, 0.08);
+
+  --shadow-xl:
+    0 20px 25px -5px rgba(18, 59, 70, 0.10),
+    0 8px 10px -6px rgba(18, 59, 70, 0.08);
+
+  --shadow-inset:
+    inset 0 2px 4px 0 rgba(18, 59, 70, 0.05);
+
+  /* =========================================================
+     RADIUS
+  ========================================================= */
+
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 24px;
   --radius-full: 9999px;
 
-  /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* =========================================================
+     TYPOGRAPHY
+  ========================================================= */
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+
   --font-heading: 'Outfit', var(--font-sans);
 
-  /* Transitions */
+  /* =========================================================
+     TRANSITIONS
+  ========================================================= */
+
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
