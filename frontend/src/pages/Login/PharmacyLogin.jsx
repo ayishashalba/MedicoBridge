@@ -36,6 +36,8 @@ function PharmacyLogin() {
       // Retail Pharmacy Login
       if (email === "retailpharmacy@gmail.com" || email === "pharmacy@gmail.com") {
         localStorage.setItem("pharmacyType", "Retail");
+        localStorage.setItem("userRole", "Pharmacy");
+        localStorage.setItem("isLoggedIn", "true");
         navigate("/pharmacy/dashboard");
       } else {
         alert("Invalid Retail Pharmacy Account");
@@ -46,6 +48,8 @@ function PharmacyLogin() {
   const handleGoogleLogin = () => {
     console.log("Retail Pharmacy Google login initiated");
     localStorage.setItem("pharmacyType", "Retail");
+    localStorage.setItem("userRole", "Pharmacy");
+    localStorage.setItem("isLoggedIn", "true");
     navigate("/pharmacy/dashboard");
   };
 

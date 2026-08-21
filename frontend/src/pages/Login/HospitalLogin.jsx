@@ -33,12 +33,16 @@ function HospitalLogin() {
     e.preventDefault();
     if (validateForm()) {
       console.log("Hospital logging in:", { email, password, rememberMe });
+      localStorage.setItem("userRole", "Hospital");
+      localStorage.setItem("isLoggedIn", "true");
       navigate("/hospital/dashboard");
     }
   };
 
   const handleGoogleLogin = () => {
     console.log("Hospital Google login initiated");
+    localStorage.setItem("userRole", "Hospital");
+    localStorage.setItem("isLoggedIn", "true");
     window.location.href = "https://accounts.google.com";
   };
 

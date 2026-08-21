@@ -8,6 +8,7 @@ function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null); // 'login', 'register', or null
+  const [cartModal, setCartModal] = useState(null); // null | 'not-logged-in' | 'wrong-role'
   const navigate = useNavigate();
 
   const handlePharmacyClick = () => {
@@ -16,6 +17,53 @@ function Navbar() {
     toast.info(
       "🔒 Pharmacy services are available only for registered patients. Please login to continue."
     );
+  };
+
+  const handleCartClick = (e) => {
+    e.preventDefault();
+    closeAllMenus();
+
+    const userRole = (
+      localStorage.getItem("userRole") ||
+      localStorage.getItem("role") ||
+      ""
+    ).toLowerCase();
+
+    const isLoggedIn =
+      localStorage.getItem("isLoggedIn") === "true" ||
+      !!localStorage.getItem("token") ||
+      !!localStorage.getItem("patient_token") ||
+      !!localStorage.getItem("admin_token") ||
+      !!localStorage.getItem("doctorType") ||
+      !!localStorage.getItem("pharmacyType") ||
+      !!userRole;
+
+    if (!isLoggedIn || !userRole) {
+      // Not logged in -> show modal
+      setCartModal("not-logged-in");
+      document.body.style.overflow = "hidden";
+      return;
+    }
+
+    if (userRole === "patient") {
+      // Logged in as Patient -> go directly to cart
+      navigate("/patient/cart");
+      return;
+    }
+
+    // Logged in with another role -> show modal
+    setCartModal("wrong-role");
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeCartModal = () => {
+    setCartModal(null);
+    document.body.style.overflow = "";
+  };
+
+  const handleCartModalLogin = () => {
+    closeCartModal();
+    navigate("/login/patient", { state: { redirectTo: "/patient/cart" } });
   };
 
   useEffect(() => {
@@ -154,15 +202,16 @@ function Navbar() {
           </ul>
 
           <div className="nav-actions">
-            <Link
-              to="/cart"
+            <button
+              type="button"
               className="cart-icon-btn"
               aria-label="View shopping cart"
-              onClick={closeAllMenus}
+              onClick={handleCartClick}
+              style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
             >
               <FaShoppingCart />
               <span className="cart-badge">0</span>
-            </Link>
+            </button>
 
             {/* Login Dropdown Wrapper */}
             <div className="dropdown-wrapper">
@@ -265,6 +314,72 @@ function Navbar() {
           {mobileMenuOpen ? <FaTimes /> : <FaBars />}
         </div>
       </div>
+
+      {/* ── Cart Auth Modal ─────────────────────────────── */}
+      {cartModal && (
+        <div
+          className="cart-modal-backdrop"
+          onClick={closeCartModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Cart access"
+        >
+          <div
+            className="cart-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="cart-modal-header">
+              <div className="cart-modal-icon-wrap">
+                <FaShoppingCart className="cart-modal-icon" />
+              </div>
+              <button
+                className="cart-modal-close"
+                onClick={closeCartModal}
+                aria-label="Close"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="cart-modal-body">
+              {cartModal === "not-logged-in" ? (
+                <>
+                  <h3 className="cart-modal-title">Login to View Your Cart</h3>
+                  <p className="cart-modal-msg">
+                    Please login as a patient to view your cart and buy medicines.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="cart-modal-title">Patient Account Required</h3>
+                  <p className="cart-modal-msg">
+                    Cart and medicine purchases are available for Patient accounts only.
+                  </p>
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="cart-modal-actions">
+              <button
+                className="cart-modal-btn-login"
+                onClick={handleCartModalLogin}
+              >
+                {cartModal === "not-logged-in" ? "Login" : "Patient Login"}
+              </button>
+              <button
+                className="cart-modal-btn-cancel"
+                onClick={closeCartModal}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </nav>
   );
 }

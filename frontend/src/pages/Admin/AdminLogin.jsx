@@ -25,6 +25,8 @@ function AdminLogin() {
     setTimeout(() => {
       if (email === "admin@medicobridge.com" && password === "admin123") {
         localStorage.setItem("admin_token", "dummy_admin_session_token");
+        localStorage.setItem("userRole", "Admin");
+        localStorage.setItem("isLoggedIn", "true");
         navigate("/admin/dashboard");
       } else {
         setError("Invalid email address or passcode.");

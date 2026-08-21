@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaHeartbeat, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 import "./PatientLogin.css";
 
 function PatientLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -33,15 +34,20 @@ function PatientLogin() {
     e.preventDefault();
     if (validateForm()) {
       console.log("Patient logging in:", { email, password, rememberMe });
-      // Simulate successful login and redirect to patient dashboard
-      navigate("/patient/dashboard");
+      localStorage.setItem("userRole", "Patient");
+      localStorage.setItem("isLoggedIn", "true");
+      
+      const destination = location.state?.redirectTo || "/patient/dashboard";
+      navigate(destination);
     }
   };
 
   const handleGoogleLogin = () => {
     console.log("Patient Google login initiated");
-    // Simulate oauth redirection
-    window.location.href = "https://accounts.google.com";
+    localStorage.setItem("userRole", "Patient");
+    localStorage.setItem("isLoggedIn", "true");
+    const destination = location.state?.redirectTo || "/patient/dashboard";
+    navigate(destination);
   };
 
   return (
