@@ -165,9 +165,9 @@
   color: #fff;
 }
 
-.sidebar-logo-icon,
-.profile-avatar,
-.topnav-avatar {
+.doctor-layout .sidebar-logo-icon,
+.doctor-layout .profile-avatar,
+.doctor-layout .topnav-avatar {
   background: linear-gradient(135deg, #0057CC, #1AA7E7) !important;
 }
 
@@ -368,12 +368,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.sidebar-logo-icon,
-.profile-avatar,
-.topnav-avatar {
-  background: linear-gradient(135deg, #0057CC, #1AA7E7) !important;
 }
 
 .nav-link-label {
