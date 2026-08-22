@@ -17,6 +17,7 @@ const initialPatients = [
     name: "Ramesh Kumar",
     age: 52,
     gender: "Male",
+    bloodGroup: "B+",
     phone: "+91 94471 23456",
     ward: "ICU - Bed A4",
     status: "Admitted",
@@ -27,6 +28,7 @@ const initialPatients = [
     name: "Sonia Sebastian",
     age: 29,
     gender: "Female",
+    bloodGroup: "O+",
     phone: "+91 94471 23457",
     ward: "General Ward B - Bed 12",
     status: "Admitted",
@@ -37,6 +39,7 @@ const initialPatients = [
     name: "Mohan Lal",
     age: 64,
     gender: "Male",
+    bloodGroup: "A-",
     phone: "+91 94471 23458",
     ward: "Special Cabin C2",
     status: "Admitted",
@@ -47,6 +50,7 @@ const initialPatients = [
     name: "Aparna Nair",
     age: 41,
     gender: "Female",
+    bloodGroup: "AB+",
     phone: "+91 94471 23459",
     ward: "Maternity Ward - Bed 3",
     status: "Admitted",
@@ -57,6 +61,7 @@ const initialPatients = [
     name: "Thomas Kurian",
     age: 35,
     gender: "Male",
+    bloodGroup: "",
     phone: "+91 94471 23460",
     ward: "None (Outpatient)",
     status: "Outpatient",
@@ -67,6 +72,7 @@ const initialPatients = [
     name: "Leela Mathews",
     age: 72,
     gender: "Female",
+    bloodGroup: "O-",
     phone: "+91 94471 23461",
     ward: "General Ward A - Bed 04",
     status: "Discharged",
@@ -81,12 +87,14 @@ function ManagePatients() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [wardFilter, setWardFilter] = useState("All Wards");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("All");
   const [showAddModal, setShowAddModal] = useState(false);
 
   // Form State
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("Male");
+  const [bloodGroup, setBloodGroup] = useState("");
   const [phone, setPhone] = useState("");
   const [ward, setWard] = useState("General Ward A - Bed 01");
   const [status, setStatus] = useState("Admitted");
@@ -101,9 +109,10 @@ function ManagePatients() {
         wardFilter === "All Wards" ||
         (wardFilter === "Outpatient" && pat.status === "Outpatient") ||
         pat.ward.toLowerCase().includes(wardFilter.toLowerCase());
-      return matchSearch && matchStatus && matchWard;
+      const matchBloodGroup = bloodGroupFilter === "All" || pat.bloodGroup === bloodGroupFilter;
+      return matchSearch && matchStatus && matchWard && matchBloodGroup;
     });
-  }, [patients, search, statusFilter, wardFilter]);
+  }, [patients, search, statusFilter, wardFilter, bloodGroupFilter]);
 
   const handleRegisterPatient = (e) => {
     e.preventDefault();
@@ -114,6 +123,7 @@ function ManagePatients() {
       name,
       age: parseInt(age),
       gender,
+      bloodGroup,
       phone,
       ward: status === "Outpatient" ? "None (Outpatient)" : ward,
       status,
@@ -130,6 +140,7 @@ function ManagePatients() {
     setName("");
     setAge("");
     setGender("Male");
+    setBloodGroup("");
     setPhone("");
     setWard("General Ward A - Bed 01");
     setStatus("Admitted");
@@ -170,6 +181,20 @@ function ManagePatients() {
               <option value="Admitted">Admitted</option>
               <option value="Discharged">Discharged</option>
               <option value="Outpatient">Outpatient</option>
+            </select>
+          </div>
+
+          <div className="hosp-filter-group">
+            <select
+              value={bloodGroupFilter}
+              onChange={(e) => setBloodGroupFilter(e.target.value)}
+            >
+              <option value="All">All Blood Groups</option>
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                <option key={bg} value={bg}>
+                  {bg}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -224,7 +249,7 @@ function ManagePatients() {
                         <div className="hosp-pat-info">
                           <span className="hosp-pat-name">{pat.name}</span>
                           <span className="hosp-pat-sub">
-                            {pat.age} years · {pat.gender}
+                            {pat.age} years · {pat.gender}{pat.bloodGroup && <span> · <span style={{ color: "#ef4444", fontWeight: "600" }}>{pat.bloodGroup}</span></span>}
                           </span>
                         </div>
                       </div>
@@ -303,16 +328,27 @@ function ManagePatients() {
                   </select>
                 </div>
               </div>
-
-              <div className="form-group">
-                <label>Mobile Number</label>
-                <input
-                  type="tel"
-                  placeholder="+91 90000 00000"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  required
-                />
+              
+              <div className="form-row">
+                <div className="form-group half">
+                  <label>Mobile Number</label>
+                  <input
+                    type="tel"
+                    placeholder="+91 90000 00000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group half">
+                  <label>Blood Group <span style={{fontSize: '0.7rem', color: '#64748b'}}>(Optional)</span></label>
+                  <select value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)}>
+                    <option value="">Not provided</option>
+                    {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div className="form-group">

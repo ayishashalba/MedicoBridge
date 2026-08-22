@@ -54,11 +54,15 @@ function ProfileField({ icon, label, name, value, type = "text", editMode, onCha
             value={value}
             onChange={onChange}
           >
-            {options.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
+            {options.map((opt) => {
+              const val = typeof opt === "object" ? opt.value : opt;
+              const lbl = typeof opt === "object" ? opt.label : opt;
+              return (
+                <option key={val} value={val}>
+                  {lbl}
+                </option>
+              );
+            })}
           </select>
         ) : (
           <input
@@ -284,7 +288,17 @@ function PatientProfile() {
                 value={data.bloodGroup}
                 editMode={editMode}
                 onChange={handleChange}
-                options={["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"]}
+                options={[
+                  { value: "", label: "Not provided" },
+                  { value: "A+", label: "A+" },
+                  { value: "A-", label: "A-" },
+                  { value: "B+", label: "B+" },
+                  { value: "B-", label: "B-" },
+                  { value: "AB+", label: "AB+" },
+                  { value: "AB-", label: "AB-" },
+                  { value: "O+", label: "O+" },
+                  { value: "O-", label: "O-" },
+                ]}
               />
             </div>
 

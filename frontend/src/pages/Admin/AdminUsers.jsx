@@ -97,7 +97,7 @@ const initialPatients = [
 const initialDoctors = [
   {
     id: "DOC-201", name: "Dr. Priya Mehta", email: "priya.mehta@example.com",
-    phone: "+91 99112 23344", specialty: "Pediatrics",
+    phone: "+91 99112 23344", specialty: "Pediatrics", bloodGroup: "O+",
     qualification: "MBBS, MD (Pediatrics)", experience: "12 Years",
     doctorType: "Hospital Doctor", facility: "City Care Hospital",
     department: "Pediatrics", licenseNumber: "MCI-PED-20145",
@@ -107,7 +107,7 @@ const initialDoctors = [
   },
   {
     id: "DOC-202", name: "Dr. Anil Kumar", email: "anil.kumar@example.com",
-    phone: "+91 88223 34455", specialty: "Dermatology",
+    phone: "+91 88223 34455", specialty: "Dermatology", bloodGroup: "A+",
     qualification: "MBBS, DVD", experience: "8 Years",
     doctorType: "Clinic Doctor", facility: "Wellness Clinic",
     department: "Dermatology OPD", licenseNumber: "MCI-DRM-30291",
@@ -117,7 +117,7 @@ const initialDoctors = [
   },
   {
     id: "DOC-203", name: "Dr. Sara Thomas", email: "sara.thomas@example.com",
-    phone: "+91 77334 45566", specialty: "General Medicine",
+    phone: "+91 77334 45566", specialty: "General Medicine", bloodGroup: "B+",
     qualification: "MBBS, DNB (Gen Medicine)", experience: "5 Years",
     doctorType: "Hospital Doctor", facility: "Metro General Hospital",
     department: "General Medicine", licenseNumber: "MCI-GM-41882",
@@ -127,7 +127,7 @@ const initialDoctors = [
   },
   {
     id: "DOC-204", name: "Dr. Rajiv Kapoor", email: "rajiv.kapoor@example.com",
-    phone: "+91 66445 56677", specialty: "Orthopedics",
+    phone: "+91 66445 56677", specialty: "Orthopedics", bloodGroup: "",
     qualification: "MBBS, MS (Ortho)", experience: "15 Years",
     doctorType: "Clinic Doctor", facility: "Pune Care Clinic",
     department: "Orthopedics OPD", licenseNumber: "MCI-ORT-55930",
@@ -384,6 +384,9 @@ function DoctorDetailModal({ doctor, onClose, onToggleStatus, onApprove, onRejec
             <DetailRow label="Doctor ID" value={doctor.id} />
             <DetailRow label="Doctor Type" value={doctor.doctorType} />
             <DetailRow label="Specialization" value={doctor.specialty} />
+            <DetailRow label="Blood Group">
+              {doctor.bloodGroup ? <span className="adv-blood-badge">{doctor.bloodGroup}</span> : "Not provided"}
+            </DetailRow>
             <DetailRow label="Qualification" value={doctor.qualification} />
             <DetailRow label="Experience" value={doctor.experience} />
             <DetailRow label="Hospital / Clinic" value={doctor.facility} />

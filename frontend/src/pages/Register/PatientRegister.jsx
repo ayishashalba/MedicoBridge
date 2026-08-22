@@ -3,12 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaEye, FaEyeSlash, FaUserPlus } from "react-icons/fa";
 import "./PatientRegister.css";
 
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
 const INITIAL = {
   fullName: "",
   email: "",
   phone: "",
   dob: "",
   gender: "",
+  bloodGroup: "",
   address: "",
   password: "",
   confirmPassword: "",
@@ -193,7 +196,7 @@ function PatientRegister() {
               </div>
             </div>
 
-            {/* ── Row: Gender | Address ──────────────────── */}
+            {/* ── Row: Gender | Blood Group ──────────────── */}
             <div className="pat-reg-grid-row">
               <div className="pat-reg-form-group">
                 <label htmlFor="pr-gender">Gender</label>
@@ -216,6 +219,28 @@ function PatientRegister() {
               </div>
 
               <div className="pat-reg-form-group">
+                <label htmlFor="pr-bloodGroup">
+                  Blood Group{" "}
+                  <span className="pat-reg-optional-badge">Optional</span>
+                </label>
+                <select
+                  id="pr-bloodGroup"
+                  name="bloodGroup"
+                  className="pat-reg-input pat-reg-select"
+                  value={form.bloodGroup}
+                  onChange={handleChange}
+                >
+                  <option value="">Not provided</option>
+                  {BLOOD_GROUPS.map((bg) => (
+                    <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* ── Row: Address ───────────────────────────── */}
+            <div className="pat-reg-grid-row">
+              <div className="pat-reg-form-group pat-reg-full-col">
                 <label htmlFor="pr-address">Address</label>
                 <input
                   type="text"

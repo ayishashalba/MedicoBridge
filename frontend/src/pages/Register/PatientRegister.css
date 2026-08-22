@@ -334,6 +334,28 @@
   text-decoration: underline;
 }
 
+
+/* ── Optional badge (for non-required fields) ─────────── */
+.pat-reg-optional-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 0.05rem 0.4rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+/* Full-width column inside grid row */
+.pat-reg-full-col {
+  grid-column: 1 / -1;
+}
+
 /* ── Responsive ─────────────────────────────────────────── */
 @media screen and (max-width: 640px) {
   .pat-reg-grid-row {

@@ -64,6 +64,18 @@ export default function AdminDashboard() {
     { label: "Hospital Pharmacies", count: "110", pct: 11, color: "#fbbf24" },
   ];
 
+  const bloodGroupStats = [
+    { label: "O+", count: "4,520", color: "#ef4444" },
+    { label: "O-", count: "890", color: "#f87171" },
+    { label: "A+", count: "3,840", color: "#3b82f6" },
+    { label: "A-", count: "720", color: "#60a5fa" },
+    { label: "B+", count: "3,410", color: "#10b981" },
+    { label: "B-", count: "550", color: "#34d399" },
+    { label: "AB+", count: "980", color: "#8b5cf6" },
+    { label: "AB-", count: "150", color: "#a78bfa" },
+    { label: "Not Provided", count: "3,360", color: "#94a3b8" },
+  ];
+
   const systemAlerts = [
     { id: 1, type: "Warning", msg: "Backup failed: Disk space low on server Node-3.", time: "10 mins ago" },
     { id: 2, type: "Info", msg: "API traffic spike: Payment processor latency at 240ms.", time: "45 mins ago" },
@@ -229,6 +241,24 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Blood Group Overview */}
+      <div className="ad-card" style={{ marginBottom: "1.5rem" }}>
+        <div className="ad-card-header">
+          <h3 className="ad-card-title">Patient Blood Group Overview</h3>
+          <span style={{ fontSize: "0.75rem", background: "var(--ad-bg-secondary)", padding: "0.25rem 0.5rem", borderRadius: "4px", fontWeight: "600" }}>
+            Total Registered Patients
+          </span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "1rem", paddingTop: "0.5rem" }}>
+          {bloodGroupStats.map((bg, idx) => (
+            <div key={idx} style={{ padding: "1rem", background: "var(--ad-bg-secondary)", borderRadius: "8px", textAlign: "center", borderTop: `4px solid ${bg.color}` }}>
+              <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--ad-text-primary)", marginBottom: "0.25rem" }}>{bg.label}</div>
+              <div style={{ fontSize: "0.85rem", color: "var(--ad-text-secondary)", fontWeight: "600" }}>{bg.count}</div>
+            </div>
+          ))}
         </div>
       </div>
 

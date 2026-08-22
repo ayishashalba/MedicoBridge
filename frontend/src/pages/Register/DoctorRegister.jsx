@@ -15,8 +15,10 @@ const SPECIALIZATIONS = [
   "Radiology", "Rheumatology", "Urology", "Other",
 ];
 
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
 const INITIAL = {
-  fullName: "", email: "", phone: "", gender: "",
+  fullName: "", email: "", phone: "", gender: "", bloodGroup: "",
   medRegNumber: "", specialization: "", qualification: "", experience: "",
   practiceType: "", // empty by default so no practice fields show
   // Hospital fields
@@ -215,8 +217,25 @@ function DoctorRegister() {
             </div>
 
             <div className="doc-reg-grid-row">
-              {fld("medRegNumber", "Medical Registration Number", "text", "e.g. MCI-12345678")}
+              {/* Blood Group */}
+              <div className="doc-reg-form-group">
+                <label htmlFor="dr-bloodGroup">
+                  Blood Group <span className="doc-reg-optional-badge">Optional</span>
+                </label>
+                <select
+                  id="dr-bloodGroup" name="bloodGroup"
+                  className="doc-reg-input doc-reg-select"
+                  value={form.bloodGroup} onChange={handleChange}
+                >
+                  <option value="">Not provided</option>
+                  {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                </select>
+              </div>
 
+              {fld("medRegNumber", "Medical Registration Number", "text", "e.g. MCI-12345678")}
+            </div>
+
+            <div className="doc-reg-grid-row">
               <div className="doc-reg-form-group">
                 <label htmlFor="dr-specialization">Specialization</label>
                 <select
@@ -229,10 +248,10 @@ function DoctorRegister() {
                 </select>
                 {errors.specialization && <span className="doc-reg-error-msg">{errors.specialization}</span>}
               </div>
+              {fld("qualification", "Qualification", "text", "e.g. MBBS, MD, MS")}
             </div>
 
             <div className="doc-reg-grid-row">
-              {fld("qualification", "Qualification", "text", "e.g. MBBS, MD, MS")}
               {fld("experience", "Years of Experience", "number", "e.g. 5")}
             </div>
 
