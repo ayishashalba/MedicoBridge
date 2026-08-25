@@ -101,7 +101,11 @@ function PatientProfile() {
   };
 
   const handleSave = () => {
-    setProfile(draft);
+    const updated = {
+      ...draft,
+      bloodGroup: draft.bloodGroup || "Not Provided",
+    };
+    setProfile(updated);
     setEditMode(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);

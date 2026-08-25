@@ -99,7 +99,11 @@ function PatientRegister() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log("Patient registration submitted:", form);
+      const payload = {
+        ...form,
+        bloodGroup: form.bloodGroup || "Not Provided",
+      };
+      console.log("Patient registration submitted:", payload);
       navigate("/verify-email");
     }
   };

@@ -16,7 +16,9 @@ import {
   FaBriefcase,
   FaCalendarAlt,
   FaClock,
+  FaDownload,
 } from "react-icons/fa";
+import { generateBloodGroupReport } from "../../utils/pdfGenerator";
 import "./ManageDoctors.css";
 
 const initialDoctors = [
@@ -29,6 +31,7 @@ const initialDoctors = [
     department: "Cardiology & Vascular Sciences",
     qualification: "MBBS, MD (Cardiology), DM",
     experience: "12 Years",
+    bloodGroup: "O+",
     doctorType: "Hospital",
     email: "ayisha.shalba@medicobridge.com",
     phone: "+91 98765 43210",
@@ -49,6 +52,7 @@ const initialDoctors = [
     department: "Neurology & Neuro Surgery",
     qualification: "MBBS, MS, M.Ch (Neuro Surgery)",
     experience: "15 Years",
+    bloodGroup: "A+",
     doctorType: "Hospital",
     email: "rajesh.nair@medicobridge.com",
     phone: "+91 98765 43211",
@@ -69,6 +73,7 @@ const initialDoctors = [
     department: "Pediatrics & Child Care",
     qualification: "MBBS, DCH, MD (Pediatrics)",
     experience: "9 Years",
+    bloodGroup: "B+",
     doctorType: "Hospital",
     email: "priya.t@medicobridge.com",
     phone: "+91 98765 43212",
@@ -89,6 +94,7 @@ const initialDoctors = [
     department: "Orthopedics & Joint Replacement",
     qualification: "MBBS, MS (Orthopedics), DNB",
     experience: "11 Years",
+    bloodGroup: "AB+",
     doctorType: "Hospital",
     email: "susan.g@medicobridge.com",
     phone: "+91 98765 43213",
@@ -109,6 +115,7 @@ const initialDoctors = [
     department: "Dermatology & Cosmetology",
     qualification: "MBBS, MD (DVL - Dermatology)",
     experience: "8 Years",
+    bloodGroup: "O-",
     doctorType: "Hospital",
     email: "vikram.s@medicobridge.com",
     phone: "+91 98765 43214",
@@ -129,6 +136,7 @@ const initialDoctors = [
     department: "General & Internal Medicine",
     qualification: "MBBS, MD (General Medicine)",
     experience: "14 Years",
+    bloodGroup: "Not Provided",
     doctorType: "Hospital",
     email: "amit.v@medicobridge.com",
     phone: "+91 98765 43215",
@@ -158,6 +166,7 @@ function ManageDoctors() {
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("All");
 
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -225,9 +234,36 @@ function ManageDoctors() {
         (doc.qualification && doc.qualification.toLowerCase().includes(q));
       const matchDept = selectedDept === "All" || doc.specialization === selectedDept;
       const matchStatus = selectedStatus === "All" || doc.status === selectedStatus;
-      return matchSearch && matchDept && matchStatus;
+      
+      const bg = doc.bloodGroup || "Not Provided";
+      const matchBloodGroup =
+        bloodGroupFilter === "All" ||
+        bloodGroupFilter === "All Blood Groups" ||
+        bg === bloodGroupFilter;
+
+      return matchSearch && matchDept && matchStatus && matchBloodGroup;
     });
-  }, [doctors, search, selectedDept, selectedStatus]);
+  }, [doctors, search, selectedDept, selectedStatus, bloodGroupFilter]);
+
+  const handleDownloadReport = () => {
+    generateBloodGroupReport({
+      title: "Hospital Medical Staff Blood Group Report",
+      selectedBloodGroup: bloodGroupFilter === "All" ? "All Blood Groups" : bloodGroupFilter,
+      generatedBy: "City Care Hospital Admin",
+      columns: [
+        { header: "Doctor ID", dataKey: "id" },
+        { header: "Name", dataKey: "name" },
+        { header: "Specialization", dataKey: "specialization" },
+        { header: "Department", dataKey: "department" },
+        { header: "Blood Group", dataKey: "bloodGroup" },
+        { header: "Phone", dataKey: "phone" },
+        { header: "Email", dataKey: "email" },
+        { header: "Status", dataKey: "status" },
+      ],
+      data: filteredDoctors,
+      activeFilters: { Department: selectedDept, Status: selectedStatus, Search: search },
+    });
+  };
 
   // Validation function for Add Doctor Form
   const validateAddDoctor = () => {
@@ -478,6 +514,21 @@ function ManageDoctors() {
 
           <div className="hosp-filter-group">
             <select
+              value={bloodGroupFilter}
+              onChange={(e) => setBloodGroupFilter(e.target.value)}
+              aria-label="Filter by Blood Group"
+            >
+              <option value="All">All Blood Groups</option>
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
+                <option key={bg} value={bg}>
+                  {bg}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="hosp-filter-group">
+            <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               aria-label="Filter by Status"
@@ -488,6 +539,10 @@ function ManageDoctors() {
               <option value="On Leave">On Leave</option>
             </select>
           </div>
+
+          <button className="hosp-btn-download" onClick={handleDownloadReport} style={{ background: "#0d9488", color: "#fff", border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <FaDownload /> Download Report
+          </button>
 
           <button className="hosp-btn-add" onClick={() => setShowAddModal(true)}>
             <FaPlus /> Add Doctor
@@ -609,8 +664,8 @@ function ManageDoctors() {
                 <tr>
                   <td colSpan="9" className="hosp-table-empty">
                     <FaUserMd className="empty-icon" />
-                    <h3>No doctors found</h3>
-                    <p>Try clearing your filters or registering a new staff doctor.</p>
+                    <h3>No users found for the selected blood group.</h3>
+                    <p>Try clearing your filters or selecting a different blood group.</p>
                   </td>
                 </tr>
               )}

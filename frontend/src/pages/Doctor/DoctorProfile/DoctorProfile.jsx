@@ -11,6 +11,7 @@ import {
   FaEdit,
   FaIdCard,
   FaMoneyBillWave,
+  FaTint,
 } from "react-icons/fa";
 import "./DoctorProfile.css";
 import { useNavigate } from "react-router-dom";
@@ -22,11 +23,13 @@ function DoctorProfile() {
   const doctorType = localStorage.getItem("doctorType") || "Hospital";
 
   const navigate = useNavigate();
+  const savedBloodGroup = localStorage.getItem("doctorBloodGroup") || "O+";
   const doctor = {
     name: "Dr. Ayisha Shalba",
     specialization: "Cardiologist",
     qualification: "MBBS, MD (Cardiology)",
     experience: "12 Years",
+    bloodGroup: savedBloodGroup,
     registration: "KLMC 458721",
     consultationFee: "₹800",
     languages: "English, Malayalam, Hindi",
@@ -92,6 +95,11 @@ function DoctorProfile() {
           <p>
             <FaBriefcase />
             <strong> Experience:</strong> {doctor.experience}
+          </p>
+
+          <p>
+            <FaTint />
+            <strong> Blood Group:</strong> {doctor.bloodGroup || "Not Provided"}
           </p>
 
           {doctor.type === "Hospital" ? (

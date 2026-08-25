@@ -119,7 +119,11 @@ function DoctorRegister() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log("Doctor registration submitted:", form, { licenseFile, photoFile });
+      const payload = {
+        ...form,
+        bloodGroup: form.bloodGroup || "Not Provided",
+      };
+      console.log("Doctor registration submitted:", payload, { licenseFile, photoFile });
       navigate("/verify-email");
     }
   };

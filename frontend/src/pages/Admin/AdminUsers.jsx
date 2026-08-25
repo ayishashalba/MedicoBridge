@@ -5,7 +5,9 @@ import {
   FaCheckCircle, FaTimesCircle, FaCalendarAlt, FaFileMedical,
   FaStethoscope, FaClipboardList, FaPhoneAlt, FaEnvelope,
   FaMapMarkerAlt, FaIdCard, FaBuilding, FaFlask, FaShieldAlt,
+  FaDownload,
 } from "react-icons/fa";
+import { generateBloodGroupReport } from "../../utils/pdfGenerator";
 import "./AdminPages.css";
 
 /* ===================================================================
@@ -669,6 +671,7 @@ export default function AdminUsers() {
   const [activeTab, setActiveTab] = useState("Patients");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [bloodGroupFilter, setBloodGroupFilter] = useState("All Blood Groups");
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [patients, setPatients] = useState(initialPatients);
@@ -735,9 +738,74 @@ export default function AdminUsers() {
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.email && item.email.toLowerCase().includes(searchQuery.toLowerCase()));
+    
     const matchesStatus = statusFilter === "All" || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
+
+    let matchesBloodGroup = true;
+    if (
+      (activeTab === "Patients" || activeTab === "Doctors") &&
+      bloodGroupFilter &&
+      bloodGroupFilter !== "All Blood Groups" &&
+      bloodGroupFilter !== "All"
+    ) {
+      const bg = item.bloodGroup || "Not Provided";
+      matchesBloodGroup = bg === bloodGroupFilter;
+    }
+
+    return matchesSearch && matchesStatus && matchesBloodGroup;
   });
+
+  const handleDownloadReport = () => {
+    let cols = [];
+    if (activeTab === "Patients") {
+      cols = [
+        { header: "Patient ID", dataKey: "id" },
+        { header: "Name", dataKey: "name" },
+        { header: "Email", dataKey: "email" },
+        { header: "Phone", dataKey: "phone" },
+        { header: "Blood Group", dataKey: "bloodGroup" },
+        { header: "City", dataKey: "city" },
+        { header: "Status", dataKey: "status" },
+      ];
+    } else if (activeTab === "Doctors") {
+      cols = [
+        { header: "Doctor ID", dataKey: "id" },
+        { header: "Name", dataKey: "name" },
+        { header: "Email", dataKey: "email" },
+        { header: "Doctor Type", dataKey: "doctorType" },
+        { header: "Specialty", dataKey: "specialty" },
+        { header: "Blood Group", dataKey: "bloodGroup" },
+        { header: "Status", dataKey: "status" },
+      ];
+    } else if (activeTab === "Hospitals") {
+      cols = [
+        { header: "Hospital ID", dataKey: "id" },
+        { header: "Hospital Name", dataKey: "name" },
+        { header: "Email", dataKey: "email" },
+        { header: "City", dataKey: "city" },
+        { header: "Beds", dataKey: "beds" },
+        { header: "Status", dataKey: "status" },
+      ];
+    } else {
+      cols = [
+        { header: "Pharmacy ID", dataKey: "id" },
+        { header: "Pharmacy Name", dataKey: "name" },
+        { header: "Type", dataKey: "pharmacyType" },
+        { header: "License", dataKey: "license" },
+        { header: "Email", dataKey: "email" },
+        { header: "Status", dataKey: "status" },
+      ];
+    }
+
+    generateBloodGroupReport({
+      title: `Admin ${activeTab} Report`,
+      selectedBloodGroup: (activeTab === "Patients" || activeTab === "Doctors") ? bloodGroupFilter : "N/A",
+      generatedBy: "System Administrator (Admin)",
+      columns: cols,
+      data: filteredData,
+      activeFilters: { Tab: activeTab, Status: statusFilter, Search: searchQuery },
+    });
+  };
 
   return (
     <div className="ad-page">
@@ -755,6 +823,7 @@ export default function AdminUsers() {
                 setActiveTab(tab);
                 setSearchQuery("");
                 setStatusFilter("All");
+                setBloodGroupFilter("All Blood Groups");
               }}
               className={`ad-tab-btn ${activeTab === tab ? "active" : ""}`}
             >
@@ -766,8 +835,8 @@ export default function AdminUsers() {
 
       {/* Action Bar */}
       <div className="ad-card" style={{ padding: "1.25rem" }}>
-        <div className="ad-search-filter-bar">
-          <div className="ad-search-wrapper">
+        <div className="ad-search-filter-bar" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "1rem" }}>
+          <div className="ad-search-wrapper" style={{ flex: 1, minWidth: "240px" }}>
             <FaSearch className="ad-search-icon" />
             <input
               type="text"
@@ -777,6 +846,28 @@ export default function AdminUsers() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
+
+          {(activeTab === "Patients" || activeTab === "Doctors") && (
+            <div className="ad-filters">
+              <span style={{ fontSize: "0.85rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                <FaFilter /> Blood Group:
+              </span>
+              <select
+                className="ad-select"
+                style={{ width: "160px", padding: "0.45rem 0.75rem" }}
+                value={bloodGroupFilter}
+                onChange={(e) => setBloodGroupFilter(e.target.value)}
+              >
+                <option value="All Blood Groups">All Blood Groups</option>
+                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
+                  <option key={bg} value={bg}>
+                    {bg}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="ad-filters">
             <span style={{ fontSize: "0.85rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
               <FaFilter /> Status:
@@ -793,6 +884,15 @@ export default function AdminUsers() {
               <option value="Blocked">Blocked</option>
             </select>
           </div>
+
+          <button
+            className="ad-btn ad-btn-primary"
+            onClick={handleDownloadReport}
+            title="Download Filtered Report"
+            style={{ background: "#0d9488", color: "#fff", border: "none", borderRadius: "6px", padding: "0.45rem 0.85rem", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+          >
+            <FaDownload /> Download Report
+          </button>
         </div>
 
         {/* Dynamic Table */}
@@ -802,13 +902,13 @@ export default function AdminUsers() {
               {activeTab === "Patients" && (
                 <tr>
                   <th>Patient ID</th><th>Name</th><th>Email</th>
-                  <th>Phone</th><th>City</th><th>Status</th><th>Actions</th>
+                  <th>Phone</th><th>City</th><th>Blood Group</th><th>Status</th><th>Actions</th>
                 </tr>
               )}
               {activeTab === "Doctors" && (
                 <tr>
                   <th>Doctor ID</th><th>Name</th><th>Email</th>
-                  <th>Type</th><th>Specialty</th><th>Verified</th><th>Status</th><th>Actions</th>
+                  <th>Type</th><th>Specialty</th><th>Blood Group</th><th>Status</th><th>Actions</th>
                 </tr>
               )}
               {activeTab === "Hospitals" && (
@@ -828,7 +928,7 @@ export default function AdminUsers() {
               {filteredData.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
-                    No matching users found for search queries.
+                    No users found for the selected blood group.
                   </td>
                 </tr>
               ) : (
@@ -842,6 +942,11 @@ export default function AdminUsers() {
                       <>
                         <td>{user.phone}</td>
                         <td>{user.city}</td>
+                        <td>
+                          <span className="adv-blood-badge" style={{ background: "#fef2f2", color: "#dc2626", fontWeight: "600", padding: "2px 8px", borderRadius: "12px", fontSize: "0.8rem", border: "1px solid #fecaca" }}>
+                            {user.bloodGroup || "Not Provided"}
+                          </span>
+                        </td>
                       </>
                     )}
                     {activeTab === "Doctors" && (
@@ -849,10 +954,9 @@ export default function AdminUsers() {
                         <td>{user.doctorType}</td>
                         <td>{user.specialty}</td>
                         <td>
-                          <span className="ad-pill" style={{
-                            background: user.verified === "Yes" ? "#dcfce7" : "#fee2e2",
-                            color: user.verified === "Yes" ? "#15803d" : "#b91c1c"
-                          }}>{user.verified === "Yes" ? "Verified" : "Unverified"}</span>
+                          <span className="adv-blood-badge" style={{ background: "#fef2f2", color: "#dc2626", fontWeight: "600", padding: "2px 8px", borderRadius: "12px", fontSize: "0.8rem", border: "1px solid #fecaca" }}>
+                            {user.bloodGroup || "Not Provided"}
+                          </span>
                         </td>
                       </>
                     )}

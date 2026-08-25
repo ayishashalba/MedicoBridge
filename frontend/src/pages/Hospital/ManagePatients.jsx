@@ -8,7 +8,9 @@ import {
   FaUser,
   FaCheck,
   FaBan,
+  FaDownload,
 } from "react-icons/fa";
+import { generateBloodGroupReport } from "../../utils/pdfGenerator";
 import "./ManagePatients.css";
 
 const initialPatients = [
@@ -61,7 +63,7 @@ const initialPatients = [
     name: "Thomas Kurian",
     age: 35,
     gender: "Male",
-    bloodGroup: "",
+    bloodGroup: "Not Provided",
     phone: "+91 94471 23460",
     ward: "None (Outpatient)",
     status: "Outpatient",
@@ -109,10 +111,36 @@ function ManagePatients() {
         wardFilter === "All Wards" ||
         (wardFilter === "Outpatient" && pat.status === "Outpatient") ||
         pat.ward.toLowerCase().includes(wardFilter.toLowerCase());
-      const matchBloodGroup = bloodGroupFilter === "All" || pat.bloodGroup === bloodGroupFilter;
+      
+      const bg = pat.bloodGroup || "Not Provided";
+      const matchBloodGroup =
+        bloodGroupFilter === "All" ||
+        bloodGroupFilter === "All Blood Groups" ||
+        bg === bloodGroupFilter;
+        
       return matchSearch && matchStatus && matchWard && matchBloodGroup;
     });
   }, [patients, search, statusFilter, wardFilter, bloodGroupFilter]);
+
+  const handleDownloadReport = () => {
+    generateBloodGroupReport({
+      title: "Hospital Patients Blood Group Report",
+      selectedBloodGroup: bloodGroupFilter === "All" ? "All Blood Groups" : bloodGroupFilter,
+      generatedBy: "City Care Hospital Admin",
+      columns: [
+        { header: "Patient ID", dataKey: "id" },
+        { header: "Name", dataKey: "name" },
+        { header: "Age", dataKey: "age" },
+        { header: "Gender", dataKey: "gender" },
+        { header: "Blood Group", dataKey: "bloodGroup" },
+        { header: "Phone", dataKey: "phone" },
+        { header: "Ward / Location", dataKey: "ward" },
+        { header: "Status", dataKey: "status" },
+      ],
+      data: filteredPatients,
+      activeFilters: { Status: statusFilter, Ward: wardFilter, Search: search },
+    });
+  };
 
   const handleRegisterPatient = (e) => {
     e.preventDefault();
@@ -123,7 +151,7 @@ function ManagePatients() {
       name,
       age: parseInt(age),
       gender,
-      bloodGroup,
+      bloodGroup: bloodGroup || "Not Provided",
       phone,
       ward: status === "Outpatient" ? "None (Outpatient)" : ward,
       status,
@@ -190,7 +218,7 @@ function ManagePatients() {
               onChange={(e) => setBloodGroupFilter(e.target.value)}
             >
               <option value="All">All Blood Groups</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bg) => (
+              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
                 <option key={bg} value={bg}>
                   {bg}
                 </option>
@@ -210,6 +238,10 @@ function ManagePatients() {
               ))}
             </select>
           </div>
+
+          <button className="hosp-btn-download" onClick={handleDownloadReport} style={{ background: "#0d9488", color: "#fff", border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            <FaDownload /> Download Report
+          </button>
 
           <button className="hosp-btn-add" onClick={() => setShowAddModal(true)}>
             <FaUserPlus /> Check-In Patient
@@ -236,8 +268,8 @@ function ManagePatients() {
                 <tr>
                   <td colSpan="6" className="hosp-table-empty">
                     <FaUser className="empty-icon" />
-                    <h3>No patient records found</h3>
-                    <p>Try adjusting your search criteria or register a new patient.</p>
+                    <h3>No users found for the selected blood group.</h3>
+                    <p>Try adjusting your blood group filter or search criteria.</p>
                   </td>
                 </tr>
               ) : (
