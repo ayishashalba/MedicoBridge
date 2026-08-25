@@ -15,25 +15,28 @@ const VALID_BLOOD_GROUPS = [
 /* ── MOCK DATABASE FOR BACKEND ────────────────────────────── */
 const db = {
   patients: [
-    { id: "PAT-101", name: "Aarav Sharma", age: 32, gender: "Male", bloodGroup: "O+", phone: "+91 98765 43210", email: "aarav.sharma@example.com", doctorIds: ["DR-80241", "DOC-201"], hospitalId: "HOSP-5021", status: "Active", ward: "ICU - Bed A4" },
-    { id: "PAT-102", name: "Sunita Rao", age: 27, gender: "Female", bloodGroup: "A+", phone: "+91 87654 32109", email: "sunita.rao@example.com", doctorIds: ["DR-80242", "DOC-202"], hospitalId: "HOSP-5021", status: "Active", ward: "General Ward B - Bed 12" },
-    { id: "PAT-103", name: "Rohan Verma", age: 41, gender: "Male", bloodGroup: "B-", phone: "+91 76543 21098", email: "rohan.verma@example.com", doctorIds: ["DOC-203"], hospitalId: "HOSP-5022", status: "Blocked", ward: "Special Cabin C2" },
-    { id: "PAT-104", name: "Lakshmi Nair", age: 46, gender: "Female", bloodGroup: "AB+", phone: "+91 65432 10987", email: "lakshmi.nair@example.com", doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Active", ward: "Maternity Ward - Bed 3" },
-    { id: "PAT-105", name: "Karan Malhotra", age: 31, gender: "Male", bloodGroup: "O-", phone: "+91 54321 09876", email: "karan.m@example.com", doctorIds: ["DR-80244"], hospitalId: "HOSP-5021", status: "Active", ward: "None (Outpatient)" },
-    { id: "PAT-106", name: "Rahul Nair", age: 32, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43210", email: "rahul@gmail.com", doctorIds: ["DR-80241", "DOC-201"], hospitalId: "HOSP-5021", status: "Admitted", ward: "ICU - Bed A1" },
-    { id: "PAT-107", name: "Anjali Thomas", age: 27, gender: "Female", bloodGroup: "O+", phone: "+91 98765 43211", email: "anjali@gmail.com", doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Admitted", ward: "General Ward A" },
-    { id: "PAT-108", name: "Arun Kumar", age: 41, gender: "Male", bloodGroup: "A-", phone: "+91 98765 43212", email: "arun@gmail.com", doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Discharged", ward: "None" },
+    { id: "PAT-101", name: "Aarav Sharma", age: 32, gender: "Male", bloodGroup: "O+", phone: "+91 98765 43210", email: "aarav.sharma@example.com", city: "Kozhikode", isDonorAvailable: true, doctorIds: ["DR-80241", "DOC-201"], hospitalId: "HOSP-5021", status: "Active", ward: "ICU - Bed A4" },
+    { id: "PAT-102", name: "Sunita Rao", age: 27, gender: "Female", bloodGroup: "A+", phone: "+91 87654 32109", email: "sunita.rao@example.com", city: "Malappuram", isDonorAvailable: true, doctorIds: ["DR-80242", "DOC-202"], hospitalId: "HOSP-5021", status: "Active", ward: "General Ward B - Bed 12" },
+    { id: "PAT-103", name: "Rohan Verma", age: 41, gender: "Male", bloodGroup: "B-", phone: "+91 76543 21098", email: "rohan.verma@example.com", city: "Delhi", isDonorAvailable: false, doctorIds: ["DOC-203"], hospitalId: "HOSP-5022", status: "Blocked", ward: "Special Cabin C2" },
+    { id: "PAT-104", name: "Lakshmi Nair", age: 46, gender: "Female", bloodGroup: "AB+", phone: "+91 65432 10987", email: "lakshmi.nair@example.com", city: "Kozhikode", isDonorAvailable: true, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Active", ward: "Maternity Ward - Bed 3" },
+    { id: "PAT-105", name: "Karan Malhotra", age: 31, gender: "Male", bloodGroup: "O-", phone: "+91 54321 09876", email: "karan.m@example.com", city: "Kannur", isDonorAvailable: true, doctorIds: ["DR-80244"], hospitalId: "HOSP-5021", status: "Active", ward: "None (Outpatient)" },
+    { id: "PAT-106", name: "Rahul Nair", age: 32, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43210", email: "rahul@gmail.com", city: "Kozhikode", isDonorAvailable: true, doctorIds: ["DR-80241", "DOC-201"], hospitalId: "HOSP-5021", status: "Admitted", ward: "ICU - Bed A1" },
+    { id: "PAT-107", name: "Anjali Thomas", age: 27, gender: "Female", bloodGroup: "B+", phone: "+91 98765 43211", email: "anjali@gmail.com", city: "Malappuram", isDonorAvailable: true, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Admitted", ward: "General Ward A" },
+    { id: "PAT-108", name: "Arun Kumar", age: 41, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43212", email: "arun@gmail.com", city: "Kannur", isDonorAvailable: true, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Discharged", ward: "None" },
+    { id: "PAT-109", name: "Firoz Khan", age: 36, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43219", email: "firoz.khan@example.com", city: "Ernakulam", isDonorAvailable: true, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Active", ward: "None" },
+    { id: "PAT-110", name: "Deepak Sharma", age: 29, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43220", email: "deepak.sharma@example.com", city: "Delhi", isDonorAvailable: true, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Active", ward: "None" },
+    { id: "PAT-111", name: "Vikas Patel", age: 34, gender: "Male", bloodGroup: "B+", phone: "+91 98765 43221", email: "vikas.patel@example.com", city: "Goa", isDonorAvailable: false, doctorIds: ["DR-80241"], hospitalId: "HOSP-5021", status: "Active", ward: "None" },
   ],
   doctors: [
-    { id: "DR-80241", userId: "USR-DOC-1021", hospitalId: "HOSP-5021", name: "Dr. Ayisha Shalba", specialization: "Cardiology", department: "Cardiology", qualification: "MBBS, MD", experience: "12 Years", doctorType: "Hospital", email: "ayisha.shalba@medicobridge.com", phone: "+91 98765 43210", bloodGroup: "O+", status: "Available", accountStatus: "Active", verified: "Yes" },
-    { id: "DR-80242", userId: "USR-DOC-1022", hospitalId: "HOSP-5021", name: "Dr. Rajesh K. Nair", specialization: "Neurology", department: "Neurology", qualification: "MBBS, MS", experience: "15 Years", doctorType: "Hospital", email: "rajesh.nair@medicobridge.com", phone: "+91 98765 43211", bloodGroup: "A+", status: "In Surgery", accountStatus: "Active", verified: "Yes" },
-    { id: "DR-80243", userId: "USR-DOC-1023", hospitalId: "HOSP-5021", name: "Dr. Priya Thomas", specialization: "Pediatrics", department: "Pediatrics", qualification: "MBBS, DCH", experience: "9 Years", doctorType: "Hospital", email: "priya.t@medicobridge.com", phone: "+91 98765 43212", bloodGroup: "B+", status: "On Leave", accountStatus: "Active", verified: "Yes" },
-    { id: "DR-80244", userId: "USR-DOC-1024", hospitalId: "HOSP-5021", name: "Dr. Susan George", specialization: "Orthopedics", department: "Orthopedics", qualification: "MBBS, MS", experience: "11 Years", doctorType: "Hospital", email: "susan.g@medicobridge.com", phone: "+91 98765 43213", bloodGroup: "AB+", status: "Available", accountStatus: "Active", verified: "Yes" },
-    { id: "DR-80245", userId: "USR-DOC-1025", hospitalId: "HOSP-5021", name: "Dr. Vikram Shekar", specialization: "Dermatology", department: "Dermatology", qualification: "MBBS, MD", experience: "8 Years", doctorType: "Hospital", email: "vikram.s@medicobridge.com", phone: "+91 98765 43214", bloodGroup: "O-", status: "Available", accountStatus: "Active", verified: "Yes" },
-    { id: "DR-80246", userId: "USR-DOC-1026", hospitalId: "HOSP-5021", name: "Dr. Amit Varma", specialization: "General Medicine", department: "General Medicine", qualification: "MBBS, MD", experience: "14 Years", doctorType: "Hospital", email: "amit.v@medicobridge.com", phone: "+91 98765 43215", bloodGroup: "Not Provided", status: "In Surgery", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80241", userId: "USR-DOC-1021", hospitalId: "HOSP-5021", name: "Dr. Ayisha Shalba", specialization: "Cardiology", department: "Cardiology", qualification: "MBBS, MD", experience: "12 Years", doctorType: "Hospital", email: "ayisha.shalba@medicobridge.com", phone: "+91 98765 43210", bloodGroup: "O+", city: "Kozhikode", isDonorAvailable: true, status: "Available", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80242", userId: "USR-DOC-1022", hospitalId: "HOSP-5021", name: "Dr. Rajesh K. Nair", specialization: "Neurology", department: "Neurology", qualification: "MBBS, MS", experience: "15 Years", doctorType: "Hospital", email: "rajesh.nair@medicobridge.com", phone: "+91 98765 43211", bloodGroup: "B+", city: "Kozhikode", isDonorAvailable: true, status: "In Surgery", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80243", userId: "USR-DOC-1023", hospitalId: "HOSP-5021", name: "Dr. Priya Thomas", specialization: "Pediatrics", department: "Pediatrics", qualification: "MBBS, DCH", experience: "9 Years", doctorType: "Hospital", email: "priya.t@medicobridge.com", phone: "+91 98765 43212", bloodGroup: "B+", city: "Wayanad", isDonorAvailable: true, status: "On Leave", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80244", userId: "USR-DOC-1024", hospitalId: "HOSP-5021", name: "Dr. Susan George", specialization: "Orthopedics", department: "Orthopedics", qualification: "MBBS, MS", experience: "11 Years", doctorType: "Hospital", email: "susan.g@medicobridge.com", phone: "+91 98765 43213", bloodGroup: "AB+", city: "Ernakulam", isDonorAvailable: true, status: "Available", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80245", userId: "USR-DOC-1025", hospitalId: "HOSP-5021", name: "Dr. Vikram Shekar", specialization: "Dermatology", department: "Dermatology", qualification: "MBBS, MD", experience: "8 Years", doctorType: "Hospital", email: "vikram.s@medicobridge.com", phone: "+91 98765 43214", bloodGroup: "O-", city: "Chennai", isDonorAvailable: false, status: "Available", accountStatus: "Active", verified: "Yes" },
+    { id: "DR-80246", userId: "USR-DOC-1026", hospitalId: "HOSP-5021", name: "Dr. Amit Varma", specialization: "General Medicine", department: "General Medicine", qualification: "MBBS, MD", experience: "14 Years", doctorType: "Hospital", email: "amit.v@medicobridge.com", phone: "+91 98765 43215", bloodGroup: "Not Provided", city: "Kolkata", isDonorAvailable: false, status: "In Surgery", accountStatus: "Active", verified: "Yes" },
   ],
   hospitals: [
-    { id: "HOSP-5021", name: "City Care Hospital", email: "contact@citycare.org", phone: "+91 44 2234 5678", city: "Chennai", status: "Active" },
+    { id: "HOSP-5021", name: "City Care Hospital", email: "contact@citycare.org", phone: "+91 44 2234 5678", city: "Kozhikode", status: "Active" },
   ],
 };
 
@@ -201,8 +204,46 @@ app.put("/api/doctor/profile/blood-group", authorize(["Doctor"]), (req, res) => 
     doctor.bloodGroup = bg;
     return res.json({ success: true, message: "Blood group updated successfully", doctor });
   }
+  return res.status(404).json({
+    error: "Doctor record not found"
+  });
+});
 
-  res.status(404).json({ error: "Doctor record not found" });
+/* ── 7. LOCATION-AWARE BLOOD DONOR SEARCH ENDPOINT ─────────── */
+app.get("/api/blood-donors/search", authorize(["Doctor", "Hospital", "Admin"]), (req, res) => {
+  const { bloodGroup, originCity = "Kozhikode", search, userType } = req.query;
+
+  if (!bloodGroup || bloodGroup === "All" || bloodGroup === "All Blood Groups") {
+    return res.json({ success: true, count: 0, data: [], message: "Please select a specific blood group for donor search." });
+  }
+
+  // Combine patients and doctors
+  let pool = [];
+  if (!userType || userType === "All" || userType === "Patients") {
+    pool.push(...db.patients.map((p) => ({ ...p, role: "Patient" })));
+  }
+  if (!userType || userType === "All" || userType === "Doctors") {
+    pool.push(...db.doctors.map((d) => ({ ...d, role: "Doctor" })));
+  }
+
+  // Mandatory Filter 1: Matching Blood Group
+  let filtered = pool.filter((u) => u.bloodGroup === bloodGroup);
+
+  // Mandatory Filter 2: Available Donors ONLY (Exclude unavailable donors automatically)
+  filtered = filtered.filter((u) => u.isDonorAvailable === true);
+
+  // Search Query filter
+  if (search) {
+    const s = search.toLowerCase().trim();
+    filtered = filtered.filter(
+      (u) =>
+        u.name.toLowerCase().includes(s) ||
+        u.id.toLowerCase().includes(s) ||
+        (u.city && u.city.toLowerCase().includes(s))
+    );
+  }
+
+  res.json({ success: true, count: filtered.length, originCity, bloodGroup, data: filtered });
 });
 
 app.listen(PORT, () => {
@@ -210,3 +251,4 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+

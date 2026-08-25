@@ -15,10 +15,11 @@ const SPECIALIZATIONS = [
   "Radiology", "Rheumatology", "Urology", "Other",
 ];
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"];
 
 const INITIAL = {
   fullName: "", email: "", phone: "", gender: "", bloodGroup: "",
+  city: "", isDonorAvailable: true,
   medRegNumber: "", specialization: "", qualification: "", experience: "",
   practiceType: "", // empty by default so no practice fields show
   // Hospital fields
@@ -232,11 +233,28 @@ function DoctorRegister() {
                   value={form.bloodGroup} onChange={handleChange}
                 >
                   <option value="">Not provided</option>
-                  {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                  {BLOOD_GROUPS.map(bg => (
+                    bg !== "Not Provided" && <option key={bg} value={bg}>{bg}</option>
+                  ))}
+                  <option value="Not Provided">Not Provided</option>
                 </select>
               </div>
 
               {fld("medRegNumber", "Medical Registration Number", "text", "e.g. MCI-12345678")}
+            </div>
+
+            {/* Donor Availability */}
+            <div className="doc-reg-terms-group" style={{ marginBottom: "1rem" }}>
+              <label className="doc-reg-terms-label">
+                <input
+                  type="checkbox"
+                  name="isDonorAvailable"
+                  checked={form.isDonorAvailable}
+                  onChange={handleChange}
+                  className="doc-reg-checkbox"
+                />
+                <span><strong>Available for Blood Donation</strong> (Allow medical teams to contact you for urgent blood requests)</span>
+              </label>
             </div>
 
             <div className="doc-reg-grid-row">

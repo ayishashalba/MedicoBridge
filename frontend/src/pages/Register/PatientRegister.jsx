@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaEye, FaEyeSlash, FaUserPlus } from "react-icons/fa";
 import "./PatientRegister.css";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"];
 
 const INITIAL = {
   fullName: "",
@@ -12,7 +12,9 @@ const INITIAL = {
   dob: "",
   gender: "",
   bloodGroup: "",
+  city: "",
   address: "",
+  isDonorAvailable: true,
   password: "",
   confirmPassword: "",
   acceptTerms: false,
@@ -236,15 +238,29 @@ function PatientRegister() {
                 >
                   <option value="">Not provided</option>
                   {BLOOD_GROUPS.map((bg) => (
-                    <option key={bg} value={bg}>{bg}</option>
+                    bg !== "Not Provided" && <option key={bg} value={bg}>{bg}</option>
                   ))}
+                  <option value="Not Provided">Not Provided</option>
                 </select>
               </div>
             </div>
 
-            {/* ── Row: Address ───────────────────────────── */}
+            {/* ── Row: City | Address ─────────────────────── */}
             <div className="pat-reg-grid-row">
-              <div className="pat-reg-form-group pat-reg-full-col">
+              <div className="pat-reg-form-group">
+                <label htmlFor="pr-city">City / District</label>
+                <input
+                  type="text"
+                  id="pr-city"
+                  name="city"
+                  className="pat-reg-input"
+                  placeholder="e.g. Kozhikode, Malappuram, Chennai"
+                  value={form.city}
+                  onChange={handleChange}
+                />
+              </div>
+
+              <div className="pat-reg-form-group">
                 <label htmlFor="pr-address">Address</label>
                 <input
                   type="text"
@@ -259,6 +275,20 @@ function PatientRegister() {
                   <span className="pat-reg-error-msg">{errors.address}</span>
                 )}
               </div>
+            </div>
+
+            {/* ── Donor Availability Toggle ─────────────── */}
+            <div className="pat-reg-terms-group" style={{ marginBottom: "1rem" }}>
+              <label className="pat-reg-terms-label">
+                <input
+                  type="checkbox"
+                  name="isDonorAvailable"
+                  checked={form.isDonorAvailable}
+                  onChange={handleChange}
+                  className="pat-reg-checkbox"
+                />
+                <span><strong>Available for Blood Donation</strong> (Allow medical teams to contact you for urgent blood requests)</span>
+              </label>
             </div>
 
             {/* ── Row: Password | Confirm Password ──────── */}

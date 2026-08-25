@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./DoctorEditProfile.css";
 
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"];
 const DOCTOR_TYPE = "Hospital";
 
 function DoctorEditProfile() {
@@ -10,11 +10,19 @@ function DoctorEditProfile() {
   const [bloodGroup, setBloodGroup] = useState(
     localStorage.getItem("doctorBloodGroup") || "O+"
   );
+  const [city, setCity] = useState(
+    localStorage.getItem("doctorCity") || "Kozhikode"
+  );
+  const [isDonorAvailable, setIsDonorAvailable] = useState(
+    localStorage.getItem("doctorIsDonorAvailable") !== "false"
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const finalBg = bloodGroup || "Not Provided";
     localStorage.setItem("doctorBloodGroup", finalBg);
+    localStorage.setItem("doctorCity", city || "Kozhikode");
+    localStorage.setItem("doctorIsDonorAvailable", isDonorAvailable ? "true" : "false");
     navigate("/doctor/profile");
   };
 
@@ -69,6 +77,27 @@ function DoctorEditProfile() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className="form-group">
+            <label>City / District Location</label>
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="e.g. Kozhikode, Malappuram"
+            />
+          </div>
+
+          <div className="form-group checkbox-group" style={{ margin: "12px 0" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={isDonorAvailable}
+                onChange={(e) => setIsDonorAvailable(e.target.checked)}
+              />
+              <span><strong>Available for Blood Donation</strong> (Urgent blood requests)</span>
+            </label>
           </div>
 
           {DOCTOR_TYPE === "Hospital" ? (

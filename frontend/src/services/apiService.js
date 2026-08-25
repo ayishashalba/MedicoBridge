@@ -108,3 +108,20 @@ export async function getAdminUsers({ tab, bloodGroup, search, status } = {}) {
     return null;
   }
 }
+
+/**
+ * Search Location-Aware Blood Donors
+ */
+export async function searchBloodDonors({ bloodGroup, originCity = "Kozhikode", search, userRole = "Doctor" } = {}) {
+  try {
+    const res = await axios.get(`${API_BASE_URL}/blood-donors/search`, {
+      params: { bloodGroup, originCity, search },
+      headers: { "x-user-role": userRole },
+    });
+    return res.data;
+  } catch (err) {
+    console.warn("Backend server offline, using client-side proximity fallback", err);
+    return null;
+  }
+}
+

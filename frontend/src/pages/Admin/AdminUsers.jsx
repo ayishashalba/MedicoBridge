@@ -8,6 +8,7 @@ import {
   FaDownload,
 } from "react-icons/fa";
 import { generateBloodGroupReport } from "../../utils/pdfGenerator";
+import { sortDonorsByProximity, getProximityLabel } from "../../utils/locationProximity";
 import "./AdminPages.css";
 
 /* ===================================================================
@@ -733,27 +734,44 @@ export default function AdminUsers() {
     );
   };
 
-  const filteredData = data.filter((item) => {
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.email && item.email.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+  const filteredData = React.useMemo(() => {
+    let result = data.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.email && item.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.city && item.city.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    let matchesBloodGroup = true;
+      const matchesStatus = statusFilter === "All" || item.status === statusFilter;
+
+      let matchesBloodGroup = true;
+      let matchesDonorAvailability = true;
+      if (
+        (activeTab === "Patients" || activeTab === "Doctors") &&
+        bloodGroupFilter &&
+        bloodGroupFilter !== "All Blood Groups" &&
+        bloodGroupFilter !== "All"
+      ) {
+        const bg = item.bloodGroup || "Not Provided";
+        matchesBloodGroup = bg === bloodGroupFilter;
+        // Automatic rule: exclude unavailable donors when searching by blood group
+        matchesDonorAvailability = item.isDonorAvailable !== false;
+      }
+
+      return matchesSearch && matchesStatus && matchesBloodGroup && matchesDonorAvailability;
+    });
+
     if (
       (activeTab === "Patients" || activeTab === "Doctors") &&
       bloodGroupFilter &&
       bloodGroupFilter !== "All Blood Groups" &&
       bloodGroupFilter !== "All"
     ) {
-      const bg = item.bloodGroup || "Not Provided";
-      matchesBloodGroup = bg === bloodGroupFilter;
+      result = sortDonorsByProximity(result, "Kozhikode");
     }
 
-    return matchesSearch && matchesStatus && matchesBloodGroup;
-  });
+    return result;
+  }, [data, searchQuery, statusFilter, bloodGroupFilter, activeTab]);
 
   const handleDownloadReport = () => {
     let cols = [];

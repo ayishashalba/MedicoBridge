@@ -17,6 +17,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaStar,
+  FaTint,
 } from "react-icons/fa";
 import "./DoctorLayout.css";
 
@@ -40,6 +41,11 @@ const sidebarNavItems = [
     label: "Patients",
     icon: <FaUsers />,
     path: "/doctor/patients",
+  },
+  {
+    label: "Blood Donor Search",
+    icon: <FaTint />,
+    path: "/doctor/blood-search",
   },
   {
     label: "Prescriptions",

@@ -49,6 +49,7 @@ import BillingManagement from "../pages/Hospital/BillingManagement";
 import HospitalNotifications from "../pages/Hospital/HospitalNotifications";
 import HospitalSettings from "../pages/Hospital/HospitalSettings";
 import HospitalProfile from "../pages/Hospital/HospitalProfile";
+import HospitalBloodSearch from "../pages/Hospital/HospitalBloodSearch/HospitalBloodSearch";
 
 // ── Doctor Dashboard Layout & Pages ────────────────────────────
 import DoctorLayout from "../layouts/DoctorLayout/DoctorLayout";
@@ -70,6 +71,7 @@ import DoctorMedicalRecords from "../pages/Doctor/DoctorMedicalRecords/DoctorMed
 import DoctorNotifications from "../pages/Doctor/DoctorNotifications/DoctorNotifications";
 import DoctorSettings from "../pages/Doctor/DoctorSettings/DoctorSettings";
 import DoctorReviews from "../pages/Doctor/DoctorReviews/DoctorReviews";
+import DoctorBloodSearch from "../pages/Doctor/DoctorBloodSearch/DoctorBloodSearch";
 
 // ── Patient Dashboard Layout & Pages ──────────────────────────
 import PatientLayout from "../layouts/PatientLayout/PatientLayout";
@@ -204,6 +206,7 @@ function AppRoutes() {
         <Route path="medical-records" element={<DoctorMedicalRecords />} />
         <Route path="notifications" element={<DoctorNotifications />} />
         <Route path="reviews" element={<DoctorReviews />} />
+        <Route path="blood-search" element={<DoctorBloodSearch />} />
         <Route path="settings" element={<DoctorSettings />} />
       </Route>
 
@@ -212,6 +215,7 @@ function AppRoutes() {
         <Route path="dashboard" element={<HospitalDashboard />} />
         <Route path="doctors" element={<ManageDoctors />} />
         <Route path="patients" element={<ManagePatients />} />
+        <Route path="blood-search" element={<HospitalBloodSearch />} />
         <Route path="departments" element={<HospitalDepartments />} />
         <Route path="appointments" element={<HospitalAppointments />} />
         <Route path="beds" element={<BedManagement />} />
