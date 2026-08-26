@@ -7,10 +7,8 @@ import {
   FaUserCheck,
   FaPhoneAlt,
   FaEnvelope,
-  FaHospital,
   FaUserMd,
   FaUser,
-  FaInfoCircle,
   FaCheckCircle,
 } from "react-icons/fa";
 import { sortDonorsByProximity, getProximityLabel, getProximityScore } from "../../../utils/locationProximity";
@@ -156,27 +154,27 @@ const initialDonorPool = [
 function DoctorBloodSearch() {
   const doctorCity = localStorage.getItem("doctorCity") || "Kozhikode";
   const [selectedBloodGroup, setSelectedBloodGroup] = useState("B+");
-  const [searchQuery, setSearchQuery] = useState("");
+  // locationInput: what the user types; activeLocation: what's actually used for search
+  const [locationInput, setLocationInput] = useState(doctorCity);
+  const [activeLocation, setActiveLocation] = useState(doctorCity);
+
+  const handleSearch = () => {
+    const loc = locationInput.trim() || doctorCity;
+    setActiveLocation(loc);
+  };
+
+  const handleLocationKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
 
   // Rule: Automatically show ONLY users who are currently available for donation
-  // Sort by nearest location first
+  // Sort by nearest location first based on activeLocation
   const filteredDonors = useMemo(() => {
-    let result = initialDonorPool.filter(
+    const result = initialDonorPool.filter(
       (donor) => donor.bloodGroup === selectedBloodGroup && donor.isDonorAvailable === true
     );
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (d) =>
-          d.name.toLowerCase().includes(q) ||
-          d.id.toLowerCase().includes(q) ||
-          d.city.toLowerCase().includes(q)
-      );
-    }
-
-    return sortDonorsByProximity(result, doctorCity);
-  }, [selectedBloodGroup, searchQuery, doctorCity]);
+    return sortDonorsByProximity(result, activeLocation);
+  }, [selectedBloodGroup, activeLocation]);
 
   const handleDownload = () => {
     generateBloodGroupReport({
@@ -195,9 +193,9 @@ function DoctorBloodSearch() {
       ],
       data: filteredDonors.map((d) => ({
         ...d,
-        proximityLabel: getProximityLabel(d.city, doctorCity),
+        proximityLabel: getProximityLabel(d.city, activeLocation),
       })),
-      activeFilters: { "Doctor Location": doctorCity, "Availability Filter": "Active Donors Only (Automatic)" },
+      activeFilters: { "Search Location": activeLocation, "Availability Filter": "Active Donors Only (Automatic)" },
     });
   };
 
@@ -224,7 +222,7 @@ function DoctorBloodSearch() {
         </div>
       </div>
 
-      {/* Control Bar: Select Blood Group & Search & Download */}
+      {/* Control Bar: Select Blood Group + Location + Search + Download */}
       <div className="dbs-controls-bar">
         {/* Blood Group Selector Buttons */}
         <div className="dbs-bg-selector-wrap">
@@ -244,17 +242,26 @@ function DoctorBloodSearch() {
           </div>
         </div>
 
-        {/* Right side Search + Download */}
+        {/* Right side: Location + Search + Download */}
         <div className="dbs-actions-wrap">
-          <div className="dbs-search-box">
-            <FaSearch />
-            <input
-              type="text"
-              placeholder="Filter by donor name or city..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="dbs-location-input-wrap">
+            <label className="dbs-select-label">Location:</label>
+            <div className="dbs-search-box">
+              <FaMapMarkerAlt style={{ color: "#38bdf8" }} />
+              <input
+                type="text"
+                placeholder="e.g. Kozhikode, Kannur..."
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                onKeyDown={handleLocationKeyDown}
+              />
+            </div>
           </div>
+
+          <button className="dbs-search-trigger-btn" onClick={handleSearch}>
+            <FaSearch />
+            <span>Search</span>
+          </button>
 
           <button className="dbs-download-btn" onClick={handleDownload}>
             <FaDownload />
@@ -267,7 +274,7 @@ function DoctorBloodSearch() {
       <div className="dbs-notice-bar">
         <FaCheckCircle className="notice-icon" />
         <span>
-          Showing <strong>Available {selectedBloodGroup} Donors Only</strong> ranked by proximity to <strong>{doctorCity}</strong>. Unavailable donors are automatically excluded.
+          Showing <strong>Available {selectedBloodGroup} Donors Only</strong> ranked by proximity to <strong>{activeLocation}</strong>. Unavailable donors are automatically excluded.
         </span>
       </div>
 
@@ -277,7 +284,7 @@ function DoctorBloodSearch() {
           Found {filteredDonors.length} Available Donor{filteredDonors.length === 1 ? "" : "s"} for {selectedBloodGroup}
         </h3>
         <span className="dbs-proximity-hint">
-          Nearest location donors appear first
+          Nearest to <strong>{activeLocation}</strong> appear first
         </span>
       </div>
 
@@ -285,14 +292,14 @@ function DoctorBloodSearch() {
       {filteredDonors.length === 0 ? (
         <div className="dbs-empty-state">
           <FaTint className="dbs-empty-icon" />
-          <h3>No available {selectedBloodGroup} donors found near {doctorCity}.</h3>
-          <p>Try searching for a different blood group or expanding search query.</p>
+          <h3>No available {selectedBloodGroup} donors found near {activeLocation}.</h3>
+          <p>Try searching for a different blood group or a different location.</p>
         </div>
       ) : (
         <div className="dbs-donor-grid">
           {filteredDonors.map((donor, idx) => {
-            const proxScore = getProximityScore(donor.city, doctorCity);
-            const proxLabel = getProximityLabel(donor.city, doctorCity);
+            const proxScore = getProximityScore(donor.city, activeLocation);
+            const proxLabel = getProximityLabel(donor.city, activeLocation);
             const isHighestPriority = proxScore <= 1;
 
             return (

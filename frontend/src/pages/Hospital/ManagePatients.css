@@ -154,3 +154,77 @@
     gap: 1.15rem;
   }
 }
+
+/* ── Location Input Group (donor search mode) ── */
+.hosp-location-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hosp-location-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid #bae6fd;
+  border-radius: var(--radius-md);
+  padding: 0.52rem 0.95rem;
+  min-width: 190px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hosp-location-input .hosp-loc-pin {
+  color: #0d9488;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.hosp-location-input input {
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: var(--text-primary);
+  background: transparent;
+  width: 100%;
+}
+
+.hosp-location-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s ease;
+}
+
+.hosp-location-search-btn:hover {
+  background: #0f172a;
+}
+
+/* ── Donor Mode Notice Bar ── */
+.hosp-donor-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  padding: 0.75rem 1.1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.88rem;
+}
+
+.hosp-donor-notice-icon {
+  color: #22c55e;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+

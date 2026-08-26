@@ -19,7 +19,6 @@ import {
   FaHospital,
   FaBuilding,
   FaUserCircle,
-  FaTint,
 } from "react-icons/fa";
 import "./HospitalLayout.css";
 import "./hospital-shared.css";
@@ -39,11 +38,6 @@ const sidebarNavItems = [
     label: "Patients",
     icon: <FaUsers />,
     path: "/hospital/patients",
-  },
-  {
-    label: "Blood Donor Search",
-    icon: <FaTint />,
-    path: "/hospital/blood-search",
   },
   {
     label: "Departments",

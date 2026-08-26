@@ -17,8 +17,11 @@ import {
   FaCalendarAlt,
   FaClock,
   FaDownload,
+  FaMapMarkerAlt,
+  FaUserCheck,
 } from "react-icons/fa";
 import { generateBloodGroupReport } from "../../utils/pdfGenerator";
+import { sortDonorsByProximity } from "../../utils/locationProximity";
 import "./ManageDoctors.css";
 
 const initialDoctors = [
@@ -32,6 +35,8 @@ const initialDoctors = [
     qualification: "MBBS, MD (Cardiology), DM",
     experience: "12 Years",
     bloodGroup: "O+",
+    city: "Kozhikode",
+    isDonorAvailable: true,
     doctorType: "Hospital",
     email: "ayisha.shalba@medicobridge.com",
     phone: "+91 98765 43210",
@@ -53,6 +58,8 @@ const initialDoctors = [
     qualification: "MBBS, MS, M.Ch (Neuro Surgery)",
     experience: "15 Years",
     bloodGroup: "A+",
+    city: "Malappuram",
+    isDonorAvailable: true,
     doctorType: "Hospital",
     email: "rajesh.nair@medicobridge.com",
     phone: "+91 98765 43211",
@@ -74,6 +81,8 @@ const initialDoctors = [
     qualification: "MBBS, DCH, MD (Pediatrics)",
     experience: "9 Years",
     bloodGroup: "B+",
+    city: "Kannur",
+    isDonorAvailable: false,
     doctorType: "Hospital",
     email: "priya.t@medicobridge.com",
     phone: "+91 98765 43212",
@@ -95,6 +104,8 @@ const initialDoctors = [
     qualification: "MBBS, MS (Orthopedics), DNB",
     experience: "11 Years",
     bloodGroup: "AB+",
+    city: "Kozhikode",
+    isDonorAvailable: true,
     doctorType: "Hospital",
     email: "susan.g@medicobridge.com",
     phone: "+91 98765 43213",
@@ -116,7 +127,8 @@ const initialDoctors = [
     qualification: "MBBS, MD (DVL - Dermatology)",
     experience: "8 Years",
     bloodGroup: "O-",
-    doctorType: "Hospital",
+    city: "Thrissur",
+    isDonorAvailable: true,
     email: "vikram.s@medicobridge.com",
     phone: "+91 98765 43214",
     licenseNumber: "KMC-2016-32145",
@@ -137,6 +149,8 @@ const initialDoctors = [
     qualification: "MBBS, MD (General Medicine)",
     experience: "14 Years",
     bloodGroup: "Not Provided",
+    city: "Ernakulam",
+    isDonorAvailable: false,
     doctorType: "Hospital",
     email: "amit.v@medicobridge.com",
     phone: "+91 98765 43215",
@@ -162,11 +176,20 @@ const doctorDepartmentOptions = [
 ];
 
 function ManageDoctors() {
+  const hospitalCity = localStorage.getItem("hospitalCity") || "Kozhikode";
   const [doctors, setDoctors] = useState(initialDoctors);
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("All");
+
+  // Location state for donor search
+  const [locationInput, setLocationInput] = useState(hospitalCity);
+  const [activeLocation, setActiveLocation] = useState(hospitalCity);
+
+  // Donor search mode: a specific blood group is selected
+  const isDonorSearchMode =
+    bloodGroupFilter !== "All" && bloodGroupFilter !== "All Blood Groups" && bloodGroupFilter !== "";
 
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
@@ -224,7 +247,7 @@ function ManageDoctors() {
   };
 
   const filteredDoctors = useMemo(() => {
-    return doctors.filter((doc) => {
+    let result = doctors.filter((doc) => {
       const q = search.toLowerCase();
       const matchSearch =
         doc.name.toLowerCase().includes(q) ||
@@ -234,16 +257,27 @@ function ManageDoctors() {
         (doc.qualification && doc.qualification.toLowerCase().includes(q));
       const matchDept = selectedDept === "All" || doc.specialization === selectedDept;
       const matchStatus = selectedStatus === "All" || doc.status === selectedStatus;
-      
+
       const bg = doc.bloodGroup || "Not Provided";
       const matchBloodGroup =
         bloodGroupFilter === "All" ||
         bloodGroupFilter === "All Blood Groups" ||
         bg === bloodGroupFilter;
 
-      return matchSearch && matchDept && matchStatus && matchBloodGroup;
+      // In donor search mode: auto-exclude unavailable staff
+      const matchAvailability =
+        !isDonorSearchMode || doc.isDonorAvailable === true;
+
+      return matchSearch && matchDept && matchStatus && matchBloodGroup && matchAvailability;
     });
-  }, [doctors, search, selectedDept, selectedStatus, bloodGroupFilter]);
+
+    // Proximity sort when a specific blood group is selected
+    if (isDonorSearchMode) {
+      result = sortDonorsByProximity(result, activeLocation);
+    }
+
+    return result;
+  }, [doctors, search, selectedDept, selectedStatus, bloodGroupFilter, isDonorSearchMode, activeLocation]);
 
   const handleDownloadReport = () => {
     generateBloodGroupReport({
@@ -515,7 +549,11 @@ function ManageDoctors() {
           <div className="hosp-filter-group">
             <select
               value={bloodGroupFilter}
-              onChange={(e) => setBloodGroupFilter(e.target.value)}
+              onChange={(e) => {
+                setBloodGroupFilter(e.target.value);
+                setLocationInput(hospitalCity);
+                setActiveLocation(hospitalCity);
+              }}
               aria-label="Filter by Blood Group"
             >
               <option value="All">All Blood Groups</option>
@@ -526,6 +564,32 @@ function ManageDoctors() {
               ))}
             </select>
           </div>
+
+          {/* Location input — visible only in donor search mode */}
+          {isDonorSearchMode && (
+            <div className="hosp-location-group">
+              <div className="hosp-location-input">
+                <FaMapMarkerAlt className="hosp-loc-pin" />
+                <input
+                  type="text"
+                  placeholder="Enter location..."
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter")
+                      setActiveLocation(locationInput.trim() || hospitalCity);
+                  }}
+                  aria-label="Search location"
+                />
+              </div>
+              <button
+                className="hosp-location-search-btn"
+                onClick={() => setActiveLocation(locationInput.trim() || hospitalCity)}
+              >
+                <FaSearch /> Search
+              </button>
+            </div>
+          )}
 
           <div className="hosp-filter-group">
             <select
@@ -549,6 +613,17 @@ function ManageDoctors() {
           </button>
         </div>
       </div>
+
+      {/* Donor mode notice bar */}
+      {isDonorSearchMode && (
+        <div className="hosp-donor-notice">
+          <FaUserCheck className="hosp-donor-notice-icon" />
+          <span>
+            Showing <strong>available {bloodGroupFilter} donors only</strong>, ranked nearest to{" "}
+            <strong>{activeLocation}</strong>. Unavailable staff are automatically excluded.
+          </span>
+        </div>
+      )}
 
       {/* ── DOCTORS TABLE / LIST ── */}
       <div className="hosp-card hosp-doc-table-card">

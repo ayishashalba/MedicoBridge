@@ -142,25 +142,25 @@ const hospitalDonorPool = [
 function HospitalBloodSearch() {
   const hospitalCity = localStorage.getItem("hospitalCity") || "Kozhikode";
   const [selectedBloodGroup, setSelectedBloodGroup] = useState("B+");
-  const [searchQuery, setSearchQuery] = useState("");
+  // locationInput: what the user types; activeLocation: what's actually used for search
+  const [locationInput, setLocationInput] = useState(hospitalCity);
+  const [activeLocation, setActiveLocation] = useState(hospitalCity);
+
+  const handleSearch = () => {
+    const loc = locationInput.trim() || hospitalCity;
+    setActiveLocation(loc);
+  };
+
+  const handleLocationKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
 
   const filteredDonors = useMemo(() => {
-    let result = hospitalDonorPool.filter(
+    const result = hospitalDonorPool.filter(
       (donor) => donor.bloodGroup === selectedBloodGroup && donor.isDonorAvailable === true
     );
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter(
-        (d) =>
-          d.name.toLowerCase().includes(q) ||
-          d.id.toLowerCase().includes(q) ||
-          d.city.toLowerCase().includes(q)
-      );
-    }
-
-    return sortDonorsByProximity(result, hospitalCity);
-  }, [selectedBloodGroup, searchQuery, hospitalCity]);
+    return sortDonorsByProximity(result, activeLocation);
+  }, [selectedBloodGroup, activeLocation]);
 
   const handleDownload = () => {
     generateBloodGroupReport({
@@ -179,9 +179,9 @@ function HospitalBloodSearch() {
       ],
       data: filteredDonors.map((d) => ({
         ...d,
-        proximityLabel: getProximityLabel(d.city, hospitalCity),
+        proximityLabel: getProximityLabel(d.city, activeLocation),
       })),
-      activeFilters: { "Hospital Center": "City Care Hospital (Kozhikode)" },
+      activeFilters: { "Hospital Center": `City Care Hospital (${hospitalCity})`, "Search Location": activeLocation },
     });
   };
 
@@ -228,15 +228,24 @@ function HospitalBloodSearch() {
         </div>
 
         <div className="hbs-right-actions">
-          <div className="hbs-search-field">
-            <FaSearch />
-            <input
-              type="text"
-              placeholder="Search by name, ID or location..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="hbs-location-input-wrap">
+            <label className="hbs-loc-input-label">Location:</label>
+            <div className="hbs-search-field">
+              <FaMapMarkerAlt style={{ color: "#818cf8" }} />
+              <input
+                type="text"
+                placeholder="e.g. Kozhikode, Wayanad..."
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                onKeyDown={handleLocationKeyDown}
+              />
+            </div>
           </div>
+
+          <button className="hbs-search-trigger-btn" onClick={handleSearch}>
+            <FaSearch />
+            <span>Search</span>
+          </button>
 
           <button className="hbs-download-btn" onClick={handleDownload}>
             <FaDownload />
@@ -249,7 +258,7 @@ function HospitalBloodSearch() {
       <div className="hbs-filter-alert">
         <FaCheckCircle />
         <span>
-          Showing available <strong>{selectedBloodGroup} donors only</strong> sorted nearest to <strong>{hospitalCity}</strong> first. Unavailable members are automatically excluded.
+          Showing available <strong>{selectedBloodGroup} donors only</strong> sorted nearest to <strong>{activeLocation}</strong> first. Unavailable members are automatically excluded.
         </span>
       </div>
 
@@ -258,21 +267,21 @@ function HospitalBloodSearch() {
         <h3>
           {filteredDonors.length} Available {selectedBloodGroup} Donor{filteredDonors.length === 1 ? "" : "s"} Found
         </h3>
-        <span className="hbs-order-tag">Proximity Order: {hospitalCity} → Malappuram → Kannur → ...</span>
+        <span className="hbs-order-tag">Nearest to {activeLocation} appear first</span>
       </div>
 
       {/* Grid */}
       {filteredDonors.length === 0 ? (
         <div className="hbs-empty">
           <FaTint className="empty-icon" />
-          <h3>No available {selectedBloodGroup} donors found.</h3>
-          <p>Try searching another blood group or clearing query filters.</p>
+          <h3>No available {selectedBloodGroup} donors found near {activeLocation}.</h3>
+          <p>Try searching another blood group or a different location.</p>
         </div>
       ) : (
         <div className="hbs-grid">
           {filteredDonors.map((donor, idx) => {
-            const proxScore = getProximityScore(donor.city, hospitalCity);
-            const proxLabel = getProximityLabel(donor.city, hospitalCity);
+            const proxScore = getProximityScore(donor.city, activeLocation);
+            const proxLabel = getProximityLabel(donor.city, activeLocation);
 
             return (
               <div key={donor.id} className="hbs-card">

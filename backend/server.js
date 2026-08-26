@@ -211,13 +211,16 @@ app.put("/api/doctor/profile/blood-group", authorize(["Doctor"]), (req, res) => 
 
 /* ── 7. LOCATION-AWARE BLOOD DONOR SEARCH ENDPOINT ─────────── */
 app.get("/api/blood-donors/search", authorize(["Doctor", "Hospital", "Admin"]), (req, res) => {
-  const { bloodGroup, originCity = "Kozhikode", search, userType } = req.query;
+  const { bloodGroup, originCity, location, search, userType } = req.query;
+
+  // Resolve search location: prefer `location` param, fall back to `originCity`, default to Kozhikode
+  const searchLocation = (location || originCity || "Kozhikode").trim();
 
   if (!bloodGroup || bloodGroup === "All" || bloodGroup === "All Blood Groups") {
-    return res.json({ success: true, count: 0, data: [], message: "Please select a specific blood group for donor search." });
+    return res.json({ success: true, count: 0, data: [], searchLocation, message: "Please select a specific blood group for donor search." });
   }
 
-  // Combine patients and doctors
+  // Combine patients and doctors based on userType filter
   let pool = [];
   if (!userType || userType === "All" || userType === "Patients") {
     pool.push(...db.patients.map((p) => ({ ...p, role: "Patient" })));
@@ -226,13 +229,27 @@ app.get("/api/blood-donors/search", authorize(["Doctor", "Hospital", "Admin"]), 
     pool.push(...db.doctors.map((d) => ({ ...d, role: "Doctor" })));
   }
 
+  // For Hospital role: restrict pool to this hospital's patients + doctors
+  if (req.userRole === "Hospital") {
+    const hospitalId = req.hospitalId;
+    pool = pool.filter((u) => u.hospitalId === hospitalId);
+  }
+
+  // For Doctor role: restrict pool to patients belonging to this doctor + all doctors
+  if (req.userRole === "Doctor") {
+    const doctorId = req.userId;
+    pool = pool.filter(
+      (u) => u.role === "Doctor" || (u.doctorIds && u.doctorIds.includes(doctorId))
+    );
+  }
+
   // Mandatory Filter 1: Matching Blood Group
   let filtered = pool.filter((u) => u.bloodGroup === bloodGroup);
 
-  // Mandatory Filter 2: Available Donors ONLY (Exclude unavailable donors automatically)
+  // Mandatory Filter 2: Available Donors ONLY — unavailable donors are NEVER shown
   filtered = filtered.filter((u) => u.isDonorAvailable === true);
 
-  // Search Query filter
+  // Optional name/ID search filter
   if (search) {
     const s = search.toLowerCase().trim();
     filtered = filtered.filter(
@@ -243,7 +260,9 @@ app.get("/api/blood-donors/search", authorize(["Doctor", "Hospital", "Admin"]), 
     );
   }
 
-  res.json({ success: true, count: filtered.length, originCity, bloodGroup, data: filtered });
+  // Note: proximity sorting is done on the frontend using locationProximity.js
+  // Return searchLocation so the frontend knows which origin city to use for sorting
+  res.json({ success: true, count: filtered.length, searchLocation, bloodGroup, data: filtered });
 });
 
 app.listen(PORT, () => {

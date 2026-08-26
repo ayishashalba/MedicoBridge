@@ -317,11 +317,10 @@
 }
 
 .phlay-nav-link--active {
-
   font-weight: 700;
-  background: rgba(255, 255, 255, .18);
+  background: #7c3aed1a;
   color: #7c3aed;
-  border-left: 4px solid #ddd6fe;
+  border-left: 4px solid #a898f3;
 }
 
 .phlay-nav-icon {

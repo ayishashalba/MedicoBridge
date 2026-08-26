@@ -673,6 +673,8 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("All Blood Groups");
+  const [locationInput, setLocationInput] = useState("");
+  const [activeLocation, setActiveLocation] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
   const [patients, setPatients] = useState(initialPatients);
@@ -761,17 +763,19 @@ export default function AdminUsers() {
       return matchesSearch && matchesStatus && matchesBloodGroup && matchesDonorAvailability;
     });
 
+    // When a blood group is selected, sort by proximity to the active location (if provided)
     if (
       (activeTab === "Patients" || activeTab === "Doctors") &&
       bloodGroupFilter &&
       bloodGroupFilter !== "All Blood Groups" &&
       bloodGroupFilter !== "All"
     ) {
-      result = sortDonorsByProximity(result, "Kozhikode");
+      const origin = activeLocation.trim() || "Kozhikode";
+      result = sortDonorsByProximity(result, origin);
     }
 
     return result;
-  }, [data, searchQuery, statusFilter, bloodGroupFilter, activeTab]);
+  }, [data, searchQuery, statusFilter, bloodGroupFilter, activeLocation, activeTab]);
 
   const handleDownloadReport = () => {
     let cols = [];
@@ -842,6 +846,8 @@ export default function AdminUsers() {
                 setSearchQuery("");
                 setStatusFilter("All");
                 setBloodGroupFilter("All Blood Groups");
+                setLocationInput("");
+                setActiveLocation("");
               }}
               className={`ad-tab-btn ${activeTab === tab ? "active" : ""}`}
             >
@@ -866,23 +872,59 @@ export default function AdminUsers() {
           </div>
 
           {(activeTab === "Patients" || activeTab === "Doctors") && (
-            <div className="ad-filters">
-              <span style={{ fontSize: "0.85rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
-                <FaFilter /> Blood Group:
-              </span>
-              <select
-                className="ad-select"
-                style={{ width: "160px", padding: "0.45rem 0.75rem" }}
-                value={bloodGroupFilter}
-                onChange={(e) => setBloodGroupFilter(e.target.value)}
-              >
-                <option value="All Blood Groups">All Blood Groups</option>
-                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
-                  <option key={bg} value={bg}>
-                    {bg}
-                  </option>
-                ))}
-              </select>
+            <div className="ad-filters" style={{ display: "flex", alignItems: "flex-end", gap: "0.5rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                <span style={{ fontSize: "0.85rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                  <FaFilter /> Blood Group:
+                </span>
+                <select
+                  className="ad-select"
+                  style={{ width: "160px", padding: "0.45rem 0.75rem" }}
+                  value={bloodGroupFilter}
+                  onChange={(e) => setBloodGroupFilter(e.target.value)}
+                >
+                  <option value="All Blood Groups">All Blood Groups</option>
+                  {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
+                    <option key={bg} value={bg}>
+                      {bg}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {bloodGroupFilter !== "All Blood Groups" && bloodGroupFilter !== "All" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                    <FaMapMarkerAlt style={{ color: "#0d9488" }} /> Location:
+                  </span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <div className="ad-search-wrapper" style={{ flex: "none", minWidth: "180px" }}>
+                      <FaMapMarkerAlt className="ad-search-icon" style={{ color: "#0d9488" }} />
+                      <input
+                        type="text"
+                        placeholder="e.g. Kozhikode..."
+                        className="ad-input"
+                        value={locationInput}
+                        onChange={(e) => setLocationInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") setActiveLocation(locationInput.trim()); }}
+                      />
+                    </div>
+                    <button
+                      className="ad-btn ad-btn-primary"
+                      onClick={() => setActiveLocation(locationInput.trim())}
+                      title="Search by Location"
+                      style={{ background: "#1e293b", color: "#fff", border: "none", borderRadius: "6px", padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.35rem", whiteSpace: "nowrap" }}
+                    >
+                      <FaSearch /> Search
+                    </button>
+                  </div>
+                  {activeLocation && (
+                    <span style={{ fontSize: "0.75rem", color: "#0d9488", fontWeight: "500", marginTop: "0.1rem" }}>
+                      Sorted nearest to: <strong>{activeLocation}</strong>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           )}
 

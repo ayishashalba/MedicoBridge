@@ -9,8 +9,11 @@ import {
   FaCheck,
   FaBan,
   FaDownload,
+  FaMapMarkerAlt,
+  FaUserCheck,
 } from "react-icons/fa";
 import { generateBloodGroupReport } from "../../utils/pdfGenerator";
+import { sortDonorsByProximity, getProximityLabel } from "../../utils/locationProximity";
 import "./ManagePatients.css";
 
 const initialPatients = [
@@ -20,6 +23,8 @@ const initialPatients = [
     age: 52,
     gender: "Male",
     bloodGroup: "B+",
+    city: "Kozhikode",
+    isDonorAvailable: true,
     phone: "+91 94471 23456",
     ward: "ICU - Bed A4",
     status: "Admitted",
@@ -31,6 +36,8 @@ const initialPatients = [
     age: 29,
     gender: "Female",
     bloodGroup: "O+",
+    city: "Malappuram",
+    isDonorAvailable: true,
     phone: "+91 94471 23457",
     ward: "General Ward B - Bed 12",
     status: "Admitted",
@@ -42,6 +49,8 @@ const initialPatients = [
     age: 64,
     gender: "Male",
     bloodGroup: "A-",
+    city: "Kannur",
+    isDonorAvailable: false,
     phone: "+91 94471 23458",
     ward: "Special Cabin C2",
     status: "Admitted",
@@ -53,6 +62,8 @@ const initialPatients = [
     age: 41,
     gender: "Female",
     bloodGroup: "AB+",
+    city: "Kozhikode",
+    isDonorAvailable: true,
     phone: "+91 94471 23459",
     ward: "Maternity Ward - Bed 3",
     status: "Admitted",
@@ -64,6 +75,8 @@ const initialPatients = [
     age: 35,
     gender: "Male",
     bloodGroup: "Not Provided",
+    city: "Wayanad",
+    isDonorAvailable: false,
     phone: "+91 94471 23460",
     ward: "None (Outpatient)",
     status: "Outpatient",
@@ -75,22 +88,47 @@ const initialPatients = [
     age: 72,
     gender: "Female",
     bloodGroup: "O-",
+    city: "Ernakulam",
+    isDonorAvailable: false,
     phone: "+91 94471 23461",
     ward: "General Ward A - Bed 04",
     status: "Discharged",
     admissionDate: "July 05, 2026",
+  },
+  {
+    id: "PAT-4097",
+    name: "Firoz Khan",
+    age: 36,
+    gender: "Male",
+    bloodGroup: "B+",
+    city: "Malappuram",
+    isDonorAvailable: true,
+    phone: "+91 94471 23462",
+    ward: "None (Outpatient)",
+    status: "Outpatient",
+    admissionDate: "July 14, 2026",
   },
 ];
 
 const wardsList = ["All Wards", "ICU", "General Ward A", "General Ward B", "Special Cabin", "Maternity Ward", "Outpatient"];
 
 function ManagePatients() {
+  const hospitalCity = localStorage.getItem("hospitalCity") || "Kozhikode";
   const [patients, setPatients] = useState(initialPatients);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [wardFilter, setWardFilter] = useState("All Wards");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("All");
+
+  // Location state for donor search
+  const [locationInput, setLocationInput] = useState(hospitalCity);
+  const [activeLocation, setActiveLocation] = useState(hospitalCity);
+
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Whether we are in donor-search mode (a specific blood group is selected)
+  const isDonorSearchMode =
+    bloodGroupFilter !== "All" && bloodGroupFilter !== "All Blood Groups" && bloodGroupFilter !== "";
 
   // Form State
   const [name, setName] = useState("");
@@ -102,7 +140,7 @@ function ManagePatients() {
   const [status, setStatus] = useState("Admitted");
 
   const filteredPatients = useMemo(() => {
-    return patients.filter((pat) => {
+    let result = patients.filter((pat) => {
       const matchSearch =
         pat.name.toLowerCase().includes(search.toLowerCase()) ||
         pat.id.toLowerCase().includes(search.toLowerCase());
@@ -111,20 +149,33 @@ function ManagePatients() {
         wardFilter === "All Wards" ||
         (wardFilter === "Outpatient" && pat.status === "Outpatient") ||
         pat.ward.toLowerCase().includes(wardFilter.toLowerCase());
-      
+
       const bg = pat.bloodGroup || "Not Provided";
       const matchBloodGroup =
         bloodGroupFilter === "All" ||
         bloodGroupFilter === "All Blood Groups" ||
         bg === bloodGroupFilter;
-        
-      return matchSearch && matchStatus && matchWard && matchBloodGroup;
+
+      // When in donor-search mode: automatically exclude unavailable donors
+      const matchAvailability =
+        !isDonorSearchMode || pat.isDonorAvailable === true;
+
+      return matchSearch && matchStatus && matchWard && matchBloodGroup && matchAvailability;
     });
-  }, [patients, search, statusFilter, wardFilter, bloodGroupFilter]);
+
+    // Proximity sort when a blood group is selected
+    if (isDonorSearchMode) {
+      result = sortDonorsByProximity(result, activeLocation);
+    }
+
+    return result;
+  }, [patients, search, statusFilter, wardFilter, bloodGroupFilter, isDonorSearchMode, activeLocation]);
 
   const handleDownloadReport = () => {
     generateBloodGroupReport({
-      title: "Hospital Patients Blood Group Report",
+      title: isDonorSearchMode
+        ? `Available ${bloodGroupFilter} Donors near ${activeLocation} — Hospital`
+        : "Hospital Patients Blood Group Report",
       selectedBloodGroup: bloodGroupFilter === "All" ? "All Blood Groups" : bloodGroupFilter,
       generatedBy: "City Care Hospital Admin",
       columns: [
@@ -133,12 +184,19 @@ function ManagePatients() {
         { header: "Age", dataKey: "age" },
         { header: "Gender", dataKey: "gender" },
         { header: "Blood Group", dataKey: "bloodGroup" },
+        { header: "City", dataKey: "city" },
         { header: "Phone", dataKey: "phone" },
         { header: "Ward / Location", dataKey: "ward" },
         { header: "Status", dataKey: "status" },
       ],
       data: filteredPatients,
-      activeFilters: { Status: statusFilter, Ward: wardFilter, Search: search },
+      activeFilters: {
+        Status: statusFilter,
+        Ward: wardFilter,
+        Search: search,
+        ...(isDonorSearchMode && { "Search Location": activeLocation }),
+        ...(isDonorSearchMode && { Availability: "Available Donors Only (Auto)" }),
+      },
     });
   };
 
@@ -215,7 +273,11 @@ function ManagePatients() {
           <div className="hosp-filter-group">
             <select
               value={bloodGroupFilter}
-              onChange={(e) => setBloodGroupFilter(e.target.value)}
+              onChange={(e) => {
+                setBloodGroupFilter(e.target.value);
+                setLocationInput(hospitalCity);
+                setActiveLocation(hospitalCity);
+              }}
             >
               <option value="All">All Blood Groups</option>
               {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
@@ -225,6 +287,32 @@ function ManagePatients() {
               ))}
             </select>
           </div>
+
+          {/* Location input — visible only in donor search mode */}
+          {isDonorSearchMode && (
+            <div className="hosp-location-group">
+              <div className="hosp-location-input">
+                <FaMapMarkerAlt className="hosp-loc-pin" />
+                <input
+                  type="text"
+                  placeholder="Enter location..."
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter")
+                      setActiveLocation(locationInput.trim() || hospitalCity);
+                  }}
+                  aria-label="Search location"
+                />
+              </div>
+              <button
+                className="hosp-location-search-btn"
+                onClick={() => setActiveLocation(locationInput.trim() || hospitalCity)}
+              >
+                <FaSearch /> Search
+              </button>
+            </div>
+          )}
 
           <div className="hosp-filter-group">
             <select
@@ -248,6 +336,17 @@ function ManagePatients() {
           </button>
         </div>
       </div>
+
+      {/* Donor mode notice bar */}
+      {isDonorSearchMode && (
+        <div className="hosp-donor-notice">
+          <FaUserCheck className="hosp-donor-notice-icon" />
+          <span>
+            Showing <strong>available {bloodGroupFilter} donors only</strong>, ranked nearest to{" "}
+            <strong>{activeLocation}</strong>. Unavailable patients are automatically excluded.
+          </span>
+        </div>
+      )}
 
       {/* Patients Table */}
       <div className="hosp-card hosp-pats-card">
