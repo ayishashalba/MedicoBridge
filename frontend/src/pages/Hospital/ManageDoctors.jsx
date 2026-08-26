@@ -129,6 +129,7 @@ const initialDoctors = [
     bloodGroup: "O-",
     city: "Thrissur",
     isDonorAvailable: true,
+    doctorType: "Hospital",
     email: "vikram.s@medicobridge.com",
     phone: "+91 98765 43214",
     licenseNumber: "KMC-2016-32145",
