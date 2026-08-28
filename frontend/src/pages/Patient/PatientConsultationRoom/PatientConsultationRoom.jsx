@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   FaMicrophone,
   FaMicrophoneSlash,
@@ -15,6 +17,7 @@ import {
   FaUserCircle,
   FaExclamationCircle,
   FaPaperPlane,
+  FaSpinner,
 } from "react-icons/fa";
 import "./PatientConsultationRoom.css";
 
@@ -58,6 +61,12 @@ function PatientConsultationRoom() {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [showPrescription, setShowPrescription] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  // PDF Generation States
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [pdfSuccessMsg, setPdfSuccessMsg] = useState("");
+  const [pdfErrorMsg, setPdfErrorMsg] = useState("");
+  const prescContentRef = useRef(null);
 
   const data = consultationsData[id] || consultationsData["MC-CON-101"];
   const timerIdRef = useRef(null);
@@ -124,6 +133,49 @@ function PatientConsultationRoom() {
         },
       ]);
     }, 1200);
+  };
+
+  // PDF Download Handler using html2canvas & jsPDF
+  const handleDownloadPDF = async () => {
+    if (!prescContentRef.current) return;
+    setIsGeneratingPdf(true);
+    setPdfSuccessMsg("");
+    setPdfErrorMsg("");
+
+    try {
+      const element = prescContentRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pdfWidth - 20; // 10mm margin on left and right
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+
+      const fileName = `E-Prescription_${data.id || id || "MC-CON-101"}.pdf`;
+      pdf.save(fileName);
+
+      setPdfSuccessMsg(`E-Prescription downloaded successfully (${fileName})`);
+      setTimeout(() => setPdfSuccessMsg(""), 5000);
+    } catch (error) {
+      console.error("Prescription PDF generation error:", error);
+      setPdfErrorMsg("Unable to generate PDF prescription. Please try again.");
+      setTimeout(() => setPdfErrorMsg(""), 5000);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // 1. Waiting state transitions
@@ -453,7 +505,7 @@ function PatientConsultationRoom() {
               </button>
             </div>
 
-            <div className="ocr-presc-content">
+            <div className="ocr-presc-content" ref={prescContentRef}>
               <div className="ocr-presc-clinic-info">
                 <h4 className="ocr-presc-clinic-name">MedicoBridge Digital Clinic</h4>
                 <p className="ocr-presc-clinic-sub">Telehealth Division • www.medicobridge.com</p>
@@ -473,18 +525,16 @@ function PatientConsultationRoom() {
               <h3 className="ocr-presc-rx">Rx</h3>
               
               <ul className="ocr-presc-med-list">
-                <li className="ocr-presc-med-item">
-                  <div className="ocr-presc-med-name">1. Tab. Pantoprazole 40mg</div>
-                  <div className="ocr-presc-med-dosage">Dosage: 1-0-0 (Before food) • 7 Days</div>
-                </li>
-                <li className="ocr-presc-med-item">
-                  <div className="ocr-presc-med-name">2. Cap. Amoxicillin 500mg</div>
-                  <div className="ocr-presc-med-dosage">Dosage: 1-0-1 (After food) • 5 Days</div>
-                </li>
-                <li className="ocr-presc-med-item">
-                  <div className="ocr-presc-med-name">3. Tab. Paracetamol 650mg</div>
-                  <div className="ocr-presc-med-dosage">Dosage: 1-0-1 (SOS - If fever) • 3 Days</div>
-                </li>
+                {(data.medicines || [
+                  { id: 1, name: "Tab. Pantoprazole 40mg", dosage: "1-0-0 (Before food)", duration: "7 Days" },
+                  { id: 2, name: "Cap. Amoxicillin 500mg", dosage: "1-0-1 (After food)", duration: "5 Days" },
+                  { id: 3, name: "Tab. Paracetamol 650mg", dosage: "1-0-1 (SOS - If fever)", duration: "3 Days" },
+                ]).map((med, index) => (
+                  <li key={med.id || index} className="ocr-presc-med-item">
+                    <div className="ocr-presc-med-name">{index + 1}. {med.name}</div>
+                    <div className="ocr-presc-med-dosage">Dosage: {med.dosage} • {med.duration}</div>
+                  </li>
+                ))}
               </ul>
 
               <div className="ocr-presc-footer">
@@ -498,11 +548,31 @@ function PatientConsultationRoom() {
               </div>
             </div>
 
+            {pdfSuccessMsg && (
+              <div className="ocr-presc-feedback ocr-presc-feedback--success">
+                {pdfSuccessMsg}
+              </div>
+            )}
+            {pdfErrorMsg && (
+              <div className="ocr-presc-feedback ocr-presc-feedback--error">
+                {pdfErrorMsg}
+              </div>
+            )}
+
             <button
               className="ocr-presc-btn-download"
-              onClick={() => alert("E-Prescription download started (Simulated).")}
+              onClick={handleDownloadPDF}
+              disabled={isGeneratingPdf}
             >
-              <FaDownload style={{ marginRight: "0.5rem" }} /> Download Prescription PDF
+              {isGeneratingPdf ? (
+                <>
+                  <FaSpinner className="ocr-spin" style={{ marginRight: "0.5rem" }} /> Generating PDF...
+                </>
+              ) : (
+                <>
+                  <FaDownload style={{ marginRight: "0.5rem" }} /> Download Prescription PDF
+                </>
+              )}
             </button>
           </div>
         </div>,

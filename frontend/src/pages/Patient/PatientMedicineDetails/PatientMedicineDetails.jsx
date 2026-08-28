@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -76,7 +76,8 @@ export default function PatientMedicineDetails() {
   const medicine = medicinesDB[parseInt(id)] || defaultMedicine;
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
-  const [wishlisted, setWishlisted] = useState(false);
+  const [showRxModal, setShowRxModal] = useState(false);
+  const [hasUploadedRx, setHasUploadedRx] = useState(false);
 
   const outOfStock = medicine.stock === "out-of-stock";
   const discount = discountPct(medicine.price, medicine.mrp);
@@ -85,11 +86,22 @@ export default function PatientMedicineDetails() {
 
   const handleAddToCart = () => {
     if (outOfStock) return;
+    if ((medicine.requiresPrescription || medicine.isRx) && !hasUploadedRx) {
+      setShowRxModal(true);
+      return;
+    }
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
   };
 
-  const handleBuyNow = () => { if (!outOfStock) navigate("/patient/checkout"); };
+  const handleBuyNow = () => {
+    if (outOfStock) return;
+    if ((medicine.requiresPrescription || medicine.isRx) && !hasUploadedRx) {
+      setShowRxModal(true);
+      return;
+    }
+    navigate("/patient/checkout");
+  };
 
   return (
     <div className="medicine-details-page">
@@ -99,9 +111,6 @@ export default function PatientMedicineDetails() {
           <FaArrowLeft /><span>Back to Pharmacy</span>
         </button>
         <div className="medicine-details-topbar-actions">
-          <button className={`medicine-details-wishlist-btn${wishlisted ? " medicine-details-wishlist-btn--active" : ""}`} onClick={() => setWishlisted(w => !w)} aria-label="Wishlist" id="medicine-details-wishlist">
-            <FaHeart /><span>{wishlisted ? "Wishlisted" : "Wishlist"}</span>
-          </button>
           <button className="medicine-details-share-btn" aria-label="Share" id="medicine-details-share">
             <FaShareAlt /><span>Share</span>
           </button>
@@ -260,6 +269,48 @@ export default function PatientMedicineDetails() {
           <button className="medicine-details-sticky-buy" onClick={handleBuyNow} disabled={outOfStock} id="medicine-details-sticky-buy"><FaBolt /> Buy Now</button>
         </div>
       </div>
+
+      {/* ── Prescription Requirement Modal Overlay ───────────────────────── */}
+      {showRxModal && (
+        <div className="appt-modal-overlay" style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }} onClick={() => setShowRxModal(false)}>
+          <div style={{ background: "var(--bg-primary)", borderRadius: "12px", width: "100%", maxWidth: "460px", padding: "1.5rem", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2)", border: "1px solid var(--border-color)" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", color: "#d97706" }}>
+              <span style={{ fontSize: "1.5rem" }}>℞</span>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "var(--text-primary)" }}>Prescription Required</h3>
+            </div>
+            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: "1.5", marginBottom: "1.25rem" }}>
+              <strong>{medicine.name}</strong> is a prescription-only medicine (Rx). Please upload a valid doctor's prescription to continue with your purchase.
+            </p>
+            <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "0.85rem", marginBottom: "1.25rem" }}>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                id="rx-modal-file"
+                style={{ display: "none" }}
+                onChange={(e) => {
+                  if (e.target.files[0]) {
+                    setHasUploadedRx(true);
+                    setShowRxModal(false);
+                    setAddedToCart(true);
+                    setTimeout(() => setAddedToCart(false), 2500);
+                  }
+                }}
+              />
+              <label htmlFor="rx-modal-file" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.65rem 1rem", background: "var(--primary-color)", color: "#fff", borderRadius: "6px", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}>
+                Upload Prescription (JPG, PNG, PDF)
+              </label>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button
+                style={{ padding: "0.55rem 1.25rem", borderRadius: "6px", border: "1px solid var(--border-color)", background: "transparent", cursor: "pointer", fontSize: "0.85rem" }}
+                onClick={() => setShowRxModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

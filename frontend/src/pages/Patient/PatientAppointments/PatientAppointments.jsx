@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 import {
   FaCalendarCheck,
   FaCalendarTimes,
@@ -425,8 +426,143 @@ function handleDownloadSlip(appt) {
   document.body.removeChild(element);
 }
 
+function handleDownloadPrescriptionPDF(appt) {
+  try {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(13, 148, 136);
+    doc.text("MedicoBridge Digital Clinic", 14, 20);
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(100, 116, 139);
+    doc.text("Telehealth Division • www.medicobridge.com", 14, 26);
+    doc.line(14, 30, 196, 30);
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(15, 23, 42);
+    doc.text(`Doctor: ${appt.doctorName}`, 14, 40);
+    doc.text(`Patient: John Doe`, 120, 40);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Specialization: ${appt.specialization}`, 14, 47);
+    doc.text(`Age/Sex: 30 Years / Male`, 120, 47);
+    doc.text(`Hospital: ${appt.hospital}, ${appt.city}`, 14, 54);
+    doc.text(`Date: ${formatDate(appt.date)}`, 120, 54);
+
+    doc.line(14, 60, 196, 60);
+
+    doc.setFontSize(22);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(13, 148, 136);
+    doc.text("Rx", 14, 73);
+
+    const medicines = [
+      { name: "1. Tab. Pantoprazole 40mg", dosage: "Dosage: 1-0-0 (Before food) • 7 Days" },
+      { name: "2. Cap. Amoxicillin 500mg", dosage: "Dosage: 1-0-1 (After food) • 5 Days" },
+      { name: "3. Tab. Paracetamol 650mg", dosage: "Dosage: 1-0-1 (SOS - If fever) • 3 Days" },
+    ];
+
+    let yPos = 83;
+    medicines.forEach((med) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(15, 23, 42);
+      doc.text(med.name, 14, yPos);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(71, 85, 105);
+      doc.text(med.dosage, 14, yPos + 6);
+      
+      yPos += 16;
+    });
+
+    doc.line(14, yPos + 5, 196, yPos + 5);
+
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text(`Date Issued: ${new Date().toLocaleDateString("en-IN")}`, 14, yPos + 20);
+    doc.text("Digitally Signed By:", 140, yPos + 20);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(15, 23, 42);
+    doc.text(appt.doctorName, 140, yPos + 26);
+
+    const fileName = `E-Prescription_${appt.id}.pdf`;
+    doc.save(fileName);
+  } catch (err) {
+    console.error("Prescription PDF generation error:", err);
+    alert("Unable to generate PDF prescription. Please try again.");
+  }
+}
+
+/* ─── Feedback Modal ─────────────────────────────────────────────── */
+function FeedbackModal({ apptId, onClose, onSubmit }) {
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+
+  if (!apptId) return null;
+
+  return (
+    <div className="appt-modal-overlay" role="dialog" aria-modal="true" onClick={onClose}>
+      <div className="appt-modal" style={{ maxWidth: "450px" }} onClick={(e) => e.stopPropagation()}>
+        <div className="appt-modal-header">
+          <h2 className="appt-modal-title" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <FaStar style={{ color: "#f59e0b" }} /> Give Feedback & Review
+          </h2>
+          <button className="appt-modal-close" onClick={onClose} aria-label="Close">
+            <FaTimesCircle />
+          </button>
+        </div>
+        <div className="appt-modal-body" style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", textAlign: "center" }}>
+            How was your appointment experience? Your feedback helps us improve MedicoBridge.
+          </p>
+          <div style={{ display: "flex", justifyContent: "center", gap: "0.5rem", fontSize: "2rem" }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                style={{ background: "none", border: "none", cursor: "pointer", outline: "none", padding: 0 }}
+                onClick={() => setRating(star)}
+              >
+                <FaStar color={star <= rating ? "#f59e0b" : "#cbd5e1"} />
+              </button>
+            ))}
+          </div>
+          <div>
+            <label style={{ fontWeight: "600", fontSize: "0.85rem", marginBottom: "0.3rem", display: "block" }}>Written Review</label>
+            <textarea
+              className="appt-search-input"
+              style={{ height: "90px", resize: "none", fontFamily: "inherit", width: "100%", padding: "0.6rem" }}
+              placeholder="Share details of your experience (optional)..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="appt-confirm-actions" style={{ padding: "1rem 1.5rem" }}>
+          <button className="appt-action-btn appt-action-btn--secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="appt-action-btn"
+            style={{ background: "var(--primary-color)", color: "#fff" }}
+            onClick={() => onSubmit(apptId, rating, comment)}
+          >
+            Submit Feedback
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Appointment Details Modal ──────────────────────────────────── */
-function AppointmentDetailModal({ appt, onClose, onCancel, onReschedule }) {
+function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, onClose, onCancel, onReschedule }) {
   if (!appt) return null;
   const cfg = STATUS_CONFIG[appt.status];
   const contact = getHospitalContact(appt.hospital);
@@ -614,13 +750,42 @@ function AppointmentDetailModal({ appt, onClose, onCancel, onReschedule }) {
           {appt.status === "completed" && (
             <>
               {appt.prescription && (
-                <button className="appt-action-btn appt-action-btn--download" onClick={() => alert("Downloading Prescription PDF...")}>
+                <button className="appt-action-btn appt-action-btn--download" onClick={() => handleDownloadPrescriptionPDF(appt)}>
                   <FaDownload /> Download Prescription
                 </button>
               )}
               <button className="appt-action-btn appt-action-btn--outline" onClick={() => handleDownloadSlip(appt)}>
                 <FaDownload /> Download Slip
               </button>
+              {hasSubmittedFeedback ? (
+                <span
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: "700",
+                    color: "#16a34a",
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                    padding: "0.5rem 0.85rem",
+                    borderRadius: "var(--radius-md)",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.25rem",
+                  }}
+                >
+                  ✓ Feedback Submitted
+                </span>
+              ) : (
+                <button
+                  className="appt-action-btn appt-action-btn--outline"
+                  style={{ borderColor: "#f59e0b", color: "#d97706" }}
+                  onClick={() => {
+                    onClose();
+                    onGiveFeedback(appt.id);
+                  }}
+                >
+                  ★ Give Feedback
+                </button>
+              )}
             </>
           )}
           <button
@@ -636,7 +801,7 @@ function AppointmentDetailModal({ appt, onClose, onCancel, onReschedule }) {
 }
 
 /* ─── Single Appointment Card ────────────────────────────────────── */
-function AppointmentCard({ appt, onViewDetails, onCancel, onReschedule }) {
+function AppointmentCard({ appt, hasSubmittedFeedback, onGiveFeedback, onViewDetails, onCancel, onReschedule }) {
   const cfg = STATUS_CONFIG[appt.status];
   const upcoming = isUpcoming(appt.date);
   const isVideo = appt.consultationType === "video";
@@ -764,19 +929,47 @@ function AppointmentCard({ appt, onViewDetails, onCancel, onReschedule }) {
         )}
 
         {appt.status === "completed" && (
-          <button
-            className="appt-action-btn appt-action-btn--outline"
-            onClick={() => handleDownloadSlip(appt)}
-            aria-label="Download slip"
-          >
-            <FaDownload /> Slip
-          </button>
+          <>
+            <button
+              className="appt-action-btn appt-action-btn--outline"
+              onClick={() => handleDownloadSlip(appt)}
+              aria-label="Download slip"
+            >
+              <FaDownload /> Slip
+            </button>
+            {hasSubmittedFeedback ? (
+              <span
+                style={{
+                  fontSize: "0.78rem",
+                  fontWeight: "700",
+                  color: "#16a34a",
+                  background: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  padding: "0.4rem 0.75rem",
+                  borderRadius: "var(--radius-md)",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                }}
+              >
+                ✓ Feedback Submitted
+              </span>
+            ) : (
+              <button
+                className="appt-action-btn appt-action-btn--outline"
+                style={{ borderColor: "#f59e0b", color: "#d97706" }}
+                onClick={() => onGiveFeedback(appt.id)}
+              >
+                ★ Give Feedback
+              </button>
+            )}
+          </>
         )}
 
         {canDownload && (
           <button
             className="appt-action-btn appt-action-btn--download"
-            onClick={() => alert("Downloading Prescription PDF...")}
+            onClick={() => handleDownloadPrescriptionPDF(appt)}
             aria-label="Download prescription"
           >
             <FaDownload /> Prescription
@@ -1141,8 +1334,27 @@ function PatientAppointments() {
   const [detailAppt, setDetailAppt] = useState(null);
   const [cancelId, setCancelId] = useState(null);
   const [rescheduleAppt, setRescheduleAppt] = useState(null);
+  const [feedbackApptId, setFeedbackApptId] = useState(null);
+  const [submittedFeedback, setSubmittedFeedback] = useState({});
+  const [toastMessage, setToastMessage] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [visibleCount, setVisibleCount] = useState(10);
+
+  /* Load persisted feedback from backend on mount */
+  useEffect(() => {
+    fetch("http://localhost:5000/api/patient/feedback")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          const map = {};
+          data.data.forEach((f) => { map[f.appointmentId] = true; });
+          setSubmittedFeedback(map);
+        }
+      })
+      .catch(() => {
+        /* Backend unavailable — rely on local state */
+      });
+  }, []);
 
   /* Filter by tab + search */
   const filtered = appointments
@@ -1313,6 +1525,8 @@ function PatientAppointments() {
                 <AppointmentCard
                   key={appt.id}
                   appt={appt}
+                  hasSubmittedFeedback={!!submittedFeedback[appt.id]}
+                  onGiveFeedback={(id) => setFeedbackApptId(id)}
                   onViewDetails={setDetailAppt}
                   onCancel={(id) => setCancelId(id)}
                   onReschedule={(appt) => setRescheduleAppt(appt)}
@@ -1378,6 +1592,8 @@ function PatientAppointments() {
       {/* ── Modals ───────────────────────────────────────────── */}
       <AppointmentDetailModal
         appt={detailAppt}
+        hasSubmittedFeedback={detailAppt ? !!submittedFeedback[detailAppt.id] : false}
+        onGiveFeedback={(id) => setFeedbackApptId(id)}
         onClose={() => setDetailAppt(null)}
         onCancel={(id) => setCancelId(id)}
         onReschedule={(appt) => setRescheduleAppt(appt)}
@@ -1394,6 +1610,45 @@ function PatientAppointments() {
           onClose={() => setRescheduleAppt(null)}
           onConfirm={handleRescheduleConfirm}
         />
+      )}
+      {feedbackApptId && (
+        <FeedbackModal
+          apptId={feedbackApptId}
+          onClose={() => setFeedbackApptId(null)}
+          onSubmit={async (id, rating, comment) => {
+            // Persist to backend
+            try {
+              await fetch("http://localhost:5000/api/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ appointmentId: id, rating, comment }),
+              });
+            } catch (err) {
+              /* Backend unavailable — persist locally only */
+            }
+            setSubmittedFeedback((prev) => ({ ...prev, [id]: true }));
+            setFeedbackApptId(null);
+            setToastMessage("Thank you for your feedback! It has been submitted.");
+            setTimeout(() => setToastMessage(""), 4500);
+          }}
+        />
+      )}
+
+      {/* Toast notification */}
+      {toastMessage && (
+        <div
+          role="status"
+          style={{
+            position: "fixed", bottom: "1.5rem", right: "1.5rem",
+            background: "#10b981", color: "#fff",
+            padding: "0.75rem 1.25rem", borderRadius: "8px",
+            fontSize: "0.85rem", fontWeight: 600,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            zIndex: 9999, animation: "apptFadeIn 0.3s ease",
+          }}
+        >
+          ✓ {toastMessage}
+        </div>
       )}
     </div>
   );

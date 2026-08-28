@@ -12,6 +12,7 @@ const medicines = [
     mrp: 35,
     emoji: "💊",
     stock: "in-stock",
+    requiresPrescription: false,
     isRx: false,
     category: "Tablet",
     highlight: "#e8f5e9",
@@ -25,6 +26,7 @@ const medicines = [
     mrp: 185,
     emoji: "💉",
     stock: "in-stock",
+    requiresPrescription: true,
     isRx: true,
     category: "Capsule",
     highlight: "#e3f2fd",
@@ -38,6 +40,7 @@ const medicines = [
     mrp: 80,
     emoji: "🍊",
     stock: "low-stock",
+    requiresPrescription: false,
     isRx: false,
     category: "Supplement",
     highlight: "#fff8e1",
@@ -51,6 +54,7 @@ const medicines = [
     mrp: 265,
     emoji: "🔬",
     stock: "in-stock",
+    requiresPrescription: true,
     isRx: true,
     category: "Tablet",
     highlight: "#f3e5f5",
@@ -64,6 +68,7 @@ const medicines = [
     mrp: 68,
     emoji: "🌿",
     stock: "low-stock",
+    requiresPrescription: false,
     isRx: false,
     category: "Capsule",
     highlight: "#e8f5e9",
@@ -77,6 +82,7 @@ const medicines = [
     mrp: 50,
     emoji: "🌸",
     stock: "out-of-stock",
+    requiresPrescription: false,
     isRx: false,
     category: "Tablet",
     highlight: "#fce4ec",
@@ -90,6 +96,7 @@ const medicines = [
     mrp: 45,
     emoji: "⚡",
     stock: "in-stock",
+    requiresPrescription: true,
     isRx: true,
     category: "Tablet",
     highlight: "#e3f2fd",
@@ -103,6 +110,7 @@ const medicines = [
     mrp: 120,
     emoji: "☀️",
     stock: "in-stock",
+    requiresPrescription: false,
     isRx: false,
     category: "Supplement",
     highlight: "#fffde7",
@@ -120,11 +128,10 @@ const stockConfig = {
 };
 
 /* ─── Single Medicine Card ───────────────────────────────────────── */
-function MedicineCard({ med }) {
+function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
-  const [wishlist, setWishlist] = useState(false);
 
   const outOfStock = med.stock === "out-of-stock";
   const discount = discountPct(med.price, med.mrp);
@@ -132,6 +139,12 @@ function MedicineCard({ med }) {
 
   const handleAddToCart = () => {
     if (outOfStock) return;
+    if ((med.requiresPrescription || med.isRx) && !hasPrescription) {
+      if (onPrescriptionRequired) {
+        onPrescriptionRequired(med);
+      }
+      return;
+    }
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
   };
@@ -143,22 +156,18 @@ function MedicineCard({ med }) {
     >
       {/* ── Badge row ─────────────────────────────────────────── */}
       <div className="featured-badges-row">
-        {med.isRx && (
+        {(med.requiresPrescription || med.isRx) ? (
           <span className="featured-badge featured-badge--rx" title="Prescription Required">
-            ℞ Rx
+            ℞ Rx Required
+          </span>
+        ) : (
+          <span className="featured-badge" style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" }}>
+            OTC (No Rx)
           </span>
         )}
         {discount > 0 && (
           <span className="featured-badge featured-badge--discount">{discount}% OFF</span>
         )}
-        <button
-          className="featured-wishlist-btn"
-          onClick={() => setWishlist((w) => !w)}
-          aria-label={wishlist ? "Remove from wishlist" : "Add to wishlist"}
-          title={wishlist ? "Remove from wishlist" : "Add to wishlist"}
-        >
-          {wishlist ? "❤️" : "🤍"}
-        </button>
       </div>
 
       {/* ── Image / Icon area ─────────────────────────────────── */}
@@ -242,7 +251,7 @@ function MedicineCard({ med }) {
 }
 
 /* ─── Featured Medicines Section (export) ───────────────────────── */
-export default function FeaturedMedicines() {
+export default function FeaturedMedicines({ hasPrescription, onPrescriptionRequired }) {
   const [filter, setFilter] = useState("All");
   const filterOptions = ["All", "Tablet", "Capsule", "Supplement"];
 
@@ -277,7 +286,12 @@ export default function FeaturedMedicines() {
       {/* Cards Grid */}
       <div className="featured-grid">
         {filtered.map((med) => (
-          <MedicineCard key={med.id} med={med} />
+          <MedicineCard
+            key={med.id}
+            med={med}
+            hasPrescription={hasPrescription}
+            onPrescriptionRequired={onPrescriptionRequired}
+          />
         ))}
       </div>
 

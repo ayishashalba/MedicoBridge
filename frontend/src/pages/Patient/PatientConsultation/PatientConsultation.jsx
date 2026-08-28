@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 import {
   FaVideo,
   FaClock,
@@ -21,6 +23,9 @@ import {
   FaVolumeUp,
   FaUndo,
   FaSpinner,
+  FaLock,
+  FaExclamationTriangle,
+  FaDownload,
 } from "react-icons/fa";
 import "./PatientConsultation.css";
 
@@ -51,6 +56,30 @@ const STATUS_CONFIG = {
     cardClass: "oc-card--completed",
   },
 };
+
+/* ─── Doctor Slot Schedules ───────────────────────────────────────── */
+const DOCTOR_SLOTS_MAP = {
+  "MC-CON-101": ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"],
+  "MC-CON-102": ["10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
+  "MC-CON-103": ["10:00 AM", "11:00 AM", "12:00 PM", "02:30 PM", "04:00 PM", "05:00 PM"],
+  "MC-CON-104": ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
+};
+const DEFAULT_SLOTS = ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"];
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const clean = timeStr.trim().toUpperCase();
+  const match = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return 0;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3];
+
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+}
 
 /* ─── Helpers for Parsing & Generating Datetime ───────────────────── */
 function parseDateTime(dateStr, timeStr) {
@@ -429,11 +458,30 @@ function PatientConsultation() {
   const [feedbackId, setFeedbackId] = useState(null);
   const [feedbackRating, setFeedbackRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [submittedFeedback, setSubmittedFeedback] = useState({});
+
+  // PDF Generation States
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const prescContentRef = useRef(null);
 
   // Timer loop for active countdown ticks
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Load submitted feedbacks from backend on mount
+  useEffect(() => {
+    fetch("http://localhost:5000/api/patient/feedback")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          const map = {};
+          data.data.forEach((f) => { map[f.appointmentId] = true; });
+          setSubmittedFeedback(map);
+        }
+      })
+      .catch(() => { /* Backend unavailable */ });
   }, []);
 
   const showToast = (msg) => {
@@ -445,6 +493,37 @@ function PatientConsultation() {
 
   const handleImageError = (docId) => {
     setImageErrors((prev) => ({ ...prev, [docId]: true }));
+  };
+
+  // Slot validation helper for Online Consultation Reschedule
+  const isSlotDisabled = (slotTime, targetDate, currentConsultId) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    
+    // 1. Cannot select past date
+    if (targetDate < todayStr) return true;
+
+    // 2. If targetDate is today, check if slot time has passed
+    if (targetDate === todayStr) {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const slotMinutes = timeToMinutes(slotTime);
+      if (slotMinutes <= currentMinutes) return true;
+    }
+
+    const currentConsult = consultations.find((c) => c.id === currentConsultId);
+
+    // 3. Current appointment slot cannot be selected
+    if (currentConsult && currentConsult.date === targetDate && currentConsult.time === slotTime) {
+      return true;
+    }
+
+    // 4. Already booked slots (by other consultations)
+    const isBookedByOther = consultations.some(
+      (c) => c.id !== currentConsultId && c.date === targetDate && c.time === slotTime
+    );
+    if (isBookedByOther) return true;
+
+    return false;
   };
 
   // Rescheduling Handlers
@@ -461,13 +540,12 @@ function PatientConsultation() {
   const handleSaveReschedule = (e) => {
     e.preventDefault();
     if (!rescheduleDate || !rescheduleTime) {
-      alert("Please fill in both Date and Time fields.");
+      alert("Please select both Date and Time slot.");
       return;
     }
 
-    const scheduledDateObj = parseDateTime(rescheduleDate, rescheduleTime);
-    if (scheduledDateObj < new Date()) {
-      alert("Please select a future time slot for rescheduling.");
+    if (isSlotDisabled(rescheduleTime, rescheduleDate, rescheduleId)) {
+      alert("Selected slot is unavailable. Please choose another future time slot.");
       return;
     }
 
@@ -485,6 +563,46 @@ function PatientConsultation() {
     );
     setShowReschedule(false);
     showToast("Your consultation slot was successfully rescheduled!");
+  };
+
+  // Real PDF Generator Handler
+  const handleDownloadPrescriptionPDF = async () => {
+    if (!prescContentRef.current) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const element = prescContentRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgWidth = pdfWidth - 20; // 10mm margins
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+
+      const fileName = `E-Prescription_${prescriptionId || "MC-CON-104"}.pdf`;
+      pdf.save(fileName);
+
+      showToast(`Prescription downloaded successfully (${fileName})!`);
+      setShowPrescription(false);
+    } catch (error) {
+      console.error("Prescription PDF generation error:", error);
+      alert("Unable to generate PDF prescription. Please try again.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   // Cancellation Handlers
@@ -863,23 +981,43 @@ function PatientConsultation() {
 
                   {/* Contextual Options: Reschedule/Cancel for upcoming OR feedback for completed */}
                   {consult.status === "completed" ? (
-                    <button
-                      className="oc-btn"
-                      style={{
-                        width: "100%",
-                        padding: "0.45rem 0.75rem",
-                        fontSize: "0.78rem",
-                        background: "transparent",
-                        borderColor: "#f59e0b",
-                        color: "#d97706",
-                      }}
-                      onClick={() => {
-                        setFeedbackId(consult.id);
-                        setShowFeedback(true);
-                      }}
-                    >
-                      ★ Give Feedback
-                    </button>
+                    submittedFeedback[consult.id] ? (
+                      <span
+                        className="oc-feedback-submitted-badge"
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          padding: "0.45rem 0.75rem",
+                          fontSize: "0.78rem",
+                          textAlign: "center",
+                          color: "#16a34a",
+                          background: "#f0fdf4",
+                          border: "1px solid #bbf7d0",
+                          borderRadius: "var(--radius-md)",
+                          fontWeight: "700",
+                        }}
+                      >
+                        ✓ Feedback Submitted
+                      </span>
+                    ) : (
+                      <button
+                        className="oc-btn"
+                        style={{
+                          width: "100%",
+                          padding: "0.45rem 0.75rem",
+                          fontSize: "0.78rem",
+                          background: "transparent",
+                          borderColor: "#f59e0b",
+                          color: "#d97706",
+                        }}
+                        onClick={() => {
+                          setFeedbackId(consult.id);
+                          setShowFeedback(true);
+                        }}
+                      >
+                        ★ Give Feedback
+                      </button>
+                    )
                   ) : (
                     <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
                       <button
@@ -968,7 +1106,7 @@ function PatientConsultation() {
       {/* ── Reschedule Appointment Modal ────────────────────────────── */}
       {showReschedule && createPortal(
         <div className="oc-modal-backdrop" onClick={() => setShowReschedule(false)}>
-          <form className="oc-modal-card" onClick={(e) => e.stopPropagation()} onSubmit={handleSaveReschedule}>
+          <form className="oc-modal-card" style={{ maxWidth: "520px" }} onClick={(e) => e.stopPropagation()} onSubmit={handleSaveReschedule}>
             <div className="oc-modal-header">
               <h3>
                 <FaCalendarAlt /> Reschedule Consultation
@@ -978,43 +1116,83 @@ function PatientConsultation() {
               </button>
             </div>
             <div className="oc-modal-body">
-              <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", marginBottom: "1.25rem" }}>
-                Choose a new date and preferred time slot for your appointment.
-              </p>
+              <div style={{ backgroundColor: "#f0f9ff", borderLeft: "4px solid #0284c7", padding: "0.65rem 0.85rem", borderRadius: "6px", fontSize: "0.8rem", color: "#0369a1", marginBottom: "1.25rem", lineHeight: "1.4" }}>
+                <strong>Reschedule Rules:</strong> Past slots and currently booked slots are locked. You can only move your appointment to available future slots.
+              </div>
               
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div className="oc-form-group">
-                  <label className="oc-form-label">New Date</label>
+                  <label className="oc-form-label">Select New Date</label>
                   <input
                     type="date"
                     className="oc-form-input"
                     value={rescheduleDate}
                     min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setRescheduleDate(e.target.value)}
+                    onChange={(e) => {
+                      setRescheduleDate(e.target.value);
+                      setRescheduleTime("");
+                    }}
                     required
                   />
                 </div>
 
                 <div className="oc-form-group">
-                  <label className="oc-form-label">Available Time Slot</label>
-                  <select
-                    className="oc-form-input"
-                    value={rescheduleTime}
-                    onChange={(e) => setRescheduleTime(e.target.value)}
-                    required
-                  >
-                    <option value="">Select a time</option>
-                    <option value="09:00 AM">09:00 AM</option>
-                    <option value="10:00 AM">10:00 AM</option>
-                    <option value="10:30 AM">10:30 AM</option>
-                    <option value="11:15 AM">11:15 AM</option>
-                    <option value="01:30 PM">01:30 PM</option>
-                    <option value="02:00 PM">02:00 PM</option>
-                    <option value="03:30 PM">03:30 PM</option>
-                    <option value="04:30 PM">04:30 PM</option>
-                    <option value="05:00 PM">05:00 PM</option>
-                    <option value="06:00 PM">06:00 PM</option>
-                  </select>
+                  <label className="oc-form-label">Select Available Time Slot</label>
+                  {(() => {
+                    const availableDoctorSlots = DOCTOR_SLOTS_MAP[rescheduleId] || DEFAULT_SLOTS;
+                    const validSlotsCount = availableDoctorSlots.filter(
+                      (s) => !isSlotDisabled(s, rescheduleDate, rescheduleId)
+                    ).length;
+
+                    if (validSlotsCount === 0) {
+                      return (
+                        <div style={{ backgroundColor: "#fff1f2", border: "1px solid #fecdd3", padding: "0.85rem", borderRadius: "8px", color: "#e11d48", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <FaExclamationTriangle />
+                          <span>No available slots for this date. Please select another date.</span>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="bk-slot-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.6rem" }}>
+                        {availableDoctorSlots.map((slot) => {
+                          const disabled = isSlotDisabled(slot, rescheduleDate, rescheduleId);
+                          const isSelected = rescheduleTime === slot;
+                          return (
+                            <button
+                              key={slot}
+                              type="button"
+                              className={`bk-slot-btn ${isSelected ? "bk-slot-btn--active" : ""} ${disabled ? "bk-slot-btn--disabled" : ""}`}
+                              style={{
+                                padding: "0.6rem 0.5rem",
+                                borderRadius: "8px",
+                                border: isSelected ? "2px solid var(--primary-color)" : "1px solid var(--border-color)",
+                                background: isSelected ? "rgba(13, 148, 136, 0.1)" : disabled ? "#f8fafc" : "var(--bg-primary)",
+                                color: disabled ? "#94a3b8" : isSelected ? "var(--primary-color)" : "var(--text-primary)",
+                                opacity: disabled ? 0.6 : 1,
+                                cursor: disabled ? "not-allowed" : "pointer",
+                                fontSize: "0.82rem",
+                                fontWeight: isSelected ? "700" : "500",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "0.3rem",
+                              }}
+                              onClick={() => {
+                                if (disabled) return;
+                                setRescheduleTime(slot);
+                              }}
+                              disabled={disabled}
+                            >
+                              <FaClock style={{ fontSize: "0.75rem" }} />
+                              {disabled ? <del>{slot}</del> : slot}
+                              {disabled && <span title="Slot unavailable"> 🔒</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -1022,7 +1200,12 @@ function PatientConsultation() {
               <button type="button" className="oc-btn oc-btn--details" onClick={() => setShowReschedule(false)}>
                 Cancel
               </button>
-              <button type="submit" className="oc-btn oc-btn--join" style={{ background: "var(--primary-color)" }}>
+              <button
+                type="submit"
+                className="oc-btn oc-btn--join"
+                style={{ background: "var(--primary-color)" }}
+                disabled={!rescheduleTime || isSlotDisabled(rescheduleTime, rescheduleDate, rescheduleId)}
+              >
                 Confirm Reschedule
               </button>
             </div>
@@ -1080,7 +1263,7 @@ function PatientConsultation() {
                 <FaTimes />
               </button>
             </div>
-            <div className="oc-modal-body" style={{ padding: "1.5rem" }}>
+            <div className="oc-modal-body" style={{ padding: "1.5rem" }} ref={prescContentRef}>
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", marginBottom: "1rem" }}>
                 <div>
                   <h4 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)" }}>Dr. Suresh Nair</h4>
@@ -1143,12 +1326,18 @@ function PatientConsultation() {
               <button
                 className="oc-btn oc-btn--join"
                 style={{ background: "linear-gradient(135deg, var(--primary-color), var(--secondary-color))" }}
-                onClick={() => {
-                  setShowPrescription(false);
-                  showToast("Prescription downloaded successfully!");
-                }}
+                onClick={handleDownloadPrescriptionPDF}
+                disabled={isGeneratingPdf}
               >
-                Download PDF
+                {isGeneratingPdf ? (
+                  <>
+                    <FaSpinner className="ocr-spin" style={{ marginRight: "0.5rem" }} /> Generating PDF...
+                  </>
+                ) : (
+                  <>
+                    <FaDownload style={{ marginRight: "0.5rem" }} /> Download PDF
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -1204,7 +1393,21 @@ function PatientConsultation() {
               <button
                 className="oc-btn oc-btn--join"
                 style={{ background: "var(--primary-color)" }}
-                onClick={() => {
+                onClick={async () => {
+                  if (feedbackId) {
+                    try {
+                      await fetch("http://localhost:5000/api/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          appointmentId: feedbackId,
+                          rating: feedbackRating,
+                          comment: feedbackComment,
+                        }),
+                      });
+                    } catch (err) { /* Backend unavailable */ }
+                    setSubmittedFeedback((prev) => ({ ...prev, [feedbackId]: true }));
+                  }
                   setShowFeedback(false);
                   showToast("Thank you for your feedback! It helps us improve MedicoBridge.");
                   setFeedbackComment("");

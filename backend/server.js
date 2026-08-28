@@ -35,10 +35,187 @@ const db = {
     { id: "DR-80245", userId: "USR-DOC-1025", hospitalId: "HOSP-5021", name: "Dr. Vikram Shekar", specialization: "Dermatology", department: "Dermatology", qualification: "MBBS, MD", experience: "8 Years", doctorType: "Hospital", email: "vikram.s@medicobridge.com", phone: "+91 98765 43214", bloodGroup: "O-", city: "Chennai", isDonorAvailable: false, status: "Available", accountStatus: "Active", verified: "Yes" },
     { id: "DR-80246", userId: "USR-DOC-1026", hospitalId: "HOSP-5021", name: "Dr. Amit Varma", specialization: "General Medicine", department: "General Medicine", qualification: "MBBS, MD", experience: "14 Years", doctorType: "Hospital", email: "amit.v@medicobridge.com", phone: "+91 98765 43215", bloodGroup: "Not Provided", city: "Kolkata", isDonorAvailable: false, status: "In Surgery", accountStatus: "Active", verified: "Yes" },
   ],
-  hospitals: [
-    { id: "HOSP-5021", name: "City Care Hospital", email: "contact@citycare.org", phone: "+91 44 2234 5678", city: "Kozhikode", status: "Active" },
   ],
+  pharmacyProducts: [
+    { id: 1, name: "Paracetamol 650mg", brand: "Calpol", price: 28, mrp: 35, emoji: "💊", stock: "in-stock", requiresPrescription: false, isRx: false, category: "Tablet" },
+    { id: 2, name: "Amoxicillin 500mg", brand: "Novamox", price: 145, mrp: 185, emoji: "💉", stock: "in-stock", requiresPrescription: true, isRx: true, category: "Capsule" },
+    { id: 3, name: "Vitamin C 1000mg", brand: "Limcee", price: 62, mrp: 80, emoji: "🍊", stock: "low-stock", requiresPrescription: false, isRx: false, category: "Supplement" },
+    { id: 4, name: "Azithromycin 500mg", brand: "Zithromax", price: 210, mrp: 265, emoji: "🔬", stock: "in-stock", requiresPrescription: true, isRx: true, category: "Tablet" },
+    { id: 5, name: "Omeprazole 20mg", brand: "Omez", price: 55, mrp: 68, emoji: "🌿", stock: "low-stock", requiresPrescription: false, isRx: false, category: "Capsule" },
+    { id: 6, name: "Cetirizine 10mg", brand: "Zyrtec", price: 38, mrp: 50, emoji: "🌸", stock: "out-of-stock", requiresPrescription: false, isRx: false, category: "Tablet" },
+    { id: 7, name: "Metformin 500mg", brand: "Glycomet", price: 35, mrp: 45, emoji: "⚡", stock: "in-stock", requiresPrescription: true, isRx: true, category: "Tablet" },
+    { id: 8, name: "D3 Vitamin 60K", brand: "Calcirol", price: 90, mrp: 120, emoji: "☀️", stock: "in-stock", requiresPrescription: false, isRx: false, category: "Supplement" },
+  ],
+  feedbacks: [
+    { appointmentId: "MC-CON-104", rating: 5, comment: "Great consultation!", submittedAt: "2026-08-28" }
+  ],
+  prescriptions: [
+    {
+      id: "MC-CON-101",
+      patientName: "John Doe",
+      patientId: "#PT-20041",
+      doctorName: "Dr. Ayisha Shalba",
+      specialization: "Cardiology",
+      hospital: "City Care Hospital",
+      date: "18 Jul 2026",
+      diagnosis: "Mild Hypertension & Stress",
+      medicines: [
+        { name: "Amoxicillin 500mg", dosage: "1-0-1", duration: "5 Days", instruction: "After Food" },
+        { name: "Paracetamol 650mg", dosage: "1-0-0", duration: "As needed", instruction: "For fever/headache" }
+      ]
+    }
+  ]
 };
+
+/* ── 8. PRESCRIPTION OCR & EXTRACTION ENDPOINT ─────────────── */
+app.post("/api/pharmacy/process-prescription", (req, res) => {
+  const { fileName, fileType } = req.body || {};
+  
+  const prescriptionId = `RX-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  // Extracted prescribed medicines list
+  const extractedList = [
+    { rawName: "Amoxicillin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 capsule twice daily after food" },
+    { rawName: "Paracetamol 650mg", dosage: "650mg", quantity: 10, instruction: "Take 1 tablet as needed for fever" },
+    { rawName: "Azithromycin 500mg", dosage: "500mg", quantity: 5, instruction: "Take 1 tablet daily for 5 days" },
+    { rawName: "Ciprofloxacin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 tablet every 12 hours" }, // Unmatched sample
+  ];
+
+  // Match extracted medicines against DB catalog
+  const matchedMedicines = extractedList.map((item) => {
+    const matchedProduct = db.pharmacyProducts.find(
+      (p) => p.name.toLowerCase().includes(item.rawName.split(" ")[0].toLowerCase())
+    );
+
+    if (matchedProduct) {
+      return {
+        name: matchedProduct.name,
+        dosage: item.dosage,
+        quantity: item.quantity,
+        instruction: item.instruction,
+        requiresPrescription: matchedProduct.requiresPrescription,
+        matched: true,
+        product: matchedProduct,
+      };
+    }
+
+    return {
+      name: item.rawName,
+      dosage: item.dosage,
+      quantity: item.quantity,
+      instruction: item.instruction,
+      requiresPrescription: true,
+      matched: false,
+      product: null,
+      statusMessage: "Not available in our pharmacy",
+    };
+  });
+
+  res.json({
+    success: true,
+    prescriptionId,
+    fileName: fileName || "Prescription_Document.pdf",
+    prescriptionDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+    doctorName: "Dr. Suresh Nair",
+    clinicName: "MedicoBridge Digital Clinic",
+    medicines: matchedMedicines,
+    message: "Prescription processed successfully. Extracted medicines matched with pharmacy catalog.",
+  });
+});
+
+/* ── 9. APPOINTMENT FEEDBACK ENDPOINTS ─────────────────────── */
+app.post("/api/feedback", (req, res) => {
+  const { appointmentId, rating, comment } = req.body;
+  if (!appointmentId) {
+    return res.status(400).json({ error: "Appointment ID is required" });
+  }
+
+  const existing = db.feedbacks.find((f) => f.appointmentId === appointmentId);
+  if (existing) {
+    return res.json({ success: true, message: "Feedback already submitted for this appointment", feedback: existing });
+  }
+
+  const newFeedback = {
+    appointmentId,
+    rating: rating || 5,
+    comment: comment || "",
+    submittedAt: new Date().toISOString(),
+  };
+
+  db.feedbacks.push(newFeedback);
+  res.json({ success: true, message: "Feedback submitted successfully", feedback: newFeedback });
+});
+
+app.get("/api/patient/feedback", (req, res) => {
+  res.json({ success: true, count: db.feedbacks.length, data: db.feedbacks });
+});
+
+/* ── 10. PRESCRIPTIONS ENDPOINT ────────────────────────────── */
+app.get("/api/prescriptions/:id", (req, res) => {
+  const prescription = db.prescriptions.find((p) => p.id === req.params.id) || db.prescriptions[0];
+  res.json({ success: true, data: prescription });
+});
+
+/* ── 7. LOCATION-AWARE BLOOD DONOR SEARCH ENDPOINT ─────────── */
+app.get("/api/blood-donors/search", authorize(["Doctor", "Hospital", "Admin"]), (req, res) => {
+  const { bloodGroup, originCity, location, search, userType } = req.query;
+
+  // Resolve search location: prefer `location` param, fall back to `originCity`, default to Kozhikode
+  const searchLocation = (location || originCity || "Kozhikode").trim();
+
+  if (!bloodGroup || bloodGroup === "All" || bloodGroup === "All Blood Groups") {
+    return res.json({ success: true, count: 0, data: [], searchLocation, message: "Please select a specific blood group for donor search." });
+  }
+
+  // Combine patients and doctors based on userType filter
+  let pool = [];
+  if (!userType || userType === "All" || userType === "Patients") {
+    pool.push(...db.patients.map((p) => ({ ...p, role: "Patient" })));
+  }
+  if (!userType || userType === "All" || userType === "Doctors") {
+    pool.push(...db.doctors.map((d) => ({ ...d, role: "Doctor" })));
+  }
+
+  // For Hospital role: restrict pool to this hospital's patients + doctors
+  if (req.userRole === "Hospital") {
+    const hospitalId = req.hospitalId;
+    pool = pool.filter((u) => u.hospitalId === hospitalId);
+  }
+
+  // For Doctor role: restrict pool to patients belonging to this doctor + all doctors
+  if (req.userRole === "Doctor") {
+    const doctorId = req.userId;
+    pool = pool.filter(
+      (u) => u.role === "Doctor" || (u.doctorIds && u.doctorIds.includes(doctorId))
+    );
+  }
+
+  // Mandatory Filter 1: Matching Blood Group
+  let filtered = pool.filter((u) => u.bloodGroup === bloodGroup);
+
+  // Mandatory Filter 2: Available Donors ONLY — unavailable donors are NEVER shown
+  filtered = filtered.filter((u) => u.isDonorAvailable === true);
+
+  // Optional name/ID search filter
+  if (search) {
+    const s = search.toLowerCase().trim();
+    filtered = filtered.filter(
+      (u) =>
+        u.name.toLowerCase().includes(s) ||
+        u.id.toLowerCase().includes(s) ||
+        (u.city && u.city.toLowerCase().includes(s))
+    );
+  }
+
+  // Return searchLocation so the frontend knows which origin city to use for sorting
+  res.json({ success: true, count: filtered.length, searchLocation, bloodGroup, data: filtered });
+});
+
+app.listen(PORT, () => {
+  console.log(`MedicoBridge Backend API running on port ${PORT}`);
+});
+
+module.exports = app;
 
 /* ── AUTHORIZATION MIDDLEWARE ─────────────────────────────── */
 function authorize(roles = []) {
