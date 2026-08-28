@@ -35,7 +35,6 @@ const db = {
     { id: "DR-80245", userId: "USR-DOC-1025", hospitalId: "HOSP-5021", name: "Dr. Vikram Shekar", specialization: "Dermatology", department: "Dermatology", qualification: "MBBS, MD", experience: "8 Years", doctorType: "Hospital", email: "vikram.s@medicobridge.com", phone: "+91 98765 43214", bloodGroup: "O-", city: "Chennai", isDonorAvailable: false, status: "Available", accountStatus: "Active", verified: "Yes" },
     { id: "DR-80246", userId: "USR-DOC-1026", hospitalId: "HOSP-5021", name: "Dr. Amit Varma", specialization: "General Medicine", department: "General Medicine", qualification: "MBBS, MD", experience: "14 Years", doctorType: "Hospital", email: "amit.v@medicobridge.com", phone: "+91 98765 43215", bloodGroup: "Not Provided", city: "Kolkata", isDonorAvailable: false, status: "In Surgery", accountStatus: "Active", verified: "Yes" },
   ],
-  ],
   pharmacyProducts: [
     { id: 1, name: "Paracetamol 650mg", brand: "Calpol", price: 28, mrp: 35, emoji: "💊", stock: "in-stock", requiresPrescription: false, isRx: false, category: "Tablet" },
     { id: 2, name: "Amoxicillin 500mg", brand: "Novamox", price: 145, mrp: 185, emoji: "💉", stock: "in-stock", requiresPrescription: true, isRx: true, category: "Capsule" },
@@ -70,7 +69,7 @@ const db = {
 /* ── 8. PRESCRIPTION OCR & EXTRACTION ENDPOINT ─────────────── */
 app.post("/api/pharmacy/process-prescription", (req, res) => {
   const { fileName, fileType } = req.body || {};
-  
+
   const prescriptionId = `RX-2026-${Math.floor(1000 + Math.random() * 9000)}`;
 
   // Extracted prescribed medicines list
