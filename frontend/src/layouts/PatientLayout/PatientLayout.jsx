@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   FaHeartbeat,
+  FaHeart,
   FaTachometerAlt,
   FaUserCircle,
   FaStethoscope,
@@ -21,6 +22,7 @@ import {
   FaMoon,
   FaSun,
 } from "react-icons/fa";
+import { getSavedDoctors } from "../../utils/savedDoctorsStorage";
 import "./PatientLayout.css";
 
 const sidebarNavItems = [
@@ -72,6 +74,19 @@ function PatientLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [savedCount, setSavedCount] = useState(() => getSavedDoctors().length);
+
+  useEffect(() => {
+    const updateCount = () => {
+      setSavedCount(getSavedDoctors().length);
+    };
+    window.addEventListener("savedDoctorsUpdated", updateCount);
+    window.addEventListener("storage", updateCount);
+    return () => {
+      window.removeEventListener("savedDoctorsUpdated", updateCount);
+      window.removeEventListener("storage", updateCount);
+    };
+  }, []);
 
   const toggleMobileSidebar = () => setSidebarOpen((prev) => !prev);
   const closeMobileSidebar = () => setSidebarOpen(false);
@@ -239,6 +254,16 @@ function PatientLayout() {
           </div>
 
           <div className="topnav-right">
+            {/* Saved Doctors */}
+            <NavLink
+              to="/patient/saved-doctors"
+              className="topnav-icon-btn"
+              aria-label="Saved Doctors"
+              title="Saved Doctors"
+            >
+              <FaHeart style={{ color: savedCount > 0 ? "#ef4444" : "inherit" }} />
+              {savedCount > 0 && <span className="topnav-badge">{savedCount}</span>}
+            </NavLink>
             {/* Notifications */}
             <NavLink
               to="/patient/notifications"

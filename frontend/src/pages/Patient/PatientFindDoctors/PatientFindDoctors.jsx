@@ -16,7 +16,10 @@ import {
   FaUserMd,
   FaCheckCircle,
   FaClock,
+  FaHeart,
+  FaRegHeart,
 } from "react-icons/fa";
+import { isDoctorSaved, toggleSaveDoctorInStorage } from "../../../utils/savedDoctorsStorage";
 import "./PatientFindDoctors.css";
 
 /* ─── Dummy Doctor Data ──────────────────────────────────────────── */
@@ -232,21 +235,46 @@ function StarRating({ rating }) {
 
 /* ─── Doctor Card ────────────────────────────────────────────────── */
 function DoctorCard({ doctor }) {
+  const [saved, setSaved] = useState(() => isDoctorSaved(doctor.id));
+
+  React.useEffect(() => {
+    const handleUpdate = () => setSaved(isDoctorSaved(doctor.id));
+    window.addEventListener("savedDoctorsUpdated", handleUpdate);
+    return () => window.removeEventListener("savedDoctorsUpdated", handleUpdate);
+  }, [doctor.id]);
+
+  const handleToggleSave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nowSaved = toggleSaveDoctorInStorage(doctor);
+    setSaved(nowSaved);
+  };
+
   return (
     <article className="fd-card" aria-label={`Doctor card for ${doctor.name}`}>
       {/* Availability ribbon */}
       <div
         className={`fd-card-ribbon ${doctor.available ? "fd-ribbon--available" : "fd-ribbon--busy"}`}
       >
-        {doctor.available ? (
-          <>
-            <FaCheckCircle /> Available Today
-          </>
-        ) : (
-          <>
-            <FaClock /> Unavailable
-          </>
-        )}
+        <span>
+          {doctor.available ? (
+            <>
+              <FaCheckCircle /> Available Today
+            </>
+          ) : (
+            <>
+              <FaClock /> Unavailable
+            </>
+          )}
+        </span>
+        <button
+          className="fd-card-save-btn"
+          onClick={handleToggleSave}
+          title={saved ? "Remove from saved doctors" : "Save doctor"}
+          aria-label={saved ? "Remove from saved doctors" : "Save doctor"}
+        >
+          {saved ? <FaHeart style={{ color: "#ef4444" }} /> : <FaRegHeart />}
+        </button>
       </div>
 
       {/* Photo / Avatar */}

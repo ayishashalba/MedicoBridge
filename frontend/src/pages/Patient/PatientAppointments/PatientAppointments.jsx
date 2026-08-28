@@ -347,6 +347,21 @@ function formatDate(dateStr) {
   });
 }
 
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const clean = timeStr.trim().toUpperCase();
+  const match = clean.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+  if (!match) return 0;
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  const period = match[3];
+
+  if (period === "PM" && hours !== 12) hours += 12;
+  if (period === "AM" && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+}
+
 function isUpcoming(dateStr) {
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -608,16 +623,6 @@ function AppointmentDetailModal({ appt, onClose, onCancel, onReschedule }) {
               </button>
             </>
           )}
-          {appt.consultationType === "video" &&
-            appt.status === "confirmed" &&
-            isUpcoming(appt.date) && (
-              <button
-                className="appt-action-btn appt-action-btn--video"
-                onClick={() => alert("Connecting to secure consultation video room. Please wait...")}
-              >
-                <FaVideo /> Join Consultation
-              </button>
-            )}
           <button
             className="appt-action-btn appt-action-btn--secondary"
             onClick={onClose}
@@ -637,8 +642,6 @@ function AppointmentCard({ appt, onViewDetails, onCancel, onReschedule }) {
   const isVideo = appt.consultationType === "video";
   const canCancel =
     appt.status === "pending" || appt.status === "confirmed";
-  const canJoin =
-    isVideo && appt.status === "confirmed" && upcoming;
   const canDownload = appt.status === "completed" && appt.prescription;
 
   return (
@@ -760,16 +763,6 @@ function AppointmentCard({ appt, onViewDetails, onCancel, onReschedule }) {
           </button>
         )}
 
-        {canJoin && (
-          <button
-            className="appt-action-btn appt-action-btn--video"
-            onClick={() => alert("Connecting to secure consultation video room. Please wait...")}
-            aria-label="Join video consultation"
-          >
-            <FaVideo /> Join Consultation
-          </button>
-        )}
-
         {appt.status === "completed" && (
           <button
             className="appt-action-btn appt-action-btn--outline"
@@ -868,27 +861,96 @@ function CancelConfirmDialog({ apptId, onConfirm, onDismiss }) {
   );
 }
 
-/* ─── Main Page Component ────────────────────────────────────────── */
+const DOCTOR_SLOTS_MAP = {
+  1: ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"],
+  2: ["10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
+  3: ["10:00 AM", "11:00 AM", "12:00 PM", "02:30 PM", "04:00 PM", "05:00 PM"],
+  4: ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
+  5: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
+  6: ["09:00 AM", "10:00 AM", "11:00 AM", "04:00 PM", "05:00 PM"],
+  7: ["09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
+  8: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
+  9: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
+  10: ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "04:00 PM", "05:00 PM"],
+  11: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
+  12: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
+};
+
 /* ─── Reschedule Modal ────────────────────────────────────────── */
-function RescheduleModal({ appt, onClose, onConfirm }) {
-  const [newDate, setNewDate] = useState("");
+function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
+  const [newDate, setNewDate] = useState(appt.date || "");
   const [newSlot, setNewSlot] = useState("");
   const [error, setError] = useState("");
 
-  const today = new Date().toISOString().split("T")[0];
-  const slots = ["09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "02:00 PM", "03:00 PM", "04:00 PM", "04:30 PM"];
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const doctorSlots = DOCTOR_SLOTS_MAP[appt.doctorId] || appt.slots || [
+    "09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"
+  ];
+
+  const getSlotStatus = (slotTimeStr) => {
+    const selectedDate = newDate || appt.date;
+
+    if (selectedDate < todayStr) {
+      return { disabled: true, reason: "Past date" };
+    }
+
+    if (selectedDate === todayStr) {
+      const now = new Date();
+      const currentClockMinutes = now.getHours() * 60 + now.getMinutes();
+      const slotMinutes = timeToMinutes(slotTimeStr);
+      if (slotMinutes <= currentClockMinutes) {
+        return { disabled: true, reason: "Past time" };
+      }
+    }
+
+    if (selectedDate === appt.date && slotTimeStr === appt.time) {
+      return { disabled: true, reason: "Current appointment slot" };
+    }
+
+    const isBookedByOther = allAppointments.some(
+      (other) =>
+        other.id !== appt.id &&
+        (other.doctorId === appt.doctorId || other.doctorName === appt.doctorName) &&
+        other.date === selectedDate &&
+        other.time === slotTimeStr &&
+        (other.status === "confirmed" || other.status === "pending")
+    );
+    if (isBookedByOther) {
+      return { disabled: true, reason: "Already booked" };
+    }
+
+    return { disabled: false, reason: "" };
+  };
+
+  const availableSlotsCount = doctorSlots.filter(
+    (slot) => !getSlotStatus(slot).disabled
+  ).length;
 
   const handleSave = () => {
     if (!newDate) {
       setError("Please select a date.");
       return;
     }
-    if (newDate < today) {
+    if (newDate < todayStr) {
       setError("Rescheduled date cannot be in the past.");
       return;
     }
     if (!newSlot) {
-      setError("Please select a time slot.");
+      setError("Please select an available time slot.");
+      return;
+    }
+    const status = getSlotStatus(newSlot);
+    if (status.disabled) {
+      if (status.reason === "Current appointment slot") {
+        setError("Your current appointment is already booked for this slot. Please choose another slot.");
+      } else if (status.reason === "Past time") {
+        setError("This time slot has already passed.");
+      } else if (status.reason === "Already booked") {
+        setError("This time slot is already booked.");
+      } else {
+        setError("This time slot is not available.");
+      }
       return;
     }
     setError("");
@@ -896,65 +958,174 @@ function RescheduleModal({ appt, onClose, onConfirm }) {
   };
 
   return (
-    <div className="appt-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="reschedule-title">
+    <div
+      className="appt-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reschedule-title"
+    >
       <div className="appt-modal appt-reschedule-modal">
         <div className="appt-modal-header">
-          <h2 id="reschedule-title" className="appt-modal-title">Reschedule Appointment</h2>
+          <h2 id="reschedule-title" className="appt-modal-title">
+            Reschedule Appointment
+          </h2>
           <button className="appt-modal-close" onClick={onClose} aria-label="Close">
             <FaTimesCircle />
           </button>
         </div>
+
         <div style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-            Rescheduling appointment <strong>{appt.id}</strong> with <strong>{appt.doctorName}</strong>.
-          </p>
+          <div style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-color)", borderRadius: "var(--radius-md)", padding: "0.75rem 1rem", fontSize: "0.85rem" }}>
+            <p style={{ color: "var(--text-primary)", fontWeight: "600", marginBottom: "0.2rem" }}>
+              Current Appointment: <strong>{formatDate(appt.date)}</strong> at <strong>{appt.time}</strong>
+            </p>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+              Doctor: <strong>{appt.doctorName}</strong> ({appt.specialization})
+            </p>
+          </div>
+
           {error && (
-            <p className="appt-field-error" style={{ color: "#ef4444", fontSize: "0.78rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "0.25rem" }}>
+            <p
+              className="appt-field-error"
+              style={{
+                color: "#ef4444",
+                fontSize: "0.78rem",
+                fontWeight: "700",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.25rem",
+              }}
+            >
               <FaTimesCircle /> {error}
             </p>
           )}
+
+          {/* Date Picker */}
           <div className="bk-field" style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            <label className="bk-label" htmlFor="reschedule-date" style={{ fontWeight: "700", fontSize: "0.8rem", color: "var(--text-secondary)" }}>Select Date <span style={{ color: "#ef4444" }}>*</span></label>
+            <label
+              className="bk-label"
+              htmlFor="reschedule-date"
+              style={{ fontWeight: "700", fontSize: "0.8rem", color: "var(--text-secondary)" }}
+            >
+              Select Date <span style={{ color: "#ef4444" }}>*</span>
+            </label>
             <input
               type="date"
               id="reschedule-date"
               className="bk-input"
-              min={today}
+              min={todayStr}
               value={newDate}
-              onChange={(e) => { setNewDate(e.target.value); setError(""); }}
-              style={{ width: "100%", padding: "0.75rem", borderRadius: "var(--radius-md)", border: "1.5px solid var(--border-color)", background: "var(--bg-primary)", color: "var(--text-primary)", outline: "none" }}
+              onChange={(e) => {
+                setNewDate(e.target.value);
+                setNewSlot("");
+                setError("");
+              }}
+              style={{
+                width: "100%",
+                padding: "0.75rem",
+                borderRadius: "var(--radius-md)",
+                border: "1.5px solid var(--border-color)",
+                background: "var(--bg-primary)",
+                color: "var(--text-primary)",
+                outline: "none",
+              }}
             />
           </div>
+
+          {/* Doctor Schedule Slots */}
           <div className="bk-field" style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
-            <label className="bk-label" style={{ fontWeight: "700", fontSize: "0.8rem", color: "var(--text-secondary)" }}>Select Time Slot <span style={{ color: "#ef4444" }}>*</span></label>
-            <div className="bk-slot-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.4rem" }}>
-              {slots.map((slot) => (
-                <button
-                  key={slot}
-                  type="button"
-                  className={`bk-slot-btn ${newSlot === slot ? "bk-slot-btn--active" : ""}`}
-                  onClick={() => { setNewSlot(slot); setError(""); }}
-                  style={{
-                    padding: "0.55rem 0.65rem",
-                    border: "1.5px solid var(--border-color)",
-                    borderRadius: "var(--radius-md)",
-                    fontSize: "0.75rem",
-                    fontWeight: "600",
-                    background: newSlot === slot ? "linear-gradient(135deg, var(--primary-color), var(--secondary-color))" : "var(--bg-secondary)",
-                    color: newSlot === slot ? "#fff" : "var(--text-secondary)",
-                    cursor: "pointer",
-                    transition: "all var(--transition-fast)"
-                  }}
-                >
-                  {slot}
-                </button>
-              ))}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label className="bk-label" style={{ fontWeight: "700", fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                Doctor's Available Slots <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <span style={{ fontSize: "0.78rem", fontWeight: "700", color: availableSlotsCount > 0 ? "#16a34a" : "#dc2626" }}>
+                {availableSlotsCount > 0 ? `🟢 ${availableSlotsCount} available` : "🔴 0 available"}
+              </span>
             </div>
+
+            {availableSlotsCount === 0 ? (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.82rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <FaTimesCircle /> No available future slots for this date. Please select another date.
+              </div>
+            ) : (
+              <div
+                className="bk-slot-grid"
+                style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.45rem" }}
+              >
+                {doctorSlots.map((slot) => {
+                  const status = getSlotStatus(slot);
+                  const isSelected = newSlot === slot;
+
+                  let slotTitle = "Click to select slot";
+                  if (status.disabled) {
+                    if (status.reason === "Current appointment slot") slotTitle = "Current appointment slot (Already Booked)";
+                    else if (status.reason === "Past time") slotTitle = "Time slot already passed";
+                    else if (status.reason === "Already booked") slotTitle = "Slot already booked";
+                    else slotTitle = "Unavailable slot";
+                  }
+
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      disabled={status.disabled}
+                      className={`bk-slot-btn ${isSelected ? "bk-slot-btn--active" : ""}`}
+                      onClick={() => {
+                        if (!status.disabled) {
+                          setNewSlot(slot);
+                          setError("");
+                        }
+                      }}
+                      title={slotTitle}
+                      style={{
+                        padding: "0.55rem 0.65rem",
+                        border: isSelected
+                          ? "1.5px solid var(--primary-color)"
+                          : "1.5px solid var(--border-color)",
+                        borderRadius: "var(--radius-md)",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        background: isSelected
+                          ? "linear-gradient(135deg, var(--primary-color), var(--secondary-color))"
+                          : status.disabled
+                          ? "#f1f5f9"
+                          : "var(--bg-secondary)",
+                        color: isSelected
+                          ? "#fff"
+                          : status.disabled
+                          ? "#94a3b8"
+                          : "var(--text-secondary)",
+                        cursor: status.disabled ? "not-allowed" : "pointer",
+                        opacity: status.disabled ? 0.55 : 1,
+                        textDecoration: status.disabled ? "line-through" : "none",
+                        transition: "all var(--transition-fast)",
+                      }}
+                    >
+                      {slot} {status.disabled && "🔒"}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
+
         <div className="appt-modal-actions">
-          <button className="appt-action-btn appt-action-btn--secondary" onClick={onClose}>Cancel</button>
-          <button className="appt-action-btn" onClick={handleSave} style={{ background: "var(--primary-color)", color: "#fff" }}>Confirm Reschedule</button>
+          <button className="appt-action-btn appt-action-btn--secondary" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="appt-action-btn"
+            disabled={availableSlotsCount === 0}
+            onClick={handleSave}
+            style={{
+              background: availableSlotsCount > 0 ? "var(--primary-color)" : "#cbd5e1",
+              color: "#fff",
+              cursor: availableSlotsCount > 0 ? "pointer" : "not-allowed",
+            }}
+          >
+            Confirm Reschedule
+          </button>
         </div>
       </div>
     </div>
@@ -1047,7 +1218,7 @@ function PatientAppointments() {
       <AppointmentStats data={appointments} />
 
       {/* ── Search & Filter Controls ─────────────────────────── */}
-      <div className="appt-filters-row" style={{ display: "flex", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap", alignItems: "stretch" }}>
+      <div className="appt-filters-row" style={{ display: "flex", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap", flexShrink: 0 }}>
         <div className="appt-search-bar" style={{ flex: 1, minWidth: "280px", margin: 0 }}>
           <FaSearch className="appt-search-icon" />
           <input
@@ -1219,6 +1390,7 @@ function PatientAppointments() {
       {rescheduleAppt && (
         <RescheduleModal
           appt={rescheduleAppt}
+          allAppointments={appointments}
           onClose={() => setRescheduleAppt(null)}
           onConfirm={handleRescheduleConfirm}
         />

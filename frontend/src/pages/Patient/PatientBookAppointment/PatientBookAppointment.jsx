@@ -21,6 +21,14 @@ import {
   FaIdCard,
   FaPrint,
   FaHome,
+  FaFilePdf,
+  FaFileImage,
+  FaEye,
+  FaDownload,
+  FaTrashAlt,
+  FaSearchPlus,
+  FaSearchMinus,
+  FaTimes,
 } from "react-icons/fa";
 import "./PatientBookAppointment.css";
 
@@ -272,6 +280,129 @@ const REASON_OPTIONS = [
   "Other",
 ];
 
+/* ─── Report Preview Modal ────────────────────────────────────────── */
+function ReportPreviewModal({ report, onClose }) {
+  const [zoom, setZoom] = useState(1);
+
+  if (!report) return null;
+
+  const isPdf = report.type === "pdf" || (report.name && report.name.toLowerCase().endsWith(".pdf"));
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 2.5));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handleResetZoom = () => setZoom(1);
+
+  return (
+    <div className="rpm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rpm-file-title">
+      <div className="rpm-modal-card">
+        {/* Modal Header */}
+        <div className="rpm-modal-header">
+          <div className="rpm-header-title">
+            <div className={`rpm-type-icon rpm-type-icon--${isPdf ? "pdf" : "image"}`}>
+              {isPdf ? <FaFilePdf /> : <FaFileImage />}
+            </div>
+            <div className="rpm-header-info">
+              <h3 id="rpm-file-title" className="rpm-file-name" title={report.name}>{report.name}</h3>
+              <p className="rpm-file-meta">
+                <span className={`rpm-badge rpm-badge--${isPdf ? "pdf" : "image"}`}>
+                  {report.fileTypeBadge || (isPdf ? "PDF Document" : "Medical Image")}
+                </span>
+                <span className="rpm-size">{report.size}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="rpm-header-actions">
+            {!isPdf && (
+              <div className="rpm-zoom-controls">
+                <button type="button" className="rpm-btn-icon" onClick={handleZoomOut} title="Zoom Out (-)">
+                  <FaSearchMinus />
+                </button>
+                <span className="rpm-zoom-text">{Math.round(zoom * 100)}%</span>
+                <button type="button" className="rpm-btn-icon" onClick={handleZoomIn} title="Zoom In (+)">
+                  <FaSearchPlus />
+                </button>
+                <button type="button" className="rpm-btn-text" onClick={handleResetZoom} title="Fit to Screen">
+                  Fit
+                </button>
+              </div>
+            )}
+
+            {report.previewUrl && (
+              <a
+                href={report.previewUrl}
+                download={report.name}
+                className="rpm-download-btn"
+                title="Download Report File"
+              >
+                <FaDownload />
+                <span>Download</span>
+              </a>
+            )}
+
+            <button type="button" className="rpm-close-btn" onClick={onClose} aria-label="Close Preview" title="Close Preview">
+              <FaTimes />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Content Viewer */}
+        <div className="rpm-modal-body">
+          {isPdf ? (
+            <div className="rpm-pdf-container">
+              <object
+                data={report.previewUrl}
+                type="application/pdf"
+                width="100%"
+                height="540px"
+                className="rpm-pdf-object"
+              >
+                <iframe
+                  src={report.previewUrl}
+                  title={report.name}
+                  width="100%"
+                  height="540px"
+                  style={{ border: "none" }}
+                />
+                <div className="rpm-pdf-fallback">
+                  <p>Your browser cannot embed the PDF directly.</p>
+                  <a href={report.previewUrl} download={report.name} className="rpm-download-fallback">
+                    <FaDownload /> Download {report.name}
+                  </a>
+                </div>
+              </object>
+            </div>
+          ) : (
+            <div className="rpm-image-container">
+              <div className="rpm-image-viewport">
+                <img
+                  src={report.previewUrl}
+                  alt={report.name}
+                  className="rpm-image-preview"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transition: "transform 0.2s ease-out",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="rpm-modal-footer">
+          <span className="rpm-security-note">
+            🔒 Confidential Medical Document — Authorized Access Only
+          </span>
+          <button type="button" className="rpm-btn-secondary" onClick={onClose}>
+            Close Preview
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Generate Appointment ID ────────────────────────────────────── */
 function generateAppointmentId() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -351,6 +482,36 @@ function BookingSuccessCard({ booking, doctor, onGoHome, onGoAppointments }) {
                 </span>
               </dd>
             </div>
+            {booking.uploadedFiles && booking.uploadedFiles.length > 0 && (
+              <div className="bk-confirm-row bk-confirm-row--reports">
+                <dt><FaFileAlt className="bk-confirm-icon" /> Attached Reports</dt>
+                <dd className="bk-reports-chips-wrap">
+                  {booking.uploadedFiles.map((file, idx) => (
+                    <div key={file.id || idx} className="bk-report-mini-chip">
+                      <span className="bk-chip-name">{file.name}</span>
+                      <button
+                        type="button"
+                        className="bk-chip-act-btn"
+                        onClick={() => onPreviewReport && onPreviewReport(file)}
+                        title="Preview Report"
+                      >
+                        <FaEye /> Preview
+                      </button>
+                      {file.previewUrl && (
+                        <a
+                          href={file.previewUrl}
+                          download={file.name}
+                          className="bk-chip-act-btn"
+                          title="Download Report"
+                        >
+                          <FaDownload />
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </dd>
+              </div>
+            )}
           </dl>
 
           {/* Booking notice */}
@@ -383,6 +544,21 @@ function BookingSuccessCard({ booking, doctor, onGoHome, onGoAppointments }) {
 }
 
 /* ─── Main Booking Component ─────────────────────────────────────── */
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+  const [time, modifier] = timeStr.split(" ");
+  if (!time || !modifier) return 0;
+  let [hours, minutes] = time.split(":");
+  hours = parseInt(hours, 10);
+  minutes = parseInt(minutes, 10);
+  if (hours === 12) {
+    hours = modifier === "AM" ? 0 : 12;
+  } else if (modifier === "PM") {
+    hours += 12;
+  }
+  return hours * 60 + minutes;
+}
+
 function PatientBookAppointment() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -431,6 +607,8 @@ function PatientBookAppointment() {
   // File Upload states
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const [previewingReport, setPreviewingReport] = useState(null);
 
   // Helper for slots left
   const getRemainingSlotsCount = () => {
@@ -439,22 +617,89 @@ function PatientBookAppointment() {
     return (daySeed % 4) + 2; // Returns 2, 3, 4 or 5
   };
 
+  const isSlotDisabled = (slotTime) => {
+    if (appointmentDate === today) {
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const slotMinutes = timeToMinutes(slotTime);
+      if (slotMinutes <= currentMinutes) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    setUploading(true);
-    setTimeout(() => {
-      const newFiles = files.map((f) => ({
+    setUploadError("");
+
+    const validFiles = [];
+    let errorMsg = "";
+
+    files.forEach((f) => {
+      const ext = f.name.slice(((f.name.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
+      const isValidType =
+        f.type === "application/pdf" ||
+        f.type === "image/jpeg" ||
+        f.type === "image/png" ||
+        ["pdf", "jpg", "jpeg", "png"].includes(ext);
+
+      if (!isValidType) {
+        errorMsg = `Invalid format for "${f.name}". Only PDF, JPEG, or PNG files are supported.`;
+        return;
+      }
+
+      if (f.size > 10 * 1024 * 1024) {
+        errorMsg = `File "${f.name}" exceeds the 10MB limit.`;
+        return;
+      }
+
+      const isPdf = f.type.includes("pdf") || ext === "pdf";
+      const isPng = f.type.includes("png") || ext === "png";
+      const fileTypeBadge = isPdf ? "PDF" : isPng ? "PNG" : "JPEG";
+      const reportType = isPdf ? "pdf" : "image";
+      const formattedSize =
+        f.size >= 1024 * 1024
+          ? (f.size / (1024 * 1024)).toFixed(2) + " MB"
+          : (f.size / 1024).toFixed(0) + " KB";
+
+      validFiles.push({
+        id: `rep_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
         name: f.name,
-        size: (f.size / (1024 * 1024)).toFixed(2) + " MB",
-      }));
-      setUploadedFiles((prev) => [...prev, ...newFiles]);
-      setUploading(false);
-    }, 1000);
+        size: formattedSize,
+        type: reportType,
+        fileTypeBadge,
+        previewUrl: URL.createObjectURL(f),
+      });
+    });
+
+    if (errorMsg) {
+      setUploadError(errorMsg);
+      setTimeout(() => setUploadError(""), 5000);
+    }
+
+    if (validFiles.length > 0) {
+      setUploading(true);
+      setTimeout(() => {
+        setUploadedFiles((prev) => [...prev, ...validFiles]);
+        setUploading(false);
+      }, 500);
+    }
+
+    e.target.value = "";
   };
 
   const handleRemoveFile = (index) => {
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => {
+      const target = prev[index];
+      if (target && target.previewUrl) {
+        try {
+          URL.revokeObjectURL(target.previewUrl);
+        } catch (err) {}
+      }
+      return prev.filter((_, i) => i !== index);
+    });
   };
 
   const handleDateChange = (val) => {
@@ -774,21 +1019,27 @@ function PatientBookAppointment() {
                 aria-label="Select time slot"
                 aria-describedby={errors.slot ? "bk-slot-error" : undefined}
               >
-                {doctor.slots.map((slot) => (
-                  <button
-                    key={slot}
-                    type="button"
-                    className={`bk-slot-btn ${selectedSlot === slot ? "bk-slot-btn--active" : ""}`}
-                    onClick={() => {
-                      setSelectedSlot(slot);
-                      if (errors.slot) setErrors((prev) => ({ ...prev, slot: "" }));
-                    }}
-                    aria-pressed={selectedSlot === slot}
-                  >
-                    <FaClock className="bk-slot-icon" />
-                    {slot}
-                  </button>
-                ))}
+                {doctor.slots.map((slot) => {
+                  const disabled = isSlotDisabled(slot);
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      className={`bk-slot-btn ${selectedSlot === slot ? "bk-slot-btn--active" : ""} ${disabled ? "bk-slot-btn--disabled" : ""}`}
+                      onClick={() => {
+                        if (disabled) return;
+                        setSelectedSlot(slot);
+                        if (errors.slot) setErrors((prev) => ({ ...prev, slot: "" }));
+                      }}
+                      disabled={disabled}
+                      aria-pressed={selectedSlot === slot}
+                    >
+                      <FaClock className="bk-slot-icon" />
+                      {disabled ? <del>{slot}</del> : slot}
+                      {disabled && <span title="Slot unavailable"> 🔒</span>}
+                    </button>
+                  );
+                })}
               </div>
               {errors.slot && (
                 <p id="bk-slot-error" className="bk-field-error" role="alert">
@@ -975,51 +1226,98 @@ function PatientBookAppointment() {
               <p className="bk-char-count">{notes.length}/500 characters</p>
             </div>
 
-            {/* Optional File Upload */}
+            {/* Upload Previous Reports */}
             <div className="bk-field" style={{ marginTop: "0.5rem" }}>
               <label className="bk-label">📄 Upload Previous Reports <span className="bk-optional">(optional)</span></label>
               <div className="bk-upload-container">
                 <label htmlFor="bk-file-upload" className="bk-upload-dropzone">
                   <FaFileAlt className="bk-upload-icon" />
-                  <span>Click to upload or drag files here</span>
+                  <span>Click to upload or drag medical reports here</span>
                   <span className="bk-upload-subtext">PDF, JPEG, or PNG up to 10MB</span>
                   <input
                     type="file"
                     id="bk-file-upload"
                     className="bk-file-input"
                     multiple
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                     onChange={handleFileUpload}
                     disabled={uploading}
                   />
                 </label>
 
+                {uploadError && (
+                  <div className="bk-upload-error-banner" role="alert">
+                    <FaTimesCircle /> {uploadError}
+                  </div>
+                )}
+
                 {uploading && (
                   <div className="bk-upload-progress">
                     <div className="bk-upload-spinner" />
-                    <span>Uploading file(s)...</span>
+                    <span>Processing file(s)...</span>
                   </div>
                 )}
 
                 {uploadedFiles.length > 0 && (
-                  <ul className="bk-uploaded-list">
-                    {uploadedFiles.map((file, index) => (
-                      <li key={index} className="bk-uploaded-item">
-                        <FaFileAlt className="bk-file-item-icon" />
-                        <div className="bk-file-details">
-                          <span className="bk-file-name">{file.name}</span>
-                          <span className="bk-file-size">{file.size}</span>
-                        </div>
-                        <button
-                          type="button"
-                          className="bk-file-remove-btn"
-                          onClick={() => handleRemoveFile(index)}
-                          aria-label={`Remove ${file.name}`}
-                        >
-                          <FaTimesCircle />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="bk-uploaded-cards-wrap">
+                    <h4 className="bk-uploaded-title">
+                      Uploaded Medical Reports ({uploadedFiles.length})
+                    </h4>
+                    <ul className="bk-uploaded-card-list">
+                      {uploadedFiles.map((file, index) => (
+                        <li key={file.id || index} className="bk-uploaded-card">
+                          <div className={`bk-report-type-badge bk-report-type-badge--${file.type}`}>
+                            {file.type === "pdf" ? <FaFilePdf /> : <FaFileImage />}
+                          </div>
+
+                          <div className="bk-report-card-info">
+                            <div className="bk-report-card-header">
+                              <span className="bk-report-card-name" title={file.name}>
+                                {file.name}
+                              </span>
+                              <span className={`bk-file-badge bk-file-badge--${file.type}`}>
+                                {file.fileTypeBadge || (file.type === "pdf" ? "PDF" : "IMAGE")}
+                              </span>
+                            </div>
+                            <span className="bk-report-card-size">{file.size}</span>
+                          </div>
+
+                          <div className="bk-report-card-actions">
+                            <button
+                              type="button"
+                              className="bk-report-btn bk-report-btn--view"
+                              onClick={() => setPreviewingReport(file)}
+                              title="View / Preview Report"
+                            >
+                              <FaEye />
+                              <span>Preview</span>
+                            </button>
+
+                            {file.previewUrl && (
+                              <a
+                                href={file.previewUrl}
+                                download={file.name}
+                                className="bk-report-btn bk-report-btn--download"
+                                title="Download Report File"
+                              >
+                                <FaDownload />
+                              </a>
+                            )}
+
+                            <button
+                              type="button"
+                              className="bk-report-btn bk-report-btn--remove"
+                              onClick={() => handleRemoveFile(index)}
+                              title="Remove Report"
+                              aria-label={`Remove ${file.name}`}
+                            >
+                              <FaTrashAlt />
+                            </button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             </div>
@@ -1223,6 +1521,13 @@ function PatientBookAppointment() {
           </div>
         </aside>
       </div>
+      {/* Report Preview Modal */}
+      {previewingReport && (
+        <ReportPreviewModal
+          report={previewingReport}
+          onClose={() => setPreviewingReport(null)}
+        />
+      )}
     </div>
   );
 }

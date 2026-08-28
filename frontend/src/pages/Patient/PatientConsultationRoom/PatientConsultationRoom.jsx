@@ -14,6 +14,7 @@ import {
   FaTimes,
   FaUserCircle,
   FaExclamationCircle,
+  FaPaperPlane,
 } from "react-icons/fa";
 import "./PatientConsultationRoom.css";
 
@@ -60,6 +61,70 @@ function PatientConsultationRoom() {
 
   const data = consultationsData[id] || consultationsData["MC-CON-101"];
   const timerIdRef = useRef(null);
+
+  // Chat States & Handlers
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [messages, setMessages] = useState([]);
+  const chatMessagesEndRef = useRef(null);
+
+  useEffect(() => {
+    if (data) {
+      setMessages([
+        {
+          id: 1,
+          sender: "doctor",
+          senderName: data.doctorName,
+          text: `Hello ${data.patientName || "Patient"}, welcome to your online consultation. How are you feeling today?`,
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+    }
+  }, [data?.id, data?.doctorName, data?.patientName]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isChatOpen]);
+
+  const handleSendMessage = (e) => {
+    if (e) e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    const currentTimeStr = new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    const userMsg = {
+      id: Date.now(),
+      sender: "patient",
+      senderName: "You",
+      text: newMessage.trim(),
+      time: currentTimeStr,
+    };
+
+    setMessages((prev) => [...prev, userMsg]);
+    setNewMessage("");
+
+    // Simulated doctor auto-response for realistic interaction
+    setTimeout(() => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now() + 1,
+          sender: "doctor",
+          senderName: data.doctorName,
+          text: "Thank you for the message. I have noted that down in your medical record.",
+          time: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+        },
+      ]);
+    }, 1200);
+  };
 
   // 1. Waiting state transitions
   useEffect(() => {
@@ -211,6 +276,70 @@ function PatientConsultationRoom() {
                 </>
               )}
             </div>
+
+            {/* In-Call Interactive Messaging Chat Modal / Panel */}
+            {isChatOpen && (
+              <div className="ocr-chat-panel">
+                <div className="ocr-chat-header">
+                  <div className="ocr-chat-header-info">
+                    <FaRegComments className="ocr-chat-header-icon" />
+                    <div>
+                      <h4 className="ocr-chat-title">Consultation Chat</h4>
+                      <span className="ocr-chat-status">
+                        <span className="ocr-chat-status-dot" /> Connected with {data.doctorName}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="ocr-chat-close-btn"
+                    onClick={() => setIsChatOpen(false)}
+                    title="Close Chat"
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+
+                <div className="ocr-chat-body">
+                  <div className="ocr-chat-notice">
+                    🔒 End-to-end encrypted telehealth messaging
+                  </div>
+
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`ocr-chat-bubble-wrap ${
+                        msg.sender === "patient" ? "ocr-chat-patient" : "ocr-chat-doctor"
+                      }`}
+                    >
+                      <div className="ocr-chat-sender-name">{msg.senderName}</div>
+                      <div className="ocr-chat-bubble">
+                        <p className="ocr-chat-text">{msg.text}</p>
+                        <span className="ocr-chat-time">{msg.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={chatMessagesEndRef} />
+                </div>
+
+                <form className="ocr-chat-footer" onSubmit={handleSendMessage}>
+                  <input
+                    type="text"
+                    className="ocr-chat-input"
+                    placeholder="Type your message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    className="ocr-chat-send-btn"
+                    disabled={!newMessage.trim()}
+                    title="Send Message"
+                  >
+                    <FaPaperPlane />
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
 
           {/* Call Room Action Controls */}
@@ -231,8 +360,15 @@ function PatientConsultationRoom() {
               {isVideoOff ? <FaVideoSlash /> : <FaVideo />}
             </button>
 
-            <button className="ocr-control-btn ocr-btn-chat" title="Simulated Room Details">
+            <button
+              className={`ocr-control-btn ocr-btn-chat ${isChatOpen ? "active" : ""}`}
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              title={isChatOpen ? "Close Consultation Chat" : "Open Consultation Chat"}
+            >
               <FaRegComments />
+              {!isChatOpen && messages.length > 1 && (
+                <span className="ocr-chat-unread-dot" title="New message" />
+              )}
             </button>
 
             <button

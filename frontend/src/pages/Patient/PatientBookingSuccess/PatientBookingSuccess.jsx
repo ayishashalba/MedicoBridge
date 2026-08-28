@@ -16,12 +16,143 @@ import {
   FaFileAlt,
   FaStar,
   FaStethoscope,
+  FaFilePdf,
+  FaFileImage,
+  FaEye,
+  FaDownload,
+  FaSearchPlus,
+  FaSearchMinus,
+  FaTimes,
 } from "react-icons/fa";
 import "./PatientBookingSuccess.css";
+
+/* ─── Report Preview Modal ────────────────────────────────────────── */
+function ReportPreviewModal({ report, onClose }) {
+  const [zoom, setZoom] = React.useState(1);
+
+  if (!report) return null;
+
+  const isPdf = report.type === "pdf" || (report.name && report.name.toLowerCase().endsWith(".pdf"));
+
+  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 2.5));
+  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
+  const handleResetZoom = () => setZoom(1);
+
+  return (
+    <div className="rpm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rpm-file-title">
+      <div className="rpm-modal-card">
+        {/* Modal Header */}
+        <div className="rpm-modal-header">
+          <div className="rpm-header-title">
+            <div className={`rpm-type-icon rpm-type-icon--${isPdf ? "pdf" : "image"}`}>
+              {isPdf ? <FaFilePdf /> : <FaFileImage />}
+            </div>
+            <div className="rpm-header-info">
+              <h3 id="rpm-file-title" className="rpm-file-name" title={report.name}>{report.name}</h3>
+              <p className="rpm-file-meta">
+                <span className={`rpm-badge rpm-badge--${isPdf ? "pdf" : "image"}`}>
+                  {report.fileTypeBadge || (isPdf ? "PDF Document" : "Medical Image")}
+                </span>
+                <span className="rpm-size">{report.size}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="rpm-header-actions">
+            {!isPdf && (
+              <div className="rpm-zoom-controls">
+                <button type="button" className="rpm-btn-icon" onClick={handleZoomOut} title="Zoom Out (-)">
+                  <FaSearchMinus />
+                </button>
+                <span className="rpm-zoom-text">{Math.round(zoom * 100)}%</span>
+                <button type="button" className="rpm-btn-icon" onClick={handleZoomIn} title="Zoom In (+)">
+                  <FaSearchPlus />
+                </button>
+                <button type="button" className="rpm-btn-text" onClick={handleResetZoom} title="Fit to Screen">
+                  Fit
+                </button>
+              </div>
+            )}
+
+            {report.previewUrl && (
+              <a
+                href={report.previewUrl}
+                download={report.name}
+                className="rpm-download-btn"
+                title="Download Report File"
+              >
+                <FaDownload />
+                <span>Download</span>
+              </a>
+            )}
+
+            <button type="button" className="rpm-close-btn" onClick={onClose} aria-label="Close Preview" title="Close Preview">
+              <FaTimes />
+            </button>
+          </div>
+        </div>
+
+        {/* Modal Content Viewer */}
+        <div className="rpm-modal-body">
+          {isPdf ? (
+            <div className="rpm-pdf-container">
+              <object
+                data={report.previewUrl}
+                type="application/pdf"
+                width="100%"
+                height="540px"
+                className="rpm-pdf-object"
+              >
+                <iframe
+                  src={report.previewUrl}
+                  title={report.name}
+                  width="100%"
+                  height="540px"
+                  style={{ border: "none" }}
+                />
+                <div className="rpm-pdf-fallback">
+                  <p>Your browser cannot embed the PDF directly.</p>
+                  <a href={report.previewUrl} download={report.name} className="rpm-download-fallback">
+                    <FaDownload /> Download {report.name}
+                  </a>
+                </div>
+              </object>
+            </div>
+          ) : (
+            <div className="rpm-image-container">
+              <div className="rpm-image-viewport">
+                <img
+                  src={report.previewUrl}
+                  alt={report.name}
+                  className="rpm-image-preview"
+                  style={{
+                    transform: `scale(${zoom})`,
+                    transition: "transform 0.2s ease-out",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="rpm-modal-footer">
+          <span className="rpm-security-note">
+            🔒 Confidential Medical Document — Authorized Access Only
+          </span>
+          <button type="button" className="rpm-btn-secondary" onClick={onClose}>
+            Close Preview
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function PatientBookingSuccess() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [previewingReport, setPreviewingReport] = React.useState(null);
 
   // Robust fallback for direct access
   const { booking, doctor } = location.state || {
@@ -148,12 +279,34 @@ function PatientBookingSuccess() {
               </dd>
             </div>
             {booking.uploadedFiles && booking.uploadedFiles.length > 0 && (
-              <div className="bk-confirm-row">
+              <div className="bk-confirm-row bk-confirm-row--reports">
                 <dt>
                   <FaFileAlt className="bk-confirm-icon" /> Attached Reports
                 </dt>
-                <dd>
-                  {booking.uploadedFiles.map((f) => f.name).join(", ")}
+                <dd className="bk-reports-chips-wrap">
+                  {booking.uploadedFiles.map((file, idx) => (
+                    <div key={file.id || idx} className="bk-report-mini-chip">
+                      <span className="bk-chip-name">{file.name}</span>
+                      <button
+                        type="button"
+                        className="bk-chip-act-btn"
+                        onClick={() => setPreviewingReport(file)}
+                        title="Preview Report"
+                      >
+                        <FaEye /> Preview
+                      </button>
+                      {file.previewUrl && (
+                        <a
+                          href={file.previewUrl}
+                          download={file.name}
+                          className="bk-chip-act-btn"
+                          title="Download Report"
+                        >
+                          <FaDownload />
+                        </a>
+                      )}
+                    </div>
+                  ))}
                 </dd>
               </div>
             )}
@@ -211,6 +364,13 @@ function PatientBookingSuccess() {
           <FaPrint /> Print Details
         </button>
       </div>
+      {/* Report Preview Modal */}
+      {previewingReport && (
+        <ReportPreviewModal
+          report={previewingReport}
+          onClose={() => setPreviewingReport(null)}
+        />
+      )}
     </div>
   );
 }

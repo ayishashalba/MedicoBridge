@@ -26,6 +26,7 @@ import {
   FaShareAlt,
   FaHeartbeat,
 } from "react-icons/fa";
+import { isDoctorSaved, toggleSaveDoctorInStorage } from "../../../utils/savedDoctorsStorage";
 import "./PatientDoctorProfile.css";
 
 /* ─── Full Dummy Doctor Dataset ──────────────────────────────────── */
@@ -273,7 +274,16 @@ function PatientDoctorProfile() {
   const [selectedDay, setSelectedDay] = useState(doctor.availableDays[0]);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookingMsg, setBookingMsg] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(() => isDoctorSaved(doctor.id));
+
+  React.useEffect(() => {
+    setIsSaved(isDoctorSaved(doctor.id));
+    const handleUpdate = () => {
+      setIsSaved(isDoctorSaved(doctor.id));
+    };
+    window.addEventListener("savedDoctorsUpdated", handleUpdate);
+    return () => window.removeEventListener("savedDoctorsUpdated", handleUpdate);
+  }, [doctor.id]);
 
   const isHospital = doctor.type === "hospital";
 
@@ -287,8 +297,9 @@ function PatientDoctorProfile() {
   };
 
   const handleSaveDoctor = () => {
-    setIsSaved(!isSaved);
-    setBookingMsg(isSaved ? "Doctor removed from saved list" : "Doctor saved to your profile!");
+    const nowSaved = toggleSaveDoctorInStorage(doctor);
+    setIsSaved(nowSaved);
+    setBookingMsg(nowSaved ? "Doctor saved to your profile!" : "Doctor removed from saved list");
     setTimeout(() => setBookingMsg(""), 3000);
   };
 
@@ -454,17 +465,6 @@ function PatientDoctorProfile() {
               >
                 <FaCalendarCheck />
                 Book Appointment
-              </button>
-              <button
-                className="dp-btn dp-btn--outline"
-                aria-label="Start online consultation (UI only)"
-                onClick={() => {
-                  setBookingMsg("Starting video consultation call room...");
-                  setTimeout(() => setBookingMsg(""), 3000);
-                }}
-              >
-                <FaVideo />
-                Start Consultation
               </button>
             </div>
 

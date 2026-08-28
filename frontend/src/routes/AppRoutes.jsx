@@ -99,6 +99,7 @@ import LabReportDetails from "../pages/Patient/PatientRecordDetails/LabReportDet
 import DocumentDetails from "../pages/Patient/PatientRecordDetails/DocumentDetails";
 import PatientAddresses from "../pages/Patient/PatientAddresses/PatientAddresses";
 import PatientChangePassword from "../pages/Patient/PatientChangePassword/PatientChangePassword";
+import PatientSavedDoctors from "../pages/Patient/PatientSavedDoctors/PatientSavedDoctors";
 
 // ── Pharmacy Dashboard Layout & Pages ─────────────────────────
 import PharmacyLayout from "../layouts/PharmacyLayout/PharmacyLayout";
@@ -151,6 +152,7 @@ function AppRoutes() {
         <Route path="dashboard" element={<PatientDashboardHome />} />
         <Route path="profile" element={<PatientProfile />} />
         <Route path="find-doctors" element={<PatientFindDoctors />} />
+        <Route path="saved-doctors" element={<PatientSavedDoctors />} />
         <Route path="doctor-profile/:id" element={<PatientDoctorProfile />} />
         <Route path="book-appointment/:id" element={<PatientBookAppointment />} />
         <Route path="booking-success" element={<PatientBookingSuccess />} />
