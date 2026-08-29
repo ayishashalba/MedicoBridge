@@ -102,19 +102,7 @@ export function generateDynamicAppointments(baseDate = new Date()) {
       complaint: "Post-Surgery Cardiac Review",
       symptoms: "Shortness of breath on exertion",
     },
-    {
-      id: 6,
-      patient: "Lakshmi Nair",
-      initials: "LN",
-      avatarColor: "#059669",
-      patientId: "PT-1060",
-      age: 46,
-      gender: "Female",
-      ...getOffsetDateTime(-5), // Started 5 mins ago -> "Ongoing" (Join Consultation Enabled)
-      type: "Online Consultation",
-      complaint: "Migraine Consultation",
-      symptoms: "Frequent severe headaches, dizziness",
-    },
+
   ];
 }
 
@@ -201,7 +189,7 @@ export function markConsultationJoined(id) {
       "doctor_joined_consultations",
       JSON.stringify(current)
     );
-  } catch (e) {}
+  } catch (e) { }
 }
 
 /* ─── Helper: Get Live Consultation Timing & Action Status ────── */
@@ -381,9 +369,8 @@ export function getTodayConsultationStatus(
       diffMinutes,
       diffSeconds,
       timeNotice,
-      reminderText: `Your consultation with ${appointment.patient} starts in ${diffMinutes} minute${
-        diffMinutes === 1 ? "" : "s"
-      }.`,
+      reminderText: `Your consultation with ${appointment.patient} starts in ${diffMinutes} minute${diffMinutes === 1 ? "" : "s"
+        }.`,
       message: `Consultation starts at ${appointment.time}. Join Consultation will unlock 2 minutes before scheduled time.`,
       scheduledTime: appointment.time,
       buttonText: "", // Locked
@@ -410,12 +397,10 @@ export function getTodayConsultationStatus(
     diffMinutes: minsLeft,
     diffSeconds,
     timeNotice: `Starts in ${diffSeconds}s`,
-    reminderText: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${
-      minsLeft === 1 ? "" : "s"
-    }! Join is now available.`,
-    message: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${
-      minsLeft === 1 ? "" : "s"
-    }. Join Consultation is now available.`,
+    reminderText: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${minsLeft === 1 ? "" : "s"
+      }! Join is now available.`,
+    message: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${minsLeft === 1 ? "" : "s"
+      }. Join Consultation is now available.`,
     scheduledTime: appointment.time,
     buttonText: "Join Consultation",
     apptDate,
@@ -848,7 +833,7 @@ export async function fetchPatientMedicalRecords(patientId) {
         return data.records;
       }
     }
-  } catch (e) {}
+  } catch (e) { }
 
   return patientMedicalRecordsDatabase[patientId] || null;
 }

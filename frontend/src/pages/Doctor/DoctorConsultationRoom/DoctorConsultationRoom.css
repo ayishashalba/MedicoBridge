@@ -1,200 +1,706 @@
+/* ==========================================================================
+   Doctor Consultation Room — Modern Video Call Layout & Styles
+   ========================================================================== */
+
 .consultation-room {
-    padding: 30px;
-    background: #f8fafc;
-    min-height: 100vh;
+  padding: 24px 32px;
+  background: #f8fafc;
+  min-height: 100vh;
+  font-family: inherit;
 }
 
-/* Back Button */
+/* ── Top Bar ────────────────────────────────────────────────────────────── */
+.cr-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
 
 .back-btn {
-    border: none;
-    background: #0ea5e9;
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 10px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 25px;
-    transition: .3s;
+  border: none;
+  background: #ffffff;
+  color: #0284c7;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
 }
 
 .back-btn:hover {
-    background: #0284c7;
+  background: #f0f9ff;
+  border-color: #bae6fd;
+  color: #0369a1;
+  transform: translateY(-1px);
 }
 
-/* Layout */
+.cr-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ffffff;
+  padding: 8px 16px;
+  border-radius: 30px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
 
+.cr-live-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: crPulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes crPulse {
+  to {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.cr-live-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.cr-header-divider {
+  color: #cbd5e1;
+  font-size: 12px;
+}
+
+.cr-header-id {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* ── Main Container ─────────────────────────────────────────────────────── */
 .consultation-container {
-    display: grid;
-    grid-template-columns: 1.2fr 1fr;
-    gap: 25px;
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 24px;
+  align-items: start;
 }
 
-/* Video */
-
+/* ── Video Section ──────────────────────────────────────────────────────── */
 .video-section {
-    background: #fff;
-    border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.video-box {
-    height: 420px;
-    border-radius: 14px;
-    background: #e2e8f0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: #475569;
+/* ── Video Viewport (Cinema Dark Theme) ─────────────────────────────────── */
+.dvr-video-viewport {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.patient-icon {
-    font-size: 80px;
-    color: #0ea5e9;
-    margin-bottom: 20px;
+/* Patient Stream */
+.dvr-patient-feed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
 }
 
-.video-box h3 {
-    color: #0f172a;
-    margin-bottom: 10px;
+.dvr-patient-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  filter: brightness(0.95) contrast(1.05);
+  transition: transform 0.4s ease;
 }
 
-.video-controls {
-    margin-top: 25px;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
+.dvr-video-overlay-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.65) 0%,
+    rgba(15, 23, 42, 0) 25%,
+    rgba(15, 23, 42, 0) 70%,
+    rgba(15, 23, 42, 0.75) 100%
+  );
+  pointer-events: none;
 }
 
-/* Buttons */
-
-.icon-btn,
-.end-btn {
-    border: none;
-    cursor: pointer;
-    border-radius: 12px;
-    transition: .3s;
+.dvr-live-scanline {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0) 50%,
+    rgba(0, 0, 0, 0.15) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.25;
 }
 
-.icon-btn {
-    width: 55px;
-    height: 55px;
-    background: #0ea5e9;
-    color: white;
-    font-size: 20px;
+/* Patient Fallback Avatar */
+.dvr-patient-fallback-avatar {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 48px;
+  font-weight: 700;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
 }
 
-.icon-btn:hover {
-    background: #0284c7;
+.dvr-avatar-icon {
+  font-size: 48px;
+  margin-bottom: 4px;
 }
 
-.end-btn {
-    background: #ef4444;
-    color: white;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.dvr-avatar-initials {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 1px;
 }
 
-.end-btn:hover {
-    background: #dc2626;
+/* ── Top Left Badge ─────────────────────────────────────────────────────── */
+.dvr-top-left-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 10;
 }
 
-/* Notes */
+.dvr-patient-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 6px 14px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
 
+.dvr-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.dvr-patient-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.dvr-patient-role {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Voice Equalizer Wave */
+.dvr-audio-activity {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dvr-wave-bar {
+  width: 3px;
+  background: #10b981;
+  border-radius: 2px;
+  animation: dvrWave 1.2s infinite ease-in-out alternate;
+}
+
+.bar-1 { height: 6px; animation-delay: 0.1s; }
+.bar-2 { height: 14px; animation-delay: 0.3s; }
+.bar-3 { height: 10px; animation-delay: 0.2s; }
+.bar-4 { height: 16px; animation-delay: 0.4s; }
+
+@keyframes dvrWave {
+  0% { height: 4px; opacity: 0.5; }
+  100% { height: 16px; opacity: 1; }
+}
+
+/* ── Top Right Badge ────────────────────────────────────────────────────── */
+.dvr-top-right-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+.dvr-call-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(220, 38, 38, 0.85);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+}
+
+.dvr-timer-dot {
+  font-size: 7px;
+  animation: timerBlink 1s infinite;
+}
+
+@keyframes timerBlink {
+  50% { opacity: 0.3; }
+}
+
+.dvr-quality-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(10px);
+  color: #38bdf8;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.dvr-wifi-icon {
+  font-size: 11px;
+}
+
+/* ── Bottom Left Info ───────────────────────────────────────────────────── */
+.dvr-bottom-left-info {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+}
+
+.dvr-security-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  color: #94a3b8;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dvr-patient-quick-meta {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  color: #cbd5e1;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Floating Doctor Camera Preview (PIP) ───────────────────────────────── */
+.dvr-doctor-pip {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 155px;
+  height: 115px;
+  border-radius: 14px;
+  background: #1e293b;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 20;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.dvr-doctor-pip:hover {
+  transform: scale(1.04);
+  border-color: #38bdf8;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.3);
+}
+
+.dvr-pip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #0f172a;
+}
+
+.dvr-doctor-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror camera view */
+}
+
+.dvr-doctor-mock-feed {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.dvr-doctor-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.dvr-pip-live-indicator {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(14, 165, 233, 0.85);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.dvr-doctor-off-screen {
+  width: 100%;
+  height: 100%;
+  background: #1e293b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  gap: 4px;
+}
+
+.dvr-doc-off-icon {
+  font-size: 26px;
+  color: #94a3b8;
+}
+
+.dvr-doc-off-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.dvr-hidden {
+  display: none;
+}
+
+.dvr-pip-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(0deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0) 100%);
+  padding: 6px 8px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.dvr-pip-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.dvr-pip-mic-status {
+  font-size: 9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dvr-pip-mic--active {
+  background: rgba(16, 185, 129, 0.9);
+  color: #ffffff;
+}
+
+.dvr-pip-mic--muted {
+  background: rgba(239, 68, 68, 0.95);
+  color: #ffffff;
+}
+
+/* ── Video Controls Bar ─────────────────────────────────────────────────── */
+.video-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.ctrl-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+  font-size: 17px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ctrl-btn-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.ctrl-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.ctrl-btn--active {
+  background: #ffffff;
+  color: #0284c7;
+}
+
+.ctrl-btn--muted,
+.ctrl-btn--video-off {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.ctrl-btn--muted:hover,
+.ctrl-btn--video-off:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ctrl-btn--highlight {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #2563eb;
+}
+
+/* End Call Button */
+.end-call-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 58px;
+  padding: 0 22px;
+  border-radius: 14px;
+  border: none;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+.end-call-btn:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.45);
+}
+
+.end-call-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Notes Section (Preserved Functionality & Modernized Finish) ────────── */
 .notes-section {
-    background: #fff;
-    border-radius: 16px;
-    padding: 25px;
-    box-shadow: 0 5px 18px rgba(0, 0, 0, .08);
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
 }
 
 .notes-section h2 {
-    margin-bottom: 20px;
-    color: #0f172a;
+  margin: 0 0 18px 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 12px;
 }
 
 .notes-section label {
-    display: block;
-    margin-top: 18px;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #334155;
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
 }
 
 .notes-section textarea {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-    border-radius: 10px;
-    resize: none;
-    outline: none;
-    font-size: 15px;
-    font-family: inherit;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  resize: vertical;
+  outline: none;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
 .notes-section textarea:focus {
-    border-color: #0ea5e9;
+  border-color: #0284c7;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
 }
 
-/* Save */
-
+/* Save Button */
 .save-btn {
-    margin-top: 25px;
-    width: 100%;
-    border: none;
-    padding: 14px;
-    border-radius: 10px;
-    background: #16a34a;
-    color: white;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    transition: .3s;
+  margin-top: 24px;
+  width: 100%;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+  transition: all 0.2s ease;
 }
 
 .save-btn:hover {
-    background: #15803d;
+  background: linear-gradient(135deg, #15803d 0%, #166534 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.4);
 }
 
-/* Responsive */
-
-@media (max-width: 992px) {
-
-    .consultation-container {
-        grid-template-columns: 1fr;
-    }
-
-    .video-box {
-        height: 300px;
-    }
-
+.save-btn:active {
+  transform: translateY(0);
 }
 
-@media (max-width:768px) {
+/* ── Responsive Adaptations ─────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .consultation-container {
+    grid-template-columns: 1fr;
+  }
 
-    .consultation-room {
-        padding: 20px;
-    }
+  .dvr-video-viewport {
+    height: 400px;
+  }
+}
 
-    .video-controls {
-        flex-wrap: wrap;
-    }
+@media (max-width: 768px) {
+  .consultation-room {
+    padding: 16px;
+  }
 
-    .icon-btn,
-    .end-btn {
-        width: 100%;
-        justify-content: center;
-        height: 50px;
-    }
+  .dvr-video-viewport {
+    height: 320px;
+  }
 
+  .dvr-doctor-pip {
+    width: 120px;
+    height: 90px;
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .video-controls-bar {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .ctrl-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 15px;
+  }
+
+  .end-call-btn {
+    height: 48px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
 }

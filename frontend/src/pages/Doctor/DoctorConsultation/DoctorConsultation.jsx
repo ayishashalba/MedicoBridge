@@ -13,9 +13,11 @@ import {
   FaCircle,
   FaSpinner,
   FaCheckCircle,
+  FaTimesCircle,
   FaHashtag,
   FaSyncAlt,
   FaExclamationTriangle,
+  FaLock,
 } from "react-icons/fa";
 import "./DoctorConsultation.css";
 import {
@@ -99,13 +101,16 @@ function ConsultationCard({ item, timeStatus, onJoin, onDetails, onPrescription 
       {/* ── Action Buttons ──────────────────────── */}
       <div className="dc-card-actions">
         <button
-          className={`dc-btn dc-btn--details ${!canJoin && !timeStatus.isCompleted ? "dc-btn--full" : ""}`}
+          className={`dc-btn dc-btn--details ${
+            timeStatus.isCancelled ? "dc-btn--full" : ""
+          }`}
           onClick={() => onDetails(item.id)}
         >
           <FaEye />
           View Details
         </button>
 
+        {/* 2 minutes before scheduled time or ongoing: Join Consultation Enabled */}
         {canJoin && (
           <button
             className={`dc-btn dc-btn--join ${isReady ? "dc-btn--ready-pulse" : ""}`}
@@ -116,6 +121,19 @@ function ConsultationCard({ item, timeStatus, onJoin, onDetails, onPrescription 
           </button>
         )}
 
+        {/* Before 2-minute pre-join window: Locked with scheduled start time */}
+        {timeStatus.isUpcoming && !canJoin && (
+          <button
+            className="dc-btn dc-btn--locked"
+            disabled
+            title={`Join Consultation unlocks 2 minutes before scheduled start time (${item.time})`}
+          >
+            <FaLock />
+            Starts at {item.time}
+          </button>
+        )}
+
+        {/* Completed consultation: View Prescription only, Join button removed */}
         {timeStatus.isCompleted && (
           <button
             className="dc-btn dc-btn--rx"

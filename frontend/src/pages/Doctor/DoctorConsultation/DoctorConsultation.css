@@ -466,6 +466,20 @@
     box-shadow: 0 5px 16px rgba(0,107,214,0.35);
 }
 
+.dc-btn--locked {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #cbd5e1;
+    cursor: not-allowed;
+    flex: 1;
+    justify-content: center;
+    opacity: 0.85;
+}
+.dc-btn--locked:hover {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
 /* ── Spin animation ──────────────────────────────────────────── */
 .dc-spin {
     animation: dc-spin 1.2s linear infinite;

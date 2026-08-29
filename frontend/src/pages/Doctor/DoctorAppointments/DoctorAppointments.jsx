@@ -19,7 +19,6 @@ import {
   FaExclamationCircle,
   FaLock,
   FaArrowRight,
-  FaPhoneAlt,
 } from "react-icons/fa";
 import "./DoctorAppointments.css";
 import {
@@ -35,7 +34,6 @@ const STATUS_GROUPS = ["Today", "Upcoming", "Completed", "Cancelled"];
 /* ─── Top Reminder Banner Component (Next Approaching Consultation Only) ─── */
 function ApproachingConsultationReminderBanner({
   onlineAppointmentsWithStatus,
-  onStartConsultation,
   onViewDetails,
 }) {
   // Find the single next approaching consultation or currently active one
@@ -76,11 +74,7 @@ function ApproachingConsultationReminderBanner({
     >
       <div className="reminder-banner-main">
         <div className="reminder-banner-icon-wrapper">
-          {isUnlocked ? (
-            <FaPhoneAlt className="banner-icon-pulse" />
-          ) : (
-            <FaBell className="banner-icon-ring" />
-          )}
+          <FaBell className="banner-icon-ring" />
         </div>
 
         <div className="reminder-banner-content">
@@ -95,9 +89,9 @@ function ApproachingConsultationReminderBanner({
               <span className="live-dot" />
               {isUnlocked
                 ? timeStatus.isOngoing
-                  ? "Ongoing Consultation"
-                  : "Ready to Join"
-                : "Upcoming Reminder"}
+                  ? "Ongoing Online Consultation"
+                  : "Online Consultation Ready"
+                : "Upcoming Consultation Reminder"}
             </span>
             <span className="reminder-time-tag">
               <FaClock /> Scheduled at {item.time}
@@ -115,21 +109,8 @@ function ApproachingConsultationReminderBanner({
         </div>
 
         <div className="reminder-banner-actions">
-          {isUnlocked ? (
-            <button
-              className="banner-action-btn banner-action-btn--primary banner-action-btn--highlighted"
-              onClick={() => onStartConsultation(item.id)}
-            >
-              <FaPhoneAlt /> Join Consultation
-            </button>
-          ) : (
-            <div className="banner-locked-notice">
-              <FaLock /> Join unlocks at {getTwoMinutesBefore(item.time)}
-            </div>
-          )}
-
           <button
-            className="banner-action-btn banner-action-btn--secondary"
+            className="banner-action-btn banner-action-btn--primary"
             onClick={() => onViewDetails(item.id)}
           >
             <FaEye /> View Details
@@ -140,24 +121,6 @@ function ApproachingConsultationReminderBanner({
   );
 }
 
-// Helper to format "9:58 AM" from "10:00 AM"
-function getTwoMinutesBefore(timeStr) {
-  const match = timeStr?.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return timeStr;
-  let h = parseInt(match[1], 10);
-  let m = parseInt(match[2], 10);
-  const ampm = match[3].toUpperCase();
-
-  m -= 2;
-  if (m < 0) {
-    m += 60;
-    h -= 1;
-    if (h === 0) h = 12;
-  }
-  const mm = String(m).padStart(2, "0");
-  return `${h}:${mm} ${ampm}`;
-}
-
 /* ─── Main Doctor Appointments Component ────────────────────────── */
 function DoctorAppointments() {
   const navigate = useNavigate();
@@ -166,7 +129,7 @@ function DoctorAppointments() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [joinedMap, setJoinedMap] = useState(getJoinedConsultations());
 
-  // Automatically update every 2 seconds to keep live countdowns and reminder statuses fresh
+  // Automatically update every 2 seconds to keep live countdowns and statuses fresh
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -253,10 +216,6 @@ function DoctorAppointments() {
     return totals;
   }, [appointmentsWithStatus]);
 
-  const handleStartConsultation = (id) => {
-    navigate(`/doctor/consultation-room/${id}`);
-  };
-
   const handleViewDetails = (id) => {
     navigate(`/doctor/appointments/${id}`);
   };
@@ -269,14 +228,13 @@ function DoctorAppointments() {
           <h2>
             <FaCalendarCheck /> Appointments
           </h2>
-          <p>View, search, and manage your clinical consultation schedule.</p>
+          <p>View, search, and manage your clinical consultation schedule and patient records.</p>
         </div>
       </div>
 
       {/* ── Single Approaching Consultation Reminder Banner ── */}
       <ApproachingConsultationReminderBanner
         onlineAppointmentsWithStatus={onlineAppointmentsWithStatus}
-        onStartConsultation={handleStartConsultation}
         onViewDetails={handleViewDetails}
       />
 
@@ -345,13 +303,10 @@ function DoctorAppointments() {
                 <div className="appointments-grid-container">
                   {list.map((item) => {
                     const timeStatus = item.timeStatus;
-                    const canJoin = timeStatus.canJoin;
 
                     return (
                       <div
-                        className={`appointment-card-v2 ${
-                          canJoin ? "appointment-card-v2--ready" : ""
-                        }`}
+                        className="appointment-card-v2"
                         key={item.id}
                       >
                         <div className="card-top-header">
@@ -372,7 +327,7 @@ function DoctorAppointments() {
 
                           <div className="card-top-badges">
                             <span className={`status-pill ${timeStatus.badgeClass}`}>
-                              {canJoin && <span className="live-dot" />}
+                              {(timeStatus.isReady || timeStatus.isOngoing) && <span className="live-dot" />}
                               {timeStatus.isCompleted && <FaCheckCircle />}
                               {timeStatus.isCancelled && <FaTimesCircle />}
                               {timeStatus.badgeLabel}
@@ -385,14 +340,14 @@ function DoctorAppointments() {
                           <div className="card-reminder-alert-bar card-reminder-alert-bar--ready">
                             <span className="live-dot" />
                             <span>
-                              <strong>Consultation is Ongoing</strong> ({item.time})
+                              <strong>Ongoing Online Consultation</strong> ({item.time})
                             </span>
                           </div>
                         ) : timeStatus.isReady ? (
                           <div className="card-reminder-alert-bar card-reminder-alert-bar--ready">
                             <span className="live-dot" />
                             <span>
-                              <strong>Join Consultation Available</strong> (Starts at {item.time})
+                              <strong>Online Consultation Starting Soon</strong> (Starts at {item.time})
                             </span>
                           </div>
                         ) : timeStatus.isUpcoming ? (
@@ -463,49 +418,14 @@ function DoctorAppointments() {
                                 <FaPrescriptionBottleAlt /> View Prescription
                               </button>
                             </>
-                          ) : timeStatus.isCancelled ? (
-                            /* Cancelled appointment: Join button removed */
+                          ) : (
+                            /* All active / upcoming / cancelled appointments focus on View Details */
                             <button
                               className="action-btn action-btn--view action-btn--full"
                               onClick={() => handleViewDetails(item.id)}
                             >
                               <FaEye /> View Details
                             </button>
-                          ) : canJoin ? (
-                            /* 2 mins before or ongoing: Join enabled */
-                            <>
-                              <button
-                                className="action-btn action-btn--view"
-                                onClick={() => handleViewDetails(item.id)}
-                              >
-                                <FaEye /> View Details
-                              </button>
-                              <button
-                                className="action-btn action-btn--join action-btn--ready-pulse"
-                                onClick={() => handleStartConsultation(item.id)}
-                              >
-                                <FaPhoneAlt /> Join Consultation
-                              </button>
-                            </>
-                          ) : (
-                            /* Future appointment (> 2 mins): Join locked/disabled */
-                            <>
-                              <button
-                                className="action-btn action-btn--view"
-                                onClick={() => handleViewDetails(item.id)}
-                              >
-                                <FaEye /> View Details
-                              </button>
-                              {item.type.includes("Online") ? (
-                                <button
-                                  className="action-btn action-btn--join action-btn--disabled"
-                                  disabled
-                                  title={`Join Consultation unlocks at ${getTwoMinutesBefore(item.time)} (2 mins before scheduled time)`}
-                                >
-                                  <FaLock /> Starts at {item.time}
-                                </button>
-                              ) : null}
-                            </>
                           )}
                         </div>
                       </div>
