@@ -514,3 +514,486 @@
     .mr-card-actions { flex-direction: column; }
     .mr-btn--dl { justify-content: center; }
 }
+
+/* ================================================================
+   MEDICAL RECORD DETAILS MODAL  (mrd-*)
+   ================================================================ */
+
+/* Overlay */
+.mrd-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 30, 40, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 1rem;
+    animation: mrd-fade-in 0.2s ease;
+}
+
+@keyframes mrd-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Modal container */
+.mrd-modal {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    max-width: 660px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 72px rgba(10, 30, 40, 0.22), 0 4px 16px rgba(10, 30, 40, 0.12);
+    border: 1px solid var(--border-color);
+    animation: mrd-slide-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+}
+
+@keyframes mrd-slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ── Header ───────────────────────────────────────────────────── */
+.mrd-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-accent) 100%);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+.mrd-header-left {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.mrd-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.88rem; font-weight: 800; color: #fff;
+    letter-spacing: 0.5px; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
+.mrd-header-id {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.15rem;
+}
+
+.mrd-id-icon { font-size: 0.6rem; opacity: 0.75; }
+
+.mrd-header-patient {
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+    line-height: 1.2;
+}
+
+.mrd-header-sub {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+    flex-wrap: wrap;
+}
+.mrd-header-sub svg { color: var(--primary-color); font-size: 0.72rem; flex-shrink: 0; }
+.mrd-dot { color: var(--text-muted); }
+
+.mrd-header-right {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-shrink: 0;
+}
+
+.mrd-status-lg {
+    font-size: 0.8rem !important;
+    padding: 0.35rem 0.85rem !important;
+}
+
+.mrd-close-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.95rem;
+    width: 32px; height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+.mrd-close-btn:hover { color: #dc2626; border-color: #dc2626; background: #fef2f2; }
+
+/* ── Body ─────────────────────────────────────────────────────── */
+.mrd-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Section ──────────────────────────────────────────────────── */
+.mrd-section {
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.mrd-section:last-child { border-bottom: none; }
+
+.mrd-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 0.85rem;
+}
+.mrd-section-icon { color: var(--primary-color); font-size: 0.75rem; flex-shrink: 0; }
+
+/* ── Info Grid ────────────────────────────────────────────────── */
+.mrd-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.7rem;
+}
+
+.mrd-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.mrd-info-item--full {
+    grid-column: 1 / -1;
+}
+
+.mrd-info-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.mrd-info-val {
+    font-size: 0.87rem;
+    color: var(--text-primary);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.mrd-info-val--id {
+    color: var(--primary-color);
+    font-family: monospace;
+    font-size: 0.83rem;
+}
+
+.mrd-inline-icon { color: var(--primary-color); font-size: 0.72rem; }
+
+.mrd-diagnosis-chip {
+    display: inline-block;
+    background: var(--bg-accent);
+    color: var(--primary-color);
+    border: 1px solid rgba(11, 143, 106, 0.2);
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.83rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* ── Symptoms Tags ────────────────────────────────────────────── */
+.mrd-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.mrd-tag {
+    display: inline-flex;
+    align-items: center;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    border-radius: var(--radius-full);
+    padding: 0.25rem 0.72rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+/* ── Consultation Notes ───────────────────────────────────────── */
+.mrd-notes-text {
+    font-size: 0.87rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+    padding: 0.85rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+/* ── Prescriptions ────────────────────────────────────────────── */
+.mrd-med-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.mrd-med-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.mrd-med-bullet {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    margin-top: 5px;
+    flex-shrink: 0;
+}
+
+.mrd-med-info { flex: 1; min-width: 0; }
+
+.mrd-med-name {
+    font-size: 0.87rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+}
+
+.mrd-med-dosage {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    background: var(--bg-accent);
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-sm);
+}
+
+.mrd-med-meta {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+}
+
+/* ── Lab Reports Table ────────────────────────────────────────── */
+.mrd-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.mrd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+}
+
+.mrd-table thead th {
+    background: var(--bg-secondary);
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.65rem 0.9rem;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.mrd-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+.mrd-table tbody tr:last-child { border-bottom: none; }
+.mrd-table tbody tr:hover { background: var(--bg-secondary); }
+
+.mrd-table tbody td {
+    padding: 0.65rem 0.9rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+
+.mrd-table-muted { color: var(--text-muted) !important; font-size: 0.78rem !important; }
+
+/* Flag badges */
+.mrd-flag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+}
+.mrd-flag--normal  { background: #f0fdf4; color: #16a34a; }
+.mrd-flag--high    { background: #fef2f2; color: #dc2626; }
+.mrd-flag--low     { background: #eff6ff; color: #1d4ed8; }
+
+/* ── Other Documents ──────────────────────────────────────────── */
+.mrd-doc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mrd-doc-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.9rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
+}
+.mrd-doc-row:hover { border-color: var(--primary-color); background: var(--bg-accent); }
+
+.mrd-doc-icon {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-accent);
+    border: 1px solid rgba(11, 143, 106, 0.15);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary-color);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.mrd-doc-info { flex: 1; min-width: 0; }
+
+.mrd-doc-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mrd-doc-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 0.1rem;
+}
+
+.mrd-doc-dl-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.35rem 0.55rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+.mrd-doc-dl-btn:hover { background: var(--primary-color); border-color: var(--primary-color); color: #fff; }
+
+/* ── Status Block ─────────────────────────────────────────────── */
+.mrd-section--status { background: var(--bg-secondary); }
+
+.mrd-status-block {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.mrd-status-note {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.mrd-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    flex-shrink: 0;
+}
+
+.mrd-close-footer-btn {
+    padding: 0.55rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.mrd-close-footer-btn:hover { background: var(--bg-accent); border-color: var(--primary-color); color: var(--primary-color); }
+
+.mrd-dl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-color);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 3px 10px rgba(11, 143, 106, 0.3);
+}
+.mrd-dl-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 16px rgba(11, 143, 106, 0.4);
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media screen and (max-width: 640px) {
+    .mrd-modal { max-height: 95vh; border-radius: var(--radius-md); }
+    .mrd-header { flex-direction: column; gap: 0.75rem; }
+    .mrd-header-right { flex-direction: row-reverse; width: 100%; justify-content: space-between; }
+    .mrd-info-grid { grid-template-columns: 1fr; }
+    .mrd-section { padding: 0.9rem 1.1rem; }
+}
+

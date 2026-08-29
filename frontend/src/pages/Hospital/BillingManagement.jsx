@@ -122,6 +122,7 @@ const initialInvoices = [
     dueDate: "Aug 23, 2026",
     paymentMethod: "Net Banking (SBI)",
     status: "Partially Paid",
+    paidAmount: 20000,
     items: [
       { description: "Private Deluxe Cabin Stay (4 Days)", service: "Hospital Treatment", quantity: 4, unitPrice: 6500, amount: 26000 },
       { description: "Cardiac Wellness & Dietary Plan", service: "Other Hospital Services", quantity: 1, unitPrice: 4500, amount: 4500 },
@@ -269,7 +270,7 @@ function BillingManagement() {
     });
   }, [invoices, search, statusFilter, serviceFilter]);
 
-  // Handler: Mark as Paid
+  // Handler: Mark as Paid (handles both Pending and Partially Paid)
   const handleMarkAsPaid = (invId) => {
     setInvoices((prev) =>
       prev.map((inv) =>
@@ -277,6 +278,7 @@ function BillingManagement() {
           ? {
               ...inv,
               status: "Paid",
+              paidAmount: getInvoiceTotal(inv), // full amount is now paid
               paymentMethod: inv.paymentMethod.includes("Pending") ? "Direct Counter Settlement" : inv.paymentMethod,
             }
           : inv
@@ -287,6 +289,7 @@ function BillingManagement() {
       setViewInvoice((prev) => ({
         ...prev,
         status: "Paid",
+        paidAmount: getInvoiceTotal(prev),
         paymentMethod: prev.paymentMethod.includes("Pending") ? "Direct Counter Settlement" : prev.paymentMethod,
       }));
     }
@@ -826,6 +829,8 @@ function BillingManagement() {
                     This is a computer-generated official hospital billing invoice from MedicoBridge Hospital Portal.
                     {viewInvoice.status === "Paid"
                       ? " Payment has been settled in full. Thank you."
+                      : viewInvoice.status === "Partially Paid"
+                      ? " A partial payment has been received. The remaining balance must be cleared before the due date."
                       : " Payment is pending clearance. Please settle before the scheduled due date."}
                   </p>
                 </div>
@@ -854,6 +859,55 @@ function BillingManagement() {
                 </div>
               </div>
 
+              {/* ── Partial Payment Breakdown Panel ── */}
+              {viewInvoice.status === "Partially Paid" && (() => {
+                const totalAmt = getInvoiceTotal(viewInvoice);
+                const paidAmt = viewInvoice.paidAmount || 0;
+                const balanceDue = Math.max(0, totalAmt - paidAmt);
+                return (
+                  <div className="partial-pay-panel">
+                    <div className="partial-pay-header">
+                      <FaExclamationCircle className="partial-pay-icon" />
+                      <span>Partial Payment — Balance Outstanding</span>
+                    </div>
+                    <div className="partial-pay-grid">
+                      <div className="partial-pay-item">
+                        <span className="pp-label">Total Amount</span>
+                        <strong className="pp-val pp-total">₹{totalAmt.toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="partial-pay-item">
+                        <span className="pp-label">Paid Amount</span>
+                        <strong className="pp-val pp-paid">₹{paidAmt.toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="partial-pay-item">
+                        <span className="pp-label">Balance Due</span>
+                        <strong className="pp-val pp-balance">₹{balanceDue.toLocaleString("en-IN")}</strong>
+                      </div>
+                      <div className="partial-pay-item">
+                        <span className="pp-label">Due Date</span>
+                        <strong className="pp-val pp-due">{viewInvoice.dueDate}</strong>
+                      </div>
+                    </div>
+                    <div className="partial-pay-status-row">
+                      <span className="pp-status-label">Payment Status:</span>
+                      <span className="hosp-bill-status-pill bill-status--partial">Partially Paid</span>
+                    </div>
+                    {/* Progress bar: paid vs total */}
+                    <div className="pp-progress-wrap">
+                      <div className="pp-progress-track">
+                        <div
+                          className="pp-progress-fill"
+                          style={{ width: `${Math.min(100, (paidAmt / totalAmt) * 100).toFixed(1)}%` }}
+                        />
+                      </div>
+                      <span className="pp-progress-label">
+                        {Math.round((paidAmt / totalAmt) * 100)}% paid
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Invoice Footer / Signatures */}
               <div className="invoice-footer-sign">
                 <div>
@@ -872,11 +926,15 @@ function BillingManagement() {
               {viewInvoice.status !== "Paid" && viewInvoice.status !== "Cancelled" && (
                 <button
                   type="button"
-                  className="hosp-btn-submit"
+                  className={viewInvoice.status === "Partially Paid" ? "hosp-btn-submit btn-pay-balance" : "hosp-btn-submit"}
                   onClick={() => handleMarkAsPaid(viewInvoice.id)}
                 >
                   <FaCheck />
-                  <span>Mark as Paid</span>
+                  <span>
+                    {viewInvoice.status === "Partially Paid"
+                      ? `Pay Remaining Balance — ₹${Math.max(0, getInvoiceTotal(viewInvoice) - (viewInvoice.paidAmount || 0)).toLocaleString("en-IN")}`
+                      : "Mark as Paid"}
+                  </span>
                 </button>
               )}
               <button

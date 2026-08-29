@@ -353,3 +353,289 @@
   border-radius: 6px;
   cursor: pointer;
 }
+
+/* ─── Department Management Modal ─────────────────────── */
+.hosp-dept-manage-modal {
+  background: #fff;
+  width: 580px;
+  max-width: 94vw;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+}
+
+.hdmm-header {
+  padding: 1.1rem 1.5rem;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.hdmm-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.hdmm-dept-id {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.hdmm-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hdmm-title svg {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hdmm-close-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.hdmm-close-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.hdmm-body {
+  padding: 1.35rem 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  flex: 1;
+}
+
+/* Status banner */
+.hdmm-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  gap: 0.75rem;
+}
+
+.hdmm-status-active {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.hdmm-status-inactive {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.hdmm-status-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hdmm-toggle-icon {
+  font-size: 1.6rem;
+}
+
+.hdmm-status-active .hdmm-toggle-icon {
+  color: #16a34a;
+}
+
+.hdmm-status-inactive .hdmm-toggle-icon {
+  color: #ea580c;
+}
+
+.hdmm-status-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  margin-bottom: 0.1rem;
+}
+
+.hdmm-status-value {
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.hdmm-status-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.hdmm-status-btn-on {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.hdmm-status-btn-on:hover {
+  background: #dc2626;
+  color: #fff;
+}
+
+.hdmm-status-btn-off {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.hdmm-status-btn-off:hover {
+  background: #16a34a;
+  color: #fff;
+}
+
+/* Patient count chip */
+.hdmm-patient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.82rem;
+  color: #1e40af;
+}
+
+.hdmm-patient-icon {
+  color: #3b82f6;
+  font-size: 0.95rem;
+}
+
+.hdmm-patient-chip strong {
+  font-size: 1rem;
+  margin-left: auto;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 5px;
+  padding: 0.1rem 0.55rem;
+}
+
+/* Section titles */
+.hdmm-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #4f46e5;
+  border-bottom: 1px solid #e0e7ff;
+  padding-bottom: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+/* 2-column grid for form fields */
+.hdmm-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+/* Bed occupancy bar */
+.hdmm-bed-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.hdmm-bed-bar-track {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.hdmm-bed-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5, #818cf8);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.hdmm-bed-bar-label {
+  font-size: 0.73rem;
+  color: #64748b;
+  text-align: right;
+}
+
+/* Footer */
+.hdmm-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.hdmm-footer .hosp-dept-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hdmm-save-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.3rem;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.25s;
+  box-shadow: 0 3px 10px rgba(79, 70, 229, 0.3);
+}
+
+.hdmm-save-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+.hdmm-save-btn--saved {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 3px 10px rgba(22, 163, 74, 0.3);
+  pointer-events: none;
+}
+
