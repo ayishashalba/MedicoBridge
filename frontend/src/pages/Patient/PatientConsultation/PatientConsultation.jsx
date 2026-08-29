@@ -617,32 +617,39 @@ function PatientConsultation() {
     showToast("Consultation cancelled successfully.");
   };
 
-  // Join timing eligibility verification: Join becomes active 15m before and up to 30m after start time
+  // Join timing eligibility verification: Join becomes active 2m before and up to 30m after start time (Ongoing)
   const isCallJoinable = (consult) => {
-    if (consult.status !== "ready" && consult.status !== "confirmed") return false;
+    if (consult.status === "completed" || consult.status === "cancelled") return false;
     const apptTime = parseDateTime(consult.date, consult.time);
     const diffMs = apptTime - currentTime;
-    return diffMs <= 15 * 60 * 1000 && diffMs >= -30 * 60 * 1000;
+    return diffMs <= 2 * 60 * 1000 && diffMs >= -30 * 60 * 1000;
   };
 
   // Format dynamic remaining time for countdown UI display
   const renderCountdown = (consult) => {
-    if (consult.status === "completed" || consult.status === "pending") return null;
+    if (consult.status === "completed" || consult.status === "cancelled") return null;
 
     const apptTime = parseDateTime(consult.date, consult.time);
     const diffMs = apptTime - currentTime;
 
     if (diffMs <= 0) {
       if (diffMs >= -30 * 60 * 1000) {
-        return <span className="oc-countdown-tag oc-countdown-tag--active">🔴 Live Now</span>;
+        return <span className="oc-countdown-tag oc-countdown-tag--active">🔴 Ongoing</span>;
       }
-      return <span className="oc-countdown-tag oc-countdown-tag--passed">Passed</span>;
+      return <span className="oc-countdown-tag oc-countdown-tag--passed">Cancelled</span>;
     }
 
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 60) {
+    const diffMins = Math.ceil(diffMs / 60000);
+    if (diffMs <= 2 * 60 * 1000) {
       return (
         <span className="oc-countdown-tag oc-countdown-tag--near">
+          Starts in {diffMins} min{diffMins !== 1 ? "s" : ""} (Ready to Join)
+        </span>
+      );
+    }
+    if (diffMins < 60) {
+      return (
+        <span className="oc-countdown-tag">
           Starts in {diffMins} min{diffMins !== 1 ? "s" : ""}
         </span>
       );

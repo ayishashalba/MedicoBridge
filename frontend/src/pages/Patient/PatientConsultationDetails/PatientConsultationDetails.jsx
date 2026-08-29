@@ -112,15 +112,46 @@ function formatDate(dateStr) {
   });
 }
 
+function parseDateTime(dateStr, timeStr) {
+  try {
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const match = timeStr.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+    if (!match) return new Date(`${dateStr}T${timeStr}`);
+    let [_, hours, minutes, ampm] = match;
+    hours = parseInt(hours, 10);
+    minutes = parseInt(minutes, 10);
+    if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
+    if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
+    
+    return new Date(year, month - 1, day, hours, minutes, 0, 0);
+  } catch (e) {
+    return new Date();
+  }
+}
+
 function PatientConsultationDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 2000);
+    return () => clearInterval(timer);
+  }, []);
 
   const data = consultationsData[id] || consultationsData["MC-CON-101"]; // Fallback if not mapped
   const config = STATUS_CONFIG[data.status] || STATUS_CONFIG.pending;
-  const isJoinable = data.status === "ready" || data.status === "confirmed";
+
+  // Real-time Join calculation: unlocks 2 minutes before scheduled start time and stays active during consultation (30 mins)
+  const apptTime = parseDateTime(data.date, data.time);
+  const diffMs = apptTime - currentTime;
+  const isJoinable =
+    data.status !== "completed" &&
+    data.status !== "cancelled" &&
+    diffMs <= 2 * 60 * 1000 &&
+    diffMs >= -30 * 60 * 1000;
 
   // Check if we navigated here with ?join=true
   useEffect(() => {

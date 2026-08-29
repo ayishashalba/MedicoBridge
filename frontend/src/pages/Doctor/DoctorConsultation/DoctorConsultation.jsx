@@ -24,93 +24,21 @@ import {
   getJoinedConsultations,
 } from "../../../services/doctorAppointmentsData";
 
-/* ─── Static Consultations List ──────────────────────────────── */
-const initialConsultations = [
-  {
-    id: "1",
-    patient: "Rahul Nair",
-    initials: "RN",
-    avatarColor: "#0d9488",
-    patientId: "PT-1024",
-    appointmentId: "APT-2041",
-    date: "July 12, 2026",
-    time: "10:00 AM",
-    type: "Video",
-    status: "Today",
-    complaint: "Type 2 Diabetes Mellitus Follow-up",
-  },
-  {
-    id: "2",
-    patient: "Anjali Thomas",
-    initials: "AT",
-    avatarColor: "#7c3aed",
-    patientId: "PT-1031",
-    appointmentId: "APT-2042",
-    date: "July 15, 2026",
-    time: "02:30 PM",
-    type: "Video",
-    status: "Upcoming",
-    complaint: "Chronic Migraine Review",
-  },
-  {
-    id: "3",
-    patient: "Arun Kumar",
-    initials: "AK",
-    avatarColor: "#0284c7",
-    patientId: "PT-1018",
-    appointmentId: "APT-2043",
-    date: "July 10, 2026",
-    time: "11:15 AM",
-    type: "Video",
-    status: "Completed",
-    complaint: "Hypertension Check",
-  },
-  {
-    id: "4",
-    patient: "Meera Pillai",
-    initials: "MP",
-    avatarColor: "#d97706",
-    patientId: "PT-1045",
-    appointmentId: "APT-2044",
-    date: "July 18, 2026",
-    time: "09:00 AM",
-    type: "Video",
-    status: "Upcoming",
-    complaint: "Thyroid Follow-up",
-  },
-  {
-    id: "5",
-    patient: "Suresh Babu",
-    initials: "SB",
-    avatarColor: "#dc2626",
-    patientId: "PT-1052",
-    appointmentId: "APT-2045",
-    date: "July 8, 2026",
-    time: "04:00 PM",
-    type: "Video",
-    status: "Cancelled",
-    complaint: "Post-Surgery Cardiac Review",
-  },
-  {
-    id: "6",
-    patient: "Lakshmi Nair",
-    initials: "LN",
-    avatarColor: "#059669",
-    patientId: "PT-1060",
-    appointmentId: "APT-2046",
-    date: "July 12, 2026",
-    time: "02:00 PM",
-    type: "Video",
-    status: "Today",
-    complaint: "Migraine Consultation",
-  },
-];
+/* ─── Online Consultations derived from shared data ─────────── */
+const getInitialConsultations = () => {
+  return doctorAppointmentsList
+    .filter((a) => a.type.includes("Online") || a.type.includes("Video"))
+    .map((a) => ({
+      ...a,
+      appointmentId: `APT-204${a.id}`,
+      type: "Video",
+    }));
+};
 
 /* ─── Consultation Card ──────────────────────────────────────── */
 function ConsultationCard({ item, timeStatus, onJoin, onDetails, onPrescription }) {
   const isReady = timeStatus.isReady;
   const isOngoing = timeStatus.isOngoing;
-  const isNeedsAttention = timeStatus.isNeedsAttention;
   const canJoin = timeStatus.canJoin;
 
   return (
@@ -120,8 +48,8 @@ function ConsultationCard({ item, timeStatus, onJoin, onDetails, onPrescription 
           ? "dc-card--ready"
           : isOngoing
           ? "dc-card--ongoing"
-          : isNeedsAttention
-          ? "dc-card--attention"
+          : timeStatus.isCancelled
+          ? "dc-card--cancelled"
           : timeStatus.isCompleted
           ? "dc-card--completed"
           : "dc-card--upcoming"
@@ -139,9 +67,9 @@ function ConsultationCard({ item, timeStatus, onJoin, onDetails, onPrescription 
           </span>
         </div>
         <span className={`dc-status-badge ${timeStatus.badgeClass}`}>
-          {isReady && <span className="live-dot" />}
-          {isOngoing && <span className="live-dot" />}
-          {isNeedsAttention && <FaExclamationTriangle />}
+          {(isReady || isOngoing) && <span className="live-dot" />}
+          {timeStatus.isCompleted && <FaCheckCircle />}
+          {timeStatus.isCancelled && <FaTimesCircle />}
           {timeStatus.badgeLabel}
         </span>
       </div>
@@ -214,17 +142,19 @@ function DoctorConsultation() {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       setJoinedMap(getJoinedConsultations());
-    }, 10000);
+    }, 2000);
     return () => clearInterval(timer);
   }, []);
 
+  const consultationsList = useMemo(() => getInitialConsultations(), []);
+
   // Compute status for all consultations
   const consultationsWithStatus = useMemo(() => {
-    return initialConsultations.map((item) => ({
+    return consultationsList.map((item) => ({
       item,
       timeStatus: getTodayConsultationStatus(item, currentTime, joinedMap),
     }));
-  }, [currentTime, joinedMap]);
+  }, [consultationsList, currentTime, joinedMap]);
 
   const filtered = useMemo(() => {
     return consultationsWithStatus.filter(({ item, timeStatus }) => {
@@ -240,6 +170,7 @@ function DoctorConsultation() {
       if (activeFilter === "ongoing") return timeStatus.isOngoing;
       if (activeFilter === "upcoming") return timeStatus.isUpcoming;
       if (activeFilter === "completed") return timeStatus.isCompleted;
+      if (activeFilter === "cancelled") return timeStatus.isCancelled;
       return true;
     });
   }, [consultationsWithStatus, search, activeFilter]);
@@ -251,12 +182,14 @@ function DoctorConsultation() {
       ongoing: 0,
       upcoming: 0,
       completed: 0,
+      cancelled: 0,
     };
     consultationsWithStatus.forEach(({ timeStatus }) => {
       if (timeStatus.isReady) res.ready++;
       if (timeStatus.isOngoing) res.ongoing++;
       if (timeStatus.isUpcoming) res.upcoming++;
       if (timeStatus.isCompleted) res.completed++;
+      if (timeStatus.isCancelled) res.cancelled++;
     });
     return res;
   }, [consultationsWithStatus]);
@@ -319,6 +252,7 @@ function DoctorConsultation() {
             { key: "ongoing", label: "Ongoing", count: counts.ongoing },
             { key: "upcoming", label: "Upcoming", count: counts.upcoming },
             { key: "completed", label: "Completed", count: counts.completed },
+            { key: "cancelled", label: "Cancelled", count: counts.cancelled },
           ].map((f) => (
             <button
               key={f.key}

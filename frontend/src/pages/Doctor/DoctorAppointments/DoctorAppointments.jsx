@@ -34,35 +34,32 @@ const STATUS_GROUPS = ["Today", "Upcoming", "Completed", "Cancelled"];
 
 /* ─── Top Reminder Banner Component (Next Approaching Consultation Only) ─── */
 function ApproachingConsultationReminderBanner({
-  todayOnlineAppointments,
-  now,
-  joinedMap,
+  onlineAppointmentsWithStatus,
   onStartConsultation,
   onViewDetails,
 }) {
   // Find the single next approaching consultation or currently active one
   const targetReminder = useMemo(() => {
-    const validReminders = todayOnlineAppointments
-      .map((item) => ({
-        item,
-        timeStatus: getTodayConsultationStatus(item, now, joinedMap),
-      }))
+    const validReminders = onlineAppointmentsWithStatus
       .filter(({ timeStatus }) => {
+        // Exclude completed or cancelled
+        if (timeStatus.isCompleted || timeStatus.isCancelled) return false;
         // Show if unlocked (within 2 mins or ongoing) OR upcoming within next 60 minutes
         return (
           timeStatus.isUnlocked ||
+          timeStatus.isOngoing ||
           (timeStatus.isUpcoming && timeStatus.diffMinutes <= 60 && timeStatus.diffMinutes > 0)
         );
       })
       .sort((a, b) => {
-        // Order: Active/Ready first, then closest upcoming
+        // Order: Ongoing/Ready first, then closest upcoming
         if (a.timeStatus.isUnlocked && !b.timeStatus.isUnlocked) return -1;
         if (!a.timeStatus.isUnlocked && b.timeStatus.isUnlocked) return 1;
         return a.timeStatus.diffSeconds - b.timeStatus.diffSeconds;
       });
 
     return validReminders.length > 0 ? validReminders[0] : null;
-  }, [todayOnlineAppointments, now, joinedMap]);
+  }, [onlineAppointmentsWithStatus]);
 
   if (!targetReminder) return null;
 
@@ -169,35 +166,58 @@ function DoctorAppointments() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [joinedMap, setJoinedMap] = useState(getJoinedConsultations());
 
-  // Automatically update every 10 seconds to keep live countdowns and reminder statuses fresh
+  // Automatically update every 2 seconds to keep live countdowns and reminder statuses fresh
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       setJoinedMap(getJoinedConsultations());
-    }, 10000);
+    }, 2000);
     return () => clearInterval(timer);
   }, []);
 
-  // Today's Online Appointments for the reminder system
-  const todayOnlineAppointments = useMemo(() => {
-    return doctorAppointmentsList.filter(
-      (item) => item.status === "Today" && item.type.includes("Online")
-    );
-  }, []);
+  // Compute live consultation status for each appointment dynamically
+  const appointmentsWithStatus = useMemo(() => {
+    return doctorAppointmentsList.map((item) => {
+      const timeStatus = getTodayConsultationStatus(item, currentTime, joinedMap);
+      return {
+        ...item,
+        timeStatus,
+        effectiveGroup: timeStatus.isCancelled
+          ? "Cancelled"
+          : timeStatus.isCompleted
+          ? "Completed"
+          : timeStatus.isToday
+          ? "Today"
+          : "Upcoming",
+      };
+    });
+  }, [currentTime, joinedMap]);
 
+  // Online appointments with status for top reminder
+  const onlineAppointmentsWithStatus = useMemo(() => {
+    return appointmentsWithStatus
+      .filter((item) => item.type.includes("Online"))
+      .map((item) => ({ item, timeStatus: item.timeStatus }));
+  }, [appointmentsWithStatus]);
+
+  // Filtered by search & active tab
   const filteredAppointments = useMemo(() => {
-    return doctorAppointmentsList.filter((item) => {
+    return appointmentsWithStatus.filter((item) => {
       const matchesSearch =
         item.patient.toLowerCase().includes(search.toLowerCase()) ||
         item.complaint.toLowerCase().includes(search.toLowerCase()) ||
         item.patientId.toLowerCase().includes(search.toLowerCase());
 
-      const matchesFilter =
-        activeFilter === "All" || item.status === activeFilter;
+      if (!matchesSearch) return false;
 
-      return matchesSearch && matchesFilter;
+      if (activeFilter === "All") return true;
+      if (activeFilter === "Today") return item.timeStatus.isToday;
+      if (activeFilter === "Upcoming") return item.timeStatus.isUpcoming;
+      if (activeFilter === "Completed") return item.timeStatus.isCompleted;
+      if (activeFilter === "Cancelled") return item.timeStatus.isCancelled;
+      return true;
     });
-  }, [search, activeFilter]);
+  }, [appointmentsWithStatus, search, activeFilter]);
 
   // Grouping function
   const groupedAppointments = useMemo(() => {
@@ -208,29 +228,30 @@ function DoctorAppointments() {
       Cancelled: [],
     };
     filteredAppointments.forEach((item) => {
-      if (groups[item.status]) {
-        groups[item.status].push(item);
+      if (groups[item.effectiveGroup]) {
+        groups[item.effectiveGroup].push(item);
       }
     });
     return groups;
   }, [filteredAppointments]);
 
-  // Counts for filters
+  // Dynamic filter counts
   const counts = useMemo(() => {
     const totals = {
-      All: doctorAppointmentsList.length,
+      All: appointmentsWithStatus.length,
       Today: 0,
       Upcoming: 0,
       Completed: 0,
       Cancelled: 0,
     };
-    doctorAppointmentsList.forEach((item) => {
-      if (totals[item.status] !== undefined) {
-        totals[item.status]++;
-      }
+    appointmentsWithStatus.forEach((item) => {
+      if (item.timeStatus.isToday) totals.Today++;
+      if (item.timeStatus.isUpcoming) totals.Upcoming++;
+      if (item.timeStatus.isCompleted) totals.Completed++;
+      if (item.timeStatus.isCancelled) totals.Cancelled++;
     });
     return totals;
-  }, []);
+  }, [appointmentsWithStatus]);
 
   const handleStartConsultation = (id) => {
     navigate(`/doctor/consultation-room/${id}`);
@@ -242,7 +263,7 @@ function DoctorAppointments() {
 
   return (
     <div className="doctor-appointments">
-      {/* ── Page Header (Clean, no "Active Today" pill) ── */}
+      {/* ── Page Header ── */}
       <div className="appointments-header">
         <div className="header-title-section">
           <h2>
@@ -254,9 +275,7 @@ function DoctorAppointments() {
 
       {/* ── Single Approaching Consultation Reminder Banner ── */}
       <ApproachingConsultationReminderBanner
-        todayOnlineAppointments={todayOnlineAppointments}
-        now={currentTime}
-        joinedMap={joinedMap}
+        onlineAppointmentsWithStatus={onlineAppointmentsWithStatus}
         onStartConsultation={handleStartConsultation}
         onViewDetails={handleViewDetails}
       />
@@ -294,8 +313,7 @@ function DoctorAppointments() {
             >
               {status}
               <span className="filter-count-badge">
-                {counts[status] ||
-                  filteredAppointments.filter((x) => x.status === status).length}
+                {counts[status]}
               </span>
             </button>
           ))}
@@ -326,18 +344,13 @@ function DoctorAppointments() {
 
                 <div className="appointments-grid-container">
                   {list.map((item) => {
-                    // Compute live consultation time status
-                    const timeStatus = getTodayConsultationStatus(
-                      item,
-                      currentTime,
-                      joinedMap
-                    );
-                    const isUnlocked = timeStatus.isUnlocked;
+                    const timeStatus = item.timeStatus;
+                    const canJoin = timeStatus.canJoin;
 
                     return (
                       <div
                         className={`appointment-card-v2 ${
-                          isUnlocked ? "appointment-card-v2--ready" : ""
+                          canJoin ? "appointment-card-v2--ready" : ""
                         }`}
                         key={item.id}
                       >
@@ -358,48 +371,48 @@ function DoctorAppointments() {
                           </div>
 
                           <div className="card-top-badges">
-                            {/* Dynamic Live Status Badge */}
-                            {item.status === "Today" ? (
-                              <span className={`status-pill ${timeStatus.badgeClass}`}>
-                                {isUnlocked && <span className="live-dot" />}
-                                {timeStatus.badgeLabel}
-                              </span>
-                            ) : (
-                              <span
-                                className={`status-pill status-pill--${item.status.toLowerCase()}`}
-                              >
-                                {item.status === "Completed" && <FaCheckCircle />}
-                                {item.status === "Cancelled" && <FaTimesCircle />}
-                                {item.status}
-                              </span>
-                            )}
+                            <span className={`status-pill ${timeStatus.badgeClass}`}>
+                              {canJoin && <span className="live-dot" />}
+                              {timeStatus.isCompleted && <FaCheckCircle />}
+                              {timeStatus.isCancelled && <FaTimesCircle />}
+                              {timeStatus.badgeLabel}
+                            </span>
                           </div>
                         </div>
 
                         {/* Status Notice Message inside Card */}
-                        {item.status === "Today" && (
-                          <div
-                            className={`card-reminder-alert-bar ${
-                              isUnlocked
-                                ? "card-reminder-alert-bar--ready"
-                                : "card-reminder-alert-bar--upcoming"
-                            }`}
-                          >
-                            {isUnlocked ? (
-                              <>
-                                <span className="live-dot" />
-                                <span>
-                                  <strong>Join Consultation Available</strong> ({item.time})
-                                </span>
-                              </>
-                            ) : (
-                              <>
-                                <FaClock />
-                                <span>Starts at {item.time}</span>
-                              </>
-                            )}
+                        {timeStatus.isOngoing ? (
+                          <div className="card-reminder-alert-bar card-reminder-alert-bar--ready">
+                            <span className="live-dot" />
+                            <span>
+                              <strong>Consultation is Ongoing</strong> ({item.time})
+                            </span>
                           </div>
-                        )}
+                        ) : timeStatus.isReady ? (
+                          <div className="card-reminder-alert-bar card-reminder-alert-bar--ready">
+                            <span className="live-dot" />
+                            <span>
+                              <strong>Join Consultation Available</strong> (Starts at {item.time})
+                            </span>
+                          </div>
+                        ) : timeStatus.isUpcoming ? (
+                          <div className="card-reminder-alert-bar card-reminder-alert-bar--upcoming">
+                            <FaClock />
+                            <span>Starts at {item.time} ({timeStatus.timeNotice})</span>
+                          </div>
+                        ) : timeStatus.isCancelled ? (
+                          <div
+                            className="card-reminder-alert-bar card-reminder-alert-bar--cancelled"
+                            style={{
+                              background: "rgba(239, 68, 68, 0.08)",
+                              color: "#dc2626",
+                              border: "1px solid rgba(239, 68, 68, 0.2)",
+                            }}
+                          >
+                            <FaTimesCircle />
+                            <span>{timeStatus.reminderText}</span>
+                          </div>
+                        ) : null}
 
                         <div className="card-details-body">
                           <div className="detail-item">
@@ -432,48 +445,8 @@ function DoctorAppointments() {
                         </div>
 
                         <div className="card-actions-row">
-                          {/* Status: Today */}
-                          {item.status === "Today" && (
-                            <>
-                              <button
-                                className="action-btn action-btn--view"
-                                onClick={() => handleViewDetails(item.id)}
-                              >
-                                <FaEye /> View Details
-                              </button>
-
-                              {/* Unlocked at 2 mins before scheduled time (e.g. 1:58 PM for 2:00 PM), locked before */}
-                              {isUnlocked ? (
-                                <button
-                                  className="action-btn action-btn--join action-btn--ready-pulse"
-                                  onClick={() => handleStartConsultation(item.id)}
-                                >
-                                  <FaPhoneAlt /> Join Consultation
-                                </button>
-                              ) : (
-                                <button
-                                  className="action-btn action-btn--join action-btn--disabled"
-                                  disabled
-                                  title={`Join Consultation unlocks at ${getTwoMinutesBefore(item.time)} (2 mins before scheduled time)`}
-                                >
-                                  <FaLock /> Starts at {item.time}
-                                </button>
-                              )}
-                            </>
-                          )}
-
-                          {/* Status: Upcoming */}
-                          {item.status === "Upcoming" && (
-                            <button
-                              className="action-btn action-btn--view action-btn--full"
-                              onClick={() => handleViewDetails(item.id)}
-                            >
-                              <FaEye /> View Details
-                            </button>
-                          )}
-
-                          {/* Status: Completed */}
-                          {item.status === "Completed" && (
+                          {/* Completed appointment */}
+                          {timeStatus.isCompleted ? (
                             <>
                               <button
                                 className="action-btn action-btn--view"
@@ -490,16 +463,49 @@ function DoctorAppointments() {
                                 <FaPrescriptionBottleAlt /> View Prescription
                               </button>
                             </>
-                          )}
-
-                          {/* Status: Cancelled */}
-                          {item.status === "Cancelled" && (
+                          ) : timeStatus.isCancelled ? (
+                            /* Cancelled appointment: Join button removed */
                             <button
                               className="action-btn action-btn--view action-btn--full"
                               onClick={() => handleViewDetails(item.id)}
                             >
                               <FaEye /> View Details
                             </button>
+                          ) : canJoin ? (
+                            /* 2 mins before or ongoing: Join enabled */
+                            <>
+                              <button
+                                className="action-btn action-btn--view"
+                                onClick={() => handleViewDetails(item.id)}
+                              >
+                                <FaEye /> View Details
+                              </button>
+                              <button
+                                className="action-btn action-btn--join action-btn--ready-pulse"
+                                onClick={() => handleStartConsultation(item.id)}
+                              >
+                                <FaPhoneAlt /> Join Consultation
+                              </button>
+                            </>
+                          ) : (
+                            /* Future appointment (> 2 mins): Join locked/disabled */
+                            <>
+                              <button
+                                className="action-btn action-btn--view"
+                                onClick={() => handleViewDetails(item.id)}
+                              >
+                                <FaEye /> View Details
+                              </button>
+                              {item.type.includes("Online") ? (
+                                <button
+                                  className="action-btn action-btn--join action-btn--disabled"
+                                  disabled
+                                  title={`Join Consultation unlocks at ${getTwoMinutesBefore(item.time)} (2 mins before scheduled time)`}
+                                >
+                                  <FaLock /> Starts at {item.time}
+                                </button>
+                              ) : null}
+                            </>
                           )}
                         </div>
                       </div>

@@ -380,7 +380,7 @@ function DoctorAppointmentDetails() {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
       setJoinedMap(getJoinedConsultations());
-    }, 10000);
+    }, 2000);
     return () => clearInterval(timer);
   }, []);
 
@@ -397,11 +397,10 @@ function DoctorAppointmentDetails() {
         patientId: "PT-1024",
         age: 32,
         gender: "Male",
-        date: "July 12, 2026",
+        date: "Today",
         time: "10:00 AM",
         type: "Online Consultation",
         symptoms: "Fever, Headache, Body Pain",
-        status: "Today",
         complaint: "Type 2 Diabetes Mellitus Follow-up",
       }
     );
@@ -455,10 +454,20 @@ function DoctorAppointmentDetails() {
               ? "ongoing"
               : timeStatus.isCompleted
               ? "completed"
+              : timeStatus.isCancelled
+              ? "cancelled"
               : "disabled"
           }`}
         >
-          {timeStatus.isReady ? (
+          {timeStatus.isCancelled ? (
+            <div className="alert-banner-content">
+              <FaTimesCircle />
+              <div>
+                <strong>Appointment Cancelled</strong>
+                <p>{timeStatus.message}</p>
+              </div>
+            </div>
+          ) : timeStatus.isReady ? (
             <div className="alert-banner-content">
               <FaPhoneAlt className="alert-pulse-icon" />
               <div>
@@ -570,6 +579,11 @@ function DoctorAppointmentDetails() {
               <FaPrescriptionBottleAlt />
               View Prescription
             </button>
+          ) : timeStatus.isCancelled ? (
+            <div className="upcoming-starts-badge" style={{ color: "#dc2626", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+              <FaTimesCircle />
+              Cancelled
+            </div>
           ) : timeStatus.canJoin ? (
             <button
               className={`start-btn ${
@@ -582,7 +596,7 @@ function DoctorAppointmentDetails() {
             </button>
           ) : (
             <div className="upcoming-starts-badge">
-              <FaClock />
+              <FaLock />
               Starts at {appointment.time}
             </div>
           )}

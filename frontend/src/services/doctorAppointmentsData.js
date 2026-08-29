@@ -1,99 +1,187 @@
 /* ================================================================
-   doctorAppointmentsData.js — Shared Appointments & Timing Engine
+   doctorAppointmentsData.js — Dynamic Appointments & Timing Engine
    ================================================================ */
 
-export const doctorAppointmentsList = [
-  {
-    id: 1,
-    patient: "Rahul Nair",
-    initials: "RN",
-    avatarColor: "#0d9488",
-    patientId: "PT-1024",
-    age: 32,
-    gender: "Male",
-    date: "July 12, 2026",
-    time: "10:00 AM",
-    type: "Online Consultation",
-    status: "Today",
-    complaint: "Type 2 Diabetes Mellitus Follow-up",
-    symptoms: "Fever, Headache, Body Pain",
-  },
-  {
-    id: 2,
-    patient: "Anjali Thomas",
-    initials: "AT",
-    avatarColor: "#7c3aed",
-    patientId: "PT-1031",
-    age: 27,
-    gender: "Female",
-    date: "July 15, 2026",
-    time: "02:30 PM",
-    type: "Hospital Visit",
-    status: "Upcoming",
-    complaint: "Chronic Migraine Review",
-    symptoms: "Throbbing headache, light sensitivity, nausea",
-  },
-  {
-    id: 3,
-    patient: "Arun Kumar",
-    initials: "AK",
-    avatarColor: "#0284c7",
-    patientId: "PT-1018",
-    age: 41,
-    gender: "Male",
-    date: "July 10, 2026",
-    time: "11:15 AM",
-    type: "Online Consultation",
-    status: "Completed",
-    complaint: "Hypertension Check",
-    symptoms: "Dizziness, chest tightness",
-  },
-  {
-    id: 4,
-    patient: "Meera Pillai",
-    initials: "MP",
-    avatarColor: "#d97706",
-    patientId: "PT-1045",
-    age: 35,
-    gender: "Female",
-    date: "July 18, 2026",
-    time: "09:00 AM",
-    type: "Online Consultation",
-    status: "Upcoming",
-    complaint: "Thyroid Follow-up",
-    symptoms: "Fatigue, unexpected weight changes",
-  },
-  {
-    id: 5,
-    patient: "Suresh Babu",
-    initials: "SB",
-    avatarColor: "#dc2626",
-    patientId: "PT-1052",
-    age: 58,
-    gender: "Male",
-    date: "July 8, 2026",
-    time: "04:00 PM",
-    type: "Hospital Visit",
-    status: "Cancelled",
-    complaint: "Post-Surgery Cardiac Review",
-    symptoms: "Shortness of breath on exertion",
-  },
-  {
-    id: 6,
-    patient: "Lakshmi Nair",
-    initials: "LN",
-    avatarColor: "#059669",
-    patientId: "PT-1060",
-    age: 46,
-    gender: "Female",
-    date: "July 12, 2026",
-    time: "02:00 PM",
-    type: "Online Consultation",
-    status: "Today",
-    complaint: "Migraine Consultation",
-    symptoms: "Frequent severe headaches, dizziness",
-  },
-];
+// Helper to format 12-hour time (e.g., "10:00 AM", "02:30 PM")
+export function formatTime12h(date) {
+  if (!date || isNaN(date.getTime())) return "10:00 AM";
+  let h = date.getHours();
+  const m = String(date.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  h = h ? h : 12;
+  return `${h}:${m} ${ampm}`;
+}
+
+// Helper to format date string for display (e.g. "August 29, 2026")
+export function formatDateDisplay(date) {
+  if (!date || isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// Helper to generate dynamic sample appointments based on current system time
+export function generateDynamicAppointments(baseDate = new Date()) {
+  const getOffsetDateTime = (minutesOffset = 0, daysOffset = 0) => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + daysOffset);
+    d.setMinutes(d.getMinutes() + minutesOffset);
+    return {
+      date: formatDateDisplay(d),
+      time: formatTime12h(d),
+    };
+  };
+
+  return [
+    {
+      id: 1,
+      patient: "Rahul Nair",
+      initials: "RN",
+      avatarColor: "#0d9488",
+      patientId: "PT-1024",
+      age: 32,
+      gender: "Male",
+      ...getOffsetDateTime(1), // Starting in 1 minute -> "Starting Soon" (Join Consultation Enabled + Reminder)
+      type: "Online Consultation",
+      complaint: "Type 2 Diabetes Mellitus Follow-up",
+      symptoms: "Fever, Headache, Body Pain",
+    },
+    {
+      id: 2,
+      patient: "Anjali Thomas",
+      initials: "AT",
+      avatarColor: "#7c3aed",
+      patientId: "PT-1031",
+      age: 27,
+      gender: "Female",
+      ...getOffsetDateTime(30), // Starting in 30 mins -> "Upcoming" (Join Consultation Locked)
+      type: "Online Consultation",
+      complaint: "Chronic Migraine Review",
+      symptoms: "Throbbing headache, light sensitivity, nausea",
+    },
+    {
+      id: 3,
+      patient: "Arun Kumar",
+      initials: "AK",
+      avatarColor: "#0284c7",
+      patientId: "PT-1018",
+      age: 41,
+      gender: "Male",
+      ...getOffsetDateTime(0, -2), // 2 days ago -> Completed
+      status: "Completed",
+      type: "Online Consultation",
+      complaint: "Hypertension Check",
+      symptoms: "Dizziness, chest tightness",
+    },
+    {
+      id: 4,
+      patient: "Meera Pillai",
+      initials: "MP",
+      avatarColor: "#d97706",
+      patientId: "PT-1045",
+      age: 35,
+      gender: "Female",
+      ...getOffsetDateTime(0, 3), // In 3 days -> "Upcoming" (Join Consultation Locked)
+      type: "Online Consultation",
+      complaint: "Thyroid Follow-up",
+      symptoms: "Fatigue, unexpected weight changes",
+    },
+    {
+      id: 5,
+      patient: "Suresh Babu",
+      initials: "SB",
+      avatarColor: "#dc2626",
+      patientId: "PT-1052",
+      age: 58,
+      gender: "Male",
+      ...getOffsetDateTime(-90), // Scheduled 90 mins ago, not attended -> Automatically "Cancelled"
+      type: "Hospital Visit",
+      complaint: "Post-Surgery Cardiac Review",
+      symptoms: "Shortness of breath on exertion",
+    },
+    {
+      id: 6,
+      patient: "Lakshmi Nair",
+      initials: "LN",
+      avatarColor: "#059669",
+      patientId: "PT-1060",
+      age: 46,
+      gender: "Female",
+      ...getOffsetDateTime(-5), // Started 5 mins ago -> "Ongoing" (Join Consultation Enabled)
+      type: "Online Consultation",
+      complaint: "Migraine Consultation",
+      symptoms: "Frequent severe headaches, dizziness",
+    },
+  ];
+}
+
+export const doctorAppointmentsList = generateDynamicAppointments();
+
+/* ─── Robust Date/Time Parser ────────────────────────────────── */
+export function parseAppointmentDateTime(dateInput, timeInput, now = new Date()) {
+  let year = now.getFullYear();
+  let month = now.getMonth();
+  let day = now.getDate();
+
+  if (dateInput) {
+    if (dateInput instanceof Date && !isNaN(dateInput.getTime())) {
+      year = dateInput.getFullYear();
+      month = dateInput.getMonth();
+      day = dateInput.getDate();
+    } else if (typeof dateInput === "string") {
+      const lower = dateInput.trim().toLowerCase();
+      if (lower === "today") {
+        year = now.getFullYear();
+        month = now.getMonth();
+        day = now.getDate();
+      } else if (lower === "tomorrow") {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        year = tomorrow.getFullYear();
+        month = tomorrow.getMonth();
+        day = tomorrow.getDate();
+      } else if (lower === "yesterday") {
+        const yesterday = new Date(now);
+        yesterday.setDate(yesterday.getDate() - 1);
+        year = yesterday.getFullYear();
+        month = yesterday.getMonth();
+        day = yesterday.getDate();
+      } else {
+        const ymdMatch = dateInput.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+        if (ymdMatch) {
+          year = parseInt(ymdMatch[1], 10);
+          month = parseInt(ymdMatch[2], 10) - 1;
+          day = parseInt(ymdMatch[3], 10);
+        } else {
+          const parsed = new Date(dateInput);
+          if (!isNaN(parsed.getTime())) {
+            year = parsed.getFullYear();
+            month = parsed.getMonth();
+            day = parsed.getDate();
+          }
+        }
+      }
+    }
+  }
+
+  let hours = 0;
+  let minutes = 0;
+  if (timeInput && typeof timeInput === "string") {
+    const timeMatch = timeInput.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+    if (timeMatch) {
+      hours = parseInt(timeMatch[1], 10);
+      minutes = parseInt(timeMatch[2], 10);
+      const ampm = timeMatch[3] ? timeMatch[3].toUpperCase() : null;
+      if (ampm === "PM" && hours < 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+    }
+  }
+
+  return new Date(year, month, day, hours, minutes, 0, 0);
+}
 
 /* ─── Session-joined Tracking Helpers ────────────────────────── */
 export function getJoinedConsultations() {
@@ -125,6 +213,7 @@ export function getTodayConsultationStatus(
   if (!appointment) {
     return {
       status: "Unknown",
+      group: "Upcoming",
       badgeLabel: "Unknown",
       badgeClass: "status-pill--upcoming",
       canJoin: false,
@@ -140,13 +229,34 @@ export function getTodayConsultationStatus(
     };
   }
 
+  const apptDate = parseAppointmentDateTime(appointment.date, appointment.time, now);
+  const diffMs = apptDate.getTime() - now.getTime();
+  const diffSeconds = Math.round(diffMs / 1000);
+  const diffMinutes = Math.ceil(diffSeconds / 60);
+
+  const isToday =
+    apptDate.getFullYear() === now.getFullYear() &&
+    apptDate.getMonth() === now.getMonth() &&
+    apptDate.getDate() === now.getDate();
+
   const isJoined = Boolean(
     joinedMap[String(appointment.id)] || appointment.hasJoined
   );
 
-  if (appointment.status === "Completed") {
+  // Standard duration is 30 mins unless specified
+  const durationMinutes = appointment.durationMinutes || 30;
+  const durationMs = durationMinutes * 60 * 1000;
+  const isPassed = (now.getTime() - apptDate.getTime()) > durationMs;
+
+  // 1. COMPLETED: If explicitly completed or completed in records
+  if (
+    appointment.status === "Completed" ||
+    appointment.isCompleted ||
+    joinedMap[String(appointment.id) + "_completed"]
+  ) {
     return {
       status: "Completed",
+      group: "Completed",
       badgeLabel: "Completed",
       badgeClass: "status-pill--completed",
       canJoin: false,
@@ -156,16 +266,23 @@ export function getTodayConsultationStatus(
       isUpcoming: false,
       isCompleted: true,
       isCancelled: false,
+      diffMinutes,
+      diffSeconds,
       timeNotice: "Completed",
+      reminderText: "This consultation has been completed.",
       message: "This consultation has already been completed.",
       buttonText: "View Prescription",
       scheduledTime: appointment.time || "",
+      apptDate,
+      isToday,
     };
   }
 
+  // 2. EXPLICITLY CANCELLED:
   if (appointment.status === "Cancelled") {
     return {
       status: "Cancelled",
+      group: "Cancelled",
       badgeLabel: "Cancelled",
       badgeClass: "status-pill--cancelled",
       canJoin: false,
@@ -175,60 +292,83 @@ export function getTodayConsultationStatus(
       isUpcoming: false,
       isCompleted: false,
       isCancelled: true,
+      diffMinutes,
+      diffSeconds,
       timeNotice: "Cancelled",
+      reminderText: "This appointment was cancelled.",
       message: "This appointment was cancelled.",
-      buttonText: "View Details",
+      buttonText: "",
       scheduledTime: appointment.time || "",
+      apptDate,
+      isToday,
     };
   }
 
-  // Parse appointment date & time
-  let apptDate;
-  if (appointment.status === "Today") {
-    apptDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  } else {
-    const parsed = new Date(appointment.date);
-    if (!isNaN(parsed.getTime())) {
-      apptDate = new Date(
-        parsed.getFullYear(),
-        parsed.getMonth(),
-        parsed.getDate()
-      );
-    } else {
-      apptDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    }
+  // 3. ACTUALLY STARTED & ACTIVE CONSULTATION:
+  // If the doctor has actually joined/started the consultation
+  if (isJoined) {
+    return {
+      status: "Ongoing",
+      group: isToday ? "Today" : "Upcoming",
+      badgeLabel: "Ongoing",
+      badgeClass: "status-pill--ongoing",
+      canJoin: true,
+      isUnlocked: true,
+      isReady: false,
+      isOngoing: true,
+      isUpcoming: false,
+      isCompleted: false,
+      isCancelled: false,
+      diffMinutes,
+      diffSeconds,
+      timeNotice: "Ongoing",
+      reminderText: `Your consultation with ${appointment.patient} is currently active.`,
+      message: `Your consultation with ${appointment.patient} was started and is currently ongoing. Scheduled at ${appointment.time}.`,
+      scheduledTime: appointment.time,
+      buttonText: "Join Consultation",
+      apptDate,
+      isToday,
+    };
   }
 
-  // Parse time (e.g. "10:00 AM" or "02:00 PM")
-  const timeMatch = appointment.time?.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (timeMatch) {
-    let hours = parseInt(timeMatch[1], 10);
-    const minutes = parseInt(timeMatch[2], 10);
-    const ampm = timeMatch[3].toUpperCase();
-    if (ampm === "PM" && hours < 12) hours += 12;
-    if (ampm === "AM" && hours === 12) hours = 0;
-    apptDate.setHours(hours, minutes, 0, 0);
+  // 4. SCHEDULED TIME HAS PASSED & DOCTOR HAS NOT STARTED/JOINED:
+  // If diffSeconds < 0 and !isJoined -> Automatically change status to Cancelled, disable Join
+  if (diffSeconds < 0) {
+    return {
+      status: "Cancelled",
+      group: "Cancelled",
+      badgeLabel: "Cancelled",
+      badgeClass: "status-pill--cancelled",
+      canJoin: false,
+      isUnlocked: false,
+      isReady: false,
+      isOngoing: false,
+      isUpcoming: false,
+      isCompleted: false,
+      isCancelled: true,
+      diffMinutes,
+      diffSeconds,
+      timeNotice: "Cancelled",
+      reminderText: `Consultation at ${appointment.time} was cancelled as the scheduled time passed without being started.`,
+      message: `The scheduled consultation time (${appointment.time}) has passed without being started by the doctor. The appointment has been automatically cancelled.`,
+      buttonText: "",
+      scheduledTime: appointment.time || "",
+      apptDate,
+      isToday,
+    };
   }
 
-  const diffMs = apptDate.getTime() - now.getTime();
-  const diffSeconds = Math.round(diffMs / 1000);
-  const diffMinutes = Math.ceil(diffSeconds / 60);
-
-  const isFutureDate =
-    apptDate.getFullYear() > now.getFullYear() ||
-    (apptDate.getFullYear() === now.getFullYear() &&
-      apptDate.getMonth() > now.getMonth()) ||
-    (apptDate.getFullYear() === now.getFullYear() &&
-      apptDate.getMonth() === now.getMonth() &&
-      apptDate.getDate() > now.getDate());
-
-  // 1. LOCKED / BEFORE 2 MINUTES PRE-JOIN WINDOW:
-  // (More than 2 minutes before the scheduled time) -> Join button remains locked/disabled
-  if (isFutureDate || diffSeconds > 120) {
-    const timeNotice = `Starts at ${appointment.time}`;
+  // 5. FUTURE APPOINTMENT (> 2 minutes before scheduled time):
+  // Status: Upcoming, Join Consultation: locked/disabled
+  if (diffSeconds > 120) {
+    const hours = Math.floor(diffMinutes / 60);
+    const mins = diffMinutes % 60;
+    const timeFormatted = hours > 0 ? `${hours}h ${mins}m` : `${diffMinutes}m`;
+    const timeNotice = isToday ? `Starts in ${timeFormatted}` : `Starts at ${appointment.time}`;
 
     return {
       status: "Upcoming",
+      group: isToday ? "Today" : "Upcoming",
       badgeLabel: "Upcoming",
       badgeClass: "status-pill--upcoming",
       canJoin: false,
@@ -244,65 +384,42 @@ export function getTodayConsultationStatus(
       reminderText: `Your consultation with ${appointment.patient} starts in ${diffMinutes} minute${
         diffMinutes === 1 ? "" : "s"
       }.`,
-      message: `Consultation starts at ${appointment.time}.`,
+      message: `Consultation starts at ${appointment.time}. Join Consultation will unlock 2 minutes before scheduled time.`,
       scheduledTime: appointment.time,
-      buttonText: "", // LOCKED: No Join button before 2 mins
+      buttonText: "", // Locked
       apptDate,
+      isToday,
     };
   }
 
-  // 2. UNLOCKED (Within 2-minute pre-join window or ongoing):
-  // (diffSeconds <= 120: unlocks at exactly 2 minutes before start time)
-  if (diffSeconds > 0 && diffSeconds <= 120) {
-    // 2 minutes pre-join window
-    return {
-      status: "Ready to Join",
-      badgeLabel: "Ready to Join",
-      badgeClass: "status-pill--ready",
-      canJoin: true,
-      isUnlocked: true,
-      isReady: true,
-      isOngoing: false,
-      isUpcoming: false,
-      isCompleted: false,
-      isCancelled: false,
-      diffMinutes: Math.max(1, diffMinutes),
-      diffSeconds,
-      timeNotice: `Starts in ${Math.max(1, diffMinutes)}m`,
-      reminderText: `Your consultation with ${appointment.patient} starts in ${Math.max(
-        1,
-        diffMinutes
-      )} minute${diffMinutes === 1 ? "" : "s"}.`,
-      message: `Your consultation with ${appointment.patient} starts in ${Math.max(
-        1,
-        diffMinutes
-      )} minute${diffMinutes === 1 ? "" : "s"}. Join is now available.`,
-      scheduledTime: appointment.time,
-      buttonText: "Join Consultation",
-      apptDate,
-    };
-  }
-
-  // 3. AT OR AFTER SCHEDULED TIME (Ongoing):
+  // 6. PRE-JOIN WINDOW (Within 2 minutes before scheduled time, 0 <= diffSeconds <= 120):
+  // Status: Upcoming/Starting Soon, Join Consultation: enabled + reminder
+  const minsLeft = Math.max(1, diffMinutes);
   return {
-    status: "Ongoing",
-    badgeLabel: "Ongoing",
-    badgeClass: "status-pill--ongoing",
+    status: "Upcoming",
+    group: isToday ? "Today" : "Upcoming",
+    badgeLabel: "Starting Soon",
+    badgeClass: "status-pill--ready",
     canJoin: true,
     isUnlocked: true,
-    isReady: false,
-    isOngoing: true,
-    isUpcoming: false,
+    isReady: true,
+    isOngoing: false,
+    isUpcoming: true,
     isCompleted: false,
     isCancelled: false,
-    diffMinutes,
+    diffMinutes: minsLeft,
     diffSeconds,
-    timeNotice: "In Progress",
-    reminderText: `Your consultation with ${appointment.patient} is ongoing.`,
-    message: `Your consultation with ${appointment.patient} is currently ongoing.`,
+    timeNotice: `Starts in ${diffSeconds}s`,
+    reminderText: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${
+      minsLeft === 1 ? "" : "s"
+    }! Join is now available.`,
+    message: `Your consultation with ${appointment.patient} starts in ${minsLeft} minute${
+      minsLeft === 1 ? "" : "s"
+    }. Join Consultation is now available.`,
     scheduledTime: appointment.time,
     buttonText: "Join Consultation",
     apptDate,
+    isToday,
   };
 }
 
