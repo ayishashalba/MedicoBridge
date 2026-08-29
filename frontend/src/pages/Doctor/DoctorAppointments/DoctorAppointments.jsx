@@ -436,21 +436,27 @@ function DoctorAppointments() {
                           {item.status === "Today" && (
                             <>
                               <button
-                                className={`action-btn action-btn--view ${
-                                  !isUnlocked ? "action-btn--full" : ""
-                                }`}
+                                className="action-btn action-btn--view"
                                 onClick={() => handleViewDetails(item.id)}
                               >
                                 <FaEye /> View Details
                               </button>
 
-                              {/* ONLY unlock Join Consultation within 2 mins of appointment time */}
-                              {isUnlocked && (
+                              {/* Unlocked at 2 mins before scheduled time (e.g. 1:58 PM for 2:00 PM), locked before */}
+                              {isUnlocked ? (
                                 <button
                                   className="action-btn action-btn--join action-btn--ready-pulse"
                                   onClick={() => handleStartConsultation(item.id)}
                                 >
                                   <FaPhoneAlt /> Join Consultation
+                                </button>
+                              ) : (
+                                <button
+                                  className="action-btn action-btn--join action-btn--disabled"
+                                  disabled
+                                  title={`Join Consultation unlocks at ${getTwoMinutesBefore(item.time)} (2 mins before scheduled time)`}
+                                >
+                                  <FaLock /> Starts at {item.time}
                                 </button>
                               )}
                             </>

@@ -823,6 +823,17 @@
   animation: pulseGlow 1.8s infinite ease-in-out;
 }
 
+.action-btn--disabled {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  transform: none !important;
+  filter: none !important;
+  animation: none !important;
+}
+
 /* Highlighted Start Button with Pulse Glow */
 .action-btn--start-highlighted {
   background: linear-gradient(135deg, #10b981, #059669) !important;
