@@ -92,15 +92,14 @@
   background: linear-gradient(180deg, #f59e0b, #dc2626);
 }
 
-/* Info Banner */
-.reminder-banner--info,
-.reminder-banner--normal {
+/* Approaching / Upcoming Reminder Banner */
+.reminder-banner--approaching {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border-color: #bae6fd;
+  border-color: #7dd3fc;
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.12);
 }
-.reminder-banner--info::before,
-.reminder-banner--normal::before {
-  background: linear-gradient(180deg, #0ea5e9, #0284c7);
+.reminder-banner--approaching::before {
+  background: linear-gradient(180deg, #0284c7, #0369a1);
 }
 
 .reminder-banner-main {
@@ -118,6 +117,42 @@
   justify-content: center;
   font-size: 1.4rem;
   flex-shrink: 0;
+}
+
+.reminder-banner--urgent .reminder-banner-icon-wrapper {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.reminder-banner--approaching .reminder-banner-icon-wrapper,
+.reminder-banner--info .reminder-banner-icon-wrapper,
+.reminder-banner--normal .reminder-banner-icon-wrapper {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.reminder-live-pill--approaching {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #7dd3fc;
+}
+
+.banner-locked-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.55rem 0.95rem;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.banner-locked-notice svg {
+  color: #94a3b8;
 }
 
 .reminder-banner--urgent .reminder-banner-icon-wrapper {
@@ -467,11 +502,13 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Highlighted state for Starting Now card */
+/* Highlighted state for Ready to Join card */
+.appointment-card-v2--ready,
 .appointment-card-v2--starting-now {
   border-color: #86efac;
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.15);
 }
+.appointment-card-v2--ready::before,
 .appointment-card-v2--starting-now::before {
   background: #10b981 !important;
   width: 5px;
@@ -479,10 +516,20 @@
 
 /* Highlighted state for Ongoing card */
 .appointment-card-v2--ongoing {
+  border-color: #93c5fd;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15);
+}
+.appointment-card-v2--ongoing::before {
+  background: #2563eb !important;
+  width: 5px;
+}
+
+/* State for Needs Attention card */
+.appointment-card-v2--attention {
   border-color: #fde68a;
   box-shadow: 0 6px 20px rgba(245, 158, 11, 0.15);
 }
-.appointment-card-v2--ongoing::before {
+.appointment-card-v2--attention::before {
   background: #f59e0b !important;
   width: 5px;
 }
@@ -624,6 +671,24 @@
   color: var(--secondary-color);
 }
 
+.status-pill--ready {
+  background: #dcfce7 !important;
+  color: #15803d !important;
+  border: 1px solid #86efac;
+}
+
+.status-pill--ongoing {
+  background: #dbeafe !important;
+  color: #1e40af !important;
+  border: 1px solid #93c5fd;
+}
+
+.status-pill--attention {
+  background: #fef3c7 !important;
+  color: #b45309 !important;
+  border: 1px solid #fde68a;
+}
+
 .status-pill--upcoming {
   background: #fffbeb;
   color: var(--accent-color);
@@ -739,6 +804,23 @@
   filter: brightness(1.08);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.action-btn--join {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  flex: 1;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+}
+
+.action-btn--join:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(16, 185, 129, 0.4);
+}
+
+.action-btn--ready-pulse {
+  animation: pulseGlow 1.8s infinite ease-in-out;
 }
 
 /* Highlighted Start Button with Pulse Glow */
