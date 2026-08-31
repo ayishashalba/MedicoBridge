@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+// import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {
@@ -93,7 +93,7 @@ function parseDateTime(dateStr, timeStr) {
     minutes = parseInt(minutes, 10);
     if (ampm.toUpperCase() === "PM" && hours < 12) hours += 12;
     if (ampm.toUpperCase() === "AM" && hours === 12) hours = 0;
-    
+
     return new Date(year, month - 1, day, hours, minutes, 0, 0);
   } catch (e) {
     return new Date();
@@ -103,19 +103,19 @@ function parseDateTime(dateStr, timeStr) {
 function getMockDateTime(minutesOffset) {
   const d = new Date();
   d.setMinutes(d.getMinutes() + minutesOffset);
-  
+
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   const dateStr = `${yyyy}-${mm}-${dd}`;
-  
+
   let hours = d.getHours();
   const ampm = hours >= 12 ? "PM" : "AM";
   hours = hours % 12;
   hours = hours ? hours : 12;
   const minutes = String(d.getMinutes()).padStart(2, "0");
   const timeStr = `${hours}:${minutes} ${ampm}`;
-  
+
   return { date: dateStr, time: timeStr };
 }
 
@@ -316,7 +316,7 @@ function HardwareTestPanel() {
 
         <div className="oc-hw-diagnostics">
           <h4 className="oc-hw-diag-title">Diagnostics Status</h4>
-          
+
           <div className="oc-hw-diag-row">
             <span>Camera Input:</span>
             {permission === "denied" ? (
@@ -500,7 +500,7 @@ function PatientConsultation() {
   // Slot validation helper for Online Consultation Reschedule
   const isSlotDisabled = (slotTime, targetDate, currentConsultId) => {
     const todayStr = new Date().toISOString().split("T")[0];
-    
+
     // 1. Cannot select past date
     if (targetDate < todayStr) return true;
 
@@ -555,11 +555,11 @@ function PatientConsultation() {
       prev.map((c) =>
         c.id === rescheduleId
           ? {
-              ...c,
-              date: rescheduleDate,
-              time: rescheduleTime,
-              status: c.status === "ready" ? "confirmed" : c.status,
-            }
+            ...c,
+            date: rescheduleDate,
+            time: rescheduleTime,
+            status: c.status === "ready" ? "confirmed" : c.status,
+          }
           : c
       )
     );
@@ -726,7 +726,7 @@ function PatientConsultation() {
             Secure video consultations with leading doctors from the comfort of your home.
           </p>
         </div>
-        
+
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <button
             className="oc-test-hardware-btn"
@@ -735,7 +735,7 @@ function PatientConsultation() {
           >
             <FaMicrophone /> Test Camera & Mic
           </button>
-          
+
           <button
             className="oc-request-btn"
             onClick={() => navigate("/patient/find-doctors")}
@@ -906,7 +906,7 @@ function PatientConsultation() {
                     </span>
                     <span className="oc-meta-value">{consult.time}</span>
                   </div>
-                  
+
                   {/* Meeting Duration */}
                   <div className="oc-meta-row">
                     <span className="oc-meta-label">
@@ -914,7 +914,7 @@ function PatientConsultation() {
                     </span>
                     <span className="oc-meta-value">{consult.duration || "20–30 mins"}</span>
                   </div>
-                  
+
                   {/* Consultation Fee and Payment Status */}
                   <div className="oc-meta-row">
                     <span className="oc-meta-label">
@@ -933,7 +933,7 @@ function PatientConsultation() {
                       {config.icon} {config.label}
                     </span>
                   </div>
-                  
+
                   {/* Countdown Timer displaying remaining time */}
                   {consult.status !== "completed" && renderCountdown(consult) && (
                     <div className="oc-meta-row" style={{ marginTop: "0.2rem", paddingTop: "0.4rem", borderTop: "1px dashed var(--border-color)" }}>
@@ -1128,7 +1128,7 @@ function PatientConsultation() {
               <div style={{ backgroundColor: "#f0f9ff", borderLeft: "4px solid #0284c7", padding: "0.65rem 0.85rem", borderRadius: "6px", fontSize: "0.8rem", color: "#0369a1", marginBottom: "1.25rem", lineHeight: "1.4" }}>
                 <strong>Reschedule Rules:</strong> Past slots and currently booked slots are locked. You can only move your appointment to available future slots.
               </div>
-              
+
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div className="oc-form-group">
                   <label className="oc-form-label">Select New Date</label>

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+// import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import {
   FaMapMarkerAlt,
   FaStar,

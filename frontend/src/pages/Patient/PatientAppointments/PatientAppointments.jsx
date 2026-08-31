@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+// import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import {
   FaCalendarCheck,
@@ -377,10 +377,10 @@ function getCountdownText(dateStr) {
   todayDate.setHours(0, 0, 0, 0);
   const apptDateObj = new Date(dateStr);
   apptDateObj.setHours(0, 0, 0, 0);
-  
+
   const diffTime = apptDateObj - todayDate;
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays === 0) {
     return "Starts today";
   } else if (diffDays === 1) {
@@ -473,12 +473,12 @@ function handleDownloadPrescriptionPDF(appt) {
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
       doc.text(med.name, 14, yPos);
-      
+
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
       doc.setTextColor(71, 85, 105);
       doc.text(med.dosage, 14, yPos + 6);
-      
+
       yPos += 16;
     });
 
@@ -621,14 +621,13 @@ function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, on
               <div className="appt-timeline-dot">✓</div>
               <span className="appt-timeline-label">Booked</span>
             </div>
-            
+
             <div className="appt-timeline-line appt-timeline-line--active" />
 
             {/* Step 2: Confirmed */}
-            <div className={`appt-timeline-step ${
-              appt.status !== "pending" && appt.status !== "rejected" ? "appt-timeline-step--completed" :
-              appt.status === "pending" ? "appt-timeline-step--active" : "appt-timeline-step--inactive"
-            }`}>
+            <div className={`appt-timeline-step ${appt.status !== "pending" && appt.status !== "rejected" ? "appt-timeline-step--completed" :
+                appt.status === "pending" ? "appt-timeline-step--active" : "appt-timeline-step--inactive"
+              }`}>
               <div className="appt-timeline-dot">
                 {appt.status !== "pending" && appt.status !== "rejected" ? "✓" : "2"}
               </div>
@@ -637,15 +636,13 @@ function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, on
               </span>
             </div>
 
-            <div className={`appt-timeline-line ${
-              appt.status === "completed" || appt.status === "cancelled" ? "appt-timeline-line--active" : ""
-            }`} />
+            <div className={`appt-timeline-line ${appt.status === "completed" || appt.status === "cancelled" ? "appt-timeline-line--active" : ""
+              }`} />
 
             {/* Step 3: Completed or Cancelled */}
-            <div className={`appt-timeline-step ${
-              appt.status === "completed" ? "appt-timeline-step--completed" :
-              appt.status === "cancelled" ? "appt-timeline-step--cancelled" : "appt-timeline-step--inactive"
-            }`}>
+            <div className={`appt-timeline-step ${appt.status === "completed" ? "appt-timeline-step--completed" :
+                appt.status === "cancelled" ? "appt-timeline-step--cancelled" : "appt-timeline-step--inactive"
+              }`}>
               <div className="appt-timeline-dot">
                 {appt.status === "completed" ? "✓" : appt.status === "cancelled" ? "✗" : "3"}
               </div>
@@ -1282,13 +1279,13 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
                         background: isSelected
                           ? "linear-gradient(135deg, var(--primary-color), var(--secondary-color))"
                           : status.disabled
-                          ? "#f1f5f9"
-                          : "var(--bg-secondary)",
+                            ? "#f1f5f9"
+                            : "var(--bg-secondary)",
                         color: isSelected
                           ? "#fff"
                           : status.disabled
-                          ? "#94a3b8"
-                          : "var(--text-secondary)",
+                            ? "#94a3b8"
+                            : "var(--text-secondary)",
                         cursor: status.disabled ? "not-allowed" : "pointer",
                         opacity: status.disabled ? 0.55 : 1,
                         textDecoration: status.disabled ? "line-through" : "none",
