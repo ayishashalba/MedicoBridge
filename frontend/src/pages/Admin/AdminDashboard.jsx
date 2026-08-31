@@ -160,65 +160,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Quick Governance Control Hub */}
-      <div className="ad-grid-4" style={{ gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        <Link to="/admin/pharmacy" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ background: "#e0e7ff", color: "#4f46e5", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaPills />
-            </div>
-            <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Drug Verification</h4>
-              <span style={{ fontSize: "0.75rem", color: pendingMedicineReview > 0 ? "#d97706" : "#16a34a", fontWeight: "600" }}>
-                {pendingMedicineReview} Pending Reviews
-              </span>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/admin/approvals" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ background: "#fef3c7", color: "#d97706", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaUserCheck />
-            </div>
-            <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Provider Credentials</h4>
-              <span style={{ fontSize: "0.75rem", color: "#d97706", fontWeight: "600" }}>
-                {pendingApprovals.length} Verifications Due
-              </span>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/admin/coupons" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ background: "#dcfce7", color: "#16a34a", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaTicketAlt />
-            </div>
-            <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Platform Coupons</h4>
-              <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>
-                Active Marketing Vouchers
-              </span>
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/admin/medical-records" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <div style={{ background: "#ede9fe", color: "#6d28d9", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaNotesMedical />
-            </div>
-            <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>EHR Compliance</h4>
-              <span style={{ fontSize: "0.75rem", color: "#6d28d9", fontWeight: "600" }}>
-                100% Encrypted Audits
-              </span>
-            </div>
-          </div>
-        </Link>
-      </div>
-
       {/* Analytics Row */}
       <div className="ad-grid-3">
         {/* User Growth */}
