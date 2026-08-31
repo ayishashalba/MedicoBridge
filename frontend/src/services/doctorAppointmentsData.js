@@ -1,3 +1,5 @@
+import { ENABLE_BACKEND_API } from "./apiConfig";
+
 /* ================================================================
    doctorAppointmentsData.js — Dynamic Appointments & Timing Engine
    ================================================================ */
@@ -823,17 +825,19 @@ export const patientMedicalRecordsDatabase = {
 
 /* ─── Helper: Fetch Patient Medical Records (API + Local Fallback) ─ */
 export async function fetchPatientMedicalRecords(patientId) {
-  try {
-    const res = await fetch(
-      `http://localhost:5000/api/patients/${patientId}/medical-records`
-    );
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && data.records) {
-        return data.records;
+  if (ENABLE_BACKEND_API) {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/patients/${patientId}/medical-records`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.records) {
+          return data.records;
+        }
       }
-    }
-  } catch (e) { }
+    } catch (e) { }
+  }
 
   return patientMedicalRecordsDatabase[patientId] || null;
 }

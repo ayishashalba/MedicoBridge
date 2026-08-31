@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import {
   FaMapMarkerAlt,
   FaStar,
@@ -374,6 +375,30 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
     // Simulate file upload delay then call backend prescription processing
     setTimeout(async () => {
       setStatus("processing");
+      const processMock = () => {
+        setExtractedData({
+          prescriptionId: "RX-2026-DEMO",
+          fileName: selected.name,
+          prescriptionDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
+          doctorName: "Dr. Suresh Nair",
+          clinicName: "MedicoBridge Digital Clinic",
+          medicines: [
+            { name: "Amoxicillin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 capsule twice daily after food", requiresPrescription: true, matched: true, product: { price: 145, stock: "in-stock" } },
+            { name: "Paracetamol 650mg", dosage: "650mg", quantity: 10, instruction: "Take 1 tablet as needed for fever", requiresPrescription: false, matched: true, product: { price: 28, stock: "in-stock" } },
+            { name: "Azithromycin 500mg", dosage: "500mg", quantity: 5, instruction: "Take 1 tablet daily for 5 days", requiresPrescription: true, matched: true, product: { price: 210, stock: "in-stock" } },
+            { name: "Ciprofloxacin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 tablet every 12 hours", requiresPrescription: true, matched: false, product: null },
+          ],
+        });
+        setStatus("done");
+        showToast("Prescription uploaded successfully! Medicines extracted below.");
+        if (onPrescriptionVerified) onPrescriptionVerified(true);
+      };
+
+      if (!ENABLE_BACKEND_API) {
+        processMock();
+        return;
+      }
+
       try {
         const res = await fetch("http://localhost:5000/api/pharmacy/process-prescription", {
           method: "POST",
@@ -394,22 +419,7 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
         }
       } catch (err) {
         // Fallback with mock data if backend unavailable
-        setExtractedData({
-          prescriptionId: "RX-2026-DEMO",
-          fileName: selected.name,
-          prescriptionDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-          doctorName: "Dr. Suresh Nair",
-          clinicName: "MedicoBridge Digital Clinic",
-          medicines: [
-            { name: "Amoxicillin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 capsule twice daily after food", requiresPrescription: true, matched: true, product: { price: 145, stock: "in-stock" } },
-            { name: "Paracetamol 650mg", dosage: "650mg", quantity: 10, instruction: "Take 1 tablet as needed for fever", requiresPrescription: false, matched: true, product: { price: 28, stock: "in-stock" } },
-            { name: "Azithromycin 500mg", dosage: "500mg", quantity: 5, instruction: "Take 1 tablet daily for 5 days", requiresPrescription: true, matched: true, product: { price: 210, stock: "in-stock" } },
-            { name: "Ciprofloxacin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 tablet every 12 hours", requiresPrescription: true, matched: false, product: null },
-          ],
-        });
-        setStatus("done");
-        showToast("Prescription uploaded successfully! Medicines extracted below.");
-        if (onPrescriptionVerified) onPrescriptionVerified(true);
+        processMock();
       }
     }, 1800);
   };

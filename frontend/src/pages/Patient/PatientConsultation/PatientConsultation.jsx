@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {
@@ -472,6 +473,7 @@ function PatientConsultation() {
 
   // Load submitted feedbacks from backend on mount
   useEffect(() => {
+    if (!ENABLE_BACKEND_API) return;
     fetch("http://localhost:5000/api/patient/feedback")
       .then((r) => r.json())
       .then((data) => {
@@ -1402,17 +1404,19 @@ function PatientConsultation() {
                 style={{ background: "var(--primary-color)" }}
                 onClick={async () => {
                   if (feedbackId) {
-                    try {
-                      await fetch("http://localhost:5000/api/feedback", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          appointmentId: feedbackId,
-                          rating: feedbackRating,
-                          comment: feedbackComment,
-                        }),
-                      });
-                    } catch (err) { /* Backend unavailable */ }
+                    if (ENABLE_BACKEND_API) {
+                      try {
+                        await fetch("http://localhost:5000/api/feedback", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            appointmentId: feedbackId,
+                            rating: feedbackRating,
+                            comment: feedbackComment,
+                          }),
+                        });
+                      } catch (err) { /* Backend unavailable */ }
+                    }
                     setSubmittedFeedback((prev) => ({ ...prev, [feedbackId]: true }));
                   }
                   setShowFeedback(false);

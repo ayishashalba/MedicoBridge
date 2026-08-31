@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import {
   FaCalendarCheck,
@@ -1342,6 +1343,7 @@ function PatientAppointments() {
 
   /* Load persisted feedback from backend on mount */
   useEffect(() => {
+    if (!ENABLE_BACKEND_API) return;
     fetch("http://localhost:5000/api/patient/feedback")
       .then((r) => r.json())
       .then((data) => {
@@ -1616,15 +1618,17 @@ function PatientAppointments() {
           apptId={feedbackApptId}
           onClose={() => setFeedbackApptId(null)}
           onSubmit={async (id, rating, comment) => {
-            // Persist to backend
-            try {
-              await fetch("http://localhost:5000/api/feedback", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ appointmentId: id, rating, comment }),
-              });
-            } catch (err) {
-              /* Backend unavailable — persist locally only */
+            // Persist to backend if enabled
+            if (ENABLE_BACKEND_API) {
+              try {
+                await fetch("http://localhost:5000/api/feedback", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ appointmentId: id, rating, comment }),
+                });
+              } catch (err) {
+                /* Backend unavailable — persist locally only */
+              }
             }
             setSubmittedFeedback((prev) => ({ ...prev, [id]: true }));
             setFeedbackApptId(null);

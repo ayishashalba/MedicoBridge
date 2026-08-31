@@ -1,6 +1,5 @@
 import axios from "axios";
-
-const API_BASE_URL = "http://localhost:5000/api";
+import { ENABLE_BACKEND_API, API_BASE_URL } from "./apiConfig";
 
 export const BLOOD_GROUPS = [
   "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"
@@ -49,6 +48,7 @@ export function filterRecords(records = [], { search = "", bloodGroup = "All Blo
  * Doctor GET patients with blood group filter
  */
 export async function getDoctorPatients({ bloodGroup, search, doctorId = "DR-80241" } = {}) {
+  if (!ENABLE_BACKEND_API) return null;
   try {
     const res = await axios.get(`${API_BASE_URL}/doctor/patients`, {
       params: { bloodGroup, search },
@@ -65,6 +65,7 @@ export async function getDoctorPatients({ bloodGroup, search, doctorId = "DR-802
  * Hospital GET patients with blood group filter
  */
 export async function getHospitalPatients({ bloodGroup, search, status, hospitalId = "HOSP-5021" } = {}) {
+  if (!ENABLE_BACKEND_API) return null;
   try {
     const res = await axios.get(`${API_BASE_URL}/hospital/patients`, {
       params: { bloodGroup, search, status },
@@ -81,6 +82,7 @@ export async function getHospitalPatients({ bloodGroup, search, status, hospital
  * Hospital GET staff/doctors with blood group filter
  */
 export async function getHospitalStaff({ bloodGroup, search, status, hospitalId = "HOSP-5021" } = {}) {
+  if (!ENABLE_BACKEND_API) return null;
   try {
     const res = await axios.get(`${API_BASE_URL}/hospital/staff`, {
       params: { bloodGroup, search, status },
@@ -97,6 +99,7 @@ export async function getHospitalStaff({ bloodGroup, search, status, hospitalId 
  * Admin GET users with blood group filter
  */
 export async function getAdminUsers({ tab, bloodGroup, search, status } = {}) {
+  if (!ENABLE_BACKEND_API) return null;
   try {
     const res = await axios.get(`${API_BASE_URL}/admin/users`, {
       params: { tab, bloodGroup, search, status },
@@ -113,6 +116,7 @@ export async function getAdminUsers({ tab, bloodGroup, search, status } = {}) {
  * Search Location-Aware Blood Donors
  */
 export async function searchBloodDonors({ bloodGroup, originCity = "Kozhikode", search, userRole = "Doctor" } = {}) {
+  if (!ENABLE_BACKEND_API) return null;
   try {
     const res = await axios.get(`${API_BASE_URL}/blood-donors/search`, {
       params: { bloodGroup, originCity, search },
