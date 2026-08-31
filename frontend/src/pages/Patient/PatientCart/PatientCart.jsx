@@ -48,14 +48,15 @@ function PatientCart() {
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [isFreeDeliveryCoupon, setIsFreeDeliveryCoupon] = useState(false);
 
-    /* keep original logic — only wrap with ±1 controls */
+    /* Quantity update with stock limit enforcement */
     const updateQuantity = (id, delta) => {
         setCartItems((items) =>
-            items.map((item) =>
-                item.id === id
-                    ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-                    : item
-            )
+            items.map((item) => {
+                if (item.id !== id) return item;
+                const maxUnits = item.stockUnits ?? 120;
+                const newQty = Math.max(1, Math.min(maxUnits, item.quantity + delta));
+                return { ...item, quantity: newQty };
+            })
         );
     };
 
@@ -73,7 +74,7 @@ function PatientCart() {
     const total = Math.max(0, subtotal - couponDiscount) + delivery;
 
     const hasOutOfStock = cartItems.some(
-        (item) => !getStockAndDeliveryInfo(item.stockUnits ?? item.stock).canOrder
+        (item) => (item.stockUnits ?? 120) <= 0
     );
 
     /* Determine overall estimated delivery for cart */
@@ -140,7 +141,8 @@ function PatientCart() {
                 {/* ── Left: Cart Items ────────────────────────────── */}
                 <div className="cart-items-col">
                     {cartItems.map((item) => {
-                        const stockInfo = getStockAndDeliveryInfo(item.stockUnits ?? item.stock);
+                        const maxUnits = item.stockUnits ?? 120;
+                        const isMaxReached = item.quantity >= maxUnits;
                         const itemSubtotal = item.price * item.quantity;
                         const discountPct = item.mrp
                             ? Math.round(((item.mrp - item.price) / item.mrp) * 100)
@@ -180,13 +182,7 @@ function PatientCart() {
                                         </button>
                                     </div>
 
-                                    <div className="cart-med-meta" style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
-                                        <span className={`cart-stock-badge ${stockInfo.status === "in-stock" || stockInfo.status === "medium-stock" ? "cart-stock--in" : stockInfo.status === "low-stock" ? "cart-stock--low" : "cart-stock--out"}`}>
-                                            {stockInfo.label} ({stockInfo.stockText})
-                                        </span>
-                                        <span style={{ fontSize: "0.8rem", color: stockInfo.canOrder ? "var(--primary-color)" : "#dc2626", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-                                            <FaTruck style={{ fontSize: "0.75rem" }} /> {stockInfo.deliveryDesc}
-                                        </span>
+                                    <div className="cart-med-meta">
                                         {item.category && (
                                             <span className="cart-category-chip">{item.category}</span>
                                         )}
@@ -201,25 +197,40 @@ function PatientCart() {
                                             )}
                                         </div>
 
-                                        {/* Quantity controls */}
-                                        <div className="cart-qty-ctrl">
-                                            <button
-                                                className="cart-qty-btn"
-                                                onClick={() => updateQuantity(item.id, -1)}
-                                                disabled={!stockInfo.canOrder || item.quantity <= 1}
-                                                aria-label="Decrease quantity"
+                                        {/* Quantity controls + Inline Stock Message */}
+                                        <div className="cart-qty-block">
+                                            <div className="cart-qty-ctrl">
+                                                <button
+                                                    className="cart-qty-btn"
+                                                    onClick={() => updateQuantity(item.id, -1)}
+                                                    disabled={item.quantity <= 1}
+                                                    aria-label="Decrease quantity"
+                                                    id={`cart-qty-dec-${item.id}`}
+                                                >
+                                                    −
+                                                </button>
+                                                <span className="cart-qty-val">{item.quantity}</span>
+                                                <button
+                                                    className="cart-qty-btn"
+                                                    onClick={() => updateQuantity(item.id, 1)}
+                                                    disabled={isMaxReached}
+                                                    aria-label="Increase quantity"
+                                                    id={`cart-qty-inc-${item.id}`}
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                            <span
+                                                className={`cart-stock-inline-msg ${
+                                                    isMaxReached
+                                                        ? "cart-stock-inline-msg--max"
+                                                        : "cart-stock-inline-msg--ok"
+                                                }`}
                                             >
-                                                −
-                                            </button>
-                                            <span className="cart-qty-val">{item.quantity}</span>
-                                            <button
-                                                className="cart-qty-btn"
-                                                onClick={() => updateQuantity(item.id, 1)}
-                                                disabled={!stockInfo.canOrder}
-                                                aria-label="Increase quantity"
-                                            >
-                                                +
-                                            </button>
+                                                {isMaxReached
+                                                    ? `Only ${maxUnits} units available`
+                                                    : "Stock available"}
+                                            </span>
                                         </div>
 
                                         {/* Subtotal */}

@@ -1,39 +1,125 @@
-import React, { useState } from "react";
-import { FaChartBar, FaFileDownload, FaFileCsv, FaFilePdf, FaArrowUp, FaCalendarAlt, FaTimes } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import {
+  FaChartBar,
+  FaFileDownload,
+  FaFileCsv,
+  FaFilePdf,
+  FaArrowUp,
+  FaCalendarAlt,
+  FaTimes,
+  FaMoneyBillWave,
+  FaPills,
+  FaBoxOpen,
+  FaCalendarCheck,
+  FaCheckCircle,
+} from "react-icons/fa";
+import {
+  getStoredMedicines,
+  getStoredOrders,
+  getStoredInvoices,
+  getStoredAppointments,
+} from "../../utils/adminData";
+import { generateBloodGroupReport } from "../../utils/pdfGenerator";
 import "./AdminPages.css";
 
-const revenueLogs = [
-  { ref: "TXN-88419", entity: "Dr. Priya Mehta", desc: "Subscription Fee", date: "15 Jul 2026", amount: "₹2,500", status: "Paid" },
-  { ref: "TXN-88420", entity: "Aarav Sharma", desc: "Consultation Commission", date: "15 Jul 2026", amount: "₹180", status: "Paid" },
-  { ref: "TXN-88421", entity: "MediCare Pharmacy", desc: "Order Platform Fee", date: "14 Jul 2026", amount: "₹640", status: "Paid" },
-  { ref: "TXN-88422", entity: "St. Stephens Clinic", desc: "Portal Integration Fee", date: "13 Jul 2026", amount: "₹12,000", status: "Paid" },
-  { ref: "TXN-88423", entity: "Apex Heart Clinic", desc: "Portal Integration Fee", date: "12 Jul 2026", amount: "₹12,000", status: "Paid" },
-];
-
 export default function AdminReports() {
+  const [invoices, setInvoices] = useState([]);
+  const [medicines, setMedicines] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [showExportModal, setShowExportModal] = useState(false);
-  const [reportType, setReportType] = useState("Finance");
+  const [reportDomain, setReportDomain] = useState("Finance");
   const [reportFormat, setReportFormat] = useState("PDF");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+
+  useEffect(() => {
+    setInvoices(getStoredInvoices());
+    setMedicines(getStoredMedicines());
+    setOrders(getStoredOrders());
+    setAppointments(getStoredAppointments());
+  }, []);
+
+  const totalCollected = invoices.filter((i) => i.status === "Paid").reduce((sum, i) => sum + i.total, 0);
+  const totalStockValuation = medicines.reduce((sum, m) => sum + (m.stock * m.price), 0);
+  const completedAptsCount = appointments.filter((a) => a.status === "Completed").length;
+  const fulfilledOrdersCount = orders.filter((o) => o.status === "Delivered").length;
 
   const handleExport = (e) => {
     e.preventDefault();
     setLoading(true);
-    setSuccess(false);
 
-    // Simulate file generation
     setTimeout(() => {
       setLoading(false);
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setShowExportModal(false);
-      }, 1500);
-    }, 1800);
+
+      if (reportFormat === "PDF") {
+        let cols = [];
+        let data = [];
+        let title = "";
+
+        if (reportDomain === "Finance") {
+          title = "Administrative Financial & Billing Report";
+          cols = [
+            { header: "Invoice ID", dataKey: "id" },
+            { header: "Client Entity", dataKey: "clientName" },
+            { header: "Service Description", dataKey: "serviceDescription" },
+            { header: "Issue Date", dataKey: "issueDate" },
+            { header: "Total (INR)", dataKey: "total" },
+            { header: "Status", dataKey: "status" },
+          ];
+          data = invoices;
+        } else if (reportDomain === "Pharmacy") {
+          title = "Administrative Pharmacy Stock & Inventory Report";
+          cols = [
+            { header: "Drug ID", dataKey: "id" },
+            { header: "Medicine Name", dataKey: "name" },
+            { header: "Brand", dataKey: "brand" },
+            { header: "Batch No", dataKey: "batchNumber" },
+            { header: "Stock Units", dataKey: "stock" },
+            { header: "Unit Price", dataKey: "price" },
+            { header: "Status", dataKey: "status" },
+          ];
+          data = medicines;
+        } else if (reportDomain === "Orders") {
+          title = "Administrative Orders & Delivery Audit Report";
+          cols = [
+            { header: "Order ID", dataKey: "id" },
+            { header: "Customer Name", dataKey: "customerName" },
+            { header: "Type", dataKey: "orderType" },
+            { header: "Tracking ID", dataKey: "trackingId" },
+            { header: "Total (INR)", dataKey: "total" },
+            { header: "Status", dataKey: "status" },
+          ];
+          data = orders;
+        } else {
+          title = "Administrative Clinical Appointments Report";
+          cols = [
+            { header: "Apt ID", dataKey: "id" },
+            { header: "Patient", dataKey: "patientName" },
+            { header: "Doctor", dataKey: "doctorName" },
+            { header: "Mode", dataKey: "type" },
+            { header: "Date", dataKey: "date" },
+            { header: "Status", dataKey: "status" },
+          ];
+          data = appointments;
+        }
+
+        generateBloodGroupReport({
+          title,
+          selectedBloodGroup: "N/A (Multi-Domain Administrative)",
+          generatedBy: "System Super Administrator",
+          columns: cols,
+          data,
+          activeFilters: { Domain: reportDomain, Generated: new Date().toLocaleDateString() },
+        });
+      }
+
+      setSuccessMsg(`Successfully generated & exported ${reportDomain} report (${reportFormat}).`);
+      setShowExportModal(false);
+      setTimeout(() => setSuccessMsg(""), 3500);
+    }, 1200);
   };
 
-  // SVG Chart Height Metrics
   const chartHeightMap = [
     { label: "Jan", rev: 14000, height: 40 },
     { label: "Feb", rev: 18000, height: 50 },
@@ -45,27 +131,61 @@ export default function AdminReports() {
 
   return (
     <div className="ad-page">
+      {/* Toast Alert */}
+      {successMsg && (
+        <div style={{
+          position: "fixed",
+          bottom: "2rem",
+          right: "2rem",
+          background: "#10b981",
+          color: "#fff",
+          padding: "1rem 1.5rem",
+          borderRadius: "12px",
+          boxShadow: "0 10px 25px rgba(16,185,129,0.25)",
+          zIndex: 1200,
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          animation: "adFadeIn 0.3s ease"
+        }}>
+          <FaCheckCircle />
+          <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>{successMsg}</span>
+        </div>
+      )}
+
       <div className="ad-page-header">
-        <p>Analyze transaction history, verify cash flow audits, and export statistical datasets</p>
+        <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <FaChartBar style={{ color: "var(--ad-primary)" }} /> Reports &amp; Statistical Audits
+        </h2>
+        <p>Analyze transaction history, verify cash flow audits, pharmacy valuations, and export structured administrative datasets</p>
       </div>
 
-      {/* KPI row */}
+      {/* KPI Row */}
       <div className="ad-kpi-grid">
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaArrowUp /></div>
+          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaMoneyBillWave /></div>
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Gross Margin</span>
-            <h3 className="ad-kpi-value">₹1,58,400</h3>
+            <span className="ad-kpi-label">Gross Platform Collections</span>
+            <h3 className="ad-kpi-value">₹{totalCollected.toLocaleString("en-IN")}</h3>
             <span className="ad-kpi-delta up">+18% vs last quarter</span>
           </div>
         </div>
 
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0f2fe", color: "#0284c7" }}><FaChartBar /></div>
+          <div className="ad-kpi-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><FaPills /></div>
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Active Subscriptions</span>
-            <h3 className="ad-kpi-value">124</h3>
-            <span className="ad-kpi-delta up">+6 new this week</span>
+            <span className="ad-kpi-label">Pharmacy Asset Valuation</span>
+            <h3 className="ad-kpi-value">₹{totalStockValuation.toLocaleString("en-IN")}</h3>
+            <span className="ad-kpi-delta up">{medicines.length} Cataloged SKUs</span>
+          </div>
+        </div>
+
+        <div className="ad-kpi-card">
+          <div className="ad-kpi-icon" style={{ background: "#e0f2fe", color: "#0284c7" }}><FaCalendarCheck /></div>
+          <div className="ad-kpi-body">
+            <span className="ad-kpi-label">Completed Consults</span>
+            <h3 className="ad-kpi-value">{completedAptsCount} Sessions</h3>
+            <span className="ad-kpi-delta up">98.4% Fulfillment Rate</span>
           </div>
         </div>
 
@@ -81,7 +201,7 @@ export default function AdminReports() {
         {/* SVG Performance Chart */}
         <div className="ad-card" style={{ gridColumn: "span 2" }}>
           <div className="ad-card-header">
-            <h3 className="ad-card-title">Earnings Distribution Chart</h3>
+            <h3 className="ad-card-title">Quarterly Earnings &amp; Invoiced Growth</h3>
             <span style={{ fontSize: "0.75rem", background: "var(--ad-bg-secondary)", padding: "0.25rem 0.5rem", borderRadius: "4px" }}>
               Quarterly Revenue (INR)
             </span>
@@ -92,62 +212,67 @@ export default function AdminReports() {
                 <div className="ad-chart-bar-bg">
                   <div className="ad-chart-bar-fill" style={{ height: `${bar.height}%` }} />
                 </div>
-                <span style={{ fontSize: "0.72rem", color: "var(--ad-text-muted)", marginTop: "0.2rem" }}>{bar.rev.toLocaleString("en-IN")}</span>
+                <span style={{ fontSize: "0.72rem", color: "var(--ad-text-muted)", marginTop: "0.2rem" }}>₹{bar.rev.toLocaleString("en-IN")}</span>
                 <span className="ad-chart-label" style={{ fontWeight: "700" }}>{bar.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* User Engagement Stats */}
+        {/* Operational Statistics */}
         <div className="ad-card">
           <div className="ad-card-header">
-            <h3 className="ad-card-title">Engagement Statistics</h3>
+            <h3 className="ad-card-title">System Performance</h3>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
               <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Consultation Success Rate</span>
-              <strong style={{ fontSize: "1.25rem" }}>97.8%</strong>
+              <strong style={{ fontSize: "1.25rem", color: "#16a34a" }}>98.4%</strong>
             </div>
             <div>
-              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Avg Appointment Duration</span>
-              <strong style={{ fontSize: "1.25rem" }}>18.4 mins</strong>
+              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Pharmacy Orders Delivered</span>
+              <strong style={{ fontSize: "1.25rem", color: "#0284c7" }}>{fulfilledOrdersCount} / {orders.length}</strong>
             </div>
             <div>
-              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Patient Feedback Score</span>
-              <strong style={{ fontSize: "1.25rem" }}>4.85 / 5.00</strong>
+              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Platform Health Index</span>
+              <strong style={{ fontSize: "1.25rem", color: "#4f46e5" }}>99.98% Uptime</strong>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Transaction Table */}
+      {/* Transaction & Billing Log Table */}
       <div className="ad-card">
         <div className="ad-card-header">
-          <h3 className="ad-card-title">Recent Transactions</h3>
+          <h3 className="ad-card-title">Recent Invoiced Transactions &amp; Receipts</h3>
         </div>
         <div className="ad-table-wrap">
           <table className="ad-table">
             <thead>
               <tr>
-                <th>Txn Reference</th>
-                <th>Subscriber / Client</th>
-                <th>Description</th>
+                <th>Invoice Ref</th>
+                <th>Entity / Client</th>
+                <th>Service Description</th>
                 <th>Date Paid</th>
-                <th>Amount</th>
-                <th>Status</th>
+                <th>Amount (INR)</th>
+                <th>Payment Status</th>
               </tr>
             </thead>
             <tbody>
-              {revenueLogs.map((log) => (
-                <tr key={log.ref}>
-                  <td><span className="ad-id-badge">{log.ref}</span></td>
-                  <td><strong>{log.entity}</strong></td>
-                  <td>{log.desc}</td>
-                  <td>{log.date}</td>
-                  <td><strong>{log.amount}</strong></td>
+              {invoices.map((inv) => (
+                <tr key={inv.id}>
+                  <td><span className="ad-id-badge">{inv.id}</span></td>
+                  <td><strong>{inv.clientName}</strong></td>
+                  <td>{inv.serviceDescription}</td>
+                  <td>{inv.paidDate || inv.issueDate}</td>
+                  <td><strong>₹{inv.total.toLocaleString("en-IN")}</strong></td>
                   <td>
-                    <span className="ad-pill" style={{ background: "#dcfce7", color: "#15803d" }}>{log.status}</span>
+                    <span className="ad-pill" style={{
+                      background: inv.status === "Paid" ? "#dcfce7" : inv.status === "Overdue" ? "#fee2e2" : "#fef3c7",
+                      color: inv.status === "Paid" ? "#16a34a" : inv.status === "Overdue" ? "#dc2626" : "#d97706"
+                    }}>
+                      {inv.status}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -156,83 +281,46 @@ export default function AdminReports() {
         </div>
       </div>
 
-      {/* Export Report Modal */}
+      {/* ── Export Modal ── */}
       {showExportModal && (
-        <div className="ad-modal-backdrop" onClick={() => setShowExportModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="ad-modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "500px" }}>
             <div className="ad-modal-header">
-              <h3>Generate & Export Dataset</h3>
+              <h3 className="ad-modal-title"><FaFileDownload /> Export Administrative Report</h3>
               <button className="ad-modal-close" onClick={() => setShowExportModal(false)}><FaTimes /></button>
             </div>
-            <form onSubmit={handleExport}>
-              <div className="ad-modal-body">
-                {success ? (
-                  <div style={{ textAlign: "center", padding: "2rem", color: "#16a34a" }}>
-                    <FaFilePdf style={{ fontSize: "3rem", marginBottom: "1rem" }} />
-                    <h4>File Export Initiated!</h4>
-                    <p style={{ color: "var(--ad-text-secondary)", fontSize: "0.85rem", marginTop: "0.5rem" }}>
-                      Your download will start automatically in a moment.
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                    <div className="ad-form-group">
-                      <label htmlFor="reportType">Report Content</label>
-                      <select
-                        id="reportType"
-                        className="ad-select"
-                        value={reportType}
-                        onChange={(e) => setReportType(e.target.value)}
-                      >
-                        <option value="Finance">Financial Audits & Revenue Split</option>
-                        <option value="Users">User Registrations and Growth stats</option>
-                        <option value="Apts">Appointments & Clinic Performance logs</option>
-                      </select>
-                    </div>
-
-                    <div className="ad-form-group">
-                      <label htmlFor="reportFormat">Export File Format</label>
-                      <select
-                        id="reportFormat"
-                        className="ad-select"
-                        value={reportFormat}
-                        onChange={(e) => setReportFormat(e.target.value)}
-                      >
-                        <option value="PDF">Adobe PDF (.pdf)</option>
-                        <option value="CSV">Comma Separated Values (.csv)</option>
-                        <option value="XLS">Excel Sheet (.xlsx)</option>
-                      </select>
-                    </div>
-
-                    <div className="ad-form-group">
-                      <label htmlFor="reportRange">Date Duration</label>
-                      <div style={{ position: "relative" }}>
-                        <FaCalendarAlt style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                        <select
-                          id="reportRange"
-                          className="ad-select"
-                          style={{ paddingLeft: "35px" }}
-                        >
-                          <option>Last 30 Days (Current Month)</option>
-                          <option>Last Quarter (90 Days)</option>
-                          <option>Year to Date (YTD)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
+            <form onSubmit={handleExport} className="ad-modal-body">
+              <div className="ad-form-group">
+                <label>Select Report Domain *</label>
+                <select
+                  className="ad-select"
+                  value={reportDomain}
+                  onChange={(e) => setReportDomain(e.target.value)}
+                >
+                  <option value="Finance">Financial &amp; Revenue Ledger</option>
+                  <option value="Pharmacy">Pharmacy Stock &amp; Drug Inventory</option>
+                  <option value="Orders">Orders &amp; Delivery Tracking Audit</option>
+                  <option value="Appointments">Clinical Appointments &amp; Consultations</option>
+                </select>
               </div>
-              <div className="ad-modal-footer">
-                {!success && (
-                  <>
-                    <button type="submit" className="ad-btn ad-btn-primary" disabled={loading}>
-                      {loading ? "Generating Report..." : "Build Export"}
-                    </button>
-                    <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowExportModal(false)} disabled={loading}>
-                      Cancel
-                    </button>
-                  </>
-                )}
+
+              <div className="ad-form-group">
+                <label>Export Format</label>
+                <select
+                  className="ad-select"
+                  value={reportFormat}
+                  onChange={(e) => setReportFormat(e.target.value)}
+                >
+                  <option value="PDF">Formatted Document (PDF)</option>
+                  <option value="CSV">Spreadsheet (CSV)</option>
+                </select>
+              </div>
+
+              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowExportModal(false)}>Cancel</button>
+                <button type="submit" className="ad-btn ad-btn-primary" disabled={loading}>
+                  <FaFileDownload /> {loading ? "Generating Report..." : "Download Report"}
+                </button>
               </div>
             </form>
           </div>

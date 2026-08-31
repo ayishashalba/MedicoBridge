@@ -282,7 +282,14 @@
     text-decoration: line-through;
 }
 
-/* Quantity controls */
+/* Quantity controls block */
+.cart-qty-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
 .cart-qty-ctrl {
     display: inline-flex;
     align-items: center;
@@ -291,6 +298,22 @@
     border-radius: var(--radius-md, 10px);
     overflow: hidden;
     background: var(--bg-primary, #fff);
+}
+
+.cart-stock-inline-msg {
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: all 0.2s ease;
+}
+
+.cart-stock-inline-msg--ok {
+    color: #16a34a;
+}
+
+.cart-stock-inline-msg--max {
+    color: #d97706;
+    font-weight: 700;
 }
 
 .cart-qty-btn {

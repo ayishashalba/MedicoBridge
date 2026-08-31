@@ -26,6 +26,11 @@ import AdminLogin from "../pages/Admin/AdminLogin";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
 import AdminUsers from "../pages/Admin/AdminUsers";
 import AdminApprovals from "../pages/Admin/AdminApprovals";
+import AdminPharmacy from "../pages/Admin/AdminPharmacy";
+import AdminOrders from "../pages/Admin/AdminOrders";
+import AdminCoupons from "../pages/Admin/AdminCoupons";
+import AdminBilling from "../pages/Admin/AdminBilling";
+import AdminMedicalRecords from "../pages/Admin/AdminMedicalRecords";
 import AdminAppointments from "../pages/Admin/AdminAppointments";
 import AdminReports from "../pages/Admin/AdminReports";
 import AdminSettings from "../pages/Admin/AdminSettings";
@@ -246,6 +251,11 @@ function AppRoutes() {
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="approvals" element={<AdminApprovals />} />
+        <Route path="pharmacy" element={<AdminPharmacy />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="coupons" element={<AdminCoupons />} />
+        <Route path="billing" element={<AdminBilling />} />
+        <Route path="medical-records" element={<AdminMedicalRecords />} />
         <Route path="appointments" element={<AdminAppointments />} />
         <Route path="reports" element={<AdminReports />} />
         <Route path="settings" element={<AdminSettings />} />

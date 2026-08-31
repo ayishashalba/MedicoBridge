@@ -17,6 +17,11 @@ import {
   FaChevronLeft,
   FaChevronRight,
   FaShieldAlt,
+  FaPills,
+  FaBoxOpen,
+  FaTicketAlt,
+  FaFileInvoiceDollar,
+  FaNotesMedical,
 } from "react-icons/fa";
 import "./AdminLayout.css";
 
@@ -24,10 +29,15 @@ const sidebarNavItems = [
   { label: "Dashboard",            icon: <FaTachometerAlt />,      path: "/admin/dashboard" },
   { label: "User Management",      icon: <FaUsers />,              path: "/admin/users" },
   { label: "Approvals & Review",   icon: <FaUserCheck />,          path: "/admin/approvals", badge: 3 },
+  { label: "Pharmacy & Stock",     icon: <FaPills />,              path: "/admin/pharmacy", badge: "Low" },
+  { label: "Orders & Delivery",    icon: <FaBoxOpen />,            path: "/admin/orders" },
+  { label: "Coupons & Promos",     icon: <FaTicketAlt />,          path: "/admin/coupons" },
+  { label: "Billing & Payments",   icon: <FaFileInvoiceDollar />,  path: "/admin/billing" },
+  { label: "Medical Records",      icon: <FaNotesMedical />,       path: "/admin/medical-records" },
   { label: "Appointments",         icon: <FaCalendarCheck />,      path: "/admin/appointments" },
   { label: "Reports & Analytics",  icon: <FaChartBar />,           path: "/admin/reports" },
   { label: "System Settings",      icon: <FaCogs />,               path: "/admin/settings" },
-  { label: "Notifications",        icon: <FaBell />,               path: "/admin/notifications", badge: 5 },
+  { label: "Notifications",        icon: <FaBell />,               path: "/admin/notifications", badge: 4 },
   { label: "Feedback & Reviews",   icon: <FaComments />,           path: "/admin/feedback" },
   { label: "Activity Logs",        icon: <FaHistory />,            path: "/admin/logs" },
   { label: "Profile Settings",     icon: <FaUserShield />,         path: "/admin/profile" },

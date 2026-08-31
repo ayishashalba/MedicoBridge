@@ -58,22 +58,38 @@ export const AVAILABLE_COUPONS = [
   },
 ];
 
+export function getActiveCoupons() {
+  try {
+    const raw = localStorage.getItem("adminCoupons");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.filter((c) => c.status !== "Inactive");
+      }
+    }
+  } catch (e) {
+    console.warn("Failed reading custom coupons", e);
+  }
+  return AVAILABLE_COUPONS;
+}
+
 export function validateAndApplyCoupon(code, subtotal, standardDeliveryFee = 40) {
   if (!code || !code.trim()) {
     return { success: false, message: "Please enter a coupon code." };
   }
 
   const normalized = code.trim().toUpperCase();
-  const coupon = AVAILABLE_COUPONS.find((c) => c.code === normalized);
+  const allCoupons = getActiveCoupons();
+  const coupon = allCoupons.find((c) => c.code === normalized);
 
   if (!coupon) {
     return {
       success: false,
-      message: `Invalid coupon code "${code}". Please check and try again.`,
+      message: `Invalid or inactive coupon code "${code}". Please check and try again.`,
     };
   }
 
-  if (subtotal < coupon.minOrder) {
+  if (coupon.minOrder && subtotal < coupon.minOrder) {
     const diff = coupon.minOrder - subtotal;
     return {
       success: false,
@@ -84,11 +100,13 @@ export function validateAndApplyCoupon(code, subtotal, standardDeliveryFee = 40)
   let discount = 0;
   let freesDelivery = false;
 
-  if (coupon.type === "percent") {
-    const raw = Math.round((subtotal * coupon.discountPercent) / 100);
-    discount = Math.min(raw, coupon.maxDiscount);
+  if (coupon.type === "percent" || coupon.type === "percentage") {
+    const pct = coupon.discountPercent || coupon.discountValue || 10;
+    const raw = Math.round((subtotal * pct) / 100);
+    discount = coupon.maxDiscount ? Math.min(raw, coupon.maxDiscount) : raw;
   } else if (coupon.type === "flat") {
-    discount = Math.min(coupon.discountAmount, subtotal);
+    const amt = coupon.discountAmount || coupon.discountValue || 50;
+    discount = Math.min(amt, subtotal);
   } else if (coupon.type === "freedelivery") {
     freesDelivery = true;
     discount = standardDeliveryFee;
@@ -102,3 +120,4 @@ export function validateAndApplyCoupon(code, subtotal, standardDeliveryFee = 40)
     message: `Coupon "${coupon.code}" applied successfully! You saved ₹${discount}.`,
   };
 }
+
