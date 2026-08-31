@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaTruck } from "react-icons/fa";
 import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
+import { getEffectiveMedicinePrice } from "../../../utils/productOffers";
 import "./FeaturedMedicines.css";
 
 /* ─── Medicine Data ─────────────────────────────────────────────── */
@@ -139,7 +140,13 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
 
   const stockInfo = getStockAndDeliveryInfo(med.stockUnits ?? med.stock);
   const outOfStock = !stockInfo.canOrder;
-  const discount = discountPct(med.price, med.mrp);
+
+  // Evaluate Automatic Product Offer
+  const pricing = getEffectiveMedicinePrice(med);
+  const effectivePrice = pricing.finalPrice;
+  const originalPrice = pricing.originalPrice;
+  const mrp = pricing.mrp;
+  const discount = discountPct(effectivePrice, mrp);
 
   const handleAddToCart = () => {
     if (outOfStock) return;
@@ -196,9 +203,33 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
         <h4 className="featured-med-name">{med.name}</h4>
         <p className="featured-brand-name">{med.brand}</p>
 
+        {/* Automatic Product Offer Badge */}
+        {pricing.hasOffer && (
+          <div style={{
+            background: "#fef3c7",
+            color: "#b45309",
+            fontSize: "0.72rem",
+            fontWeight: "700",
+            padding: "0.2rem 0.5rem",
+            borderRadius: "4px",
+            marginBottom: "0.35rem",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "0.3rem",
+            border: "1px solid #fde68a"
+          }}>
+            🏷️ {pricing.badgeText}
+          </div>
+        )}
+
         <div className="featured-price-row">
-          <span className="featured-price">₹{med.price}</span>
-          <span className="featured-mrp">MRP ₹{med.mrp}</span>
+          <span className="featured-price">₹{effectivePrice}</span>
+          {pricing.hasOffer && (
+            <span style={{ fontSize: "0.82rem", textDecoration: "line-through", color: "#94a3b8", fontWeight: "600" }}>
+              ₹{originalPrice}
+            </span>
+          )}
+          <span className="featured-mrp">MRP ₹{mrp}</span>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
@@ -233,7 +264,7 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           </button>
         </div>
         <span className="featured-qty-total">
-          ₹{(med.price * qty).toFixed(2)}
+          ₹{(effectivePrice * qty).toFixed(2)}
         </span>
       </div>
 
@@ -254,13 +285,12 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           aria-label={`View details for ${med.name}`}
           onClick={() => navigate(`/patient/medicine/${med.id}`, { state: { medicine: med } })}
         >
-          View Details
+          View Details →
         </button>
       </div>
     </div>
   );
 }
-
 /* ─── Featured Medicines Section (export) ───────────────────────── */
 export default function FeaturedMedicines({ hasPrescription, onPrescriptionRequired }) {
   const [filter, setFilter] = useState("All");

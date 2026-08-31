@@ -22,6 +22,7 @@ import {
   FaInfoCircle,
 } from "react-icons/fa";
 import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
+import { getEffectiveMedicinePrice } from "../../../utils/productOffers";
 import "./PatientMedicineDetails.css";
 
 /* ─── Medicine Data Store ──────────────────────────────────────── */
@@ -76,8 +77,14 @@ export default function PatientMedicineDetails() {
 
   const deliveryStockInfo = getStockAndDeliveryInfo(medicine.stockUnits ?? medicine.stock);
   const outOfStock = !deliveryStockInfo.canOrder;
-  const discount = discountPct(medicine.price, medicine.mrp);
-  const totalPrice = (medicine.price * qty).toFixed(2);
+  
+  // Evaluate live automatic product offer
+  const pricing = getEffectiveMedicinePrice(medicine);
+  const effectivePrice = pricing.finalPrice;
+  const originalPrice = pricing.originalPrice;
+  const mrp = pricing.mrp;
+  const discount = discountPct(effectivePrice, mrp);
+  const totalPrice = (effectivePrice * qty).toFixed(2);
 
   const handleAddToCart = () => {
     if (outOfStock) return;
@@ -149,9 +156,32 @@ export default function PatientMedicineDetails() {
 
           <hr className="medicine-details-divider" />
 
+          {pricing.hasOffer && (
+            <div style={{
+              background: "#fef3c7",
+              color: "#b45309",
+              fontSize: "0.85rem",
+              fontWeight: "700",
+              padding: "0.4rem 0.8rem",
+              borderRadius: "6px",
+              marginBottom: "0.75rem",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              border: "1px solid #fde68a"
+            }}>
+              🏷️ {pricing.badgeText} (No Coupon Code Needed)
+            </div>
+          )}
+
           <div className="medicine-details-pricing">
-            <span className="medicine-details-price">₹{medicine.price}</span>
-            <span className="medicine-details-mrp">MRP ₹{medicine.mrp}</span>
+            <span className="medicine-details-price">₹{effectivePrice}</span>
+            {pricing.hasOffer && (
+              <span style={{ fontSize: "1.1rem", textDecoration: "line-through", color: "#94a3b8", fontWeight: "600", marginRight: "0.4rem" }}>
+                ₹{originalPrice}
+              </span>
+            )}
+            <span className="medicine-details-mrp">MRP ₹{mrp}</span>
             {discount > 0 && <span className="medicine-details-discount-badge">{discount}% OFF</span>}
           </div>
           <p className="medicine-details-incl-tax">Inclusive of all taxes</p>

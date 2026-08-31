@@ -8,34 +8,76 @@ import {
   FaTimes,
   FaCopy,
   FaTag,
-  FaPercentage,
-  FaMoneyBillWave,
-  FaTruck,
-  FaPlay,
   FaSearch,
+  FaCalendarAlt,
+  FaBolt,
 } from "react-icons/fa";
-import { getStoredCoupons, saveCoupons } from "../../utils/adminData";
-import { validateAndApplyCoupon } from "../../utils/coupons";
+import {
+  getStoredCoupons,
+  saveStoredCoupons,
+  getCouponTimeStatus,
+} from "../../utils/coupons";
+import {
+  getStoredProductOffers,
+  saveProductOffers,
+  getOfferTimeStatus,
+} from "../../utils/productOffers";
+import { getStoredMedicines } from "../../utils/adminData";
 import "./AdminPages.css";
 
+const couponStatusColors = {
+  Active: { bg: "#dcfce7", color: "#16a34a" },
+  Scheduled: { bg: "#fef3c7", color: "#d97706" },
+  Expired: { bg: "#fee2e2", color: "#dc2626" },
+};
+
+const offerStatusColors = {
+  Active: { bg: "#dcfce7", color: "#16a34a" },
+  Scheduled: { bg: "#fef3c7", color: "#d97706" },
+  Expired: { bg: "#fee2e2", color: "#dc2626" },
+};
+
 export default function AdminCoupons() {
+  // Navigation Tabs: 'offers' (System 1) vs 'coupons' (System 2)
+  const [activeTab, setActiveTab] = useState("offers");
+
+  // System 1: Product Offers State
+  const [productOffers, setProductOffers] = useState([]);
+  const [offerSearch, setOfferSearch] = useState("");
+  const [offerStatusFilter, setOfferStatusFilter] = useState("All");
+  const [showAddOfferModal, setShowAddOfferModal] = useState(false);
+  const [showEditOfferModal, setShowEditOfferModal] = useState(false);
+
+  // System 2: Cart Coupons State
   const [coupons, setCoupons] = useState([]);
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [couponSearch, setCouponSearch] = useState("");
+  const [couponStatusFilter, setCouponStatusFilter] = useState("All");
+  const [couponTypeFilter, setCouponTypeFilter] = useState("All");
+  const [showAddCouponModal, setShowAddCouponModal] = useState(false);
+  const [showEditCouponModal, setShowEditCouponModal] = useState(false);
 
-  // Modals
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  // Common UI State
   const [toastMsg, setToastMsg] = useState("");
+  const [medicinesList, setMedicinesList] = useState([]);
 
-  // Simulator state
-  const [simCode, setSimCode] = useState("MEDI10");
-  const [simAmount, setSimAmount] = useState(650);
-  const [simResult, setSimResult] = useState(null);
+  // ── Form State: Product Offers ──
+  const initialOfferForm = {
+    id: "",
+    offerName: "",
+    targetType: "product", // 'product', 'category', 'all'
+    targetId: 1,
+    targetName: "Paracetamol 650mg",
+    discountType: "flat", // 'flat' or 'percent'
+    discountValue: 5,
+    fromDateTime: "2026-08-01T00:00",
+    toDateTime: "2026-12-31T23:59",
+    badgeText: "",
+    status: "Active",
+  };
+  const [offerFormData, setOfferFormData] = useState(initialOfferForm);
 
-  // Form State
-  const initialForm = {
+  // ── Form State: Cart Coupons ──
+  const initialCouponForm = {
     id: "",
     code: "",
     title: "",
@@ -45,16 +87,17 @@ export default function AdminCoupons() {
     discountAmount: 50,
     maxDiscount: 100,
     minOrder: 499,
-    expiryDate: "2027-12-31",
+    fromDate: "2026-08-01",
+    toDate: "2027-12-31",
     status: "Active",
     badge: "SPECIAL",
-    usageCount: 0,
-    totalSavingsGranted: 0,
   };
-  const [formData, setFormData] = useState(initialForm);
+  const [couponFormData, setCouponFormData] = useState(initialCouponForm);
 
   useEffect(() => {
+    setProductOffers(getStoredProductOffers());
     setCoupons(getStoredCoupons());
+    setMedicinesList(getStoredMedicines());
   }, []);
 
   const triggerToast = (msg) => {
@@ -62,111 +105,135 @@ export default function AdminCoupons() {
     setTimeout(() => setToastMsg(""), 3000);
   };
 
-  const updateCouponsState = (updatedList) => {
-    setCoupons(updatedList);
-    saveCoupons(updatedList);
+  // ── PRODUCT OFFERS HANDLERS ───────────────────────────────────────
+
+  const handleCreateOffer = (e) => {
+    e.preventDefault();
+    if (!offerFormData.offerName) return;
+
+    let targetName = offerFormData.targetName;
+    if (offerFormData.targetType === "product") {
+      const found = medicinesList.find((m) => Number(m.id?.toString().replace("MED-", "")) === Number(offerFormData.targetId) || m.id === offerFormData.targetId);
+      if (found) targetName = found.name;
+    }
+
+    const newOffer = {
+      ...offerFormData,
+      id: `OFFER-${Date.now().toString().slice(-4)}`,
+      targetName,
+      badgeText: offerFormData.badgeText || (
+        offerFormData.discountType === "flat"
+          ? `${offerFormData.offerName}: ₹${offerFormData.discountValue} OFF`
+          : `${offerFormData.offerName}: ${offerFormData.discountValue}% OFF`
+      ),
+    };
+
+    const updated = [newOffer, ...productOffers];
+    setProductOffers(updated);
+    saveProductOffers(updated);
+    setShowAddOfferModal(false);
+    setOfferFormData(initialOfferForm);
+    triggerToast(`Product Offer "${newOffer.offerName}" created & scheduled successfully!`);
   };
 
-  const copyToClipboard = (code) => {
-    navigator.clipboard.writeText(code);
-    triggerToast(`Copied "${code}" to clipboard!`);
+  const handleUpdateOffer = (e) => {
+    e.preventDefault();
+    const updated = productOffers.map((o) => (o.id === offerFormData.id ? offerFormData : o));
+    setProductOffers(updated);
+    saveProductOffers(updated);
+    setShowEditOfferModal(false);
+    triggerToast(`Offer "${offerFormData.offerName}" updated.`);
   };
 
-  const handleToggleStatus = (id) => {
-    const updated = coupons.map((c) => {
-      if (c.id === id) {
-        const nextStatus = c.status === "Active" ? "Inactive" : "Active";
-        return { ...c, status: nextStatus };
-      }
-      return c;
-    });
-    updateCouponsState(updated);
-    triggerToast("Coupon status updated.");
-  };
-
-  const handleDelete = (id, code) => {
-    if (window.confirm(`Are you sure you want to permanently delete coupon "${code}"?`)) {
-      const updated = coupons.filter((c) => c.id !== id);
-      updateCouponsState(updated);
-      triggerToast(`Coupon "${code}" deleted.`);
+  const handleDeleteOffer = (id, name) => {
+    if (window.confirm(`Delete automatic offer "${name}"?`)) {
+      const updated = productOffers.filter((o) => o.id !== id);
+      setProductOffers(updated);
+      saveProductOffers(updated);
+      triggerToast(`Offer removed.`);
     }
   };
 
-  const handleAddSubmit = (e) => {
+  // ── CART COUPON HANDLERS ──────────────────────────────────────────
+
+  const handleCreateCoupon = (e) => {
     e.preventDefault();
-    const cleanCode = formData.code.trim().toUpperCase();
-    if (coupons.some((c) => c.code === cleanCode)) {
-      alert(`Coupon code "${cleanCode}" already exists! Please choose a unique code.`);
+    if (!couponFormData.code) return;
+
+    const normalizedCode = couponFormData.code.trim().toUpperCase();
+    if (coupons.some((c) => c.code === normalizedCode)) {
+      alert(`Coupon code "${normalizedCode}" already exists.`);
       return;
     }
 
     const newCoupon = {
-      ...formData,
-      id: `CPN-${Math.floor(100 + Math.random() * 900)}`,
-      code: cleanCode,
-      minOrder: Number(formData.minOrder) || 0,
-      discountPercent: Number(formData.discountPercent) || 0,
-      discountAmount: Number(formData.discountAmount) || 0,
-      maxDiscount: Number(formData.maxDiscount) || 0,
-      usageCount: 0,
-      totalSavingsGranted: 0,
+      ...couponFormData,
+      id: `CPN-${Date.now().toString().slice(-4)}`,
+      code: normalizedCode,
     };
 
     const updated = [newCoupon, ...coupons];
-    updateCouponsState(updated);
-    setShowAddModal(false);
-    setFormData(initialForm);
-    triggerToast(`Coupon "${cleanCode}" created & active across platform!`);
+    setCoupons(updated);
+    saveStoredCoupons(updated);
+    setShowAddCouponModal(false);
+    setCouponFormData(initialCouponForm);
+    triggerToast(`Cart Coupon "${newCoupon.code}" created & scheduled!`);
   };
 
-  const handleEditSubmit = (e) => {
+  const handleUpdateCoupon = (e) => {
     e.preventDefault();
-    const cleanCode = formData.code.trim().toUpperCase();
-    const updated = coupons.map((c) => {
-      if (c.id === formData.id) {
-        return {
-          ...formData,
-          code: cleanCode,
-          minOrder: Number(formData.minOrder) || 0,
-          discountPercent: Number(formData.discountPercent) || 0,
-          discountAmount: Number(formData.discountAmount) || 0,
-          maxDiscount: Number(formData.maxDiscount) || 0,
-        };
-      }
-      return c;
-    });
-
-    updateCouponsState(updated);
-    setShowEditModal(false);
-    triggerToast(`Coupon "${cleanCode}" updated successfully.`);
+    const updated = coupons.map((c) => (c.id === couponFormData.id ? couponFormData : c));
+    setCoupons(updated);
+    saveStoredCoupons(updated);
+    setShowEditCouponModal(false);
+    triggerToast(`Coupon "${couponFormData.code}" updated.`);
   };
 
-  const handleRunSimulator = () => {
-    const res = validateAndApplyCoupon(simCode, Number(simAmount) || 0);
-    setSimResult(res);
+  const handleDeleteCoupon = (id, code) => {
+    if (window.confirm(`Delete coupon "${code}"?`)) {
+      const updated = coupons.filter((c) => c.id !== id);
+      setCoupons(updated);
+      saveStoredCoupons(updated);
+      triggerToast(`Coupon "${code}" deleted.`);
+    }
   };
 
-  // Filtered List
-  const filtered = coupons.filter((c) => {
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    triggerToast(`Copied "${text}" to clipboard!`);
+  };
+
+  // Filtered Product Offers
+  const filteredOffers = productOffers.filter((off) => {
+    const s = offerSearch.toLowerCase();
     const matchSearch =
-      c.code.toLowerCase().includes(search.toLowerCase()) ||
-      c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.description.toLowerCase().includes(search.toLowerCase());
+      off.offerName.toLowerCase().includes(s) ||
+      (off.targetName && off.targetName.toLowerCase().includes(s)) ||
+      (off.badgeText && off.badgeText.toLowerCase().includes(s));
 
-    const matchType = typeFilter === "All" || c.type === typeFilter;
-    const matchStatus = statusFilter === "All" || c.status === statusFilter;
-
-    return matchSearch && matchType && matchStatus;
+    const status = getOfferTimeStatus(off, new Date());
+    const matchStatus = offerStatusFilter === "All" || status === offerStatusFilter;
+    return matchSearch && matchStatus;
   });
 
-  const totalCoupons = coupons.length;
-  const activeCount = coupons.filter((c) => c.status === "Active").length;
-  const totalSavings = coupons.reduce((sum, c) => sum + (c.totalSavingsGranted || 0), 0);
-  const totalRedemptions = coupons.reduce((sum, c) => sum + (c.usageCount || 0), 0);
+  // Filtered Cart Coupons
+  const filteredCoupons = coupons.filter((cpn) => {
+    const s = couponSearch.toLowerCase();
+    const matchSearch =
+      cpn.code.toLowerCase().includes(s) ||
+      (cpn.description && cpn.description.toLowerCase().includes(s)) ||
+      (cpn.title && cpn.title.toLowerCase().includes(s));
+
+    const status = getCouponTimeStatus(cpn, new Date());
+    const matchStatus = couponStatusFilter === "All" || status === couponStatusFilter;
+    const matchType = couponTypeFilter === "All" || cpn.type === couponTypeFilter;
+
+    return matchSearch && matchStatus && matchType;
+  });
 
   return (
     <div className="ad-page">
-      {/* Toast Alert */}
+      {/* Toast Notification */}
       {toastMsg && (
         <div style={{
           position: "fixed",
@@ -176,7 +243,7 @@ export default function AdminCoupons() {
           color: "#fff",
           padding: "1rem 1.5rem",
           borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
           zIndex: 1200,
           display: "flex",
           alignItems: "center",
@@ -188,537 +255,614 @@ export default function AdminCoupons() {
         </div>
       )}
 
-      <div className="ad-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <FaTicketAlt style={{ color: "var(--ad-primary)" }} /> Coupons &amp; Promo Codes
-          </h2>
-          <p>Create, configure, and monitor platform promotional discount vouchers and free-delivery codes</p>
-        </div>
-        <button className="ad-btn ad-btn-primary" onClick={() => { setFormData(initialForm); setShowAddModal(true); }}>
-          <FaPlus /> Create New Coupon
+      <div className="ad-page-header">
+        <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <FaTag style={{ color: "var(--ad-primary)" }} /> Pharmacy Discounts &amp; Offers Management
+        </h2>
+        <p>Manage automatic product offers (no code required) and cart checkout promo coupons with date-based scheduling</p>
+      </div>
+
+      {/* ── Two System Tabs ── */}
+      <div style={{ display: "flex", gap: "1rem", borderBottom: "2px solid var(--ad-border-color)", paddingBottom: "0.5rem", marginBottom: "1.5rem" }}>
+        <button
+          className="ad-btn"
+          style={{
+            background: activeTab === "offers" ? "var(--ad-primary)" : "var(--ad-bg-secondary)",
+            color: activeTab === "offers" ? "#fff" : "var(--ad-text-primary)",
+            padding: "0.65rem 1.25rem",
+            fontWeight: "700",
+            fontSize: "0.9rem",
+            borderRadius: "8px"
+          }}
+          onClick={() => setActiveTab("offers")}
+        >
+          <FaBolt /> 1. Automatic Product Offers ({productOffers.length})
+        </button>
+
+        <button
+          className="ad-btn"
+          style={{
+            background: activeTab === "coupons" ? "var(--ad-primary)" : "var(--ad-bg-secondary)",
+            color: activeTab === "coupons" ? "#fff" : "var(--ad-text-primary)",
+            padding: "0.65rem 1.25rem",
+            fontWeight: "700",
+            fontSize: "0.9rem",
+            borderRadius: "8px"
+          }}
+          onClick={() => setActiveTab("coupons")}
+        >
+          <FaTicketAlt /> 2. Cart &amp; Checkout Coupons ({coupons.length})
         </button>
       </div>
 
-      {/* KPI Stats */}
-      <div className="ad-kpi-grid">
-        <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><FaTicketAlt /></div>
-          <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Active Promo Codes</span>
-            <h3 className="ad-kpi-value">{activeCount} / {totalCoupons}</h3>
-            <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>Ready in Checkout</span>
-          </div>
-        </div>
-
-        <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaMoneyBillWave /></div>
-          <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Total Customer Savings</span>
-            <h3 className="ad-kpi-value">₹{totalSavings.toLocaleString("en-IN")}</h3>
-            <span className="ad-kpi-delta up">Promotional Impact</span>
-          </div>
-        </div>
-
-        <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#fef3c7", color: "#d97706" }}><FaTag /></div>
-          <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Times Redeemed</span>
-            <h3 className="ad-kpi-value">{totalRedemptions} Orders</h3>
-            <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)" }}>Platform Total</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Grid: Coupons Table + Live Simulator */}
-      <div className="ad-grid-3">
-        {/* Main Coupons List (2 cols) */}
-        <div className="ad-card" style={{ gridColumn: "span 2" }}>
-          <div className="ad-card-header">
-            <h3 className="ad-card-title">Configured Promo Vouchers</h3>
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB 1: AUTOMATIC PRODUCT OFFERS ──────────────────────────── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === "offers" && (
+        <>
+          {/* Informational Guidance */}
+          <div style={{
+            background: "#eff6ff",
+            border: "1px solid #bfdbfe",
+            padding: "1rem 1.25rem",
+            borderRadius: "10px",
+            color: "#1e40af",
+            fontSize: "0.85rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem"
+          }}>
+            <div>
+              <strong>⚡ Automatic Product Offers:</strong> Applied automatically on medicine cards and detail pages without requiring a coupon code. Prices return to normal automatically after the End Date/Time.
+            </div>
+            <button className="ad-btn ad-btn-primary" onClick={() => { setOfferFormData(initialOfferForm); setShowAddOfferModal(true); }}>
+              <FaPlus /> Create Product Offer
+            </button>
           </div>
 
-          <div className="ad-search-filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
-            <div className="ad-search-wrapper" style={{ flex: 1, minWidth: "200px" }}>
-              <FaSearch className="ad-search-icon" />
-              <input
-                type="text"
-                placeholder="Search coupon code, title..."
-                className="ad-input"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          {/* Product Offers Main Card */}
+          <div className="ad-card">
+            <div className="ad-search-filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+              <div className="ad-search-wrapper" style={{ flex: 1, minWidth: "260px" }}>
+                <FaSearch className="ad-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search offer name, target product, category, badge..."
+                  className="ad-input"
+                  value={offerSearch}
+                  onChange={(e) => setOfferSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="ad-filters">
+                <select
+                  className="ad-select"
+                  value={offerStatusFilter}
+                  onChange={(e) => setOfferStatusFilter(e.target.value)}
+                  style={{ width: "160px" }}
+                >
+                  <option value="All">All Time Statuses</option>
+                  <option value="Active">Active (Now)</option>
+                  <option value="Scheduled">Scheduled (Future)</option>
+                  <option value="Expired">Expired (Past)</option>
+                </select>
+              </div>
             </div>
 
-            <select
-              className="ad-select"
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              style={{ width: "135px" }}
-            >
-              <option value="All">All Types</option>
-              <option value="percent">Percentage %</option>
-              <option value="flat">Flat Amount</option>
-              <option value="freedelivery">Free Delivery</option>
-            </select>
-
-            <select
-              className="ad-select"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ width: "120px" }}
-            >
-              <option value="All">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-
-          <div className="ad-table-wrap">
-            <table className="ad-table">
-              <thead>
-                <tr>
-                  <th>Code &amp; Badge</th>
-                  <th>Title &amp; Benefit</th>
-                  <th>Min Order</th>
-                  <th>Redemptions</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
+            {/* Table of Product Offers */}
+            <div className="ad-table-wrap">
+              <table className="ad-table">
+                <thead>
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
-                      No coupons found.
-                    </td>
+                    <th>Offer Title &amp; Badge</th>
+                    <th>Applies To</th>
+                    <th>Discount Value</th>
+                    <th>Schedule Window (From → To)</th>
+                    <th>Current Status</th>
+                    <th>Actions</th>
                   </tr>
-                ) : (
-                  filtered.map((cpn) => {
-                    const isActive = cpn.status === "Active";
-                    return (
-                      <tr key={cpn.id} style={{ opacity: isActive ? 1 : 0.65 }}>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                            <strong className="ad-id-badge" style={{ fontSize: "0.85rem", letterSpacing: "0.5px" }}>
-                              {cpn.code}
-                            </strong>
-                            <button
-                              className="ad-btn ad-btn-outline"
-                              style={{ padding: "0.2rem 0.35rem", fontSize: "0.7rem" }}
-                              onClick={() => copyToClipboard(cpn.code)}
-                              title="Copy Code"
-                            >
-                              <FaCopy />
-                            </button>
-                          </div>
-                          {cpn.badge && (
-                            <span style={{ fontSize: "0.68rem", background: "#fef3c7", color: "#d97706", padding: "0.1rem 0.4rem", borderRadius: "4px", fontWeight: "700", display: "inline-block", marginTop: "3px" }}>
-                              {cpn.badge}
+                </thead>
+                <tbody>
+                  {filteredOffers.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
+                        No product offers found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredOffers.map((off) => {
+                      const status = getOfferTimeStatus(off, new Date());
+                      const sc = offerStatusColors[status] || { bg: "#f1f5f9", color: "#64748b" };
+
+                      return (
+                        <tr key={off.id}>
+                          <td>
+                            <strong>{off.offerName}</strong>
+                            <span style={{ display: "block", fontSize: "0.74rem", color: "#b45309", marginTop: "2px" }}>
+                              🏷️ {off.badgeText || "Special Offer"}
                             </span>
-                          )}
-                        </td>
-                        <td>
-                          <strong style={{ color: "var(--ad-text-primary)" }}>{cpn.title}</strong>
-                          <p style={{ margin: "0.15rem 0 0", fontSize: "0.75rem", color: "var(--ad-text-secondary)" }}>
-                            {cpn.description}
-                          </p>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>
-                            {cpn.minOrder > 0 ? `₹${cpn.minOrder}` : "No Min"}
-                          </span>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: "0.85rem" }}>{cpn.usageCount || 0} times</span>
-                          <span style={{ display: "block", fontSize: "0.7rem", color: "var(--ad-text-muted)" }}>
-                            Saved: ₹{(cpn.totalSavingsGranted || 0).toLocaleString("en-IN")}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => handleToggleStatus(cpn.id)}
-                            className={`ad-pill ${isActive ? "ad-pill-success" : "ad-pill-danger"}`}
-                            style={{
-                              background: isActive ? "#dcfce7" : "#fee2e2",
-                              color: isActive ? "#16a34a" : "#dc2626",
-                              cursor: "pointer",
-                              border: "none"
-                            }}
-                            title="Click to Toggle Active/Inactive"
-                          >
-                            {cpn.status}
-                          </button>
-                        </td>
-                        <td>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                            <button
-                              className="ad-btn ad-btn-secondary"
-                              style={{ padding: "0.35rem", borderRadius: "6px" }}
-                              onClick={() => {
-                                setFormData({ ...cpn });
-                                setShowEditModal(true);
-                              }}
-                              title="Edit Coupon"
-                            >
-                              <FaEdit />
-                            </button>
-                            <button
-                              className="ad-btn ad-btn-danger"
-                              style={{ padding: "0.35rem", borderRadius: "6px" }}
-                              onClick={() => handleDelete(cpn.id, cpn.code)}
-                              title="Delete Coupon"
-                            >
-                              <FaTrashAlt />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Live Coupon Simulator (1 col) */}
-        <div className="ad-card">
-          <div className="ad-card-header">
-            <h3 className="ad-card-title"><FaPlay /> Test Coupon Logic</h3>
-          </div>
-          <p style={{ fontSize: "0.82rem", color: "var(--ad-text-secondary)", marginBottom: "1rem" }}>
-            Simulate real patient cart discount math against active rules in real-time.
-          </p>
-
-          <div className="ad-form-group">
-            <label>Coupon Code to Test</label>
-            <input
-              type="text"
-              className="ad-input"
-              value={simCode}
-              onChange={(e) => setSimCode(e.target.value.toUpperCase())}
-              placeholder="e.g. MEDI10"
-            />
-          </div>
-
-          <div className="ad-form-group">
-            <label>Cart Subtotal (₹)</label>
-            <input
-              type="number"
-              min="0"
-              className="ad-input"
-              value={simAmount}
-              onChange={(e) => setSimAmount(e.target.value)}
-            />
-          </div>
-
-          <button
-            className="ad-btn ad-btn-primary"
-            style={{ width: "100%", justifyContent: "center", marginBottom: "1.25rem" }}
-            onClick={handleRunSimulator}
-          >
-            <FaPlay /> Test Validation
-          </button>
-
-          {simResult && (
-            <div style={{
-              background: simResult.success ? "#f0fdf4" : "#fef2f2",
-              border: `1px solid ${simResult.success ? "#bbf7d0" : "#fecaca"}`,
-              padding: "1rem",
-              borderRadius: "10px",
-              animation: "adFadeIn 0.2s ease"
-            }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem" }}>
-                {simResult.success ? <FaCheckCircle style={{ color: "#16a34a" }} /> : <FaTimes style={{ color: "#dc2626" }} />}
-                <strong style={{ fontSize: "0.88rem", color: simResult.success ? "#16a34a" : "#dc2626" }}>
-                  {simResult.success ? "Coupon Valid & Applied" : "Validation Failed"}
-                </strong>
-              </div>
-              <p style={{ margin: "0 0 0.5rem", fontSize: "0.8rem", color: "#334155" }}>{simResult.message}</p>
-              {simResult.success && (
-                <div style={{ fontSize: "0.8rem", borderTop: "1px dashed #cbd5e1", paddingTop: "0.5rem" }}>
-                  <div>Discount Granted: <strong>₹{simResult.discount}</strong></div>
-                  <div>Final Amount to Pay: <strong>₹{Math.max(0, simAmount - simResult.discount + (simResult.freesDelivery ? 0 : 40))}</strong></div>
-                </div>
-              )}
+                            <span className="ad-id-badge" style={{ fontSize: "0.68rem", marginTop: "3px" }}>{off.id}</span>
+                          </td>
+                          <td>
+                            <strong style={{ textTransform: "capitalize" }}>{off.targetType}:</strong>{" "}
+                            <span>{off.targetName || "All Medicines"}</span>
+                          </td>
+                          <td>
+                            <span style={{ fontWeight: "700", color: "#16a34a", fontSize: "0.95rem" }}>
+                              {off.discountType === "flat" ? `₹${off.discountValue} FLAT OFF` : `${off.discountValue}% OFF`}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: "0.8rem" }}>
+                              <div><strong>From:</strong> {off.fromDateTime?.replace("T", " ")}</div>
+                              <div><strong>To:</strong> {off.toDateTime?.replace("T", " ")}</div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="ad-pill" style={{ background: sc.bg, color: sc.color }}>
+                              {status}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", gap: "0.4rem" }}>
+                              <button
+                                className="ad-btn ad-btn-outline"
+                                style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem" }}
+                                onClick={() => { setOfferFormData(off); setShowEditOfferModal(true); }}
+                                title="Edit Offer"
+                              >
+                                <FaEdit /> Edit
+                              </button>
+                              <button
+                                className="ad-btn ad-btn-outline"
+                                style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem", color: "#dc2626" }}
+                                onClick={() => handleDeleteOffer(off.id, off.offerName)}
+                                title="Delete Offer"
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
 
-      {/* ── Add Coupon Modal ── */}
-      {showAddModal && (
-        <div className="ad-modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {/* ── TAB 2: CART & CHECKOUT COUPONS ───────────────────────────── */}
+      {/* ════════════════════════════════════════════════════════════════ */}
+      {activeTab === "coupons" && (
+        <>
+          {/* Informational Guidance */}
+          <div style={{
+            background: "#fdf4ff",
+            border: "1px solid #f5d0fe",
+            padding: "1rem 1.25rem",
+            borderRadius: "10px",
+            color: "#86198f",
+            fontSize: "0.85rem",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "1rem"
+          }}>
+            <div>
+              <strong>🎟️ Cart &amp; Checkout Coupons:</strong> Entered by patients only in Cart and Checkout. Scheduled coupons cannot be used before From Date, and expired coupons cannot be used after To Date.
+            </div>
+            <button className="ad-btn ad-btn-primary" onClick={() => { setCouponFormData(initialCouponForm); setShowAddCouponModal(true); }}>
+              <FaPlus /> Create Cart Coupon
+            </button>
+          </div>
+
+          {/* Coupons Main Card */}
+          <div className="ad-card">
+            <div className="ad-search-filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
+              <div className="ad-search-wrapper" style={{ flex: 1, minWidth: "260px" }}>
+                <FaSearch className="ad-search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search promo code, description, title..."
+                  className="ad-input"
+                  value={couponSearch}
+                  onChange={(e) => setCouponSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="ad-filters">
+                <select
+                  className="ad-select"
+                  value={couponStatusFilter}
+                  onChange={(e) => setCouponStatusFilter(e.target.value)}
+                  style={{ width: "160px" }}
+                >
+                  <option value="All">All Time Statuses</option>
+                  <option value="Active">Active (Now)</option>
+                  <option value="Scheduled">Scheduled (Future)</option>
+                  <option value="Expired">Expired (Past)</option>
+                </select>
+
+                <select
+                  className="ad-select"
+                  value={couponTypeFilter}
+                  onChange={(e) => setCouponTypeFilter(e.target.value)}
+                  style={{ width: "150px" }}
+                >
+                  <option value="All">All Types</option>
+                  <option value="percent">Percentage (%)</option>
+                  <option value="flat">Flat Amount (₹)</option>
+                  <option value="freedelivery">Free Delivery</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Coupons Table */}
+            <div className="ad-table-wrap">
+              <table className="ad-table">
+                <thead>
+                  <tr>
+                    <th>Coupon Code &amp; Title</th>
+                    <th>Type &amp; Value</th>
+                    <th>Min. Order / Cap</th>
+                    <th>Validity Period (From → To)</th>
+                    <th>Schedule Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCoupons.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
+                        No cart coupons found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredCoupons.map((cpn) => {
+                      const status = getCouponTimeStatus(cpn, new Date());
+                      const sc = couponStatusColors[status] || { bg: "#f1f5f9", color: "#64748b" };
+
+                      return (
+                        <tr key={cpn.id || cpn.code}>
+                          <td>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <strong style={{ fontSize: "0.95rem", color: "var(--ad-primary)", letterSpacing: "0.5px" }}>
+                                {cpn.code}
+                              </strong>
+                              <button
+                                type="button"
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--ad-text-muted)" }}
+                                onClick={() => copyToClipboard(cpn.code)}
+                                title="Copy code"
+                              >
+                                <FaCopy />
+                              </button>
+                            </div>
+                            <span style={{ display: "block", fontSize: "0.75rem", color: "var(--ad-text-secondary)", marginTop: "2px" }}>
+                              {cpn.description}
+                            </span>
+                          </td>
+                          <td>
+                            <strong>
+                              {cpn.type === "percent"
+                                ? `${cpn.discountPercent || cpn.discountValue}% OFF`
+                                : cpn.type === "flat"
+                                ? `₹${cpn.discountAmount || cpn.discountValue} OFF`
+                                : "Free Delivery"}
+                            </strong>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: "0.8rem" }}>
+                              <div>Min Order: <strong>₹{cpn.minOrder || 0}</strong></div>
+                              {cpn.maxDiscount && <div>Max Cap: ₹{cpn.maxDiscount}</div>}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ fontSize: "0.8rem" }}>
+                              <div><strong>From:</strong> {cpn.fromDate || "2026-01-01"}</div>
+                              <div><strong>To:</strong> {cpn.toDate || cpn.expiryDate}</div>
+                            </div>
+                          </td>
+                          <td>
+                            <span className="ad-pill" style={{ background: sc.bg, color: sc.color }}>
+                              {status}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ display: "flex", gap: "0.4rem" }}>
+                              <button
+                                className="ad-btn ad-btn-outline"
+                                style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem" }}
+                                onClick={() => { setCouponFormData(cpn); setShowEditCouponModal(true); }}
+                                title="Edit Coupon"
+                              >
+                                <FaEdit /> Edit
+                              </button>
+                              <button
+                                className="ad-btn ad-btn-outline"
+                                style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem", color: "#dc2626" }}
+                                onClick={() => handleDeleteCoupon(cpn.id, cpn.code)}
+                                title="Delete Coupon"
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── ADD PRODUCT OFFER MODAL ── */}
+      {showAddOfferModal && (
+        <div className="ad-modal-overlay" onClick={() => setShowAddOfferModal(false)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px" }}>
             <div className="ad-modal-header">
-              <h3 className="ad-modal-title"><FaPlus /> Create New Promo Voucher</h3>
-              <button className="ad-modal-close" onClick={() => setShowAddModal(false)}><FaTimes /></button>
+              <h3 className="ad-modal-title"><FaBolt /> Create Automatic Product Offer</h3>
+              <button className="ad-modal-close" onClick={() => setShowAddOfferModal(false)}><FaTimes /></button>
             </div>
-            <form onSubmit={handleAddSubmit} className="ad-modal-body">
-              <div className="ad-grid-2" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Coupon Promo Code *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. MONSOON25"
-                    className="ad-input"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Display Badge</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. SPECIAL, 25% OFF"
-                    className="ad-input"
-                    value={formData.badge}
-                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                  />
-                </div>
-              </div>
-
+            <form onSubmit={handleCreateOffer} className="ad-modal-body">
               <div className="ad-form-group">
-                <label>Voucher Title *</label>
+                <label>Offer Name *</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Monsoon Health Savings (25% OFF)"
                   className="ad-input"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Christmas Special, Monsoon Deal"
+                  value={offerFormData.offerName}
+                  onChange={(e) => setOfferFormData({ ...offerFormData, offerName: e.target.value })}
                 />
               </div>
 
-              <div className="ad-form-group">
-                <label>Description Body</label>
-                <input
-                  type="text"
-                  placeholder="e.g. 25% off up to ₹200 on all medicine orders above ₹499"
-                  className="ad-input"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="ad-grid-3" style={{ gap: "1rem" }}>
+              <div className="ad-grid-2" style={{ gap: "1rem" }}>
                 <div className="ad-form-group">
-                  <label>Discount Type</label>
+                  <label>Applies To *</label>
                   <select
                     className="ad-select"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                    value={offerFormData.targetType}
+                    onChange={(e) => setOfferFormData({ ...offerFormData, targetType: e.target.value })}
                   >
-                    <option value="percent">Percentage (%)</option>
-                    <option value="flat">Flat Amount (₹)</option>
-                    <option value="freedelivery">Free Delivery</option>
+                    <option value="product">Specific Medicine</option>
+                    <option value="category">Medicine Category</option>
+                    <option value="all">All Medicines</option>
                   </select>
                 </div>
 
-                {formData.type === "percent" && (
-                  <>
-                    <div className="ad-form-group">
-                      <label>Percent Off (%)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        className="ad-input"
-                        value={formData.discountPercent}
-                        onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
-                      />
-                    </div>
-                    <div className="ad-form-group">
-                      <label>Max Cap (₹)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        className="ad-input"
-                        value={formData.maxDiscount}
-                        onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
-                      />
-                    </div>
-                  </>
+                {offerFormData.targetType === "product" && (
+                  <div className="ad-form-group">
+                    <label>Target Medicine *</label>
+                    <select
+                      className="ad-select"
+                      value={offerFormData.targetId}
+                      onChange={(e) => setOfferFormData({ ...offerFormData, targetId: e.target.value })}
+                    >
+                      <option value={1}>Paracetamol 650mg</option>
+                      <option value={2}>Amoxicillin 500mg</option>
+                      <option value={3}>Vitamin C 1000mg</option>
+                      <option value={4}>Azithromycin 500mg</option>
+                      <option value={5}>Omeprazole 20mg</option>
+                    </select>
+                  </div>
                 )}
 
-                {formData.type === "flat" && (
+                {offerFormData.targetType === "category" && (
                   <div className="ad-form-group">
-                    <label>Discount Amount (₹)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      className="ad-input"
-                      value={formData.discountAmount}
-                      onChange={(e) => setFormData({ ...formData, discountAmount: e.target.value })}
-                    />
+                    <label>Target Category *</label>
+                    <select
+                      className="ad-select"
+                      value={offerFormData.targetName}
+                      onChange={(e) => setOfferFormData({ ...offerFormData, targetName: e.target.value })}
+                    >
+                      <option value="Tablet">Tablets</option>
+                      <option value="Capsule">Capsules</option>
+                      <option value="Supplement">Supplements</option>
+                      <option value="Syrup">Syrups</option>
+                    </select>
                   </div>
                 )}
               </div>
 
               <div className="ad-grid-2" style={{ gap: "1rem" }}>
                 <div className="ad-form-group">
-                  <label>Minimum Order Subtotal (₹)</label>
+                  <label>Discount Type *</label>
+                  <select
+                    className="ad-select"
+                    value={offerFormData.discountType}
+                    onChange={(e) => setOfferFormData({ ...offerFormData, discountType: e.target.value })}
+                  >
+                    <option value="flat">Fixed Amount (₹ OFF)</option>
+                    <option value="percent">Percentage (% OFF)</option>
+                  </select>
+                </div>
+
+                <div className="ad-form-group">
+                  <label>Discount Value *</label>
                   <input
                     type="number"
-                    min="0"
+                    required
+                    min="1"
                     className="ad-input"
-                    value={formData.minOrder}
-                    onChange={(e) => setFormData({ ...formData, minOrder: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Expiry Date</label>
-                  <input
-                    type="date"
-                    className="ad-input"
-                    value={formData.expiryDate}
-                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                    placeholder={offerFormData.discountType === "flat" ? "e.g. 5" : "e.g. 20"}
+                    value={offerFormData.discountValue}
+                    onChange={(e) => setOfferFormData({ ...offerFormData, discountValue: Number(e.target.value) })}
                   />
                 </div>
               </div>
 
-              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="ad-btn ad-btn-primary"><FaPlus /> Publish Coupon</button>
+              <div className="ad-grid-2" style={{ gap: "1rem" }}>
+                <div className="ad-form-group">
+                  <label>From Date &amp; Time *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className="ad-input"
+                    value={offerFormData.fromDateTime}
+                    onChange={(e) => setOfferFormData({ ...offerFormData, fromDateTime: e.target.value })}
+                  />
+                </div>
+
+                <div className="ad-form-group">
+                  <label>To Date &amp; Time *</label>
+                  <input
+                    type="datetime-local"
+                    required
+                    className="ad-input"
+                    value={offerFormData.toDateTime}
+                    onChange={(e) => setOfferFormData({ ...offerFormData, toDateTime: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="ad-form-group">
+                <label>Offer Badge Text (Optional)</label>
+                <input
+                  type="text"
+                  className="ad-input"
+                  placeholder="e.g. Christmas Offer: ₹5 OFF"
+                  value={offerFormData.badgeText}
+                  onChange={(e) => setOfferFormData({ ...offerFormData, badgeText: e.target.value })}
+                />
+              </div>
+
+              <div className="ad-modal-footer">
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowAddOfferModal(false)}>Cancel</button>
+                <button type="submit" className="ad-btn ad-btn-primary"><FaBolt /> Schedule Offer</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ── Edit Coupon Modal ── */}
-      {showEditModal && (
-        <div className="ad-modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+      {/* ── ADD CART COUPON MODAL ── */}
+      {showAddCouponModal && (
+        <div className="ad-modal-overlay" onClick={() => setShowAddCouponModal(false)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "560px" }}>
             <div className="ad-modal-header">
-              <h3 className="ad-modal-title"><FaEdit /> Edit Coupon: {formData.code}</h3>
-              <button className="ad-modal-close" onClick={() => setShowEditModal(false)}><FaTimes /></button>
+              <h3 className="ad-modal-title"><FaTicketAlt /> Create Cart &amp; Checkout Promo Coupon</h3>
+              <button className="ad-modal-close" onClick={() => setShowAddCouponModal(false)}><FaTimes /></button>
             </div>
-            <form onSubmit={handleEditSubmit} className="ad-modal-body">
+            <form onSubmit={handleCreateCoupon} className="ad-modal-body">
               <div className="ad-grid-2" style={{ gap: "1rem" }}>
                 <div className="ad-form-group">
-                  <label>Coupon Promo Code *</label>
+                  <label>Coupon Code *</label>
                   <input
                     type="text"
                     required
                     className="ad-input"
-                    value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                    placeholder="e.g. CHRISTMAS20"
+                    value={couponFormData.code}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, code: e.target.value.toUpperCase() })}
                   />
                 </div>
+
                 <div className="ad-form-group">
-                  <label>Display Badge</label>
-                  <input
-                    type="text"
-                    className="ad-input"
-                    value={formData.badge}
-                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                  />
+                  <label>Coupon Type *</label>
+                  <select
+                    className="ad-select"
+                    value={couponFormData.type}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, type: e.target.value })}
+                  >
+                    <option value="percent">Percentage Discount (%)</option>
+                    <option value="flat">Flat Cash Discount (₹)</option>
+                    <option value="freedelivery">Free Delivery</option>
+                  </select>
                 </div>
               </div>
 
               <div className="ad-form-group">
-                <label>Voucher Title</label>
+                <label>Description *</label>
                 <input
                   type="text"
                   required
                   className="ad-input"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Flat 20% discount on cart subtotal"
+                  value={couponFormData.description}
+                  onChange={(e) => setCouponFormData({ ...couponFormData, description: e.target.value })}
                 />
-              </div>
-
-              <div className="ad-form-group">
-                <label>Description Body</label>
-                <input
-                  type="text"
-                  className="ad-input"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="ad-grid-3" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Discount Type</label>
-                  <select
-                    className="ad-select"
-                    value={formData.type}
-                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                  >
-                    <option value="percent">Percentage (%)</option>
-                    <option value="flat">Flat Amount (₹)</option>
-                    <option value="freedelivery">Free Delivery</option>
-                  </select>
-                </div>
-
-                {formData.type === "percent" && (
-                  <>
-                    <div className="ad-form-group">
-                      <label>Percent Off (%)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        className="ad-input"
-                        value={formData.discountPercent}
-                        onChange={(e) => setFormData({ ...formData, discountPercent: e.target.value })}
-                      />
-                    </div>
-                    <div className="ad-form-group">
-                      <label>Max Cap (₹)</label>
-                      <input
-                        type="number"
-                        min="1"
-                        className="ad-input"
-                        value={formData.maxDiscount}
-                        onChange={(e) => setFormData({ ...formData, maxDiscount: e.target.value })}
-                      />
-                    </div>
-                  </>
-                )}
-
-                {formData.type === "flat" && (
-                  <div className="ad-form-group">
-                    <label>Discount Amount (₹)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      className="ad-input"
-                      value={formData.discountAmount}
-                      onChange={(e) => setFormData({ ...formData, discountAmount: e.target.value })}
-                    />
-                  </div>
-                )}
               </div>
 
               <div className="ad-grid-2" style={{ gap: "1rem" }}>
+                {couponFormData.type === "percent" ? (
+                  <div className="ad-form-group">
+                    <label>Discount Percentage (%) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      max="100"
+                      className="ad-input"
+                      value={couponFormData.discountPercent}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, discountPercent: Number(e.target.value) })}
+                    />
+                  </div>
+                ) : couponFormData.type === "flat" ? (
+                  <div className="ad-form-group">
+                    <label>Discount Amount (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      className="ad-input"
+                      value={couponFormData.discountAmount}
+                      onChange={(e) => setCouponFormData({ ...couponFormData, discountAmount: Number(e.target.value) })}
+                    />
+                  </div>
+                ) : null}
+
                 <div className="ad-form-group">
                   <label>Minimum Order Subtotal (₹)</label>
                   <input
                     type="number"
                     min="0"
                     className="ad-input"
-                    value={formData.minOrder}
-                    onChange={(e) => setFormData({ ...formData, minOrder: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Expiry Date</label>
-                  <input
-                    type="date"
-                    className="ad-input"
-                    value={formData.expiryDate}
-                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                    value={couponFormData.minOrder}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, minOrder: Number(e.target.value) })}
                   />
                 </div>
               </div>
 
-              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="ad-btn ad-btn-primary"><FaCheckCircle /> Save Changes</button>
+              <div className="ad-grid-2" style={{ gap: "1rem" }}>
+                <div className="ad-form-group">
+                  <label>From Date (Start Date) *</label>
+                  <input
+                    type="date"
+                    required
+                    className="ad-input"
+                    value={couponFormData.fromDate}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, fromDate: e.target.value })}
+                  />
+                </div>
+
+                <div className="ad-form-group">
+                  <label>To Date (Expiry Date) *</label>
+                  <input
+                    type="date"
+                    required
+                    className="ad-input"
+                    value={couponFormData.toDate}
+                    onChange={(e) => setCouponFormData({ ...couponFormData, toDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="ad-modal-footer">
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowAddCouponModal(false)}>Cancel</button>
+                <button type="submit" className="ad-btn ad-btn-primary"><FaTicketAlt /> Create Coupon</button>
               </div>
             </form>
           </div>
