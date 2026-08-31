@@ -14,6 +14,14 @@
     margin-bottom: 32px;
 }
 
+.pharmacy-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 .pharmacy-header h2 {
     font-size: 2.25rem;
     color: var(--text-primary);

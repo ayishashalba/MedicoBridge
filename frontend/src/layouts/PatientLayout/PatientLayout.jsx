@@ -9,6 +9,7 @@ import {
   FaCalendarCheck,
   FaVideo,
   FaPills,
+  FaBoxOpen,
   FaFolderOpen,
   FaBell,
   FaCog,
@@ -51,6 +52,11 @@ const sidebarNavItems = [
     label: "Pharmacy",
     icon: <FaPills />,
     path: "/patient/pharmacy",
+  },
+  {
+    label: "My Orders",
+    icon: <FaBoxOpen />,
+    path: "/patient/orders",
   },
   {
     label: "Medical Records",

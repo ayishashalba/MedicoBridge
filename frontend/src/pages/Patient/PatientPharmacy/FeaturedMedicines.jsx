@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaTruck } from "react-icons/fa";
+import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
 import "./FeaturedMedicines.css";
 
 /* ─── Medicine Data ─────────────────────────────────────────────── */
@@ -11,6 +13,7 @@ const medicines = [
     price: 28,
     mrp: 35,
     emoji: "💊",
+    stockUnits: 120, // >40 units -> 1-2 days
     stock: "in-stock",
     requiresPrescription: false,
     isRx: false,
@@ -25,6 +28,7 @@ const medicines = [
     price: 145,
     mrp: 185,
     emoji: "💉",
+    stockUnits: 55, // >40 units -> 1-2 days
     stock: "in-stock",
     requiresPrescription: true,
     isRx: true,
@@ -39,6 +43,7 @@ const medicines = [
     price: 62,
     mrp: 80,
     emoji: "🍊",
+    stockUnits: 8, // <10 units -> 3-5 days
     stock: "low-stock",
     requiresPrescription: false,
     isRx: false,
@@ -53,6 +58,7 @@ const medicines = [
     price: 210,
     mrp: 265,
     emoji: "🔬",
+    stockUnits: 25, // 10-40 units -> 2-3 days
     stock: "in-stock",
     requiresPrescription: true,
     isRx: true,
@@ -67,6 +73,7 @@ const medicines = [
     price: 55,
     mrp: 68,
     emoji: "🌿",
+    stockUnits: 5, // <10 units -> 3-5 days
     stock: "low-stock",
     requiresPrescription: false,
     isRx: false,
@@ -81,6 +88,7 @@ const medicines = [
     price: 38,
     mrp: 50,
     emoji: "🌸",
+    stockUnits: 0, // 0 units -> Out of Stock
     stock: "out-of-stock",
     requiresPrescription: false,
     isRx: false,
@@ -95,6 +103,7 @@ const medicines = [
     price: 35,
     mrp: 45,
     emoji: "⚡",
+    stockUnits: 80, // >40 units -> 1-2 days
     stock: "in-stock",
     requiresPrescription: true,
     isRx: true,
@@ -109,6 +118,7 @@ const medicines = [
     price: 90,
     mrp: 120,
     emoji: "☀️",
+    stockUnits: 60, // >40 units -> 1-2 days
     stock: "in-stock",
     requiresPrescription: false,
     isRx: false,
@@ -121,21 +131,15 @@ const medicines = [
 /* ─── Utility ───────────────────────────────────────────────────── */
 const discountPct = (price, mrp) => Math.round(((mrp - price) / mrp) * 100);
 
-const stockConfig = {
-  "in-stock": { label: "In Stock", cls: "featured-stock--in" },
-  "low-stock": { label: "Low Stock", cls: "featured-stock--low" },
-  "out-of-stock": { label: "Out of Stock", cls: "featured-stock--out" },
-};
-
 /* ─── Single Medicine Card ───────────────────────────────────────── */
 function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
   const navigate = useNavigate();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const outOfStock = med.stock === "out-of-stock";
+  const stockInfo = getStockAndDeliveryInfo(med.stockUnits ?? med.stock);
+  const outOfStock = !stockInfo.canOrder;
   const discount = discountPct(med.price, med.mrp);
-  const stock = stockConfig[med.stock];
 
   const handleAddToCart = () => {
     if (outOfStock) return;
@@ -197,7 +201,14 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           <span className="featured-mrp">MRP ₹{med.mrp}</span>
         </div>
 
-        <span className={`featured-stock-badge ${stock.cls}`}>{stock.label}</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
+          <span className={`featured-stock-badge ${stockInfo.status === "in-stock" || stockInfo.status === "medium-stock" ? "featured-stock--in" : stockInfo.status === "low-stock" ? "featured-stock--low" : "featured-stock--out"}`}>
+            {stockInfo.label} ({stockInfo.stockText})
+          </span>
+          <span style={{ fontSize: "0.75rem", color: stockInfo.canOrder ? "var(--primary-color)" : "#94a3b8", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
+            <FaTruck style={{ fontSize: "0.7rem" }} /> {stockInfo.deliveryDesc}
+          </span>
+        </div>
       </div>
 
       {/* ── Quantity selector ─────────────────────────────────── */}

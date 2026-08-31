@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { FaTrash, FaShoppingCart, FaArrowLeft, FaPills, FaTag, FaTruck } from "react-icons/fa";
+import { FaTrash, FaShoppingCart, FaArrowLeft, FaPills, FaTag, FaTruck, FaExclamationTriangle, FaPercent } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
+import CouponSection from "../../../components/CouponSection/CouponSection";
 import "./PatientCart.css";
 
 /* ─── Mock cart data enriched with brand/emoji/stock ─────────────── */
@@ -13,6 +15,7 @@ const initialCart = [
         price: 35,
         mrp: 45,
         quantity: 2,
+        stockUnits: 120, // >40 units -> 1-2 days
         stock: "in-stock",
         category: "Tablet",
         highlight: "#e8f5e9",
@@ -26,6 +29,7 @@ const initialCart = [
         price: 220,
         mrp: 280,
         quantity: 1,
+        stockUnits: 8, // <10 units -> 3-5 days
         stock: "low-stock",
         category: "Supplement",
         highlight: "#fff8e1",
@@ -36,16 +40,13 @@ const initialCart = [
 const DELIVERY_FEE = 40;
 const FREE_DELIVERY_THRESHOLD = 499;
 
-const stockConfig = {
-    "in-stock": { label: "In Stock", cls: "cart-stock--in" },
-    "low-stock": { label: "Low Stock", cls: "cart-stock--low" },
-    "out-of-stock": { label: "Out of Stock", cls: "cart-stock--out" },
-};
-
 /* ─── PatientCart Component ─────────────────────────────────────── */
 function PatientCart() {
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState(initialCart);
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [couponDiscount, setCouponDiscount] = useState(0);
+    const [isFreeDeliveryCoupon, setIsFreeDeliveryCoupon] = useState(false);
 
     /* keep original logic — only wrap with ±1 controls */
     const updateQuantity = (id, delta) => {
@@ -67,9 +68,30 @@ function PatientCart() {
         (sum, item) => sum + item.price * item.quantity,
         0
     );
-    const isFreeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD;
+    const isFreeDelivery = subtotal >= FREE_DELIVERY_THRESHOLD || isFreeDeliveryCoupon;
     const delivery = cartItems.length > 0 && !isFreeDelivery ? DELIVERY_FEE : 0;
-    const total = subtotal + delivery;
+    const total = Math.max(0, subtotal - couponDiscount) + delivery;
+
+    const hasOutOfStock = cartItems.some(
+        (item) => !getStockAndDeliveryInfo(item.stockUnits ?? item.stock).canOrder
+    );
+
+    /* Determine overall estimated delivery for cart */
+    const mainItemStockInfo = cartItems.length > 0
+        ? getStockAndDeliveryInfo(cartItems[0].stockUnits ?? cartItems[0].stock)
+        : getStockAndDeliveryInfo(120);
+
+    const handleApplyCoupon = (result) => {
+        setAppliedCoupon(result.coupon);
+        setCouponDiscount(result.discount);
+        setIsFreeDeliveryCoupon(!!result.freesDelivery);
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+        setIsFreeDeliveryCoupon(false);
+    };
 
     /* ── Empty State ─────────────────────────────────────────────── */
     if (cartItems.length === 0) {
@@ -118,7 +140,7 @@ function PatientCart() {
                 {/* ── Left: Cart Items ────────────────────────────── */}
                 <div className="cart-items-col">
                     {cartItems.map((item) => {
-                        const stock = stockConfig[item.stock] || stockConfig["in-stock"];
+                        const stockInfo = getStockAndDeliveryInfo(item.stockUnits ?? item.stock);
                         const itemSubtotal = item.price * item.quantity;
                         const discountPct = item.mrp
                             ? Math.round(((item.mrp - item.price) / item.mrp) * 100)
@@ -158,9 +180,12 @@ function PatientCart() {
                                         </button>
                                     </div>
 
-                                    <div className="cart-med-meta">
-                                        <span className={`cart-stock-badge ${stock.cls}`}>
-                                            {stock.label}
+                                    <div className="cart-med-meta" style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+                                        <span className={`cart-stock-badge ${stockInfo.status === "in-stock" || stockInfo.status === "medium-stock" ? "cart-stock--in" : stockInfo.status === "low-stock" ? "cart-stock--low" : "cart-stock--out"}`}>
+                                            {stockInfo.label} ({stockInfo.stockText})
+                                        </span>
+                                        <span style={{ fontSize: "0.8rem", color: stockInfo.canOrder ? "var(--primary-color)" : "#dc2626", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                                            <FaTruck style={{ fontSize: "0.75rem" }} /> {stockInfo.deliveryDesc}
                                         </span>
                                         {item.category && (
                                             <span className="cart-category-chip">{item.category}</span>
@@ -181,7 +206,7 @@ function PatientCart() {
                                             <button
                                                 className="cart-qty-btn"
                                                 onClick={() => updateQuantity(item.id, -1)}
-                                                disabled={item.quantity <= 1}
+                                                disabled={!stockInfo.canOrder || item.quantity <= 1}
                                                 aria-label="Decrease quantity"
                                             >
                                                 −
@@ -190,6 +215,7 @@ function PatientCart() {
                                             <button
                                                 className="cart-qty-btn"
                                                 onClick={() => updateQuantity(item.id, 1)}
+                                                disabled={!stockInfo.canOrder}
                                                 aria-label="Increase quantity"
                                             >
                                                 +
@@ -219,6 +245,16 @@ function PatientCart() {
 
                 {/* ── Right: Order Summary ─────────────────────────── */}
                 <div className="cart-summary-col">
+                    {/* Coupon Section */}
+                    <CouponSection
+                        subtotal={subtotal}
+                        deliveryFee={DELIVERY_FEE}
+                        appliedCoupon={appliedCoupon}
+                        couponDiscount={couponDiscount}
+                        onApplyCoupon={handleApplyCoupon}
+                        onRemoveCoupon={handleRemoveCoupon}
+                    />
+
                     <div className="cart-summary-card">
                         <h3 className="cart-summary-title">
                             <FaTag /> Order Summary
@@ -231,10 +267,30 @@ function PatientCart() {
                                 <span>₹{subtotal}</span>
                             </div>
 
-                            {/* Delivery */}
+                            {/* Coupon Discount if applied */}
+                            {appliedCoupon && couponDiscount > 0 && (
+                                <div className="cart-summary-row" style={{ color: "#16a34a", fontWeight: 700 }}>
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                        <FaPercent style={{ fontSize: "0.75rem" }} /> Coupon ({appliedCoupon.code})
+                                    </span>
+                                    <span>−₹{couponDiscount}</span>
+                                </div>
+                            )}
+
+                            {/* Estimated Delivery */}
+                            <div className="cart-summary-row" style={{ background: "#f0fdf4", padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid #bbf7d0" }}>
+                                <span className="cart-delivery-label" style={{ color: "#15803d", fontWeight: 700 }}>
+                                    <FaTruck /> Est. Delivery
+                                </span>
+                                <span style={{ fontWeight: 800, color: "#166534" }}>
+                                    {mainItemStockInfo.deliveryEta}
+                                </span>
+                            </div>
+
+                            {/* Delivery Charge */}
                             <div className="cart-summary-row">
                                 <span className="cart-delivery-label">
-                                    <FaTruck /> Delivery Charge
+                                    Delivery Charge
                                 </span>
                                 <span className={isFreeDelivery ? "cart-free" : "cart-delivery-amount"}>
                                     {isFreeDelivery ? "FREE" : `₹${DELIVERY_FEE}`}
@@ -263,9 +319,25 @@ function PatientCart() {
                             <span className="cart-total-val">₹{total}</span>
                         </div>
 
+                        {hasOutOfStock && (
+                            <div style={{ padding: "0.6rem", background: "#fef2f2", border: "1px solid #fecdd3", borderRadius: "6px", color: "#dc2626", fontSize: "0.8rem", marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                                <FaExclamationTriangle /> Please remove out-of-stock items before checkout.
+                            </div>
+                        )}
+
                         <button
                             className="cart-checkout-btn"
-                            onClick={() => navigate("/patient/checkout")}
+                            disabled={hasOutOfStock}
+                            onClick={() =>
+                                navigate("/patient/checkout", {
+                                    state: {
+                                        appliedCoupon,
+                                        couponDiscount,
+                                        isFreeDeliveryCoupon,
+                                    },
+                                })
+                            }
+                            style={{ opacity: hasOutOfStock ? 0.5 : 1, cursor: hasOutOfStock ? "not-allowed" : "pointer" }}
                         >
                             Proceed to Checkout →
                         </button>

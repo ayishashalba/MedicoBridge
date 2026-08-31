@@ -33,6 +33,7 @@ function PatientOrderDetails() {
     const order = {
         id: "MB20260001",
         date: "20 June 2026",
+        estimatedDelivery: "1–2 Days (Sufficient Pharmacy Stock >40 units)",
         payment: "Cash on Delivery",
         status: "Delivered",
         subtotal: 260,
@@ -47,6 +48,8 @@ function PatientOrderDetails() {
                 price: 35,
                 dosage: "500mg",
                 type: "Tablet",
+                stockText: "In Stock (>40 units)",
+                eta: "1–2 Days",
             },
             {
                 name: "Vitamin C Tablets",
@@ -54,6 +57,8 @@ function PatientOrderDetails() {
                 price: 220,
                 dosage: "1000mg",
                 type: "Tablet",
+                stockText: "Low Stock (8 units)",
+                eta: "3–5 Days",
             },
         ],
         timeline: [
@@ -131,6 +136,13 @@ function PatientOrderDetails() {
                                 </span>
                             </div>
                             <div className="od-info-item">
+                                <span className="od-info-label">Estimated Delivery</span>
+                                <span className="od-info-value" style={{ color: "#16a34a", fontWeight: 700 }}>
+                                    <FaTruck className="od-info-inline-icon" />
+                                    {order.estimatedDelivery}
+                                </span>
+                            </div>
+                            <div className="od-info-item">
                                 <span className="od-info-label">Payment Method</span>
                                 <span className="od-info-value">
                                     <FaCreditCard className="od-info-inline-icon" />
@@ -169,6 +181,11 @@ function PatientOrderDetails() {
                                         <div className="od-medicine-meta">
                                             <span className="od-medicine-tag">{medicine.type}</span>
                                             <span className="od-medicine-tag">{medicine.dosage}</span>
+                                            {medicine.stockText && (
+                                                <span className="od-medicine-tag" style={{ background: "#f0fdf4", color: "#15803d", fontWeight: 600 }}>
+                                                    {medicine.stockText} · Est. {medicine.eta}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="od-medicine-qty">

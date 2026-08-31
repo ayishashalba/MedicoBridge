@@ -22,8 +22,8 @@ const orders = [
     {
         id: "MB20260001",
         date: "20 June 2026",
-        estimatedDate: "23 June 2026",
-        deliveredDate: "22 June 2026",
+        estimatedDate: "1–2 Days (Delivered on 22 June)",
+        deliveredDate: "22 June 2026 (1–2 Days, Sufficient Stock)",
         items: ["Paracetamol 650mg", "Vitamin C Tablets"],
         amount: "₹290",
         payment: "Cash on Delivery",
@@ -32,7 +32,7 @@ const orders = [
     {
         id: "MB20260002",
         date: "22 June 2026",
-        estimatedDate: "25 June 2026",
+        estimatedDate: "1–2 Days (23–24 June 2026 · Sufficient Stock)",
         deliveredDate: null,
         items: ["Cetirizine Tablets"],
         amount: "₹120",
@@ -42,7 +42,7 @@ const orders = [
     {
         id: "MB20260003",
         date: "24 June 2026",
-        estimatedDate: "27 June 2026",
+        estimatedDate: "2–3 Days (26–27 June 2026 · Medium Stock)",
         deliveredDate: null,
         items: ["Blood Pressure Monitor"],
         amount: "₹1,850",
@@ -52,7 +52,7 @@ const orders = [
     {
         id: "MB20260004",
         date: "18 June 2026",
-        estimatedDate: "21 June 2026",
+        estimatedDate: "3–5 Days (Cancelled)",
         deliveredDate: null,
         items: ["Omega-3 Capsules", "Multivitamin Tablets", "Zinc Supplements"],
         amount: "₹560",

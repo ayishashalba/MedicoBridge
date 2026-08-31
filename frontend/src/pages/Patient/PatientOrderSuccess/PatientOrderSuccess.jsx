@@ -12,7 +12,7 @@ import {
     FaRupeeSign,
     FaStore,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./PatientOrderSuccess.css";
 
 /* ── Static order details (mirrors checkout data) ── */
@@ -27,45 +27,56 @@ const ORDER = {
         hour: "2-digit",
         minute: "2-digit",
     }),
-    delivery: "Tomorrow, by 8:00 PM",
+    delivery: "1–2 Days (Sufficient Pharmacy Stock)",
     payment: "Cash on Delivery",
     total: 290,
 };
 
-const summaryFields = [
-    {
-        icon: <FaHashtag />,
-        label: "Order ID",
-        value: `#${ORDER.id}`,
-        highlight: true,
-    },
-    {
-        icon: <FaCalendarAlt />,
-        label: "Order Date & Time",
-        value: `${ORDER.date} · ${ORDER.time}`,
-    },
-    {
-        icon: <FaTruck />,
-        label: "Estimated Delivery",
-        value: ORDER.delivery,
-        green: true,
-    },
-    {
-        icon: <FaWallet />,
-        label: "Payment Method",
-        value: ORDER.payment,
-    },
-    {
-        icon: <FaRupeeSign />,
-        label: "Total Amount Paid",
-        value: `₹${ORDER.total}`,
-        bold: true,
-    },
-];
-
 function PatientOrderSuccess() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [visible, setVisible] = useState(false);
+
+    const paidTotal = location.state?.total !== undefined ? location.state.total : ORDER.total;
+    const appliedCoupon = location.state?.appliedCoupon;
+    const couponDiscount = location.state?.couponDiscount;
+
+    const summaryFields = [
+        {
+            icon: <FaHashtag />,
+            label: "Order ID",
+            value: `#${ORDER.id}`,
+            highlight: true,
+        },
+        {
+            icon: <FaCalendarAlt />,
+            label: "Order Date & Time",
+            value: `${ORDER.date} · ${ORDER.time}`,
+        },
+        {
+            icon: <FaTruck />,
+            label: "Estimated Delivery",
+            value: ORDER.delivery,
+            green: true,
+        },
+        ...(appliedCoupon ? [{
+            icon: <FaWallet />,
+            label: `Coupon Applied (${appliedCoupon.code})`,
+            value: `Saved ₹${couponDiscount}`,
+            green: true,
+        }] : []),
+        {
+            icon: <FaWallet />,
+            label: "Payment Method",
+            value: ORDER.payment,
+        },
+        {
+            icon: <FaRupeeSign />,
+            label: "Total Amount Paid",
+            value: `₹${paidTotal}`,
+            bold: true,
+        },
+    ];
 
     /* Trigger entrance animation after mount */
     useEffect(() => {
@@ -138,8 +149,7 @@ function PatientOrderSuccess() {
                 <div className="pos-delivery-msg">
                     <FaTruck className="pos-delivery-icon" />
                     <span>
-                        Your medicines will be dispatched within <strong>2 hours</strong> and
-                        delivered <strong>by tomorrow</strong>. You'll receive an SMS update.
+                        Your medicines will be processed and delivered within <strong>1–2 days</strong> (Sufficient Pharmacy Stock). You'll receive real-time tracking updates.
                     </span>
                 </div>
 

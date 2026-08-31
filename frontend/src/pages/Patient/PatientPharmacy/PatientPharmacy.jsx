@@ -90,7 +90,7 @@ const ordersData = [
     amount: 290,
     status: "Delivered",
     pharmacy: "Apollo Pharmacy",
-    delivery: "Delivered on 21 June 2026",
+    delivery: "Est. delivery: 1–2 Days (Sufficient Stock) · Delivered 21 June",
   },
   {
     id: "MB20260002",
@@ -99,7 +99,7 @@ const ordersData = [
     amount: 185,
     status: "Shipped",
     pharmacy: "MediPlus Pharmacy",
-    delivery: "Est. delivery: 23 June 2026",
+    delivery: "Est. delivery: 1–2 Days (Sufficient Stock)",
   },
   {
     id: "MB20260003",
@@ -108,7 +108,7 @@ const ordersData = [
     amount: 399,
     status: "Pending",
     pharmacy: "Care Medicals",
-    delivery: "Awaiting pickup from pharmacy",
+    delivery: "Est. delivery: 2–3 Days (Medium Stock)",
   },
 ];
 
@@ -577,9 +577,31 @@ function MyOrdersPanel() {
   return (
     <section className="pharmacy-section orders-panel">
       <div className="orders-panel-header">
-        <h3 style={{ marginBottom: 0 }}>
-          {tab === "active" ? <><FaBoxOpen /> My Orders</> : <><FaHistory /> Order History</>}
-        </h3>
+        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <h3 style={{ marginBottom: 0 }}>
+            {tab === "active" ? <><FaBoxOpen /> My Orders</> : <><FaHistory /> Order History</>}
+          </h3>
+          <button
+            className="orders-page-link-btn"
+            onClick={() => navigate("/patient/orders")}
+            id="pharmacy-panel-view-all-orders-btn"
+            style={{
+              background: "none",
+              border: "1px solid var(--border-color)",
+              borderRadius: "6px",
+              padding: "0.35rem 0.75rem",
+              fontSize: "0.82rem",
+              fontWeight: "600",
+              color: "var(--primary-color)",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+            }}
+          >
+            View All Orders <FaArrowRight style={{ fontSize: "0.75rem" }} />
+          </button>
+        </div>
         <div className="orders-tab-group">
           <button
             className={`orders-tab ${tab === "active" ? "orders-tab--active" : ""}`}
@@ -636,6 +658,7 @@ function MyOrdersPanel() {
 
 /* ─── Main Component ────────────────────────────────────────────── */
 function PatientPharmacy() {
+  const navigate = useNavigate();
   const [expandedPharmacy, setExpandedPharmacy] = useState(null);
   const [hasPrescription, setHasPrescription] = useState(false);
   const [rxRequiredMedicine, setRxRequiredMedicine] = useState(null); // medicine that triggered the modal
@@ -668,6 +691,24 @@ function PatientPharmacy() {
             <h2>💊 Pharmacy</h2>
             <p>Search medicines, browse nearby pharmacies and upload your prescription.</p>
           </div>
+          <button
+            className="primary-btn pharmacy-my-orders-btn"
+            onClick={() => navigate("/patient/orders")}
+            id="pharmacy-my-orders-header-btn"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              whiteSpace: "nowrap",
+              padding: "0.75rem 1.25rem",
+              borderRadius: "8px",
+              fontWeight: 600,
+              fontSize: "0.9rem",
+              cursor: "pointer",
+            }}
+          >
+            <FaBoxOpen /> My Orders
+          </button>
         </div>
       </div>
 

@@ -9,10 +9,11 @@ import {
     FaTruck,
     FaShieldAlt,
     FaCheckCircle,
-    FaClock,
     FaEdit,
+    FaPercent,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import CouponSection from "../../../components/CouponSection/CouponSection";
 import "./PatientCheckout.css";
 
 const SUBTOTAL = 290;
@@ -42,15 +43,39 @@ const paymentMethods = [
 
 function PatientCheckout() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [payment, setPayment] = useState("");
     const [agreed, setAgreed] = useState(false);
 
-    const isFreeDelivery = SUBTOTAL >= DELIVERY_THRESHOLD;
+    /* Coupon state (initialize from cart navigation state if present) */
+    const [appliedCoupon, setAppliedCoupon] = useState(
+        () => location.state?.appliedCoupon || null
+    );
+    const [couponDiscount, setCouponDiscount] = useState(
+        () => location.state?.couponDiscount || 0
+    );
+    const [isFreeDeliveryCoupon, setIsFreeDeliveryCoupon] = useState(
+        () => location.state?.isFreeDeliveryCoupon || false
+    );
+
+    const isFreeDelivery = SUBTOTAL >= DELIVERY_THRESHOLD || isFreeDeliveryCoupon;
     const deliveryCharge = isFreeDelivery ? 0 : DELIVERY_CHARGE;
-    const grandTotal = SUBTOTAL + deliveryCharge;
+    const grandTotal = Math.max(0, SUBTOTAL - couponDiscount) + deliveryCharge;
 
     const canPlaceOrder = payment !== "" && agreed;
+
+    const handleApplyCoupon = (result) => {
+        setAppliedCoupon(result.coupon);
+        setCouponDiscount(result.discount);
+        setIsFreeDeliveryCoupon(!!result.freesDelivery);
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponDiscount(0);
+        setIsFreeDeliveryCoupon(false);
+    };
 
     return (
         <div className="pco-page">
@@ -103,9 +128,9 @@ function PatientCheckout() {
 
                         {/* Estimated Delivery */}
                         <div className="pco-delivery-eta">
-                            <FaClock className="pco-eta-icon" />
+                            <FaTruck className="pco-eta-icon" style={{ color: "var(--primary-color)" }} />
                             <span>
-                                <strong>Delivery by Tomorrow</strong> — by 8:00 PM
+                                Estimated Delivery: <strong>1–2 Days</strong> (Pharmacy Sufficient Stock)
                             </span>
                         </div>
                     </div>
@@ -169,6 +194,16 @@ function PatientCheckout() {
 
                 {/* ── RIGHT COLUMN — Order Summary ── */}
                 <div className="pco-right-col">
+                    {/* Coupon Section */}
+                    <CouponSection
+                        subtotal={SUBTOTAL}
+                        deliveryFee={DELIVERY_CHARGE}
+                        appliedCoupon={appliedCoupon}
+                        couponDiscount={couponDiscount}
+                        onApplyCoupon={handleApplyCoupon}
+                        onRemoveCoupon={handleRemoveCoupon}
+                    />
+
                     <div className="pco-summary-card">
 
                         <h3 className="pco-summary-title">
@@ -178,12 +213,18 @@ function PatientCheckout() {
 
                         {/* Items */}
                         <div className="pco-summary-items">
-                            <div className="pco-summary-item-row">
-                                <span>💊 Paracetamol 650mg <span className="pco-qty-chip">×2</span></span>
+                            <div className="pco-summary-item-row" style={{ alignItems: "flex-start" }}>
+                                <div>
+                                    <span>💊 Paracetamol 650mg <span className="pco-qty-chip">×2</span></span>
+                                    <small style={{ display: "block", color: "#16a34a", fontSize: "0.75rem", fontWeight: 600 }}>In Stock (&gt;40 units) · Est. 1–2 Days</small>
+                                </div>
                                 <span>₹70</span>
                             </div>
-                            <div className="pco-summary-item-row">
-                                <span>🍊 Vitamin C Tablets <span className="pco-qty-chip">×1</span></span>
+                            <div className="pco-summary-item-row" style={{ alignItems: "flex-start", marginTop: "0.5rem" }}>
+                                <div>
+                                    <span>🍊 Vitamin C Tablets <span className="pco-qty-chip">×1</span></span>
+                                    <small style={{ display: "block", color: "#d97706", fontSize: "0.75rem", fontWeight: 600 }}>Low Stock (8 units) · Est. 3–5 Days</small>
+                                </div>
                                 <span>₹220</span>
                             </div>
                         </div>
@@ -196,6 +237,17 @@ function PatientCheckout() {
                                 <span>Subtotal</span>
                                 <span>₹{SUBTOTAL}</span>
                             </div>
+
+                            {/* Coupon discount if applied */}
+                            {appliedCoupon && couponDiscount > 0 && (
+                                <div className="pco-pricing-row" style={{ color: "#16a34a", fontWeight: 700 }}>
+                                    <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                        <FaPercent style={{ fontSize: "0.75rem" }} /> Coupon ({appliedCoupon.code})
+                                    </span>
+                                    <span>−₹{couponDiscount}</span>
+                                </div>
+                            )}
+
                             <div className="pco-pricing-row">
                                 <span className="pco-delivery-label">
                                     <FaTruck className="pco-truck-icon" />
@@ -244,7 +296,15 @@ function PatientCheckout() {
                         <button
                             className={`pco-place-order-btn ${canPlaceOrder ? "" : "pco-place-order-btn--disabled"}`}
                             disabled={!canPlaceOrder}
-                            onClick={() => navigate("/patient/order-success")}
+                            onClick={() =>
+                                navigate("/patient/order-success", {
+                                    state: {
+                                        appliedCoupon,
+                                        couponDiscount,
+                                        total: grandTotal,
+                                    },
+                                })
+                            }
                         >
                             {canPlaceOrder ? "✅ Place Order" : "Select a Payment Method"}
                         </button>

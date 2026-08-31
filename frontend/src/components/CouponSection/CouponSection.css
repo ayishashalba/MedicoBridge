@@ -1,0 +1,328 @@
+/* ================================================================
+   CouponSection.css — Reusable Coupon & Promo Code UI
+   ================================================================ */
+
+.coupon-section-card {
+  background: var(--bg-primary, #ffffff);
+  border: 1.5px dashed var(--border-color, #cbd5e1);
+  border-radius: var(--radius-lg, 14px);
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm, 0 1px 4px rgba(0, 0, 0, 0.05));
+  transition: border-color 0.2s ease;
+}
+
+.coupon-section-card:hover {
+  border-color: var(--primary-color, #0d9488);
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.coupon-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.coupon-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.coupon-header-icon {
+  color: var(--primary-color, #0d9488);
+  font-size: 1.05rem;
+}
+
+.coupon-toggle-list-btn {
+  background: transparent;
+  border: none;
+  color: var(--primary-color, #0d9488);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+
+.coupon-toggle-list-btn:hover {
+  background: var(--bg-accent, #f0fdfa);
+}
+
+/* ── Input & Apply ───────────────────────────────────────────── */
+.coupon-input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.coupon-input-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 8px 12px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.coupon-input-box:focus-within {
+  border-color: var(--primary-color, #0d9488);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  background: #ffffff;
+}
+
+.coupon-input-icon {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.coupon-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-primary, #0f172a);
+}
+
+.coupon-input::placeholder {
+  text-transform: none;
+  font-weight: 400;
+  letter-spacing: normal;
+  color: #94a3b8;
+}
+
+.coupon-apply-btn {
+  background: var(--primary-color, #0d9488);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  padding: 9px 18px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  white-space: nowrap;
+}
+
+.coupon-apply-btn:hover {
+  background: #0f766e;
+}
+
+.coupon-apply-btn:active {
+  transform: scale(0.98);
+}
+
+.coupon-remove-btn {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecdd3;
+  border-radius: var(--radius-md, 8px);
+  padding: 9px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.coupon-remove-btn:hover {
+  background: #fee2e2;
+}
+
+/* ── Status Alerts ───────────────────────────────────────────── */
+.coupon-applied-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 12px;
+  animation: couponFade 0.25s ease-out;
+}
+
+.coupon-applied-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coupon-success-icon {
+  color: #16a34a;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.coupon-applied-info strong {
+  display: block;
+  font-size: 0.88rem;
+  color: #166534;
+}
+
+.coupon-applied-info p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #15803d;
+}
+
+.coupon-savings-pill {
+  background: #16a34a;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.coupon-error-alert {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef2f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  animation: couponFade 0.25s ease-out;
+}
+
+.coupon-error-icon {
+  flex-shrink: 0;
+}
+
+/* ── Available Offers List ───────────────────────────────────── */
+.coupon-available-list {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.coupon-list-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary, #64748b);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+
+.coupon-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.coupon-sample-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+}
+
+.coupon-sample-card:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.coupon-sample-card--applied {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.coupon-sample-card--locked {
+  opacity: 0.75;
+}
+
+.coupon-code-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  border: 1px dashed #94a3b8;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-primary, #0f172a);
+  letter-spacing: 0.5px;
+}
+
+.coupon-badge-icon {
+  color: var(--primary-color, #0d9488);
+  font-size: 0.65rem;
+}
+
+.coupon-sample-desc {
+  margin: 3px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+  line-height: 1.3;
+}
+
+.coupon-min-order {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.coupon-sample-apply-btn {
+  background: #ffffff;
+  border: 1.5px solid var(--primary-color, #0d9488);
+  color: var(--primary-color, #0d9488);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.coupon-sample-apply-btn:hover {
+  background: var(--primary-color, #0d9488);
+  color: #ffffff;
+}
+
+.coupon-applied-tag {
+  color: #16a34a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+@keyframes couponFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
