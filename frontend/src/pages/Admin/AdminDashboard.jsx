@@ -4,22 +4,21 @@ import {
   FaUsers,
   FaUserCheck,
   FaCalendarCheck,
-  FaFileInvoiceDollar,
   FaArrowUp,
   FaArrowDown,
   FaBell,
   FaShieldAlt,
   FaExclamationTriangle,
   FaPills,
-  FaBoxOpen,
   FaTicketAlt,
   FaNotesMedical,
   FaCheckCircle,
+  FaHospital,
+  FaClinicMedical,
+  FaBan,
 } from "react-icons/fa";
 import {
   getStoredMedicines,
-  getStoredOrders,
-  getStoredInvoices,
   getStoredAppointments,
   generateAutomatedSystemAlerts,
 } from "../../utils/adminData";
@@ -34,8 +33,6 @@ const initialPendingProviders = [
 export default function AdminDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState(initialPendingProviders);
   const [medicines, setMedicines] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [invoices, setInvoices] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [systemAlerts, setSystemAlerts] = useState([]);
   const [showToast, setShowToast] = useState(false);
@@ -43,8 +40,6 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     setMedicines(getStoredMedicines());
-    setOrders(getStoredOrders());
-    setInvoices(getStoredInvoices());
     setAppointments(getStoredAppointments());
     setSystemAlerts(generateAutomatedSystemAlerts());
   }, []);
@@ -56,18 +51,22 @@ export default function AdminDashboard() {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  // Dynamic real-time metrics
-  const totalRevenue = invoices.filter((i) => i.status === "Paid").reduce((sum, i) => sum + i.total, 0);
-  const lowStockCount = medicines.filter((m) => m.stock <= (m.minThreshold || 15)).length;
-  const activeOrdersCount = orders.filter((o) => o.status === "Placed" || o.status === "Processing" || o.status === "Out for Delivery").length;
-  const scheduledAptsCount = appointments.filter((a) => a.status === "Upcoming" || a.status === "Ongoing" || a.status === "Scheduled").length;
+  // Real-time Governance Metrics
+  const pendingMedicineReview = medicines.filter((m) => m.approvalStatus === "Pending Review").length;
+  const blockedDrugsCount = medicines.filter((m) => m.approvalStatus === "Blocked").length;
+  const approvedDrugsCount = medicines.filter((m) => m.approvalStatus === "Approved").length;
+  const activeConsultsCount = appointments.filter((a) => a.status === "Upcoming" || a.status === "Ongoing" || a.status === "Scheduled").length;
 
   const kpis = [
     { label: "Total Platform Users", value: "24,850", icon: <FaUsers />, bg: "#e0e7ff", color: "#4f46e5", delta: "+12% this month", up: true },
-    { label: "Active Consultations", value: scheduledAptsCount.toString(), icon: <FaCalendarCheck />, bg: "#e0f2fe", color: "#0284c7", delta: "Live Schedules", up: true },
-    { label: "Realized Revenue", value: `₹${totalRevenue.toLocaleString("en-IN")}`, icon: <FaFileInvoiceDollar />, bg: "#dcfce7", color: "#16a34a", delta: "+18.4% vs last month", up: true },
-    { label: "Active Pharmacy Orders", value: activeOrdersCount.toString(), icon: <FaBoxOpen />, bg: "#fef3c7", color: "#d97706", delta: `${lowStockCount} low-stock alerts`, up: null },
+    { label: "Pending Provider Reviews", value: pendingApprovals.length.toString(), icon: <FaUserCheck />, bg: "#fef3c7", color: "#d97706", delta: "Credentials verification", up: null },
+    { label: "Verified Listed Drugs", value: `${approvedCount(medicines)} / ${medicines.length}`, icon: <FaPills />, bg: "#dcfce7", color: "#16a34a", delta: `${pendingMedicineReview} pending approval`, up: true },
+    { label: "Active Telehealth Consults", value: activeConsultsCount.toString(), icon: <FaCalendarCheck />, bg: "#e0f2fe", color: "#0284c7", delta: "Live digital sessions", up: true },
   ];
+
+  function approvedCount(list) {
+    return list.filter((m) => m.approvalStatus === "Approved").length;
+  }
 
   const chartData = [
     { month: "Jan", val: 32 },
@@ -98,7 +97,7 @@ export default function AdminDashboard() {
           color: "#fff",
           padding: "1rem 1.5rem",
           borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
           zIndex: 1200,
           display: "flex",
           alignItems: "center",
@@ -125,18 +124,15 @@ export default function AdminDashboard() {
       }}>
         <div>
           <h2 style={{ color: "#fff", fontFamily: "var(--ad-font-heading)", fontSize: "1.45rem", fontWeight: "800", margin: "0 0 0.3rem" }}>
-            Welcome Back, Admin Alex 👋
+            Platform Governance &amp; Supervision Portal 👋
           </h2>
           <p style={{ margin: 0, fontSize: "0.88rem", color: "rgba(255,255,255,0.8)" }}>
-            Real-time platform status: <strong>{activeOrdersCount}</strong> orders processing, <strong>{lowStockCount}</strong> inventory warnings, and <strong>{pendingApprovals.length}</strong> provider verifications pending.
+            Welcome Admin Alex. You have <strong>{pendingApprovals.length}</strong> healthcare providers and <strong>{pendingMedicineReview}</strong> pharmacy drug submissions awaiting regulatory verification.
           </p>
         </div>
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <Link to="/admin/pharmacy" className="ad-btn ad-btn-primary">
-            <FaPills /> Stock Management
-          </Link>
-          <Link to="/admin/orders" className="ad-btn ad-btn-outline" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}>
-            <FaBoxOpen /> Orders &amp; Delivery
+            <FaShieldAlt /> Medicine Verification ({pendingMedicineReview})
           </Link>
           <Link to="/admin/approvals" className="ad-btn ad-btn-outline" style={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)" }}>
             <FaUserCheck /> Provider Approvals ({pendingApprovals.length})
@@ -164,68 +160,68 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* Quick Access Control Matrix */}
+      {/* Quick Governance Control Hub */}
       <div className="ad-grid-4" style={{ gap: "1rem", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-        <Link to="/admin/pharmacy" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s ease" }}>
+        <Link to="/admin/pharmacy" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ background: "#e0e7ff", color: "#4f46e5", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
               <FaPills />
             </div>
             <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Pharmacy &amp; Stock</h4>
-              <span style={{ fontSize: "0.75rem", color: lowStockCount > 0 ? "#dc2626" : "#16a34a", fontWeight: "600" }}>
-                {lowStockCount} Stock Alerts
+              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Drug Verification</h4>
+              <span style={{ fontSize: "0.75rem", color: pendingMedicineReview > 0 ? "#d97706" : "#16a34a", fontWeight: "600" }}>
+                {pendingMedicineReview} Pending Reviews
               </span>
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/orders" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s ease" }}>
+        <Link to="/admin/approvals" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ background: "#fef3c7", color: "#d97706", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaBoxOpen />
+              <FaUserCheck />
             </div>
             <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Orders &amp; Courier</h4>
-              <span style={{ fontSize: "0.75rem", color: "#0284c7", fontWeight: "600" }}>
-                {activeOrdersCount} Dispatches Active
+              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Provider Credentials</h4>
+              <span style={{ fontSize: "0.75rem", color: "#d97706", fontWeight: "600" }}>
+                {pendingApprovals.length} Verifications Due
               </span>
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/coupons" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s ease" }}>
+        <Link to="/admin/coupons" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ background: "#dcfce7", color: "#16a34a", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
               <FaTicketAlt />
             </div>
             <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Coupons &amp; Promos</h4>
+              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Platform Coupons</h4>
               <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>
-                Voucher CRUD &amp; Rules
+                Active Marketing Vouchers
               </span>
             </div>
           </div>
         </Link>
 
-        <Link to="/admin/billing" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit", transition: "transform 0.2s ease" }}>
+        <Link to="/admin/medical-records" className="ad-card" style={{ padding: "1.2rem", textDecoration: "none", color: "inherit" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <div style={{ background: "#ede9fe", color: "#6d28d9", padding: "0.75rem", borderRadius: "10px", fontSize: "1.2rem" }}>
-              <FaFileInvoiceDollar />
+              <FaNotesMedical />
             </div>
             <div>
-              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>Billing &amp; Invoices</h4>
+              <h4 style={{ margin: "0 0 0.2rem", fontSize: "0.95rem" }}>EHR Compliance</h4>
               <span style={{ fontSize: "0.75rem", color: "#6d28d9", fontWeight: "600" }}>
-                Settlements &amp; Taxes
+                100% Encrypted Audits
               </span>
             </div>
           </div>
         </Link>
       </div>
 
-      {/* Analytics Charts Row */}
+      {/* Analytics Row */}
       <div className="ad-grid-3">
-        {/* Registration Analytics */}
+        {/* User Growth */}
         <div className="ad-card">
           <div className="ad-card-header">
             <h3 className="ad-card-title">Monthly Platform Growth</h3>
@@ -251,7 +247,7 @@ export default function AdminDashboard() {
         {/* User Distribution */}
         <div className="ad-card">
           <div className="ad-card-header">
-            <h3 className="ad-card-title">User Distribution</h3>
+            <h3 className="ad-card-title">Registered Participants</h3>
           </div>
           <div className="ad-distribution-list">
             {distribution.map((dist, idx) => (
@@ -268,10 +264,10 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Live System Alerts */}
+        {/* Regulatory Feeds */}
         <div className="ad-card">
           <div className="ad-card-header">
-            <h3 className="ad-card-title"><FaBell /> Real-time System Feeds</h3>
+            <h3 className="ad-card-title"><FaBell /> Regulatory Feeds &amp; Alerts</h3>
             <Link to="/admin/notifications" style={{ fontSize: "0.75rem", color: "var(--ad-primary)", fontWeight: "600" }}>
               View All
             </Link>
@@ -293,7 +289,7 @@ export default function AdminDashboard() {
       {/* Pending Provider Applications */}
       <div className="ad-card">
         <div className="ad-card-header">
-          <h3 className="ad-card-title"><FaUserCheck /> Pending Healthcare Provider Applications</h3>
+          <h3 className="ad-card-title"><FaUserCheck /> Healthcare Providers Pending Verification</h3>
           <Link to="/admin/approvals" className="ad-btn ad-btn-outline" style={{ fontSize: "0.78rem" }}>
             View Approvals Hub
           </Link>

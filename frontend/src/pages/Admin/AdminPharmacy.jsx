@@ -3,17 +3,18 @@ import {
   FaPills,
   FaSearch,
   FaFilter,
-  FaPlus,
-  FaEdit,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaBan,
   FaTrashAlt,
   FaExclamationTriangle,
-  FaCheckCircle,
+  FaShieldAlt,
   FaTimes,
-  FaBoxes,
-  FaMoneyBillWave,
-  FaSyncAlt,
-  FaFilePrescription,
-  FaWarehouse,
+  FaEye,
+  FaFlask,
+  FaBuilding,
+  FaFileContract,
+  FaUndoAlt,
 } from "react-icons/fa";
 import {
   getStoredMedicines,
@@ -21,39 +22,28 @@ import {
 } from "../../utils/adminData";
 import "./AdminPages.css";
 
+const statusColors = {
+  Approved: { bg: "#dcfce7", color: "#16a34a", icon: <FaCheckCircle /> },
+  "Pending Review": { bg: "#fef3c7", color: "#d97706", icon: <FaExclamationTriangle /> },
+  Rejected: { bg: "#f1f5f9", color: "#64748b", icon: <FaTimesCircle /> },
+  Blocked: { bg: "#fee2e2", color: "#dc2626", icon: <FaBan /> },
+};
+
 export default function AdminPharmacy() {
   const [medicines, setMedicines] = useState([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [stockStatusFilter, setStockStatusFilter] = useState("All");
+  const [pharmacyFilter, setPharmacyFilter] = useState("All");
   const [rxFilter, setRxFilter] = useState("All");
 
-  // Modal States
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showAdjustModal, setShowAdjustModal] = useState(false);
+  // Modals & Action states
   const [selectedMed, setSelectedMed] = useState(null);
-  const [adjustQty, setAdjustQty] = useState(10);
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [actionReason, setActionReason] = useState("");
+  const [targetMed, setTargetMed] = useState(null);
   const [toastMsg, setToastMsg] = useState("");
-
-  // Form State for Add / Edit
-  const initialForm = {
-    id: "",
-    name: "",
-    brand: "",
-    category: "Tablet",
-    batchNumber: "",
-    stock: 50,
-    minThreshold: 15,
-    price: 50,
-    mrp: 65,
-    requiresPrescription: false,
-    expiryDate: "2027-12-31",
-    manufacturer: "",
-    pharmacyName: "MedPlus Central Pharmacy",
-    emoji: "💊",
-  };
-  const [formData, setFormData] = useState(initialForm);
 
   useEffect(() => {
     setMedicines(getStoredMedicines());
@@ -69,121 +59,111 @@ export default function AdminPharmacy() {
     saveMedicines(updatedList);
   };
 
-  // Quick Stock Adjustment (+/-)
-  const handleQuickAdjust = (medId, delta) => {
+  // 1. Approve Medicine
+  const handleApprove = (medId) => {
+    const today = new Date().toISOString().split("T")[0];
     const updated = medicines.map((m) => {
       if (m.id === medId) {
-        const newStock = Math.max(0, m.stock + delta);
         return {
           ...m,
-          stock: newStock,
-          status: newStock === 0 ? "out-of-stock" : newStock <= m.minThreshold ? "low-stock" : "in-stock",
+          approvalStatus: "Approved",
+          reviewedDate: today,
+          banReason: null,
+          labVerificationStatus: "Passed (Platform Verified)",
         };
       }
       return m;
     });
     updateMedState(updated);
-    triggerToast(`Stock updated for ${medicines.find((m) => m.id === medId)?.name}`);
+    if (selectedMed && selectedMed.id === medId) {
+      setSelectedMed(updated.find((m) => m.id === medId));
+    }
+    triggerToast(`Medicine verified & approved for platform catalog.`);
   };
 
-  // Save new medicine
-  const handleAddSubmit = (e) => {
+  // 2. Reject Submission
+  const handleRejectSubmit = (e) => {
     e.preventDefault();
-    const newId = `MED-${Math.floor(100 + Math.random() * 900)}`;
-    const status = Number(formData.stock) === 0 ? "out-of-stock" : Number(formData.stock) <= Number(formData.minThreshold) ? "low-stock" : "in-stock";
-    
-    const newMed = {
-      ...formData,
-      id: newId,
-      stock: Number(formData.stock),
-      minThreshold: Number(formData.minThreshold),
-      price: Number(formData.price),
-      mrp: Number(formData.mrp),
-      status,
-    };
+    if (!targetMed) return;
 
-    const updated = [newMed, ...medicines];
-    updateMedState(updated);
-    setShowAddModal(false);
-    setFormData(initialForm);
-    triggerToast(`Medicine "${newMed.name}" added successfully.`);
-  };
-
-  // Save Edit medicine
-  const handleEditSubmit = (e) => {
-    e.preventDefault();
-    const status = Number(formData.stock) === 0 ? "out-of-stock" : Number(formData.stock) <= Number(formData.minThreshold) ? "low-stock" : "in-stock";
-    
+    const today = new Date().toISOString().split("T")[0];
     const updated = medicines.map((m) => {
-      if (m.id === formData.id) {
+      if (m.id === targetMed.id) {
         return {
-          ...formData,
-          stock: Number(formData.stock),
-          minThreshold: Number(formData.minThreshold),
-          price: Number(formData.price),
-          mrp: Number(formData.mrp),
-          status,
+          ...m,
+          approvalStatus: "Rejected",
+          reviewedDate: today,
+          banReason: actionReason || "Rejected by Drug Safety Administrator.",
         };
       }
       return m;
     });
-
     updateMedState(updated);
-    setShowEditModal(false);
-    setSelectedMed(null);
-    triggerToast(`Medicine "${formData.name}" updated successfully.`);
+    setShowRejectModal(false);
+    setTargetMed(null);
+    setActionReason("");
+    triggerToast(`Submission rejected and pharmacy notified.`);
   };
 
-  // Delete Medicine
+  // 3. Block / Ban Drug (Counterfeit / State Ban / Poor Quality)
+  const handleBlockSubmit = (e) => {
+    e.preventDefault();
+    if (!targetMed) return;
+
+    const today = new Date().toISOString().split("T")[0];
+    const updated = medicines.map((m) => {
+      if (m.id === targetMed.id) {
+        return {
+          ...m,
+          approvalStatus: "Blocked",
+          reviewedDate: today,
+          banReason: actionReason || "Enforced Drug Recall / Substandard Assay / State Ban.",
+        };
+      }
+      return m;
+    });
+    updateMedState(updated);
+    setShowBlockModal(false);
+    setTargetMed(null);
+    setActionReason("");
+    triggerToast(`DRUG BLOCKED: "${targetMed.name}" banned platform-wide.`);
+  };
+
+  // 4. Delist / Delete
   const handleDelete = (id, name) => {
-    if (window.confirm(`Are you sure you want to remove "${name}" from inventory?`)) {
+    if (window.confirm(`Permanently delist and remove "${name}" from platform compliance database?`)) {
       const updated = medicines.filter((m) => m.id !== id);
       updateMedState(updated);
-      triggerToast(`Removed "${name}" from catalog.`);
+      if (selectedMed && selectedMed.id === id) {
+        setSelectedMed(null);
+      }
+      triggerToast(`Delisted "${name}" from platform registry.`);
     }
   };
-
-  // Restock to safe threshold
-  const handleRestockSafe = (med) => {
-    const target = (med.minThreshold || 20) * 3;
-    const updated = medicines.map((m) => {
-      if (m.id === med.id) {
-        return { ...m, stock: target, status: "in-stock" };
-      }
-      return m;
-    });
-    updateMedState(updated);
-    triggerToast(`Restocked ${med.name} to ${target} units.`);
-  };
-
-  // Computed metrics
-  const totalItems = medicines.length;
-  const totalStockUnits = medicines.reduce((sum, m) => sum + m.stock, 0);
-  const outOfStockCount = medicines.filter((m) => m.stock === 0).length;
-  const lowStockCount = medicines.filter((m) => m.stock > 0 && m.stock <= (m.minThreshold || 15)).length;
-  const totalValuation = medicines.reduce((sum, m) => sum + (m.stock * m.price), 0);
 
   // Filtered List
   const filtered = medicines.filter((m) => {
     const matchSearch =
       m.name.toLowerCase().includes(search.toLowerCase()) ||
       m.brand.toLowerCase().includes(search.toLowerCase()) ||
-      m.id.toLowerCase().includes(search.toLowerCase()) ||
-      (m.batchNumber && m.batchNumber.toLowerCase().includes(search.toLowerCase()));
+      (m.genericName && m.genericName.toLowerCase().includes(search.toLowerCase())) ||
+      (m.batchNumber && m.batchNumber.toLowerCase().includes(search.toLowerCase())) ||
+      (m.manufacturer && m.manufacturer.toLowerCase().includes(search.toLowerCase())) ||
+      (m.submittingPharmacy && m.submittingPharmacy.toLowerCase().includes(search.toLowerCase()));
 
+    const matchStatus = statusFilter === "All" || m.approvalStatus === statusFilter;
     const matchCategory = categoryFilter === "All" || m.category === categoryFilter;
-    
-    let matchStock = true;
-    if (stockStatusFilter === "in-stock") matchStock = m.stock > (m.minThreshold || 15);
-    else if (stockStatusFilter === "low-stock") matchStock = m.stock > 0 && m.stock <= (m.minThreshold || 15);
-    else if (stockStatusFilter === "out-of-stock") matchStock = m.stock === 0;
+    const matchPharmacy = pharmacyFilter === "All" || m.submittingPharmacy.includes(pharmacyFilter);
+    const matchRx = rxFilter === "All" || (rxFilter === "Rx" ? m.requiresPrescription : !m.requiresPrescription);
 
-    let matchRx = true;
-    if (rxFilter === "Rx") matchRx = m.requiresPrescription === true;
-    else if (rxFilter === "OTC") matchRx = m.requiresPrescription === false;
-
-    return matchSearch && matchCategory && matchStock && matchRx;
+    return matchSearch && matchStatus && matchCategory && matchPharmacy && matchRx;
   });
+
+  // KPI Metrics
+  const totalDrugs = medicines.length;
+  const pendingReviewCount = medicines.filter((m) => m.approvalStatus === "Pending Review").length;
+  const approvedCount = medicines.filter((m) => m.approvalStatus === "Approved").length;
+  const blockedCount = medicines.filter((m) => m.approvalStatus === "Blocked").length;
 
   return (
     <div className="ad-page">
@@ -197,72 +177,69 @@ export default function AdminPharmacy() {
           color: "#fff",
           padding: "1rem 1.5rem",
           borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
+          boxShadow: "0 10px 25px rgba(0,0,0,0.25)",
           zIndex: 1200,
           display: "flex",
           alignItems: "center",
           gap: "0.75rem",
           animation: "adFadeIn 0.3s ease"
         }}>
-          <FaCheckCircle style={{ color: "#10b981" }} />
+          <FaShieldAlt style={{ color: "#10b981" }} />
           <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>{toastMsg}</span>
         </div>
       )}
 
-      <div className="ad-page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
-        <div>
-          <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-            <FaPills style={{ color: "var(--ad-primary)" }} /> Pharmacy & Stock Management
-          </h2>
-          <p>Supervise multi-pharmacy drug inventories, batch controls, reorder levels, and restock actions</p>
-        </div>
-        <button className="ad-btn ad-btn-primary" onClick={() => { setFormData(initialForm); setShowAddModal(true); }}>
-          <FaPlus /> Add New Medicine
-        </button>
+      <div className="ad-page-header">
+        <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          <FaShieldAlt style={{ color: "var(--ad-primary)" }} /> Medicine Verification &amp; Drug Safety Authority
+        </h2>
+        <p>Platform regulatory governance: Inspect pharmacy-submitted medicines, verify manufacturer credentials &amp; batch assays, and approve, reject, or ban substandard/state-blocked drugs</p>
       </div>
 
       {/* KPI Stats Row */}
       <div className="ad-kpi-grid">
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><FaBoxes /></div>
+          <div className="ad-kpi-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><FaPills /></div>
           <div className="ad-kpi-body">
             <span className="ad-kpi-label">Cataloged Drugs</span>
-            <h3 className="ad-kpi-value">{totalItems}</h3>
-            <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)" }}>{totalStockUnits} Total Units in Warehouses</span>
+            <h3 className="ad-kpi-value">{totalDrugs} Drugs</h3>
+            <span style={{ fontSize: "0.75rem", color: "var(--ad-text-muted)" }}>Across All Pharmacies</span>
           </div>
         </div>
 
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#fee2e2", color: "#dc2626" }}><FaExclamationTriangle /></div>
+          <div className="ad-kpi-icon" style={{ background: "#fef3c7", color: "#d97706" }}><FaExclamationTriangle /></div>
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Stock Critical</span>
-            <h3 className="ad-kpi-value" style={{ color: (outOfStockCount + lowStockCount) > 0 ? "#dc2626" : "inherit" }}>
-              {outOfStockCount} Out · {lowStockCount} Low
+            <span className="ad-kpi-label">Pending Verification</span>
+            <h3 className="ad-kpi-value" style={{ color: pendingReviewCount > 0 ? "#d97706" : "inherit" }}>
+              {pendingReviewCount} Awaiting Review
             </h3>
-            <span style={{ fontSize: "0.76rem", color: "#dc2626", fontWeight: "600" }}>Reorders Recommended</span>
+            <span style={{ fontSize: "0.75rem", color: "#d97706", fontWeight: "600" }}>Action Required</span>
           </div>
         </div>
 
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaMoneyBillWave /></div>
+          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaCheckCircle /></div>
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Total Inventory Valuation</span>
-            <h3 className="ad-kpi-value">₹{totalValuation.toLocaleString("en-IN")}</h3>
-            <span className="ad-kpi-delta up">+8.4% vs last audit</span>
+            <span className="ad-kpi-label">Approved &amp; Active</span>
+            <h3 className="ad-kpi-value">{approvedCount} Listed</h3>
+            <span className="ad-kpi-delta up">Compliant with DCGI</span>
           </div>
         </div>
 
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0f2fe", color: "#0284c7" }}><FaWarehouse /></div>
+          <div className="ad-kpi-icon" style={{ background: "#fee2e2", color: "#dc2626" }}><FaBan /></div>
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Active Warehouses</span>
-            <h3 className="ad-kpi-value">3 Dispensaries</h3>
-            <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)" }}>MedPlus · Apollo · Aster</span>
+            <span className="ad-kpi-label">Blocked / Banned</span>
+            <h3 className="ad-kpi-value" style={{ color: blockedCount > 0 ? "#dc2626" : "inherit" }}>
+              {blockedCount} Banned
+            </h3>
+            <span style={{ fontSize: "0.75rem", color: "#dc2626", fontWeight: "600" }}>Platform Delisted</span>
           </div>
         </div>
       </div>
 
-      {/* Main Inventory Card */}
+      {/* Main Verification Card */}
       <div className="ad-card">
         {/* Search & Filter Toolbar */}
         <div className="ad-search-filter-bar" style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", alignItems: "center" }}>
@@ -270,7 +247,7 @@ export default function AdminPharmacy() {
             <FaSearch className="ad-search-icon" />
             <input
               type="text"
-              placeholder="Search medicine name, brand, batch ID..."
+              placeholder="Search by drug name, generic formula, batch, manufacturer, pharmacy..."
               className="ad-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -280,38 +257,41 @@ export default function AdminPharmacy() {
           <div className="ad-filters" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
             <select
               className="ad-select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ width: "165px" }}
+            >
+              <option value="All">All Approval Statuses</option>
+              <option value="Pending Review">Pending Review</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Blocked">Blocked / Banned</option>
+            </select>
+
+            <select
+              className="ad-select"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              style={{ width: "130px" }}
+              style={{ width: "135px" }}
             >
               <option value="All">All Categories</option>
               <option value="Tablet">Tablets</option>
               <option value="Capsule">Capsules</option>
               <option value="Supplement">Supplements</option>
               <option value="Injection">Injections</option>
+              <option value="Syrup">Syrups</option>
             </select>
 
             <select
               className="ad-select"
-              value={stockStatusFilter}
-              onChange={(e) => setStockStatusFilter(e.target.value)}
-              style={{ width: "135px" }}
+              value={pharmacyFilter}
+              onChange={(e) => setPharmacyFilter(e.target.value)}
+              style={{ width: "140px" }}
             >
-              <option value="All">All Stock Levels</option>
-              <option value="in-stock">In Stock (&gt;15)</option>
-              <option value="low-stock">Low Stock (1–15)</option>
-              <option value="out-of-stock">Out of Stock (0)</option>
-            </select>
-
-            <select
-              className="ad-select"
-              value={rxFilter}
-              onChange={(e) => setRxFilter(e.target.value)}
-              style={{ width: "115px" }}
-            >
-              <option value="All">All Types</option>
-              <option value="Rx">Prescription (Rx)</option>
-              <option value="OTC">OTC Only</option>
+              <option value="All">All Pharmacies</option>
+              <option value="MedPlus">MedPlus</option>
+              <option value="Apollo">Apollo</option>
+              <option value="Aster">Aster</option>
             </select>
           </div>
         </div>
@@ -321,138 +301,145 @@ export default function AdminPharmacy() {
           <table className="ad-table">
             <thead>
               <tr>
-                <th>Drug &amp; ID</th>
-                <th>Brand / Category</th>
-                <th>Batch No.</th>
-                <th>Unit Price</th>
-                <th>Stock Quantity</th>
-                <th>Reorder Threshold</th>
-                <th>Status</th>
-                <th>Assigned Facility</th>
-                <th>Actions</th>
+                <th>Drug &amp; Generic Formula</th>
+                <th>Manufacturer &amp; License</th>
+                <th>Batch No. &amp; Expiry</th>
+                <th>Submitting Pharmacy</th>
+                <th>Prescription</th>
+                <th>Regulatory Status</th>
+                <th>Compliance Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
-                    No medicines match the selected search &amp; filter criteria.
+                  <td colSpan="7" style={{ textAlign: "center", padding: "2.5rem", color: "var(--ad-text-muted)" }}>
+                    No medicines match the selected filter criteria.
                   </td>
                 </tr>
               ) : (
                 filtered.map((med) => {
-                  const isOut = med.stock === 0;
-                  const isLow = med.stock > 0 && med.stock <= (med.minThreshold || 15);
+                  const sc = statusColors[med.approvalStatus] || { bg: "#f1f5f9", color: "#64748b" };
+                  const isBlocked = med.approvalStatus === "Blocked";
+                  const isPending = med.approvalStatus === "Pending Review";
+
                   return (
-                    <tr key={med.id} style={{ background: isOut ? "#fff5f5" : isLow ? "#fffdf5" : "inherit" }}>
+                    <tr key={med.id} style={{ background: isBlocked ? "#fff5f5" : isPending ? "#fffdf5" : "inherit" }}>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                           <span style={{ fontSize: "1.3rem" }}>{med.emoji || "💊"}</span>
                           <div>
                             <strong style={{ display: "block", color: "var(--ad-text-primary)" }}>{med.name}</strong>
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                              <span className="ad-id-badge" style={{ fontSize: "0.68rem" }}>{med.id}</span>
-                              {med.requiresPrescription && (
-                                <span style={{ fontSize: "0.68rem", background: "#ede9fe", color: "#6d28d9", padding: "0.1rem 0.35rem", borderRadius: "3px", fontWeight: "700" }}>
-                                  Rx Required
-                                </span>
-                              )}
-                            </div>
+                            <span style={{ display: "block", fontSize: "0.74rem", color: "var(--ad-text-secondary)" }}>
+                              {med.genericName || med.brand} · {med.category}
+                            </span>
+                            <span className="ad-id-badge" style={{ fontSize: "0.68rem", marginTop: "2px" }}>{med.id}</span>
                           </div>
                         </div>
                       </td>
                       <td>
                         <div>
-                          <strong>{med.brand}</strong>
-                          <span style={{ display: "block", fontSize: "0.75rem", color: "var(--ad-text-muted)" }}>{med.category}</span>
+                          <strong>{med.manufacturer}</strong>
+                          <code style={{ display: "block", fontSize: "0.72rem", color: "var(--ad-text-muted)", marginTop: "2px" }}>
+                            {med.manufacturerLicense}
+                          </code>
                         </div>
                       </td>
                       <td>
                         <code style={{ fontSize: "0.78rem", background: "var(--ad-bg-secondary)", padding: "0.2rem 0.4rem", borderRadius: "4px" }}>
-                          {med.batchNumber || "BAT-2026"}
+                          {med.batchNumber}
                         </code>
-                        <span style={{ display: "block", fontSize: "0.7rem", color: "var(--ad-text-muted)", marginTop: "2px" }}>
-                          Exp: {med.expiryDate || "2027"}
+                        <span style={{ display: "block", fontSize: "0.72rem", color: "var(--ad-text-muted)", marginTop: "2px" }}>
+                          Exp: {med.expiryDate}
                         </span>
                       </td>
                       <td>
-                        <strong>₹{med.price}</strong>
-                        {med.mrp > med.price && (
-                          <span style={{ display: "block", fontSize: "0.72rem", color: "var(--ad-text-muted)", textDecoration: "line-through" }}>
-                            MRP ₹{med.mrp}
+                        <div>
+                          <strong>{med.submittingPharmacy}</strong>
+                          <span style={{ display: "block", fontSize: "0.72rem", color: "var(--ad-text-muted)" }}>
+                            {med.pharmacyType} ({med.pharmacyCity})
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        {med.requiresPrescription ? (
+                          <span style={{ fontSize: "0.72rem", background: "#ede9fe", color: "#6d28d9", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: "700" }}>
+                            Rx (Prescription)
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "0.72rem", background: "#e0f2fe", color: "#0284c7", padding: "0.15rem 0.45rem", borderRadius: "4px", fontWeight: "600" }}>
+                            OTC
                           </span>
                         )}
                       </td>
                       <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                          <button
-                            onClick={() => handleQuickAdjust(med.id, -5)}
-                            className="ad-btn ad-btn-outline"
-                            style={{ padding: "0.2rem 0.45rem", fontSize: "0.75rem" }}
-                            title="Decrease 5 units"
-                            disabled={med.stock <= 0}
-                          >
-                            -5
-                          </button>
-                          <strong style={{ fontSize: "0.95rem", minWidth: "32px", textAlign: "center" }}>{med.stock}</strong>
-                          <button
-                            onClick={() => handleQuickAdjust(med.id, 10)}
-                            className="ad-btn ad-btn-outline"
-                            style={{ padding: "0.2rem 0.45rem", fontSize: "0.75rem" }}
-                            title="Add 10 units"
-                          >
-                            +10
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ fontSize: "0.85rem", color: "var(--ad-text-secondary)" }}>
-                          {med.minThreshold || 15} units
+                        <span className="ad-pill" style={{ background: sc.bg, color: sc.color, display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
+                          {sc.icon} {med.approvalStatus}
                         </span>
-                      </td>
-                      <td>
-                        {isOut ? (
-                          <span className="ad-pill" style={{ background: "#fee2e2", color: "#dc2626" }}>Out of Stock</span>
-                        ) : isLow ? (
-                          <span className="ad-pill" style={{ background: "#fef3c7", color: "#d97706" }}>Low Stock</span>
-                        ) : (
-                          <span className="ad-pill" style={{ background: "#dcfce7", color: "#16a34a" }}>In Stock</span>
+                        {med.banReason && (
+                          <span style={{ display: "block", fontSize: "0.68rem", color: "#dc2626", marginTop: "3px", maxWidth: "160px" }}>
+                            {med.banReason}
+                          </span>
                         )}
                       </td>
                       <td>
-                        <span style={{ fontSize: "0.8rem", color: "var(--ad-text-secondary)" }}>
-                          {med.pharmacyName || "Central Dispensary"}
-                        </span>
-                      </td>
-                      <td>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                          {(isOut || isLow) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
+                          <button
+                            className="ad-btn ad-btn-primary"
+                            style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
+                            onClick={() => setSelectedMed(med)}
+                            title="Inspect Complete Drug Dossier"
+                          >
+                            <FaEye /> Inspect
+                          </button>
+
+                          {med.approvalStatus !== "Approved" && (
                             <button
-                              className="ad-btn ad-btn-primary"
-                              style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem" }}
-                              onClick={() => handleRestockSafe(med)}
-                              title="Restock to safe level"
+                              className="ad-btn"
+                              style={{ background: "#dcfce7", color: "#15803d", padding: "0.3rem 0.6rem", fontSize: "0.75rem", borderRadius: "6px", border: "none" }}
+                              onClick={() => handleApprove(med.id)}
+                              title="Approve for platform catalog"
                             >
-                              <FaSyncAlt /> Restock
+                              <FaCheckCircle /> Approve
                             </button>
                           )}
+
+                          {med.approvalStatus !== "Rejected" && med.approvalStatus !== "Blocked" && (
+                            <button
+                              className="ad-btn"
+                              style={{ background: "#fef3c7", color: "#b45309", padding: "0.3rem 0.55rem", fontSize: "0.75rem", borderRadius: "6px", border: "none" }}
+                              onClick={() => { setTargetMed(med); setShowRejectModal(true); }}
+                              title="Reject submission"
+                            >
+                              <FaTimesCircle /> Reject
+                            </button>
+                          )}
+
+                          {med.approvalStatus !== "Blocked" ? (
+                            <button
+                              className="ad-btn ad-btn-danger"
+                              style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem" }}
+                              onClick={() => { setTargetMed(med); setShowBlockModal(true); }}
+                              title="Block & Ban Drug Platform-wide"
+                            >
+                              <FaBan /> Block/Ban
+                            </button>
+                          ) : (
+                            <button
+                              className="ad-btn ad-btn-outline"
+                              style={{ padding: "0.3rem 0.55rem", fontSize: "0.75rem" }}
+                              onClick={() => handleApprove(med.id)}
+                              title="Unblock Drug"
+                            >
+                              <FaUndoAlt /> Unblock
+                            </button>
+                          )}
+
                           <button
-                            className="ad-btn ad-btn-secondary"
-                            style={{ padding: "0.35rem", borderRadius: "6px" }}
-                            onClick={() => {
-                              setSelectedMed(med);
-                              setFormData({ ...med });
-                              setShowEditModal(true);
-                            }}
-                            title="Edit Medicine Details"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            className="ad-btn ad-btn-danger"
-                            style={{ padding: "0.35rem", borderRadius: "6px" }}
+                            className="ad-btn ad-btn-outline"
+                            style={{ padding: "0.3rem 0.45rem", fontSize: "0.75rem", color: "#dc2626" }}
                             onClick={() => handleDelete(med.id, med.name)}
-                            title="Remove Medicine"
+                            title="Permanently Delist Drug"
                           >
                             <FaTrashAlt />
                           </button>
@@ -467,288 +454,189 @@ export default function AdminPharmacy() {
         </div>
       </div>
 
-      {/* ── Add Medicine Modal ── */}
-      {showAddModal && (
-        <div className="ad-modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+      {/* ── Drug Dossier Inspection Modal ── */}
+      {selectedMed && (
+        <div className="ad-modal-overlay" onClick={() => setSelectedMed(null)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "680px" }}>
             <div className="ad-modal-header">
-              <h3 className="ad-modal-title"><FaPlus /> Add New Medicine to Inventory</h3>
-              <button className="ad-modal-close" onClick={() => setShowAddModal(false)}><FaTimes /></button>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "1.5rem" }}>{selectedMed.emoji || "💊"}</span>
+                <div>
+                  <h3 className="ad-modal-title" style={{ margin: 0 }}>Drug Verification Dossier: {selectedMed.name}</h3>
+                  <span className="ad-id-badge" style={{ marginTop: "3px" }}>{selectedMed.id}</span>
+                </div>
+              </div>
+              <button className="ad-modal-close" onClick={() => setSelectedMed(null)}><FaTimes /></button>
             </div>
-            <form onSubmit={handleAddSubmit} className="ad-modal-body">
+
+            <div className="ad-modal-body" style={{ maxHeight: "75vh", overflowY: "auto" }}>
+              {/* Status Banner */}
+              <div style={{
+                background: statusColors[selectedMed.approvalStatus]?.bg,
+                color: statusColors[selectedMed.approvalStatus]?.color,
+                padding: "0.85rem 1rem",
+                borderRadius: "8px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                fontWeight: "700"
+              }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  {statusColors[selectedMed.approvalStatus]?.icon} Verification Status: {selectedMed.approvalStatus}
+                </span>
+                <span style={{ fontSize: "0.82rem" }}>
+                  Lab Status: {selectedMed.labVerificationStatus || "Verified"}
+                </span>
+              </div>
+
+              {selectedMed.banReason && (
+                <div style={{ background: "#fee2e2", border: "1px solid #fecaca", padding: "0.75rem 1rem", borderRadius: "8px", color: "#dc2626", fontSize: "0.85rem" }}>
+                  <strong>Enforcement Notice:</strong> {selectedMed.banReason}
+                </div>
+              )}
+
+              {/* Formulation & Chemistry */}
               <div className="ad-grid-2" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Medicine Name *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Paracetamol 650mg"
-                    className="ad-input"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
+                <div style={{ background: "var(--ad-bg-secondary)", padding: "1rem", borderRadius: "10px" }}>
+                  <h4 style={{ margin: "0 0 0.4rem", fontSize: "0.88rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <FaFlask /> Active Formulation &amp; Category
+                  </h4>
+                  <p style={{ margin: "0 0 0.2rem", fontWeight: "700" }}>{selectedMed.genericName}</p>
+                  <p style={{ margin: "0 0 0.2rem", fontSize: "0.82rem", color: "var(--ad-text-secondary)" }}>
+                    Form: {selectedMed.category} · Brand: {selectedMed.brand}
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--ad-text-secondary)" }}>
+                    Classification: {selectedMed.requiresPrescription ? "Schedule H (Prescription Required)" : "General Sale / OTC"}
+                  </p>
                 </div>
-                <div className="ad-form-group">
-                  <label>Brand / Generic *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Calpol"
-                    className="ad-input"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  />
+
+                <div style={{ background: "var(--ad-bg-secondary)", padding: "1rem", borderRadius: "10px" }}>
+                  <h4 style={{ margin: "0 0 0.4rem", fontSize: "0.88rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <FaBuilding /> Manufacturing Credentials
+                  </h4>
+                  <p style={{ margin: "0 0 0.2rem", fontWeight: "700" }}>{selectedMed.manufacturer}</p>
+                  <p style={{ margin: "0 0 0.2rem", fontSize: "0.82rem", color: "var(--ad-text-secondary)" }}>
+                    Mfg License: <code>{selectedMed.manufacturerLicense}</code>
+                  </p>
+                  <p style={{ margin: 0, fontSize: "0.82rem", color: "var(--ad-text-secondary)" }}>
+                    Batch: <strong>{selectedMed.batchNumber}</strong> · Expiry: <strong>{selectedMed.expiryDate}</strong>
+                  </p>
                 </div>
               </div>
 
-              <div className="ad-grid-3" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Category</label>
-                  <select
-                    className="ad-select"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              {/* Submitting Pharmacy Details */}
+              <div style={{ background: "#f8fafc", border: "1px solid var(--ad-border-color)", padding: "1rem", borderRadius: "10px" }}>
+                <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <FaFileContract /> Submitting Pharmacy Entity
+                </h4>
+                <div className="ad-grid-3" style={{ gap: "0.5rem", fontSize: "0.82rem" }}>
+                  <div>
+                    <span style={{ color: "var(--ad-text-muted)", display: "block" }}>Dispensary</span>
+                    <strong>{selectedMed.submittingPharmacy}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--ad-text-muted)", display: "block" }}>Type &amp; Region</span>
+                    <strong>{selectedMed.pharmacyType} ({selectedMed.pharmacyCity})</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--ad-text-muted)", display: "block" }}>Submitted On</span>
+                    <strong>{selectedMed.submittedDate}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="ad-modal-footer" style={{ marginTop: "1rem" }}>
+                {selectedMed.approvalStatus !== "Approved" && (
+                  <button
+                    type="button"
+                    className="ad-btn"
+                    style={{ background: "#dcfce7", color: "#15803d" }}
+                    onClick={() => handleApprove(selectedMed.id)}
                   >
-                    <option value="Tablet">Tablet</option>
-                    <option value="Capsule">Capsule</option>
-                    <option value="Supplement">Supplement</option>
-                    <option value="Injection">Injection</option>
-                    <option value="Syrup">Syrup</option>
-                    <option value="Ointment">Ointment</option>
-                  </select>
-                </div>
-                <div className="ad-form-group">
-                  <label>Batch Number *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="BAT-2026-001"
-                    className="ad-input"
-                    value={formData.batchNumber}
-                    onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Expiry Date</label>
-                  <input
-                    type="date"
-                    className="ad-input"
-                    value={formData.expiryDate}
-                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                  />
-                </div>
-              </div>
+                    <FaCheckCircle /> Approve for Platform Listing
+                  </button>
+                )}
 
-              <div className="ad-grid-4" style={{ gap: "0.75rem", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
-                <div className="ad-form-group">
-                  <label>Initial Stock *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    className="ad-input"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Min Threshold</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="ad-input"
-                    value={formData.minThreshold}
-                    onChange={(e) => setFormData({ ...formData, minThreshold: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Selling Price (₹)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    className="ad-input"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>MRP (₹)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="ad-input"
-                    value={formData.mrp}
-                    onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="ad-grid-2" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Manufacturer</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. GSK Pharmaceuticals"
-                    className="ad-input"
-                    value={formData.manufacturer}
-                    onChange={(e) => setFormData({ ...formData, manufacturer: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Dispensary / Pharmacy</label>
-                  <select
-                    className="ad-select"
-                    value={formData.pharmacyName}
-                    onChange={(e) => setFormData({ ...formData, pharmacyName: e.target.value })}
+                {selectedMed.approvalStatus !== "Blocked" && (
+                  <button
+                    type="button"
+                    className="ad-btn ad-btn-danger"
+                    onClick={() => {
+                      setTargetMed(selectedMed);
+                      setShowBlockModal(true);
+                    }}
                   >
-                    <option value="MedPlus Central Pharmacy">MedPlus Central Pharmacy</option>
-                    <option value="Apollo Pharmacy, Kochi">Apollo Pharmacy, Kochi</option>
-                    <option value="Aster Medcity Pharmacy">Aster Medcity Pharmacy</option>
-                  </select>
-                </div>
-              </div>
+                    <FaBan /> Block/Ban Drug
+                  </button>
+                )}
 
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <input
-                  type="checkbox"
-                  id="rxReq"
-                  checked={formData.requiresPrescription}
-                  onChange={(e) => setFormData({ ...formData, requiresPrescription: e.target.checked })}
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setSelectedMed(null)}>
+                  Close Dossier
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Reject Modal ── */}
+      {showRejectModal && (
+        <div className="ad-modal-overlay" onClick={() => setShowRejectModal(false)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
+            <div className="ad-modal-header">
+              <h3 className="ad-modal-title"><FaTimesCircle style={{ color: "#d97706" }} /> Reject Medicine Submission</h3>
+              <button className="ad-modal-close" onClick={() => setShowRejectModal(false)}><FaTimes /></button>
+            </div>
+            <form onSubmit={handleRejectSubmit} className="ad-modal-body">
+              <p style={{ fontSize: "0.85rem", color: "var(--ad-text-secondary)" }}>
+                Rejecting submission of <strong>{targetMed?.name}</strong> from <strong>{targetMed?.submittingPharmacy}</strong>.
+              </p>
+              <div className="ad-form-group">
+                <label>Reason for Rejection *</label>
+                <textarea
+                  rows="3"
+                  required
+                  className="ad-textarea"
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                  placeholder="e.g. Missing manufacturer assay certificate / Expired license documentation"
                 />
-                <label htmlFor="rxReq" style={{ fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}>
-                  Requires Doctor Prescription (Schedule H / Rx Drug)
-                </label>
               </div>
-
-              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowAddModal(false)}>Cancel</button>
-                <button type="submit" className="ad-btn ad-btn-primary"><FaPlus /> Add Medicine</button>
+              <div className="ad-modal-footer">
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowRejectModal(false)}>Cancel</button>
+                <button type="submit" className="ad-btn" style={{ background: "#fef3c7", color: "#b45309" }}>Confirm Rejection</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* ── Edit Medicine Modal ── */}
-      {showEditModal && (
-        <div className="ad-modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "600px" }}>
+      {/* ── Block / Ban Drug Modal ── */}
+      {showBlockModal && (
+        <div className="ad-modal-overlay" onClick={() => setShowBlockModal(false)}>
+          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "480px" }}>
             <div className="ad-modal-header">
-              <h3 className="ad-modal-title"><FaEdit /> Edit Medicine Details</h3>
-              <button className="ad-modal-close" onClick={() => setShowEditModal(false)}><FaTimes /></button>
+              <h3 className="ad-modal-title" style={{ color: "#dc2626" }}><FaBan /> Enforce Drug Ban / Platform Block</h3>
+              <button className="ad-modal-close" onClick={() => setShowBlockModal(false)}><FaTimes /></button>
             </div>
-            <form onSubmit={handleEditSubmit} className="ad-modal-body">
-              <div className="ad-grid-2" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Medicine Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="ad-input"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Brand / Generic</label>
-                  <input
-                    type="text"
-                    required
-                    className="ad-input"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="ad-grid-3" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Category</label>
-                  <select
-                    className="ad-select"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  >
-                    <option value="Tablet">Tablet</option>
-                    <option value="Capsule">Capsule</option>
-                    <option value="Supplement">Supplement</option>
-                    <option value="Injection">Injection</option>
-                    <option value="Syrup">Syrup</option>
-                    <option value="Ointment">Ointment</option>
-                  </select>
-                </div>
-                <div className="ad-form-group">
-                  <label>Batch Number</label>
-                  <input
-                    type="text"
-                    required
-                    className="ad-input"
-                    value={formData.batchNumber}
-                    onChange={(e) => setFormData({ ...formData, batchNumber: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Stock Level</label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    className="ad-input"
-                    value={formData.stock}
-                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="ad-grid-3" style={{ gap: "1rem" }}>
-                <div className="ad-form-group">
-                  <label>Min Threshold</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="ad-input"
-                    value={formData.minThreshold}
-                    onChange={(e) => setFormData({ ...formData, minThreshold: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>Selling Price (₹)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="ad-input"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  />
-                </div>
-                <div className="ad-form-group">
-                  <label>MRP (₹)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    className="ad-input"
-                    value={formData.mrp}
-                    onChange={(e) => setFormData({ ...formData, mrp: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
-                <input
-                  type="checkbox"
-                  id="rxReqEdit"
-                  checked={formData.requiresPrescription}
-                  onChange={(e) => setFormData({ ...formData, requiresPrescription: e.target.checked })}
+            <form onSubmit={handleBlockSubmit} className="ad-modal-body">
+              <p style={{ fontSize: "0.85rem", color: "#dc2626" }}>
+                Warning: Blocking <strong>{targetMed?.name}</strong> (Batch: {targetMed?.batchNumber}) will immediately ban and delist this product across all retail and hospital pharmacies on MedicoBridge.
+              </p>
+              <div className="ad-form-group">
+                <label>Regulatory Ban Reason / Defect Flag *</label>
+                <textarea
+                  rows="3"
+                  required
+                  className="ad-textarea"
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                  placeholder="e.g. Substandard laboratory assay / Counterfeit packaging detected / Central Drug Recall order"
                 />
-                <label htmlFor="rxReqEdit" style={{ fontSize: "0.85rem", cursor: "pointer", fontWeight: "600" }}>
-                  Requires Doctor Prescription (Schedule H / Rx Drug)
-                </label>
               </div>
-
-              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowEditModal(false)}>Cancel</button>
-                <button type="submit" className="ad-btn ad-btn-primary"><FaCheckCircle /> Save Changes</button>
+              <div className="ad-modal-footer">
+                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowBlockModal(false)}>Cancel</button>
+                <button type="submit" className="ad-btn ad-btn-danger"><FaBan /> Enforce Platform Ban</button>
               </div>
             </form>
           </div>
