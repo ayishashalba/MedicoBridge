@@ -11,6 +11,7 @@ import {
   FaFileInvoiceDollar,
   FaCalendarCheck,
   FaFilter,
+  FaTimes,
   FaBullhorn,
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
