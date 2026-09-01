@@ -571,7 +571,7 @@ export default function AdminPharmacy() {
                 )}
 
                 <button type="button" className="ad-btn ad-btn-outline" onClick={() => setSelectedMed(null)}>
-                  Close Dossier
+                  Close
                 </button>
               </div>
             </div>

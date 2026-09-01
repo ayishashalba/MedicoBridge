@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-// import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import {
   FaMapMarkerAlt,
   FaStar,
@@ -291,15 +291,17 @@ function ExtractedMedicineCard({ item, onAddToCart }) {
 
       {item.matched ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
-          <span style={{
-            fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.55rem",
-            borderRadius: "4px",
-            background: item.product?.stock === "in-stock" ? "#f0fdf4" : item.product?.stock === "low-stock" ? "#fffbeb" : "#f8fafc",
-            color: item.product?.stock === "in-stock" ? "#16a34a" : item.product?.stock === "low-stock" ? "#d97706" : "#94a3b8",
-            border: `1px solid ${item.product?.stock === "in-stock" ? "#bbf7d0" : item.product?.stock === "low-stock" ? "#fde68a" : "#e2e8f0"}`,
-          }}>
-            {item.product?.stock === "in-stock" ? "✓ In Stock" : item.product?.stock === "low-stock" ? "⚠ Low Stock" : "Out of Stock"}
-          </span>
+          {(item.product?.stock === "low-stock" || item.product?.stock === "out-of-stock") ? (
+            <span style={{
+              fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.55rem",
+              borderRadius: "4px",
+              background: item.product?.stock === "low-stock" ? "#fffbeb" : "#f8fafc",
+              color: item.product?.stock === "low-stock" ? "#d97706" : "#94a3b8",
+              border: `1px solid ${item.product?.stock === "low-stock" ? "#fde68a" : "#e2e8f0"}`,
+            }}>
+              {item.product?.stock === "low-stock" ? "⚠ Low Stock" : "Out of Stock"}
+            </span>
+          ) : <div />}
 
           {isAvailable ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
@@ -583,87 +585,6 @@ function MyOrdersPanel() {
     if (s === "Shipped") return <FaTruck />;
     return <FaClock />;
   };
-
-  return (
-    <section className="pharmacy-section orders-panel">
-      <div className="orders-panel-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-          <h3 style={{ marginBottom: 0 }}>
-            {tab === "active" ? <><FaBoxOpen /> My Orders</> : <><FaHistory /> Order History</>}
-          </h3>
-          <button
-            className="orders-page-link-btn"
-            onClick={() => navigate("/patient/orders")}
-            id="pharmacy-panel-view-all-orders-btn"
-            style={{
-              background: "none",
-              border: "1px solid var(--border-color)",
-              borderRadius: "6px",
-              padding: "0.35rem 0.75rem",
-              fontSize: "0.82rem",
-              fontWeight: "600",
-              color: "var(--primary-color)",
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-            }}
-          >
-            View All Orders <FaArrowRight style={{ fontSize: "0.75rem" }} />
-          </button>
-        </div>
-        <div className="orders-tab-group">
-          <button
-            className={`orders-tab ${tab === "active" ? "orders-tab--active" : ""}`}
-            onClick={() => setTab("active")}
-          >
-            <FaBoxOpen /> Active
-          </button>
-          <button
-            className={`orders-tab ${tab === "history" ? "orders-tab--active" : ""}`}
-            onClick={() => setTab("history")}
-          >
-            <FaHistory /> History
-          </button>
-        </div>
-      </div>
-
-      {shown.length === 0 ? (
-        <div className="orders-empty">
-          <FaBoxOpen className="orders-empty-icon" />
-          <p>No {tab === "active" ? "active" : "past"} orders found.</p>
-        </div>
-      ) : (
-        <div className="orders-list">
-          {shown.map((order) => (
-            <div className="order-row" key={order.id}>
-              <div className="order-row-left">
-                <span className="order-id">#{order.id}</span>
-                <span className="order-date">{order.date} · {order.pharmacy}</span>
-                <span className="order-items">{order.items}</span>
-                <span className="order-delivery-info">
-                  <FaTruck style={{ fontSize: "0.75rem", marginRight: "4px" }} />
-                  {order.delivery}
-                </span>
-              </div>
-              <div className="order-row-right">
-                <span className="order-amount">₹{order.amount}</span>
-                <span className={`order-status order-status--${order.status.toLowerCase()}`}>
-                  {statusIcon(order.status)} {order.status}
-                </span>
-                <button
-                  className="order-view-btn"
-                  onClick={() => navigate(`/patient/order-details/${order.id}`)}
-                >
-                  <FaEye /> View
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
 }
 
 /* ─── Main Component ────────────────────────────────────────────── */

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-// import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {

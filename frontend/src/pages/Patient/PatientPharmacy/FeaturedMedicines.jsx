@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaTruck } from "react-icons/fa";
 import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
 import { getEffectiveMedicinePrice } from "../../../utils/productOffers";
 import "./FeaturedMedicines.css";
@@ -196,6 +195,13 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
         >
           {med.category}
         </span>
+        {(stockInfo.status === "low-stock" || stockInfo.status === "out-of-stock") && (
+          <div className="featured-stock-badge-wrap">
+            <span className={`featured-stock-badge ${stockInfo.status === "low-stock" ? "featured-stock--low" : "featured-stock--out"}`}>
+              {stockInfo.status === "low-stock" ? `Low Stock (${stockInfo.stockText})` : "Out of Stock"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Info block ────────────────────────────────────────── */}
@@ -232,14 +238,6 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           <span className="featured-mrp">MRP ₹{mrp}</span>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", marginTop: "0.25rem" }}>
-          <span className={`featured-stock-badge ${stockInfo.status === "in-stock" || stockInfo.status === "medium-stock" ? "featured-stock--in" : stockInfo.status === "low-stock" ? "featured-stock--low" : "featured-stock--out"}`}>
-            {stockInfo.label} ({stockInfo.stockText})
-          </span>
-          <span style={{ fontSize: "0.75rem", color: stockInfo.canOrder ? "var(--primary-color)" : "#94a3b8", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.3rem" }}>
-            <FaTruck style={{ fontSize: "0.7rem" }} /> {stockInfo.deliveryDesc}
-          </span>
-        </div>
       </div>
 
       {/* ── Quantity selector ─────────────────────────────────── */}
