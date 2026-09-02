@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
             minlength: 6,
-            select: false,
         },
 
         phone: {
@@ -35,6 +34,23 @@ const userSchema = new mongoose.Schema(
             required: true,
         },
 
+        // Optional for patients and doctors
+        bloodGroup: {
+            type: String,
+            enum: [
+                "A+",
+                "A-",
+                "B+",
+                "B-",
+                "AB+",
+                "AB-",
+                "O+",
+                "O-",
+            ],
+            default: null,
+        },
+
+        // Existing profile location
         city: {
             type: String,
             default: "",
@@ -47,20 +63,9 @@ const userSchema = new mongoose.Schema(
             trim: true,
         },
 
-        bloodGroup: {
-            type: String,
-            enum: [
-                "",
-                "A+",
-                "A-",
-                "B+",
-                "B-",
-                "AB+",
-                "AB-",
-                "O+",
-                "O-",
-            ],
-            default: "",
+        isAvailable: {
+            type: Boolean,
+            default: false,
         },
 
         isActive: {
@@ -70,12 +75,12 @@ const userSchema = new mongoose.Schema(
 
         isApproved: {
             type: Boolean,
-            default: false,
+            default: true,
         },
 
-        lastLogin: {
-            type: Date,
-            default: null,
+        profileImage: {
+            type: String,
+            default: "",
         },
     },
     {

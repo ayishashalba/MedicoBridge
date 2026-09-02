@@ -3,6 +3,11 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
+const patientRoutes = require("./routes/patientRoutes");
+const doctorRoutes = require("./routes/doctorRoutes");
+const appointmentRoutes = require("./routes/appointmentRoutes");
+const prescriptionRoutes = require("./routes/prescriptionRoutes");
+const consultationRoutes = require("./routes/consultationRoutes");
 
 const app = express();
 
@@ -30,7 +35,12 @@ app.get("/", (req, res) => {
 
 // Routes will be added here
 app.use("/api/auth", require("./routes/authRoutes"));
-
+app.use("/api/patient", patientRoutes);
+app.use("/api/doctor", doctorRoutes);
+app.use("/api/appointment", appointmentRoutes);
+app.use("/api/prescriptions", prescriptionRoutes);
+app.use("/api/consultation", consultationRoutes);
+app.use("/api/hospital", hospitalRoutes);
 // 404 handler
 app.use((req, res) => {
     res.status(404).json({
