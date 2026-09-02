@@ -1,62 +1,143 @@
 const Consultation = require("../models/Consultation");
+const Appointment = require("../models/Appointment");
+
+const {
+    successResponse,
+    validationErrorResponse,
+    notFoundResponse,
+    serverErrorResponse,
+    forbiddenResponse,
+} = require("../utils/apiResponse");
+const { isValidObjectId } = require("../utils/validators");
 
 const saveConsultation = async (req, res) => {
     try {
         const { appointmentId, patientId, diagnosis, advice } = req.body;
 
         if (!appointmentId || !patientId) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid consultation details",
+            return validationErrorResponse(
+                res,
+                "Appointment ID and Patient ID are required"
+            );
+        }
+
+        if (!isValidObjectId(appointmentId) || !isValidObjectId(patientId)) {
+            return validationErrorResponse(res, "Invalid ID format");
+        }
+
+        const appointment = await Appointment.findOne({
+            _id: appointmentId,
+            doctorId: req.user.id,
+        });
+
+        if (!appointment) {
+            return notFoundResponse(
+                res,
+                "Appointment not found or not assigned to you"
+            );
+        }
+
+        let consultation = await Consultation.findOne({ appointmentId });
+
+        if (consultation) {
+            consultation.diagnosis = diagnosis !== undefined ? diagnosis.trim() : consultation.diagnosis;
+            consultation.advice = advice !== undefined ? advice.trim() : consultation.advice;
+            await consultation.save();
+        } else {
+            consultation = await Consultation.create({
+                appointmentId,
+                patientId,
+                doctorId: req.user.id,
+                diagnosis: diagnosis ? diagnosis.trim() : "",
+                advice: advice ? advice.trim() : "",
             });
         }
 
-        const consultation = await Consultation.create({
-            appointmentId,
-            patientId,
-            doctorId: req.user.id,
-            diagnosis,
-            advice,
-        });
+        // Mark appointment as Completed
+        appointment.status = "Completed";
+        await appointment.save();
 
-        return res.status(201).json({
-            success: true,
-            message: "Consultation saved",
-            data: consultation,
-        });
+        const populated = await Consultation.findById(consultation._id)
+            .populate("doctorId", "name email phone specialization")
+            .populate("patientId", "name email bloodGroup city");
+
+        return successResponse(
+            res,
+            "Consultation saved successfully",
+            { consultation: populated },
+            201
+        );
     } catch (error) {
-        console.error(error);
-
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+        return serverErrorResponse(
+            res,
+            "Unable to save consultation",
+            error
+        );
     }
 };
 
 const getConsultations = async (req, res) => {
     try {
-        const consultations = await Consultation.find({
-            patientId: req.user.id,
-        })
-            .populate("doctorId", "name email")
+        let query = {};
+
+        if (req.user.role === "patient") {
+            query.patientId = req.user.id;
+        } else if (req.user.role === "doctor") {
+            query.doctorId = req.user.id;
+        } else if (req.query.patientId) {
+            if (!isValidObjectId(req.query.patientId)) {
+                return validationErrorResponse(res, "Invalid patient ID");
+            }
+            query.patientId = req.query.patientId;
+        }
+
+        const consultations = await Consultation.find(query)
+            .populate("doctorId", "name email specialization")
+            .populate("patientId", "name email bloodGroup city")
+            .populate("appointmentId", "date time mode")
             .sort({ createdAt: -1 });
 
-        return res.status(200).json({
-            success: true,
-            data: consultations,
-        });
+        return successResponse(
+            res,
+            "Consultations retrieved successfully",
+            { consultations }
+        );
     } catch (error) {
-        console.error(error);
+        return serverErrorResponse(
+            res,
+            "Unable to fetch consultations",
+            error
+        );
+    }
+};
 
-        return res.status(500).json({
-            success: false,
-            message: "Internal Server Error",
-        });
+const getConsultationByAppointment = async (req, res) => {
+    try {
+        const { appointmentId } = req.params;
+        if (!isValidObjectId(appointmentId)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
+        const consultation = await Consultation.findOne({ appointmentId })
+            .populate("doctorId", "name email specialization")
+            .populate("patientId", "name email bloodGroup city");
+
+        if (!consultation) {
+            return notFoundResponse(res, "No consultation found for this appointment");
+        }
+
+        return successResponse(
+            res,
+            "Consultation retrieved successfully",
+            { consultation }
+        );
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to fetch consultation", error);
     }
 };
 
 module.exports = {
     saveConsultation,
     getConsultations,
+    getConsultationByAppointment,
 };

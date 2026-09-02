@@ -6,7 +6,9 @@ const {
     validationErrorResponse,
     notFoundResponse,
     serverErrorResponse,
+    forbiddenResponse,
 } = require("../utils/apiResponse");
+const { isValidObjectId } = require("../utils/validators");
 
 const generateAppointmentId = () => {
     return `APT${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -29,14 +31,18 @@ const bookAppointment = async (req, res) => {
             return validationErrorResponse(res, "Doctor, date and time are required");
         }
 
+        if (!isValidObjectId(doctorId)) {
+            return validationErrorResponse(res, "Invalid doctor ID format");
+        }
+
         const doctor = await User.findOne({
             _id: doctorId,
-            role: "Doctor",
+            role: "doctor",
             isActive: true,
         });
 
         if (!doctor) {
-            return notFoundResponse(res, "Doctor not found");
+            return notFoundResponse(res, "Doctor not found or inactive");
         }
 
         // Prevent double booking
@@ -52,7 +58,7 @@ const bookAppointment = async (req, res) => {
         if (existingAppointment) {
             return validationErrorResponse(
                 res,
-                "Selected slot unavailable"
+                "Selected slot is unavailable"
             );
         }
 
@@ -60,9 +66,9 @@ const bookAppointment = async (req, res) => {
             appointmentId: generateAppointmentId(),
             patientId: req.user.id,
             doctorId,
-            hospitalId: hospitalId || null,
-            departmentId: departmentId || null,
-            date,
+            hospitalId: hospitalId && isValidObjectId(hospitalId) ? hospitalId : null,
+            departmentId: departmentId && isValidObjectId(departmentId) ? departmentId : null,
+            date: new Date(date),
             time,
             mode: mode || "Offline",
             reason: reason || "",
@@ -94,7 +100,7 @@ const getPatientAppointments = async (req, res) => {
         })
             .populate("doctorId", "name email phone city")
             .populate("hospitalId", "name city")
-            .sort({ date: 1 });
+            .sort({ date: 1, createdAt: -1 });
 
         return successResponse(
             res,
@@ -118,7 +124,7 @@ const getDoctorAppointments = async (req, res) => {
         })
             .populate("patientId", "name email phone city bloodGroup")
             .populate("hospitalId", "name city")
-            .sort({ date: 1 });
+            .sort({ date: 1, createdAt: -1 });
 
         return successResponse(
             res,
@@ -134,21 +140,90 @@ const getDoctorAppointments = async (req, res) => {
     }
 };
 
-// Cancel appointment
-const cancelAppointment = async (req, res) => {
+// Hospital views appointments
+const getHospitalAppointments = async (req, res) => {
     try {
-        const appointment = await Appointment.findById(req.params.id);
+        const appointments = await Appointment.find({
+            hospitalId: req.user.id,
+        })
+            .populate("patientId", "name email phone city bloodGroup")
+            .populate("doctorId", "name email specialization")
+            .sort({ date: 1, createdAt: -1 });
+
+        return successResponse(
+            res,
+            "Hospital appointments retrieved successfully",
+            { appointments }
+        );
+    } catch (error) {
+        return serverErrorResponse(
+            res,
+            "Unable to fetch hospital appointments",
+            error
+        );
+    }
+};
+
+// Get single appointment
+const getAppointmentById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
+        const appointment = await Appointment.findById(id)
+            .populate("patientId", "name email phone city bloodGroup")
+            .populate("doctorId", "name email phone city")
+            .populate("hospitalId", "name city");
 
         if (!appointment) {
             return notFoundResponse(res, "Appointment not found");
         }
 
-        const userId = req.user.id;
+        const userId = req.user.id.toString();
+        const isAuthorized =
+            appointment.patientId._id.toString() === userId ||
+            appointment.doctorId._id.toString() === userId ||
+            (appointment.hospitalId && appointment.hospitalId._id.toString() === userId) ||
+            req.user.role === "admin";
+
+        if (!isAuthorized) {
+            return forbiddenResponse(res, "Not authorized to view this appointment");
+        }
+
+        return successResponse(res, "Appointment retrieved successfully", { appointment });
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to fetch appointment", error);
+    }
+};
+
+// Cancel appointment
+const cancelAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
+        const appointment = await Appointment.findById(id);
+
+        if (!appointment) {
+            return notFoundResponse(res, "Appointment not found");
+        }
+
+        const userId = req.user.id.toString();
+
+        // Admin MUST NOT reject or cancel individual doctor appointments (Admin boundary rule)
+        if (req.user.role === "admin") {
+            return forbiddenResponse(res, "Admins are not permitted to cancel individual doctor appointments");
+        }
 
         // Only patient or assigned doctor can cancel
         if (
             appointment.patientId.toString() !== userId &&
-            appointment.doctorId.toString() !== userId
+            appointment.doctorId.toString() !== userId &&
+            (!appointment.hospitalId || appointment.hospitalId.toString() !== userId)
         ) {
             return validationErrorResponse(
                 res,
@@ -164,7 +239,6 @@ const cancelAppointment = async (req, res) => {
         }
 
         appointment.status = "Cancelled";
-
         await appointment.save();
 
         return successResponse(
@@ -184,13 +258,18 @@ const cancelAppointment = async (req, res) => {
 // Doctor accepts appointment
 const acceptAppointment = async (req, res) => {
     try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
         const appointment = await Appointment.findOne({
-            _id: req.params.id,
+            _id: id,
             doctorId: req.user.id,
         });
 
         if (!appointment) {
-            return notFoundResponse(res, "Appointment not found");
+            return notFoundResponse(res, "Appointment not found or not assigned to you");
         }
 
         if (appointment.status !== "Pending") {
@@ -201,7 +280,6 @@ const acceptAppointment = async (req, res) => {
         }
 
         appointment.status = "Accepted";
-
         await appointment.save();
 
         return successResponse(
@@ -221,13 +299,23 @@ const acceptAppointment = async (req, res) => {
 // Doctor rejects appointment
 const rejectAppointment = async (req, res) => {
     try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
+        // Admin rule: Admin MUST NOT reject individual doctor appointments
+        if (req.user.role === "admin") {
+            return forbiddenResponse(res, "Admin is not allowed to reject doctor appointments");
+        }
+
         const appointment = await Appointment.findOne({
-            _id: req.params.id,
+            _id: id,
             doctorId: req.user.id,
         });
 
         if (!appointment) {
-            return notFoundResponse(res, "Appointment not found");
+            return notFoundResponse(res, "Appointment not found or not assigned to you");
         }
 
         if (appointment.status !== "Pending") {
@@ -238,7 +326,6 @@ const rejectAppointment = async (req, res) => {
         }
 
         appointment.status = "Rejected";
-
         await appointment.save();
 
         return successResponse(
@@ -255,11 +342,40 @@ const rejectAppointment = async (req, res) => {
     }
 };
 
+// Complete appointment
+const completeAppointment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid appointment ID");
+        }
+
+        const appointment = await Appointment.findOne({
+            _id: id,
+            doctorId: req.user.id,
+        });
+
+        if (!appointment) {
+            return notFoundResponse(res, "Appointment not found or not assigned to you");
+        }
+
+        appointment.status = "Completed";
+        await appointment.save();
+
+        return successResponse(res, "Appointment marked as completed", { appointment });
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to complete appointment", error);
+    }
+};
+
 module.exports = {
     bookAppointment,
     getPatientAppointments,
     getDoctorAppointments,
+    getHospitalAppointments,
+    getAppointmentById,
     cancelAppointment,
     acceptAppointment,
     rejectAppointment,
+    completeAppointment,
 };

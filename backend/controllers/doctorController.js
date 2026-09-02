@@ -1,5 +1,6 @@
 const Doctor = require("../models/Doctor");
 const User = require("../models/User");
+const Appointment = require("../models/Appointment");
 
 const {
     successResponse,
@@ -7,12 +8,13 @@ const {
     notFoundResponse,
     serverErrorResponse,
 } = require("../utils/apiResponse");
+const { isValidObjectId } = require("../utils/validators");
 
 const getDoctorProfile = async (req, res) => {
     try {
         const doctor = await Doctor.findOne({
             userId: req.user.id,
-        }).populate("userId", "name email phone city bloodGroup role");
+        }).populate("userId", "name email phone city bloodGroup role profileImage isAvailable");
 
         if (!doctor) {
             return notFoundResponse(res, "Doctor not found");
@@ -84,7 +86,7 @@ const updateDoctorProfile = async (req, res) => {
         }
 
         if (experience !== undefined) {
-            doctor.experience = experience;
+            doctor.experience = Number(experience) || 0;
         }
 
         if (licenseNumber !== undefined) {
@@ -96,7 +98,7 @@ const updateDoctorProfile = async (req, res) => {
         }
 
         if (consultationFee !== undefined) {
-            doctor.consultationFee = consultationFee;
+            doctor.consultationFee = Number(consultationFee) || 0;
         }
 
         if (isAvailable !== undefined) {
@@ -112,6 +114,7 @@ const updateDoctorProfile = async (req, res) => {
             if (phone !== undefined) user.phone = phone;
             if (city !== undefined) user.city = city;
             if (bloodGroup !== undefined) user.bloodGroup = bloodGroup || null;
+            if (isAvailable !== undefined) user.isAvailable = Boolean(isAvailable);
 
             await user.save();
         }
@@ -151,6 +154,8 @@ const updateDoctorAvailability = async (req, res) => {
             return notFoundResponse(res, "Doctor not found");
         }
 
+        await User.findByIdAndUpdate(req.user.id, { isAvailable });
+
         return successResponse(
             res,
             "Doctor availability updated successfully",
@@ -165,8 +170,131 @@ const updateDoctorAvailability = async (req, res) => {
     }
 };
 
+// Public/patient search doctors
+const getAllDoctors = async (req, res) => {
+    try {
+        const { search, specialization, city, availableOnly } = req.query;
+
+        const doctorQuery = { isApproved: true };
+
+        if (specialization) {
+            doctorQuery.specialization = new RegExp(specialization.trim(), "i");
+        }
+
+        if (availableOnly === "true") {
+            doctorQuery.isAvailable = true;
+        }
+
+        const doctors = await Doctor.find(doctorQuery)
+            .populate({
+                path: "userId",
+                select: "name email phone city bloodGroup isAvailable profileImage isActive",
+                match: { isActive: true },
+            })
+            .populate("hospitalId", "hospitalName city");
+
+        let filteredDoctors = doctors.filter((doc) => doc.userId !== null);
+
+        if (city) {
+            const cityRegex = new RegExp(city.trim(), "i");
+            filteredDoctors = filteredDoctors.filter(
+                (doc) => doc.userId.city && cityRegex.test(doc.userId.city)
+            );
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search.trim(), "i");
+            filteredDoctors = filteredDoctors.filter(
+                (doc) =>
+                    searchRegex.test(doc.userId.name) ||
+                    searchRegex.test(doc.specialization) ||
+                    searchRegex.test(doc.clinicName) ||
+                    searchRegex.test(doc.userId.city)
+            );
+        }
+
+        return successResponse(res, "Doctors retrieved successfully", {
+            doctors: filteredDoctors,
+            count: filteredDoctors.length,
+        });
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to fetch doctors", error);
+    }
+};
+
+// Get single doctor details
+const getDoctorById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!isValidObjectId(id)) {
+            return validationErrorResponse(res, "Invalid doctor ID");
+        }
+
+        let doctor = await Doctor.findById(id)
+            .populate("userId", "name email phone city bloodGroup profileImage isAvailable")
+            .populate("hospitalId", "hospitalName city");
+
+        if (!doctor) {
+            doctor = await Doctor.findOne({ userId: id })
+                .populate("userId", "name email phone city bloodGroup profileImage isAvailable")
+                .populate("hospitalId", "hospitalName city");
+        }
+
+        if (!doctor) {
+            return notFoundResponse(res, "Doctor not found");
+        }
+
+        return successResponse(res, "Doctor retrieved successfully", { doctor });
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to fetch doctor", error);
+    }
+};
+
+// Doctor's patients list
+const getDoctorPatients = async (req, res) => {
+    try {
+        const { bloodGroup, search } = req.query;
+
+        // Find all appointments associated with this doctor
+        const appointments = await Appointment.find({ doctorId: req.user.id }).distinct("patientId");
+
+        const query = {
+            _id: { $in: appointments },
+            isActive: true,
+        };
+
+        if (bloodGroup && bloodGroup !== "All Blood Groups" && bloodGroup !== "All") {
+            query.bloodGroup = bloodGroup;
+        }
+
+        if (search) {
+            const searchRegex = new RegExp(search.trim(), "i");
+            query.$or = [
+                { name: searchRegex },
+                { email: searchRegex },
+                { phone: searchRegex },
+                { city: searchRegex },
+            ];
+        }
+
+        const patients = await User.find(query)
+            .select("name email phone city bloodGroup gender isAvailable createdAt")
+            .lean();
+
+        return successResponse(res, "Doctor's patients retrieved successfully", {
+            patients,
+            count: patients.length,
+        });
+    } catch (error) {
+        return serverErrorResponse(res, "Unable to fetch doctor's patients", error);
+    }
+};
+
 module.exports = {
     getDoctorProfile,
     updateDoctorProfile,
     updateDoctorAvailability,
+    getAllDoctors,
+    getDoctorById,
+    getDoctorPatients,
 };

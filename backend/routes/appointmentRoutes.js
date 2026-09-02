@@ -4,9 +4,12 @@ const {
     bookAppointment,
     getPatientAppointments,
     getDoctorAppointments,
+    getHospitalAppointments,
+    getAppointmentById,
     cancelAppointment,
     acceptAppointment,
     rejectAppointment,
+    completeAppointment,
 } = require("../controllers/appointmentController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -18,14 +21,14 @@ const router = express.Router();
 router.post(
     "/book",
     authMiddleware,
-    roleMiddleware("Patient"),
+    roleMiddleware("patient"),
     bookAppointment
 );
 
 router.get(
     "/patient",
     authMiddleware,
-    roleMiddleware("Patient"),
+    roleMiddleware("patient"),
     getPatientAppointments
 );
 
@@ -33,25 +36,47 @@ router.get(
 router.get(
     "/doctor",
     authMiddleware,
-    roleMiddleware("Doctor"),
+    roleMiddleware("doctor"),
     getDoctorAppointments
 );
 
 router.put(
     "/:id/accept",
     authMiddleware,
-    roleMiddleware("Doctor"),
+    roleMiddleware("doctor"),
     acceptAppointment
 );
 
 router.put(
     "/:id/reject",
     authMiddleware,
-    roleMiddleware("Doctor"),
+    roleMiddleware("doctor"),
     rejectAppointment
 );
 
-// Patient or doctor
+router.put(
+    "/:id/complete",
+    authMiddleware,
+    roleMiddleware("doctor"),
+    completeAppointment
+);
+
+// Hospital
+router.get(
+    "/hospital",
+    authMiddleware,
+    roleMiddleware("hospital"),
+    getHospitalAppointments
+);
+
+// Single appointment details
+router.get(
+    "/:id",
+    authMiddleware,
+    getAppointmentById
+);
+
+// Cancel appointment (Patient or Doctor or Hospital)
 router.delete(
     "/:id",
     authMiddleware,
