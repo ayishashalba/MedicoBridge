@@ -78,6 +78,11 @@ const userSchema = new mongoose.Schema(
             default: true,
         },
 
+        isEmailVerified: {
+            type: Boolean,
+            default: false,
+        },
+
         profileImage: {
             type: String,
             default: "",
