@@ -14,14 +14,25 @@ const getPatientProfile = async (req, res) => {
     try {
         const patient = await Patient.findOne({
             userId: req.user.id,
-        }).populate("userId", "name email phone city bloodGroup role isAvailable");
+        }).populate("userId", "name email phone city address bloodGroup role isAvailable");
 
         if (!patient) {
             return notFoundResponse(res, "Patient not found");
         }
 
+        const user = patient.userId || {};
+
         return successResponse(res, "Patient profile retrieved successfully", {
             patient,
+            user: {
+                id: user._id || req.user.id,
+                name: user.name || "",
+                email: user.email || "",
+                phone: user.phone || patient.phone || "",
+                city: user.city || patient.city || "",
+                address: user.address || patient.address || "",
+                bloodGroup: user.bloodGroup || patient.bloodGroup || null,
+            },
         });
     } catch (error) {
         return serverErrorResponse(res, "Unable to fetch patient profile", error);

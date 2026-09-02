@@ -47,15 +47,13 @@ const sendOtpEmail = async (toEmail, otp, recipientName = "User") => {
 
     const textContent = `Hello ${recipientName},
 
-Thank you for registering with MedicoBridge.
-
-Your email verification OTP is:
+Your MedicoBridge verification OTP is:
 
 ${otp}
 
-This OTP will expire in 10 minutes.
+This OTP will expire in 5 minutes.
 
-If you did not request this registration, please ignore this email.
+If you did not create this account, please ignore this email.
 
 Regards,
 MedicoBridge Healthcare Platform`;
@@ -89,20 +87,19 @@ MedicoBridge Healthcare Platform`;
         <div class="content">
           <div class="greeting">Hello ${recipientName},</div>
           <div class="text">
-            Thank you for registering with MedicoBridge. Please use the verification code below to complete your email verification and activate your patient account.
+            Your MedicoBridge verification OTP is:
           </div>
           <div class="otp-box">
             <div class="otp-code">${otp}</div>
-            <div class="otp-expiry">Expires in 10 minutes</div>
+            <div class="otp-expiry">This OTP will expire in 5 minutes.</div>
           </div>
           <div class="text">
-            If you did not request this registration, you can safely ignore this email.
+            If you did not create this account, please ignore this email.
           </div>
         </div>
         <div class="footer">
           Regards,<br>
-          <strong>MedicoBridge Healthcare Platform</strong><br>
-          <span style="font-size: 11px;">This is an automated security email. Please do not reply directly.</span>
+          <strong>MedicoBridge Healthcare Platform</strong>
         </div>
       </div>
     </body>

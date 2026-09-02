@@ -41,7 +41,7 @@ const generateSixDigitOtp = () => {
 
 /**
  * POST /api/auth/register
- * Supports OTP verification for Patient role.
+ * Patient & multi-role registration with Email OTP verification for Patient.
  */
 const register = async (req, res, next) => {
     try {
@@ -97,9 +97,9 @@ const register = async (req, res, next) => {
             email: normalizedEmail,
         });
 
-        // If user exists and is already verified, disallow re-registration
-        if (existingUser && existingUser.isEmailVerified) {
-            return validationErrorResponse(res, "Email already exists");
+        // If an already verified account exists
+        if (existingUser && (existingUser.emailVerified || existingUser.isEmailVerified)) {
+            return validationErrorResponse(res, "Email is already registered");
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
@@ -108,7 +108,7 @@ const register = async (req, res, next) => {
         if (normalizedRole === "patient") {
             const otp = generateSixDigitOtp();
             const otpHash = await bcrypt.hash(otp, 10);
-            const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+            const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
 
             const registrationData = {
                 name: displayName,
@@ -125,7 +125,7 @@ const register = async (req, res, next) => {
                 isAvailable: donorStatus,
             };
 
-            // Upsert pending OTP record
+            // Store in dedicated OtpVerification model
             await OtpVerification.findOneAndUpdate(
                 { email: normalizedEmail, purpose: "registration" },
                 {
@@ -141,22 +141,53 @@ const register = async (req, res, next) => {
                 { upsert: true, new: true, setDefaultsOnInsert: true }
             );
 
-            // Send OTP email
-            await sendOtpEmail(normalizedEmail, otp, displayName);
+            // Also keep/update user in User collection if pending
+            if (existingUser) {
+                existingUser.name = displayName;
+                existingUser.password = hashedPassword;
+                existingUser.otpCode = otpHash;
+                existingUser.otpExpiresAt = otpExpiresAt;
+                existingUser.emailVerified = false;
+                existingUser.isEmailVerified = false;
+                await existingUser.save();
+            } else {
+                await User.create({
+                    name: displayName,
+                    email: normalizedEmail,
+                    password: hashedPassword,
+                    role: "patient",
+                    phone: phone ? phone.trim() : "",
+                    city: city ? city.trim() : "",
+                    address: address ? address.trim() : "",
+                    bloodGroup: bloodGroup && bloodGroup !== "Not Provided" ? bloodGroup : null,
+                    isAvailable: donorStatus,
+                    isActive: true,
+                    isApproved: true,
+                    emailVerified: false,
+                    isEmailVerified: false,
+                    otpCode: otpHash,
+                    otpExpiresAt,
+                });
+            }
+
+            // Send real OTP email
+            const emailResult = await sendOtpEmail(normalizedEmail, otp, displayName);
+            if (!emailResult.success && process.env.NODE_ENV === "production") {
+                return validationErrorResponse(res, "Unable to send verification email");
+            }
 
             return successResponse(
                 res,
-                "OTP sent successfully to your email",
+                "OTP sent to your email",
                 {
                     email: normalizedEmail,
-                    requiresOtpVerification: true,
+                    requiresVerification: true,
                 },
                 200
             );
         }
 
-        // ── OTHER ROLES REGISTRATION FLOW ──────────────────────
-        // For doctor/hospital/pharmacy: create user record (subject to approval)
+        // ── OTHER ROLES REGISTRATION FLOW (Doctor / Hospital / Pharmacy) ──
         const user = await User.create({
             name: displayName,
             email: normalizedEmail,
@@ -168,6 +199,7 @@ const register = async (req, res, next) => {
             bloodGroup: bloodGroup && bloodGroup !== "Not Provided" ? bloodGroup : null,
             isActive: true,
             isApproved: false,
+            emailVerified: true,
             isEmailVerified: true,
         });
 
@@ -232,14 +264,14 @@ const register = async (req, res, next) => {
 
 /**
  * POST /api/auth/verify-otp
- * Verifies submitted OTP, creates User & Patient records, and marks account verified.
+ * Verifies OTP, activates account, generates JWT, and returns authenticated data for direct Dashboard login.
  */
 const verifyOtp = async (req, res, next) => {
     try {
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-            return validationErrorResponse(res, "Email and OTP are required");
+            return validationErrorResponse(res, "Invalid OTP");
         }
 
         if (!validateEmail(email)) {
@@ -248,59 +280,52 @@ const verifyOtp = async (req, res, next) => {
 
         const cleanOtp = String(otp).trim();
         if (!/^\d{6}$/.test(cleanOtp)) {
-            return validationErrorResponse(res, "OTP must be a 6-digit numeric code");
+            return validationErrorResponse(res, "Invalid OTP");
         }
 
         const normalizedEmail = email.toLowerCase().trim();
 
+        // Check user & OTP record
+        const user = await User.findOne({ email: normalizedEmail });
         const otpRecord = await OtpVerification.findOne({
             email: normalizedEmail,
             purpose: "registration",
         });
 
-        if (!otpRecord) {
-            return validationErrorResponse(
-                res,
-                "No pending registration found for this email. Please register again."
-            );
+        if (!user && !otpRecord) {
+            return notFoundResponse(res, "Registration not found");
         }
 
-        if (new Date() > new Date(otpRecord.expiresAt)) {
-            return validationErrorResponse(
-                res,
-                "OTP has expired. Please request a new OTP."
-            );
+        if (user && (user.emailVerified || user.isEmailVerified)) {
+            return validationErrorResponse(res, "Email is already verified");
         }
 
-        if (otpRecord.attempts >= 5) {
-            return validationErrorResponse(
-                res,
-                "Maximum verification attempts exceeded. Please request a new OTP."
-            );
+        const effectiveExpiresAt = otpRecord?.expiresAt || user?.otpExpiresAt;
+        if (!effectiveExpiresAt || new Date() > new Date(effectiveExpiresAt)) {
+            return validationErrorResponse(res, "OTP has expired");
         }
 
-        // Increment attempts
-        otpRecord.attempts += 1;
+        const storedOtpHash = otpRecord?.otpHash || user?.otpCode;
+        if (!storedOtpHash) {
+            return validationErrorResponse(res, "Registration not found");
+        }
 
-        const isMatch = await bcrypt.compare(cleanOtp, otpRecord.otpHash);
+        const isMatch = await bcrypt.compare(cleanOtp, storedOtpHash);
 
         if (!isMatch) {
-            await otpRecord.save();
-            return validationErrorResponse(
-                res,
-                "Invalid OTP code. Please check the code and try again."
-            );
+            if (otpRecord) {
+                otpRecord.attempts = (otpRecord.attempts || 0) + 1;
+                await otpRecord.save();
+            }
+            return validationErrorResponse(res, "Invalid OTP");
         }
 
-        // OTP verified successfully
-        otpRecord.verified = true;
-        const regData = otpRecord.registrationData || {};
+        // OTP is valid! Mark email as verified
+        const regData = otpRecord?.registrationData || {};
 
-        // Find or create User
-        let user = await User.findOne({ email: normalizedEmail });
-
-        if (!user) {
-            user = await User.create({
+        let activeUser = user;
+        if (!activeUser) {
+            activeUser = await User.create({
                 name: regData.name || "Patient",
                 email: normalizedEmail,
                 password: regData.password,
@@ -312,44 +337,74 @@ const verifyOtp = async (req, res, next) => {
                 isAvailable: Boolean(regData.isAvailable),
                 isActive: true,
                 isApproved: true,
+                emailVerified: true,
                 isEmailVerified: true,
+                otpCode: null,
+                otpExpiresAt: null,
             });
         } else {
-            user.isEmailVerified = true;
-            user.isActive = true;
-            user.isApproved = true;
-            if (regData.password) user.password = regData.password;
-            if (regData.name) user.name = regData.name;
-            if (regData.phone) user.phone = regData.phone;
-            if (regData.city) user.city = regData.city;
-            if (regData.address) user.address = regData.address;
-            if (regData.bloodGroup !== undefined) user.bloodGroup = regData.bloodGroup;
-            await user.save();
+            activeUser.emailVerified = true;
+            activeUser.isEmailVerified = true;
+            activeUser.isActive = true;
+            activeUser.isApproved = true;
+            activeUser.otpCode = null;
+            activeUser.otpExpiresAt = null;
+            if (regData.password) activeUser.password = regData.password;
+            if (regData.name) activeUser.name = regData.name;
+            if (regData.phone) activeUser.phone = regData.phone;
+            if (regData.city) activeUser.city = regData.city;
+            if (regData.address) activeUser.address = regData.address;
+            if (regData.bloodGroup !== undefined) activeUser.bloodGroup = regData.bloodGroup;
+            if (regData.isAvailable !== undefined) activeUser.isAvailable = regData.isAvailable;
+            await activeUser.save();
         }
 
-        // Create Patient document if not exists
-        let patient = await Patient.findOne({ userId: user._id });
+        // Ensure Patient document exists and is linked
+        let patient = await Patient.findOne({ userId: activeUser._id });
         if (!patient) {
             patient = await Patient.create({
-                userId: user._id,
+                userId: activeUser._id,
                 patientId: `PAT${Date.now()}${Math.floor(Math.random() * 1000)}`,
                 dateOfBirth: regData.dateOfBirth ? new Date(regData.dateOfBirth) : null,
                 gender: regData.gender || undefined,
-                phone: user.phone,
-                address: user.address,
-                city: user.city,
-                bloodGroup: user.bloodGroup,
+                phone: activeUser.phone,
+                address: activeUser.address,
+                city: activeUser.city,
+                bloodGroup: activeUser.bloodGroup,
                 emergencyContact: regData.emergencyContact || "",
-                isAvailable: user.isAvailable,
+                isAvailable: activeUser.isAvailable,
             });
+        } else {
+            if (regData.dateOfBirth) patient.dateOfBirth = new Date(regData.dateOfBirth);
+            if (regData.gender) patient.gender = regData.gender;
+            if (activeUser.phone) patient.phone = activeUser.phone;
+            if (activeUser.address) patient.address = activeUser.address;
+            if (activeUser.city) patient.city = activeUser.city;
+            if (activeUser.bloodGroup) patient.bloodGroup = activeUser.bloodGroup;
+            await patient.save();
         }
 
-        // Remove the OTP record after successful registration
-        await OtpVerification.deleteOne({ _id: otpRecord._id });
+        // Clean up OtpVerification record
+        await OtpVerification.deleteMany({ email: normalizedEmail });
 
-        return successResponse(res, "Email verified successfully. You can now login.", {
-            verified: true,
-            email: user.email,
+        // Generate JWT token for immediate dashboard login
+        const token = generateToken(activeUser);
+
+        return successResponse(res, "Email verified successfully", {
+            token,
+            user: {
+                id: activeUser._id,
+                name: activeUser.name,
+                email: activeUser.email,
+                role: activeUser.role,
+                phone: activeUser.phone,
+                city: activeUser.city,
+                bloodGroup: activeUser.bloodGroup,
+                emailVerified: true,
+                isEmailVerified: true,
+                isActive: activeUser.isActive,
+                isApproved: activeUser.isApproved,
+            },
         });
     } catch (error) {
         next(error);
@@ -358,7 +413,7 @@ const verifyOtp = async (req, res, next) => {
 
 /**
  * POST /api/auth/resend-otp
- * Resends a fresh 6-digit OTP with rate limiting protection.
+ * Resends fresh 6-digit OTP with 5-minute expiry.
  */
 const resendOtp = async (req, res, next) => {
     try {
@@ -374,50 +429,54 @@ const resendOtp = async (req, res, next) => {
 
         const normalizedEmail = email.toLowerCase().trim();
 
-        // Check if already registered & verified
-        const existingUser = await User.findOne({ email: normalizedEmail });
-        if (existingUser && existingUser.isEmailVerified) {
-            return validationErrorResponse(
-                res,
-                "This email is already verified. You can proceed to login."
-            );
-        }
-
+        const user = await User.findOne({ email: normalizedEmail });
         const otpRecord = await OtpVerification.findOne({
             email: normalizedEmail,
             purpose: "registration",
         });
 
-        if (!otpRecord) {
-            return notFoundResponse(
-                res,
-                "No pending registration found for this email. Please register first."
-            );
+        if (!user && !otpRecord) {
+            return notFoundResponse(res, "Registration not found");
         }
 
-        // Rate limit: 30 seconds cooldown between resends
-        const now = Date.now();
-        const lastSent = new Date(otpRecord.lastResentAt || otpRecord.updatedAt).getTime();
-        const diffSeconds = Math.floor((now - lastSent) / 1000);
+        if (user && (user.emailVerified || user.isEmailVerified)) {
+            return validationErrorResponse(res, "Email is already verified");
+        }
 
+        // Rate limiting cooldown (30 seconds)
+        const lastSent = otpRecord?.lastResentAt ? new Date(otpRecord.lastResentAt).getTime() : 0;
+        const diffSeconds = Math.floor((Date.now() - lastSent) / 1000);
         if (diffSeconds < 30) {
             return validationErrorResponse(
                 res,
-                `Please wait ${30 - diffSeconds}s before requesting a new OTP.`
+                `Please wait ${30 - diffSeconds}s before requesting a new OTP`
             );
         }
 
         const newOtp = generateSixDigitOtp();
         const newOtpHash = await bcrypt.hash(newOtp, 10);
+        const newExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-        otpRecord.otpHash = newOtpHash;
-        otpRecord.expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-        otpRecord.attempts = 0;
-        otpRecord.lastResentAt = new Date();
-        await otpRecord.save();
+        if (otpRecord) {
+            otpRecord.otpHash = newOtpHash;
+            otpRecord.expiresAt = newExpiresAt;
+            otpRecord.attempts = 0;
+            otpRecord.lastResentAt = new Date();
+            await otpRecord.save();
+        }
 
-        const recipientName = otpRecord.registrationData?.name || "Patient";
-        await sendOtpEmail(normalizedEmail, newOtp, recipientName);
+        if (user) {
+            user.otpCode = newOtpHash;
+            user.otpExpiresAt = newExpiresAt;
+            await user.save();
+        }
+
+        const recipientName = otpRecord?.registrationData?.name || user?.name || "Patient";
+        const emailResult = await sendOtpEmail(normalizedEmail, newOtp, recipientName);
+
+        if (!emailResult.success && process.env.NODE_ENV === "production") {
+            return validationErrorResponse(res, "Unable to send verification email");
+        }
 
         return successResponse(res, "A new OTP has been sent to your email", {
             email: normalizedEmail,
@@ -466,10 +525,10 @@ const login = async (req, res, next) => {
         }
 
         // ── EMAIL VERIFICATION ENFORCEMENT ─────────────────────
-        if (user.role === "patient" && !user.isEmailVerified) {
+        if (user.role === "patient" && !user.emailVerified && !user.isEmailVerified) {
             return forbiddenResponse(
                 res,
-                "Please verify your email using the OTP before logging in."
+                "Please verify your email before logging in"
             );
         }
 
@@ -490,7 +549,8 @@ const login = async (req, res, next) => {
                 bloodGroup: user.bloodGroup,
                 isActive: user.isActive,
                 isApproved: user.isApproved,
-                isEmailVerified: user.isEmailVerified,
+                emailVerified: Boolean(user.emailVerified || user.isEmailVerified),
+                isEmailVerified: Boolean(user.emailVerified || user.isEmailVerified),
             },
         });
     } catch (error) {
@@ -508,4 +568,4 @@ module.exports = {
     resendOtp,
     login,
     logout,
-};
+};

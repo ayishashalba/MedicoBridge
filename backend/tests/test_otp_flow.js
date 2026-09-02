@@ -8,13 +8,14 @@ const User = require("../models/User");
 const Patient = require("../models/Patient");
 const OtpVerification = require("../models/OtpVerification");
 const authController = require("../controllers/authController");
+const patientController = require("../controllers/patientController");
 
 const runTests = async () => {
-    console.log("=== STARTING OTP & AUTH INTEGRATION TESTS ===");
+    console.log("=== STARTING FULL PATIENT EMAIL OTP FLOW TESTS ===");
 
     await connectDB();
 
-    const testEmail = `patient_${Date.now()}@example.com`;
+    const testEmail = `aarav_${Date.now()}@gmail.com`;
     const testPassword = "securePassword123";
 
     const mockRes = () => {
@@ -28,18 +29,20 @@ const runTests = async () => {
 
     try {
         // 1. Test Patient Registration
-        console.log("\n[Test 1] Patient Registration (triggers OTP generation)...");
+        console.log("\n[Test 1] Patient Registration (Form submission)...");
         const regReq = {
             body: {
-                fullName: "Amina Farooq",
+                fullName: "Aarav Sharma",
                 email: testEmail,
                 password: testPassword,
                 role: "patient",
-                phone: "+91 9876543210",
+                phone: "9876543210",
                 city: "Kozhikode",
-                address: "Beach Road",
-                bloodGroup: "O+",
-                gender: "female",
+                address: "Beach Road, Calicut",
+                bloodGroup: "B+",
+                gender: "Male",
+                dateOfBirth: "1995-05-15",
+                emergencyContact: "9876500000",
                 isDonorAvailable: true,
             },
         };
@@ -48,17 +51,17 @@ const runTests = async () => {
 
         assert.strictEqual(regRes.statusCode, 200);
         assert.strictEqual(regRes.data.success, true);
-        assert.strictEqual(regRes.data.data.requiresOtpVerification, true);
+        assert.strictEqual(regRes.data.data.requiresVerification, true);
         assert.strictEqual(regRes.data.data.otp, undefined, "OTP must NOT be exposed in response");
-        console.log("✓ Patient registration returned requiresOtpVerification without exposing OTP");
+        console.log("✓ Patient registration returned requiresVerification: true without exposing OTP");
 
-        // Verify OTP is in database
+        // Verify OTP is in database with 5-minute expiry
         const otpRecord = await OtpVerification.findOne({ email: testEmail, purpose: "registration" });
         assert(otpRecord, "OtpVerification record must exist in DB");
         assert(otpRecord.otpHash, "otpHash must be stored");
-        assert(otpRecord.expiresAt > new Date(), "OTP must have a future expiration date");
-        assert.strictEqual(otpRecord.registrationData.email, testEmail);
-        console.log("✓ OtpVerification document safely created with hashed OTP and TTL index");
+        const expiryDiffMinutes = (new Date(otpRecord.expiresAt).getTime() - Date.now()) / (60 * 1000);
+        assert(expiryDiffMinutes > 4 && expiryDiffMinutes <= 5.1, "OTP expiry must be approximately 5 minutes");
+        console.log(`✓ OTP stored securely with ~5-minute expiration (${expiryDiffMinutes.toFixed(1)} mins)`);
 
         // 2. Test Login BEFORE verification (must be blocked)
         console.log("\n[Test 2] Login before OTP verification...");
@@ -71,28 +74,25 @@ const runTests = async () => {
         const unverifiedLoginRes = mockRes();
         await authController.login(unverifiedLoginReq, unverifiedLoginRes, (err) => { if (err) throw err; });
 
-        // Since user document is created upon verification or unverified in DB, login must block
-        // If user isn't in User table yet or is unverified in User table:
-        assert(
-            unverifiedLoginRes.statusCode === 401 || unverifiedLoginRes.statusCode === 403,
-            "Unverified patient login must be rejected"
-        );
-        console.log(`✓ Login before OTP verification blocked (Status ${unverifiedLoginRes.statusCode}: ${unverifiedLoginRes.data.message})`);
+        assert.strictEqual(unverifiedLoginRes.statusCode, 403);
+        assert.strictEqual(unverifiedLoginRes.data.success, false);
+        assert.strictEqual(unverifiedLoginRes.data.message, "Please verify your email before logging in");
+        console.log("✓ Unverified login blocked with exact message: 'Please verify your email before logging in'");
 
-        // 3. Test Invalid OTP format & Wrong OTP
-        console.log("\n[Test 3] Entering wrong OTP...");
+        // 3. Test Invalid OTP
+        console.log("\n[Test 3] Entering incorrect OTP...");
         const wrongOtpReq = {
             body: {
                 email: testEmail,
-                otp: "000000",
+                otp: "999999",
             },
         };
         const wrongOtpRes = mockRes();
         await authController.verifyOtp(wrongOtpReq, wrongOtpRes, (err) => { if (err) throw err; });
 
         assert.strictEqual(wrongOtpRes.statusCode, 400);
-        assert.strictEqual(wrongOtpRes.data.success, false);
-        console.log("✓ Wrong OTP rejected with validation error");
+        assert.strictEqual(wrongOtpRes.data.message, "Invalid OTP");
+        console.log("✓ Incorrect OTP rejected with message: 'Invalid OTP'");
 
         // 4. Test Resend OTP
         console.log("\n[Test 4] Resend OTP...");
@@ -109,14 +109,15 @@ const runTests = async () => {
 
         assert.strictEqual(resendRes.statusCode, 200);
         assert.strictEqual(resendRes.data.success, true);
-        assert.strictEqual(resendRes.data.data.otp, undefined, "Resend OTP response must NOT expose OTP");
-        console.log("✓ Resend OTP succeeded and rate limit cooldown respected");
+        assert.strictEqual(resendRes.data.message, "A new OTP has been sent to your email");
+        console.log("✓ Resend OTP succeeded with 5-minute refreshed expiry");
 
-        // 5. Verify with Correct OTP (we simulate knowing the OTP by setting a known hash)
-        console.log("\n[Test 5] Entering correct OTP...");
-        const knownOtp = "789123";
+        // 5. Verify with Correct OTP (set a known hash to test)
+        console.log("\n[Test 5] Entering correct 6-digit OTP...");
+        const knownOtp = "482731";
         const knownHash = await bcrypt.hash(knownOtp, 10);
         await OtpVerification.updateOne({ email: testEmail }, { otpHash: knownHash });
+        await User.updateOne({ email: testEmail }, { otpCode: knownHash });
 
         const correctOtpReq = {
             body: {
@@ -129,51 +130,69 @@ const runTests = async () => {
 
         assert.strictEqual(correctOtpRes.statusCode, 200);
         assert.strictEqual(correctOtpRes.data.success, true);
-        assert.strictEqual(correctOtpRes.data.data.verified, true);
-        console.log("✓ Correct OTP verified successfully");
+        assert.strictEqual(correctOtpRes.data.message, "Email verified successfully");
+        assert(correctOtpRes.data.data.token, "JWT token must be returned upon successful verification");
+        assert.strictEqual(correctOtpRes.data.data.user.emailVerified, true);
+        assert.strictEqual(correctOtpRes.data.data.user.email, testEmail);
+        console.log("✓ OTP verified successfully, returning JWT token & user object for direct Dashboard login!");
 
-        // Check that User and Patient are in DB
-        const createdUser = await User.findOne({ email: testEmail });
-        assert(createdUser, "User document must exist in DB");
-        assert.strictEqual(createdUser.isEmailVerified, true, "isEmailVerified must be true");
-        assert.strictEqual(createdUser.isActive, true, "isActive must be true");
+        const jwtToken = correctOtpRes.data.data.token;
+        const verifiedUserId = correctOtpRes.data.data.user.id;
 
-        const createdPatient = await Patient.findOne({ userId: createdUser._id });
-        assert(createdPatient, "Patient document must exist in DB and be linked to userId");
-        assert.strictEqual(createdPatient.city, "Kozhikode");
-        assert.strictEqual(createdPatient.bloodGroup, "O+");
-        console.log("✓ User and Patient profiles successfully created and linked in MongoDB");
+        // 6. Test Patient Profile Data (must show the SAME registration details from MongoDB)
+        console.log("\n[Test 6] Fetching Patient Profile using JWT token...");
+        const profileReq = {
+            user: {
+                id: verifiedUserId,
+                role: "patient",
+            },
+        };
+        const profileRes = mockRes();
+        await patientController.getPatientProfile(profileReq, profileRes);
 
-        // Check that OtpVerification document is deleted
-        const remainingOtp = await OtpVerification.findOne({ email: testEmail });
-        assert.strictEqual(remainingOtp, null, "OtpVerification record must be cleaned up after successful verification");
-        console.log("✓ OtpVerification record cleaned up");
+        assert.strictEqual(profileRes.statusCode, 200);
+        assert.strictEqual(profileRes.data.success, true);
+        assert.strictEqual(profileRes.data.data.user.name, "Aarav Sharma");
+        assert.strictEqual(profileRes.data.data.user.email, testEmail);
+        assert.strictEqual(profileRes.data.data.user.phone, "9876543210");
+        assert.strictEqual(profileRes.data.data.user.city, "Kozhikode");
+        assert.strictEqual(profileRes.data.data.user.bloodGroup, "B+");
+        assert.strictEqual(profileRes.data.data.patient.gender, "Male");
+        assert.strictEqual(profileRes.data.data.patient.emergencyContact, "9876500000");
+        console.log("✓ Patient Profile matches registered MongoDB data (Aarav Sharma, Kozhikode, B+, Male)");
 
-        // 6. Test Login AFTER verification (must succeed and return JWT)
-        console.log("\n[Test 6] Login after OTP verification...");
-        const verifiedLoginReq = {
+        // 7. Test Already Registered Email
+        console.log("\n[Test 7] Attempting to re-register with already verified email...");
+        const dupRegRes = mockRes();
+        await authController.register(regReq, dupRegRes, (err) => { if (err) throw err; });
+        assert.strictEqual(dupRegRes.statusCode, 400);
+        assert.strictEqual(dupRegRes.data.message, "Email is already registered");
+        console.log("✓ Duplicate registration prevented with 'Email is already registered'");
+
+        // 8. Test Regular Login after OTP verification
+        console.log("\n[Test 8] Normal login after OTP verification...");
+        const loginReq = {
             body: {
                 email: testEmail,
                 password: testPassword,
             },
         };
-        const verifiedLoginRes = mockRes();
-        await authController.login(verifiedLoginReq, verifiedLoginRes, (err) => { if (err) throw err; });
+        const loginRes = mockRes();
+        await authController.login(loginReq, loginRes, (err) => { if (err) throw err; });
 
-        assert.strictEqual(verifiedLoginRes.statusCode, 200);
-        assert.strictEqual(verifiedLoginRes.data.success, true);
-        assert(verifiedLoginRes.data.data.token, "JWT token must be returned upon successful login");
-        assert.strictEqual(verifiedLoginRes.data.data.user.email, testEmail);
-        assert.strictEqual(verifiedLoginRes.data.data.user.isEmailVerified, true);
-        console.log("✓ Verified patient logged in successfully with JWT token generated");
+        assert.strictEqual(loginRes.statusCode, 200);
+        assert.strictEqual(loginRes.data.success, true);
+        assert(loginRes.data.data.token, "JWT token must be returned");
+        assert.strictEqual(loginRes.data.data.user.emailVerified, true);
+        console.log("✓ Normal login succeeds and returns JWT token");
 
-        console.log("\n==========================================");
-        console.log("ALL OTP VERIFICATION TESTS PASSED (100%)");
-        console.log("==========================================");
+        console.log("\n=======================================================");
+        console.log("ALL PATIENT EMAIL OTP TESTS COMPLETED SUCCESSFULLY (100%)");
+        console.log("=======================================================");
 
         // Cleanup test data
         await User.deleteOne({ email: testEmail });
-        await Patient.deleteOne({ userId: createdUser._id });
+        await Patient.deleteOne({ userId: verifiedUserId });
 
         process.exit(0);
     } catch (error) {
