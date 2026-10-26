@@ -9,6 +9,7 @@ import {
   FaFileAlt,
   FaTimes,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./HospitalRegister.css";
 
 const HOSPITAL_TYPES = ["Government", "Private", "Trust / NGO"];
@@ -116,7 +117,7 @@ function HospitalRegister() {
     }
     if (!form.email.trim()) {
       errs.email = "Email address is required";
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = "Please enter a valid email address";
     }
     if (!form.phone.trim()) {
@@ -170,12 +171,74 @@ function HospitalRegister() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      console.log("Hospital registration submitted:", form, { licenseFile });
-      // Navigate to OTP page, passing hospital role in state
-      navigate("/verify-email", { state: { role: "hospital" } });
+
+    if (!validate()) {
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      // Basic details
+      formData.append("name", form.hospitalName.trim());
+      formData.append("email", form.email.trim().toLowerCase());
+      formData.append("password", form.password);
+      formData.append("role", "Hospital");
+      formData.append("phone", form.phone.trim());
+
+      // Location
+      formData.append("address", form.address.trim());
+      formData.append("city", form.city.trim());
+      formData.append("state", form.state.trim());
+
+      // Hospital details
+      formData.append("regNumber", form.regNumber.trim());
+      formData.append("hospitalType", form.hospitalType);
+      formData.append("departments", JSON.stringify(form.departments));
+
+      // Medical license
+      if (licenseFile) {
+        formData.append("medicalLicense", licenseFile);
+      }
+
+      console.log("=== HOSPITAL REGISTRATION ===");
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("HOSPITAL REGISTER RESPONSE:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Hospital registration failed."
+        );
+      }
+
+      // Save email/role for OTP verification page
+      localStorage.setItem("pendingVerificationEmail", form.email.trim().toLowerCase());
+      localStorage.setItem("pendingVerificationRole", "Hospital");
+
+      navigate("/verify-email", {
+        state: {
+          email: form.email.trim().toLowerCase(),
+          role: "Hospital",
+        },
+      });
+    } catch (error) {
+      console.error("Hospital registration error:", error);
+      toast.error(
+        error.message ||
+        "Hospital registration failed. Please try again."
+      );
     }
   };
 

@@ -12,6 +12,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { getActiveCouponsForCart, validateAndApplyCoupon } from "../../utils/coupons";
+import { toast } from "react-toastify";
 import "./CouponSection.css";
 
 export default function CouponSection({
@@ -23,8 +24,6 @@ export default function CouponSection({
   onRemoveCoupon,
 }) {
   const [inputCode, setInputCode] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
   const [showCouponsList, setShowCouponsList] = useState(false);
   const [couponsList, setCouponsList] = useState([]);
 
@@ -34,30 +33,27 @@ export default function CouponSection({
 
   const handleApply = (codeToApply) => {
     const code = codeToApply || inputCode;
-    setErrorMsg("");
-    setSuccessMsg("");
 
     if (!code || !code.trim()) {
-      setErrorMsg("Please enter a valid coupon code.");
+      toast.warning("Please enter a valid coupon code.");
       return;
     }
 
     const result = validateAndApplyCoupon(code, subtotal, deliveryFee);
     if (result.success) {
-      setSuccessMsg(result.message);
+      toast.success(result.message);
       setInputCode(result.coupon.code);
       if (onApplyCoupon) {
         onApplyCoupon(result);
       }
     } else {
-      setErrorMsg(result.message);
+      toast.error(result.message);
     }
   };
 
   const handleRemove = () => {
     setInputCode("");
-    setErrorMsg("");
-    setSuccessMsg("");
+    toast.info("Coupon removed.");
     if (onRemoveCoupon) {
       onRemoveCoupon();
     }
@@ -98,10 +94,7 @@ export default function CouponSection({
             className="coupon-input"
             placeholder="Enter coupon code (e.g. MEDI10, WELCOME50)"
             value={inputCode}
-            onChange={(e) => {
-              setInputCode(e.target.value.toUpperCase());
-              setErrorMsg("");
-            }}
+            onChange={(e) => setInputCode(e.target.value.toUpperCase())}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -145,14 +138,6 @@ export default function CouponSection({
             </div>
           </div>
           <span className="coupon-savings-pill">−₹{couponDiscount}</span>
-        </div>
-      )}
-
-      {/* Error Message */}
-      {errorMsg && (
-        <div className="coupon-error-alert">
-          <FaTimesCircle className="coupon-error-icon" />
-          <span>{errorMsg}</span>
         </div>
       )}
 

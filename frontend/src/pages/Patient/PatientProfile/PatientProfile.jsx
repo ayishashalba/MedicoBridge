@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaUserCircle,
   FaCamera,
@@ -19,24 +19,56 @@ import {
   FaShieldAlt,
   FaCheckCircle,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./PatientProfile.css";
 
-/* ── Static profile data (UI only) ─────────────────────────── */
-const defaultProfile = {
-  fullName: "John Doe",
-  email: "johndoe@email.com",
-  phone: "+91 98765 43210",
-  dob: "1995-04-12",
-  gender: "Male",
-  bloodGroup: "O+",
-  address: "42, MG Road, Koramangala, Bengaluru, Karnataka – 560034",
-  allergies: "Penicillin, Peanuts",
-  conditions: "Type 2 Diabetes, Hypertension",
-  emergencyName: "Jane Doe",
-  emergencyPhone: "+91 91234 56789",
-  emergencyRelation: "Spouse",
+const IMAGE_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
+
+const formatDateForInput = (date) => {
+  if (!date) return "";
+
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) return "";
+
+  return d.toISOString().split("T")[0];
 };
 
+const formatDateForDisplay = (date) => {
+  if (!date) return "";
+
+  const d = new Date(date);
+
+  if (isNaN(d.getTime())) return "";
+
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const year = d.getUTCFullYear();
+
+  return `${day}-${month}-${year}`;
+};
+const calculateAge = (dob) => {
+  if (!dob) return "";
+
+  const birthDate = new Date(dob);
+  const today = new Date();
+
+  if (isNaN(birthDate.getTime())) return "";
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
+    age--;
+  }
+
+  return age;
+};
 /* ── Individual field component ────────────────────────────── */
 function ProfileField({ icon, label, name, value, type = "text", editMode, onChange, options }) {
   return (
@@ -85,9 +117,120 @@ function ProfileField({ icon, label, name, value, type = "text", editMode, onCha
 /* ── Main Component ─────────────────────────────────────────── */
 function PatientProfile() {
   const [editMode, setEditMode] = useState(false);
-  const [profile, setProfile] = useState(defaultProfile);
-  const [draft, setDraft] = useState(defaultProfile);
+  const [profile, setProfile] = useState(null);
+  const [draft, setDraft] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log("🔥 PATIENT PROFILE COMPONENT LOADED");
+    fetchProfile();
+  }, []);
+  const handlePhotoChange = (e) => {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    // Preview image immediately
+    const imageUrl =
+      URL.createObjectURL(file);
+
+    setDraft((prev) => ({
+      ...prev,
+
+      profileImage: imageUrl,
+
+      profileImageFile: file
+    }));
+  };
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        window.location.href = "/login/patient";
+        return;
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/auth/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      console.log("ME RESPONSE:", result);
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to fetch profile");
+      }
+
+      const backendProfile =
+        result?.data?.profile ||
+        result?.data?.patient ||
+        result?.data;
+      if (!backendProfile) {
+        console.error("Patient profile missing from /api/auth/me", result);
+        setProfile(null);
+        return;
+      }
+
+      const formattedProfile = {
+        fullName: backendProfile.name || "",
+        email: backendProfile.email || result?.data?.email || "",
+        phone: backendProfile.phone || "",
+        dob: formatDateForInput(backendProfile.dob),
+        age: calculateAge(backendProfile.dob),
+        gender: backendProfile.gender || "",
+        bloodGroup: backendProfile.bloodGroup || "Not Provided",
+        city: backendProfile.city || "",
+        address: backendProfile.address || "",
+
+        isDonorAvailable:
+          backendProfile.isDonorAvailable ?? false,
+
+        profileImage: backendProfile.profileImage || "",
+
+        allergies: Array.isArray(backendProfile.allergies)
+          ? backendProfile.allergies.join(", ")
+          : backendProfile.allergies || "",
+
+        conditions: Array.isArray(backendProfile.chronicConditions)
+          ? backendProfile.chronicConditions.join(", ")
+          : Array.isArray(backendProfile.conditions)
+            ? backendProfile.conditions.join(", ")
+            : backendProfile.conditions || "",
+
+        emergencyName:
+          backendProfile.emergencyContact?.name ||
+          backendProfile.emergencyName ||
+          "",
+
+        emergencyPhone:
+          backendProfile.emergencyContact?.phone ||
+          backendProfile.emergencyPhone ||
+          "",
+
+        emergencyRelation:
+          backendProfile.emergencyContact?.relation ||
+          backendProfile.emergencyRelation ||
+          "",
+      };
+
+      setProfile(formattedProfile);
+      setDraft(formattedProfile);
+
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -100,15 +243,116 @@ function PatientProfile() {
     setSaved(false);
   };
 
-  const handleSave = () => {
-    const updated = {
-      ...draft,
-      bloodGroup: draft.bloodGroup || "Not Provided",
-    };
-    setProfile(updated);
-    setEditMode(false);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        window.location.href = "/login/patient";
+        return;
+      }
+
+      const formData = new FormData();
+
+      formData.append("name", draft.fullName);
+      formData.append("phone", draft.phone);
+      formData.append("dob", draft.dob);
+      formData.append("gender", draft.gender);
+      formData.append("bloodGroup", draft.bloodGroup || "");
+      formData.append("city", draft.city);
+      formData.append("address", draft.address);
+
+      // Medical information
+      formData.append("allergies", draft.allergies || "");
+      formData.append("chronicConditions", draft.conditions || "");
+
+      // Emergency contact
+      formData.append(
+        "emergencyContact",
+        JSON.stringify({
+          name: draft.emergencyName || "",
+          phone: draft.emergencyPhone || "",
+          relation: draft.emergencyRelation || "",
+        })
+      );
+
+      // Donor availability
+      formData.append(
+        "isDonorAvailable",
+        String(draft.isDonorAvailable ?? false)
+      );
+
+      // Profile image
+      if (draft.profileImageFile) {
+        formData.append("profileImage", draft.profileImageFile);
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/patient/profile`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.message || "Failed to update profile");
+        return;
+      }
+
+      console.log("PROFILE UPDATED:", data);
+
+      // Update frontend state with backend response
+      const patient = data.data;
+
+      const updatedProfile = {
+        fullName: patient.name || "",
+        email: patient.email || "",
+        phone: patient.phone || "",
+        dob: formatDateForInput(patient.dob),
+        age: calculateAge(patient.dob),
+        gender: patient.gender || "",
+        bloodGroup: patient.bloodGroup || "Not Provided",
+        city: patient.city || "",
+        address: patient.address || "",
+
+        allergies: Array.isArray(patient.allergies)
+          ? patient.allergies.join(", ")
+          : patient.allergies || "",
+
+        conditions: Array.isArray(patient.chronicConditions)
+          ? patient.chronicConditions.join(", ")
+          : "",
+
+        emergencyName: patient.emergencyContact?.name || "",
+        emergencyPhone: patient.emergencyContact?.phone || "",
+        emergencyRelation: patient.emergencyContact?.relation || "",
+
+        profileImage: patient.profileImage || "",
+
+        isDonorAvailable: patient.isDonorAvailable ?? false,
+      };
+
+      setProfile(updatedProfile);
+      setDraft(updatedProfile);
+
+      setEditMode(false);
+      setSaved(true);
+      toast.success("Profile updated successfully!");
+
+      setTimeout(() => {
+        setSaved(false);
+      }, 3000);
+
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast.error("Failed to update profile.");
+    }
   };
 
   const handleCancel = () => {
@@ -117,7 +361,13 @@ function PatientProfile() {
   };
 
   const data = editMode ? draft : profile;
+  if (loading) {
+    return <div>Loading profile...</div>;
+  }
 
+  if (!profile) {
+    return <div>Profile not found.</div>;
+  }
   return (
     <div className="patient-profile-page">
 
@@ -160,17 +410,50 @@ function PatientProfile() {
           {/* Profile Photo Card */}
           <div className="pp-card pp-photo-card">
             <div className="pp-avatar-ring">
+
               <div className="pp-avatar">
-                <FaUserCircle className="pp-avatar-icon" />
+
+                {data.profileImage ? (
+
+                  <img
+                    src={
+                      data.profileImage.startsWith("blob:")
+                        ? data.profileImage
+                        : `${IMAGE_BASE}${data.profileImage}`
+                    }
+                    alt="Profile"
+                    className="pp-avatar-image"
+                  />
+
+                ) : (
+
+                  <FaUserCircle
+                    className="pp-avatar-icon"
+                  />
+
+                )}
+
               </div>
-              <button
+
+
+              <label
+                htmlFor="profileImage"
                 className="pp-camera-btn"
-                aria-label="Change profile photo"
                 title="Change photo"
-                disabled={!editMode}
               >
                 <FaCamera />
-              </button>
+              </label>
+
+
+              <input
+                id="profileImage"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                style={{ display: "none" }}
+                disabled={!editMode}
+                onChange={handlePhotoChange}
+              />
+
             </div>
 
             <div className="pp-avatar-info">
@@ -198,7 +481,9 @@ function PatientProfile() {
               </div>
               <div className="pp-stat-divider" />
               <div className="pp-stat-item">
-                <span className="pp-stat-val">31</span>
+                <span className="pp-stat-val">
+                  {calculateAge(profile.dob) || "—"}
+                </span>
                 <span className="pp-stat-key">Age</span>
               </div>
             </div>
@@ -250,12 +535,20 @@ function PatientProfile() {
                 onChange={handleChange}
               />
               <ProfileField
+                icon={<FaMapMarkerAlt />}
+                label="City / District"
+                name="city"
+                value={data.city}
+                editMode={editMode}
+                onChange={handleChange}
+              />
+              <ProfileField
                 icon={<FaEnvelope />}
                 label="Email Address"
                 name="email"
                 value={data.email}
                 type="email"
-                editMode={editMode}
+                editMode={false}
                 onChange={handleChange}
               />
               <ProfileField
@@ -271,7 +564,11 @@ function PatientProfile() {
                 icon={<FaCalendarAlt />}
                 label="Date of Birth"
                 name="dob"
-                value={data.dob}
+                value={
+                  editMode
+                    ? data.dob
+                    : formatDateForDisplay(data.dob)
+                }
                 type="date"
                 editMode={editMode}
                 onChange={handleChange}
@@ -303,6 +600,14 @@ function PatientProfile() {
                   { value: "O+", label: "O+" },
                   { value: "O-", label: "O-" },
                 ]}
+              />
+              <ProfileField
+                icon={<FaHeartbeat />}
+                label="Blood Donation Availability"
+                name="isDonorAvailable"
+                value={data.isDonorAvailable ? "Available" : "Not Available"}
+                editMode={false}
+                onChange={handleChange}
               />
             </div>
 
@@ -428,5 +733,4 @@ function PatientProfile() {
     </div>
   );
 }
-
 export default PatientProfile;

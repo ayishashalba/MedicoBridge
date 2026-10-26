@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -20,6 +20,7 @@ import {
   FaBuilding,
   FaUserCircle,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./HospitalLayout.css";
 import "./hospital-shared.css";
 
@@ -84,6 +85,52 @@ const sidebarNavItems = [
 function HospitalLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [hospital, setHospital] = useState(null);
+  const getHospitalDisplayId = () => {
+    if (!hospital?._id) return "#HOSP----";
+
+    return `#HOSP-${hospital._id.slice(-3)}`;
+  };
+  useEffect(() => {
+    const fetchHospitalProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login/hospital");
+          return;
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/api/hospital/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to load hospital profile"
+          );
+        }
+
+        setHospital(
+          data.data?.profile ||
+          data.profile ||
+          data.data ||
+          data.hospital
+        );
+      } catch (error) {
+        console.error("Failed to fetch hospital profile:", error);
+      }
+    };
+
+    fetchHospitalProfile();
+  }, [navigate]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -92,6 +139,11 @@ function HospitalLayout() {
   const toggleCollapse = () => setSidebarCollapsed((prev) => !prev);
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("rememberMe");
+    toast.info("You have been logged out successfully.");
     navigate("/login/hospital");
   };
 
@@ -167,9 +219,17 @@ function HospitalLayout() {
           </div>
           {!sidebarCollapsed && (
             <div className="profile-info">
-              <p className="profile-name">City General Hospital</p>
-              <p className="profile-role">Admin Center</p>
-              <span className="profile-id-badge">ID: #HOSP-5021</span>
+              <p className="profile-name">
+                {hospital?.name || "Hospital"}
+              </p>
+
+              <p className="profile-role">
+                Hospital
+              </p>
+
+              <span className="profile-id-badge">
+                ID: {getHospitalDisplayId()}
+              </span>
             </div>
           )}
         </Link>
@@ -272,8 +332,13 @@ function HospitalLayout() {
                 <FaHospital />
               </div>
               <div className="topnav-profile-info">
-                <span className="topnav-profile-name">City General Hospital</span>
-                <span className="topnav-profile-role">Super Admin</span>
+                <span className="topnav-profile-name">
+                  {hospital?.name || "Hospital"}
+                </span>
+
+                <span className="topnav-profile-role">
+                  Hospital
+                </span>
               </div>
             </div>
           </div>

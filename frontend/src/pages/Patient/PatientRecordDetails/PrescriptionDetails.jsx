@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaUserMd,
@@ -10,94 +10,99 @@ import {
   FaPills,
   FaClock,
   FaArrowRight,
+  FaSpinner,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./PrescriptionDetails.css";
-
-/* ── Mock Data ── */
-const prescriptions = [
-  {
-    id: "prescription-1",
-    doctor: "Dr. Sarah Johnson",
-    specialization: "Cardiologist",
-    hospital: "Apollo Hospital, Kochi",
-    date: "20 June 2026",
-    diagnosis: "Mild Hypertension",
-    patientName: "John Doe",
-    patientAge: "32 Years",
-    patientGender: "Male",
-    medicines: [
-      {
-        name: "Amlodipine",
-        dosage: "5mg",
-        frequency: "Once daily (Morning)",
-        duration: "30 days",
-        instructions: "Take after breakfast",
-      },
-      {
-        name: "Aspirin",
-        dosage: "75mg",
-        frequency: "Once daily (Morning)",
-        duration: "30 days",
-        instructions: "Take after breakfast with water",
-      },
-    ],
-    notes:
-      "Monitor blood pressure daily. Reduce salt intake, maintain healthy diet and exercise 30 min/day. Report any dizziness or unusual symptoms immediately. Follow up after 1 month.",
-    nextVisit: "20 July 2026",
-  },
-  {
-    id: "prescription-2",
-    doctor: "Dr. John Smith",
-    specialization: "Dermatologist",
-    hospital: "Aster Clinic, Kochi",
-    date: "12 June 2026",
-    diagnosis: "Skin Allergy",
-    patientName: "John Doe",
-    patientAge: "32 Years",
-    patientGender: "Male",
-    medicines: [
-      {
-        name: "Cetirizine",
-        dosage: "10mg",
-        frequency: "Once daily at night",
-        duration: "14 days",
-        instructions: "Take before bedtime",
-      },
-      {
-        name: "Calamine Lotion",
-        dosage: "Apply topically",
-        frequency: "Twice daily",
-        duration: "14 days",
-        instructions: "Apply on affected area after cleaning",
-      },
-    ],
-    notes:
-      "Avoid scratching affected area. Keep skin moisturized and wear loose cotton clothing. Avoid known allergens. If rashes worsen or fever develops, visit immediately.",
-    nextVisit: "12 July 2026",
-  },
-];
-
-function handleDownload(name) {
-  alert(
-    `Downloading PDF for "${name}"…\n\n(This is a demo — no actual file is generated.)`
-  );
-}
 
 function PrescriptionDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const rx = prescriptions.find((p) => p.id === id);
 
-  if (!rx) {
+  const [rx, setRx] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) {
+      setError("Invalid prescription ID.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchPrescription = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login/patient");
+          return;
+        }
+        const res = await fetch(`${API_BASE_URL}/patient/prescriptions/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.data) {
+          const presc = data.data;
+          const doc = presc.doctorId || {};
+          const appt = presc.appointmentId || {};
+          setRx({
+            doctor: doc.name || "Doctor",
+            specialization: doc.specialization || "General Physician",
+            hospital: doc.hospitalName || doc.clinicName || "Medical Facility",
+            date: presc.createdAt
+              ? new Date(presc.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+              : presc.date
+                ? new Date(presc.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+                : "—",
+            diagnosis: presc.diagnosis || appt.notes || "—",
+            patientName: presc.patientId?.name || "Patient",
+            medicines: presc.medicines || [],
+            notes: presc.notes || presc.advice || "—",
+            nextVisit: presc.nextVisit || null,
+            prescriptionId: presc.prescriptionId || presc._id,
+          });
+        } else {
+          setError(data.message || "Prescription not found.");
+        }
+      } catch (err) {
+        setError("Unable to connect to server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrescription();
+  }, [id, navigate]);
+
+  const handleDownload = (label) => {
+    toast.info(`Downloading "${label}" — PDF generation coming soon.`);
+  };
+
+  if (loading) {
+    return (
+      <div className="pd-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "1rem", color: "#0d9488" }}>
+        <FaSpinner className="fa-spin" /> Loading prescription details...
+      </div>
+    );
+  }
+
+  if (error || !rx) {
     return (
       <div className="pd-page">
         <button className="pd-back-btn" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Back
         </button>
-        <div className="pd-not-found">
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          <FaExclamationCircle style={{ fontSize: "2.5rem", color: "#ef4444", marginBottom: "1rem" }} />
           <h2>Prescription Not Found</h2>
-          <p>The prescription record you're looking for doesn't exist.</p>
+          <p>{error || "The prescription record you're looking for doesn't exist."}</p>
+          <button className="pd-action-btn" style={{ marginTop: "1rem" }} onClick={() => navigate("/patient/medical-records")}>
+            Back to Records
+          </button>
         </div>
       </div>
     );
@@ -134,7 +139,7 @@ function PrescriptionDetails() {
         </button>
       </div>
 
-      {/* Prescription Header Card (Hospital letterhead style) */}
+      {/* Letterhead */}
       <div className="pd-letterhead">
         <div className="pd-letterhead-top">
           <div className="pd-hospital-logo">
@@ -179,12 +184,8 @@ function PrescriptionDetails() {
             <span className="pd-patient-value">{rx.patientName}</span>
           </div>
           <div className="pd-patient-item">
-            <span className="pd-patient-label">Age</span>
-            <span className="pd-patient-value">{rx.patientAge}</span>
-          </div>
-          <div className="pd-patient-item">
-            <span className="pd-patient-label">Gender</span>
-            <span className="pd-patient-value">{rx.patientGender}</span>
+            <span className="pd-patient-label">Prescription ID</span>
+            <span className="pd-patient-value">{rx.prescriptionId}</span>
           </div>
         </div>
       </div>
@@ -194,44 +195,49 @@ function PrescriptionDetails() {
         <div className="pd-section-label">
           <FaPills className="pd-label-icon" /> Prescribed Medicines
         </div>
-        <div className="pd-medicines-table-wrapper">
-          <table className="pd-medicines-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Medicine</th>
-                <th>Dosage</th>
-                <th>Frequency</th>
-                <th>Duration</th>
-                <th>Instructions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rx.medicines.map((med, i) => (
-                <tr key={i}>
-                  <td className="pd-med-num">{i + 1}</td>
-                  <td className="pd-med-name">
-                    <FaPills className="pd-med-icon" /> {med.name}
-                  </td>
-                  <td>{med.dosage}</td>
-                  <td>{med.frequency}</td>
-                  <td>{med.duration}</td>
-                  <td className="pd-med-instructions">{med.instructions}</td>
+        {rx.medicines.length > 0 ? (
+          <div className="pd-medicines-table-wrapper">
+            <table className="pd-medicines-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Medicine</th>
+                  <th>Dosage</th>
+                  <th>Frequency</th>
+                  <th>Duration</th>
+                  <th>Instructions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rx.medicines.map((med, i) => (
+                  <tr key={i}>
+                    <td className="pd-med-num">{i + 1}</td>
+                    <td className="pd-med-name">
+                      <FaPills className="pd-med-icon" /> {med.name || med.medicineName}
+                    </td>
+                    <td>{med.dosage || "—"}</td>
+                    <td>{med.frequency || "—"}</td>
+                    <td>{med.duration || "—"}</td>
+                    <td className="pd-med-instructions">{med.instructions || med.notes || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p style={{ color: "#64748b", padding: "1rem 0" }}>No medicines listed in this prescription.</p>
+        )}
       </div>
 
       {/* Doctor Notes */}
-      <div className="pd-section-card">
-        <div className="pd-section-label">
-          <FaNotesMedical className="pd-label-icon" /> Doctor's Notes &
-          Instructions
+      {rx.notes && rx.notes !== "—" && (
+        <div className="pd-section-card">
+          <div className="pd-section-label">
+            <FaNotesMedical className="pd-label-icon" /> Doctor's Notes &amp; Instructions
+          </div>
+          <p className="pd-notes-text">{rx.notes}</p>
         </div>
-        <p className="pd-notes-text">{rx.notes}</p>
-      </div>
+      )}
 
       {/* Next Visit */}
       {rx.nextVisit && (
@@ -242,7 +248,7 @@ function PrescriptionDetails() {
           <div className="pd-next-row">
             <div className="pd-next-info">
               <FaCalendarAlt />
-              <span>{rx.nextVisit}</span>
+              <span>{new Date(rx.nextVisit).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</span>
             </div>
             <button
               className="pd-action-btn"

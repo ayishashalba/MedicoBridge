@@ -1,260 +1,1241 @@
-import React, { useState } from "react";
-import { FaBoxes, FaSearch, FaFilter, FaPlus, FaTimes, FaEdit, FaExclamationTriangle } from "react-icons/fa";
-import "./PharmacyPages.css";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  FaSearch,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaTimes,
+  FaBoxOpen,
+  FaExclamationTriangle,
+  FaCheckCircle,
+} from "react-icons/fa";
 
-const retailInventory = [
-  { id: "MED-001", name: "Paracetamol 500mg", category: "Analgesic", qty: 18, price: 5, expiry: "2027-03-01", manufacturer: "Sun Pharma", status: "Low Stock" },
-  { id: "MED-002", name: "Amoxicillin 250mg", category: "Antibiotic", qty: 9, price: 35, expiry: "2026-11-15", manufacturer: "Cipla", status: "Low Stock" },
-  { id: "MED-003", name: "Metformin 500mg", category: "Antidiabetic", qty: 22, price: 12, expiry: "2027-01-20", manufacturer: "Dr. Reddy's", status: "Low Stock" },
-  { id: "MED-004", name: "Atorvastatin 10mg", category: "Statin", qty: 14, price: 28, expiry: "2027-06-10", manufacturer: "Lupin", status: "Low Stock" },
-  { id: "MED-005", name: "Amlodipine 5mg", category: "Antihypertensive", qty: 120, price: 18, expiry: "2028-02-28", manufacturer: "Sun Pharma", status: "In Stock" },
+const API_URL = "http://localhost:5000/api/pharmacy/medicines";
+
+const categories = [
+  "All",
+  "Analgesic",
+  "Antibiotic",
+  "Antidiabetic",
+  "Statin",
+  "Antihypertensive",
+  "Antihistamine",
+  "Antacid",
+  "NSAID",
+  "Antiplatelet",
+  "Supplement",
+  "Emergency",
+  "IV Fluids",
+  "Anesthetic",
 ];
-
-const hospitalInventory = [
-  { id: "HMED-101", name: "Adrenaline Injection", category: "Emergency", qty: 50, price: 150, expiry: "2026-10-10", manufacturer: "Neon Labs", status: "In Stock" },
-  { id: "HMED-102", name: "Saline IV Fluid", category: "IV Fluids", qty: 8, price: 40, expiry: "2028-01-12", manufacturer: "Baxter", status: "Low Stock" },
-  { id: "HMED-103", name: "Propofol", category: "Anesthetic", qty: 0, price: 500, expiry: "2026-09-30", manufacturer: "Fresenius", status: "Out of Stock" },
-];
-
-
-const categories = ["All", "Analgesic", "Antibiotic", "Antidiabetic", "Statin", "Antihypertensive",
-  "Antihistamine", "Antacid", "NSAID", "Antiplatelet", "Supplement", "Emergency", "IV Fluids", "Anesthetic"];
 
 const statusColor = {
-  "In Stock": { bg: "#dcfce7", color: "#16a34a" },
-  "Low Stock": { bg: "#fef3c7", color: "#d97706" },
-  "Out of Stock": { bg: "#fee2e2", color: "#dc2626" },
+  "In Stock": {
+    bg: "#dcfce7",
+    color: "#16a34a",
+  },
+  "Low Stock": {
+    bg: "#fef3c7",
+    color: "#d97706",
+  },
+  "Out of Stock": {
+    bg: "#fee2e2",
+    color: "#dc2626",
+  },
 };
 
-const emptyForm = { name: "", category: "Analgesic", qty: "", price: "", expiry: "", manufacturer: "", status: "In Stock" };
+const emptyForm = {
+  name: "",
+  genericName: "",
+  category: "Analgesic",
+  manufacturer: "",
+  description: "",
+  dosageForm: "Tablet",
+  requiresPrescription: false,
+  qty: "",
+  price: "",
+  expiry: "",
+  image: "",
+};
 
-export default function MedicineInventory() {
-  const pharmacyType = localStorage.getItem("pharmacyType") || "Retail";
+const getToken = () => localStorage.getItem("token");
+
+const getStockStatus = (stock) => {
+  const qty = Number(stock) || 0;
+
+  if (qty === 0) return "Out of Stock";
+  if (qty <= 10) return "Low Stock";
+  return "In Stock";
+};
+
+const formatDate = (date) => {
+  if (!date) return "—";
+
+  const parsedDate = new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "—";
+  }
+
+  return parsedDate.toISOString().split("T")[0];
+};
+
+const getMedicineId = (medicine) => {
+  return medicine._id || medicine.id;
+};
+
+const MedicineInventory = () => {
+  const [inventory, setInventory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
   const [editingId, setEditingId] = useState(null);
 
-  const getInitialInventory = () => {
-    switch (pharmacyType) {
-      case "Hospital": return hospitalInventory;
-
-      case "Retail":
-      default: return retailInventory;
-    }
-  };
-
-  const [inventory, setInventory] = useState(getInitialInventory());
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
+
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  const filtered = inventory.filter((m) => {
-    const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase());
-    const matchCat = catFilter === "All" || m.category === catFilter;
-    const matchStatus = statusFilter === "All" || m.status === statusFilter;
-    return matchSearch && matchCat && matchStatus;
-  });
+  // --------------------------------------------------
+  // FETCH MEDICINES
+  // --------------------------------------------------
+  const fetchMedicines = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  const handleSubmit = () => {
-    if (editingId) {
-      setInventory((prev) =>
-        prev.map((item) =>
-          item.id === editingId
-            ? {
-              ...item,
-              ...form,
-              qty: Number(form.qty),
-              price: Number(form.price),
-            }
-            : item
-        )
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      const params = new URLSearchParams();
+
+      if (search.trim()) {
+        params.append("search", search.trim());
+      }
+
+      if (catFilter !== "All") {
+        params.append("category", catFilter);
+      }
+
+      if (statusFilter !== "All") {
+        params.append("stockStatus", statusFilter);
+      }
+
+      const queryString = params.toString();
+
+      const response = await fetch(
+        `${API_URL}${queryString ? `?${queryString}` : ""}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
-    } else {
-      const newItem = {
-        ...form,
-        id: `MED-${String(inventory.length + 1).padStart(3, "0")}`,
-        qty: Number(form.qty),
-        price: Number(form.price),
-      };
 
-      setInventory((prev) => [newItem, ...prev]);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Failed to fetch medicine inventory."
+        );
+      }
+
+      const medicines = data?.data || [];
+
+      setInventory(Array.isArray(medicines) ? medicines : []);
+    } catch (err) {
+      console.error("Failed to fetch medicines:", err);
+      setError(err.message || "Failed to load medicine inventory.");
+      setInventory([]);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchMedicines();
+  }, []);
+
+  // Refetch when backend-supported filters change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchMedicines();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, catFilter, statusFilter]);
+
+  // --------------------------------------------------
+  // FORM HANDLERS
+  // --------------------------------------------------
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const openAddModal = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setError("");
+    setShowModal(true);
+  };
+
+  const handleEdit = (medicine) => {
+    setEditingId(getMedicineId(medicine));
+
+    setForm({
+      name: medicine.name || "",
+      genericName: medicine.genericName || "",
+      category: medicine.category || "Analgesic",
+      manufacturer: medicine.manufacturer || "",
+      description: medicine.description || "",
+      dosageForm: medicine.dosageForm || "Tablet",
+      requiresPrescription: Boolean(medicine.requiresPrescription),
+      qty:
+        medicine.stock !== undefined && medicine.stock !== null
+          ? medicine.stock
+          : "",
+      price:
+        medicine.price !== undefined && medicine.price !== null
+          ? medicine.price
+          : "",
+      expiry: medicine.expiryDate
+        ? formatDate(medicine.expiryDate)
+        : "",
+      image: medicine.image || "",
+    });
+
+    setError("");
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    if (saving) return;
 
     setShowModal(false);
     setEditingId(null);
     setForm(emptyForm);
+    setError("");
   };
 
-  const handleEdit = (medicine) => {
-    setEditingId(medicine.id);
-    setForm({
-      name: medicine.name,
-      category: medicine.category,
-      qty: medicine.qty,
-      price: medicine.price,
-      expiry: medicine.expiry,
-      manufacturer: medicine.manufacturer,
-      status: medicine.status,
+  // --------------------------------------------------
+  // ADD / UPDATE MEDICINE
+  // --------------------------------------------------
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSaving(true);
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      if (!form.name.trim()) {
+        throw new Error("Medicine name is required.");
+      }
+
+      if (form.price === "" || Number.isNaN(Number(form.price))) {
+        throw new Error("Valid medicine price is required.");
+      }
+
+      if (form.qty === "" || Number.isNaN(Number(form.qty))) {
+        throw new Error("Valid medicine stock quantity is required.");
+      }
+
+      const payload = {
+        name: form.name.trim(),
+        genericName: form.genericName.trim(),
+        category: form.category,
+        manufacturer: form.manufacturer.trim(),
+        description: form.description.trim(),
+        dosageForm: form.dosageForm,
+        requiresPrescription: Boolean(form.requiresPrescription),
+        price: Number(form.price),
+        stock: Number(form.qty),
+        expiryDate: form.expiry || null,
+        image: form.image.trim(),
+      };
+
+      let response;
+
+      if (editingId) {
+        response = await fetch(`${API_URL}/${editingId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+          (editingId
+            ? "Failed to update medicine."
+            : "Failed to add medicine.")
+        );
+      }
+
+      setShowModal(false);
+      setEditingId(null);
+      setForm(emptyForm);
+
+      await fetchMedicines();
+    } catch (err) {
+      console.error("Medicine save error:", err);
+      setError(err.message || "Failed to save medicine.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // DELETE MEDICINE
+  // --------------------------------------------------
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to remove this medicine from inventory?"
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setError("");
+
+      const token = getToken();
+
+      if (!token) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || "Failed to delete medicine."
+        );
+      }
+
+      await fetchMedicines();
+    } catch (err) {
+      console.error("Medicine delete error:", err);
+      setError(err.message || "Failed to delete medicine.");
+    }
+  };
+
+  // --------------------------------------------------
+  // CLIENT-SIDE FILTER
+  // --------------------------------------------------
+  const filteredInventory = useMemo(() => {
+    return inventory.filter((medicine) => {
+      const medicineName = (medicine.name || "").toLowerCase();
+      const genericName = (medicine.genericName || "").toLowerCase();
+      const manufacturer = (medicine.manufacturer || "").toLowerCase();
+      const category = medicine.category || "";
+
+      const stockStatus = getStockStatus(medicine.stock);
+
+      const searchValue = search.trim().toLowerCase();
+
+      const matchesSearch =
+        !searchValue ||
+        medicineName.includes(searchValue) ||
+        genericName.includes(searchValue) ||
+        manufacturer.includes(searchValue);
+
+      const matchesCategory =
+        catFilter === "All" || category === catFilter;
+
+      const matchesStatus =
+        statusFilter === "All" || stockStatus === statusFilter;
+
+      return matchesSearch && matchesCategory && matchesStatus;
     });
-    setShowModal(true);
-  };
+  }, [inventory, search, catFilter, statusFilter]);
 
+  // --------------------------------------------------
+  // COUNTS
+  // --------------------------------------------------
+  const totalMedicines = inventory.length;
+
+  const lowStockCount = inventory.filter(
+    (medicine) => getStockStatus(medicine.stock) === "Low Stock"
+  ).length;
+
+  const outOfStockCount = inventory.filter(
+    (medicine) => getStockStatus(medicine.stock) === "Out of Stock"
+  ).length;
+
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
   return (
-    <div className="ph-page">
-      <div className="ph-page-header">
+    <div
+      style={{
+        padding: "24px",
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* HEADER */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "24px",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}
+      >
         <div>
-          <h2 className="ph-page-title"><FaBoxes /> Medicine Inventory</h2>
-          <p className="ph-page-sub">{inventory.length} medicines — {inventory.filter((m) => m.status === "Low Stock").length} low stock, {inventory.filter((m) => m.status === "Out of Stock").length} out of stock</p>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "28px",
+              fontWeight: 700,
+            }}
+          >
+            Medicine Inventory
+          </h1>
+
+          <p
+            style={{
+              margin: "6px 0 0",
+              color: "#64748b",
+              fontSize: "14px",
+            }}
+          >
+            Manage medicines available in your pharmacy.
+          </p>
         </div>
-        <button className="ph-btn-add" onClick={() => setShowModal(true)}>
-          <FaPlus /> Add Medicine
+
+        <button
+          type="button"
+          onClick={openAddModal}
+          style={{
+            border: "none",
+            background: "#2563eb",
+            color: "#fff",
+            padding: "11px 18px",
+            borderRadius: "8px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            fontWeight: 600,
+          }}
+        >
+          <FaPlus />
+          Add Medicine
         </button>
       </div>
 
-      {/* Low Stock Banner */}
-      {inventory.filter((m) => m.status !== "In Stock").length > 0 && (
-        <div className="ph-alert-banner">
-          <FaExclamationTriangle />
-          <span><strong>{inventory.filter((m) => m.status !== "In Stock").length} items</strong> need restocking — review low stock and out-of-stock items below.</span>
+      {/* ERROR */}
+      {error && (
+        <div
+          style={{
+            marginBottom: "16px",
+            padding: "12px 14px",
+            background: "#fee2e2",
+            color: "#b91c1c",
+            borderRadius: "8px",
+            fontSize: "14px",
+          }}
+        >
+          {error}
         </div>
       )}
 
-      {/* Toolbar */}
-      <div className="ph-toolbar">
-        <div className="ph-search-box">
-          <FaSearch className="ph-search-icon" />
-          <input placeholder="Search medicine…" value={search} onChange={(e) => setSearch(e.target.value)} />
+      {/* SUMMARY */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "16px",
+          marginBottom: "24px",
+        }}
+      >
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "10px",
+            padding: "18px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#2563eb",
+              marginBottom: "8px",
+            }}
+          >
+            <FaBoxOpen />
+            <span>Total Medicines</span>
+          </div>
+
+          <strong style={{ fontSize: "24px" }}>
+            {totalMedicines}
+          </strong>
         </div>
-        <div className="ph-filter-box">
-          <FaFilter className="ph-filter-icon" />
-          <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}>
-            {categories.map((c) => <option key={c}>{c}</option>)}
-          </select>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "10px",
+            padding: "18px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#d97706",
+              marginBottom: "8px",
+            }}
+          >
+            <FaExclamationTriangle />
+            <span>Low Stock</span>
+          </div>
+
+          <strong style={{ fontSize: "24px" }}>
+            {lowStockCount}
+          </strong>
         </div>
-        <div className="ph-filter-box">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option>All</option>
-            <option>In Stock</option>
-            <option>Low Stock</option>
-            <option>Out of Stock</option>
-          </select>
+
+        <div
+          style={{
+            background: "#fff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "10px",
+            padding: "18px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#dc2626",
+              marginBottom: "8px",
+            }}
+          >
+            <FaTimes />
+            <span>Out of Stock</span>
+          </div>
+
+          <strong style={{ fontSize: "24px" }}>
+            {outOfStockCount}
+          </strong>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="ph-card">
-        <div className="ph-table-wrap">
-          <table className="ph-table">
-            <thead>
-              <tr>
-                <th>ID</th><th>Medicine Name</th><th>Category</th><th>Qty</th><th>Price (₹)</th>
-                <th>Expiry</th><th>Manufacturer</th><th>Status</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan={8} className="ph-empty">No medicines found.</td></tr>
-              ) : filtered.map((m) => {
-                const s = statusColor[m.status] || {};
-                return (
-                  <tr key={m.id}>
-                    <td><span className="ph-id-badge">{m.id}</span></td>
-                    <td><span className="ph-name">{m.name}</span></td>
-                    <td><span className="ph-tag">{m.category}</span></td>
-                    <td>
-                      <span style={{ fontWeight: 800, color: m.qty === 0 ? "#dc2626" : m.qty < 25 ? "#d97706" : "#16a34a" }}>
-                        {m.qty}
-                      </span>
-                    </td>
-                    <td>₹{m.price}</td>
-                    <td>{m.expiry}</td>
-                    <td>{m.manufacturer}</td>
-                    <td>
-                      <span
-                        className="ph-pill"
-                        style={{ background: s.bg, color: s.color }}
-                      >
-                        {m.status}
-                      </span>
-                    </td>
-
-                    <td>
-                      <button
-                        className="ph-edit-btn"
-                        onClick={() => handleEdit(m)}
-                      >
-                        <FaEdit /> Edit
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {/* LOW STOCK BANNER */}
+      {lowStockCount > 0 && (
+        <div
+          style={{
+            background: "#fffbeb",
+            border: "1px solid #fde68a",
+            color: "#92400e",
+            padding: "14px 16px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <FaExclamationTriangle />
+          <span>
+            {lowStockCount} medicine
+            {lowStockCount !== 1 ? "s are" : " is"} currently low in
+            stock.
+          </span>
         </div>
+      )}
+
+      {/* FILTERS */}
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "10px",
+          padding: "16px",
+          marginBottom: "20px",
+          display: "flex",
+          gap: "12px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          style={{
+            position: "relative",
+            flex: "1 1 280px",
+          }}
+        >
+          <FaSearch
+            style={{
+              position: "absolute",
+              left: "12px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              color: "#94a3b8",
+            }}
+          />
+
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search medicine..."
+            style={{
+              width: "100%",
+              boxSizing: "border-box",
+              padding: "11px 12px 11px 36px",
+              border: "1px solid #cbd5e1",
+              borderRadius: "8px",
+              outline: "none",
+            }}
+          />
+        </div>
+
+        <select
+          value={catFilter}
+          onChange={(e) => setCatFilter(e.target.value)}
+          style={{
+            flex: "0 1 200px",
+            padding: "11px 12px",
+            border: "1px solid #cbd5e1",
+            borderRadius: "8px",
+            background: "#fff",
+          }}
+        >
+          {categories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
+
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          style={{
+            flex: "0 1 180px",
+            padding: "11px 12px",
+            border: "1px solid #cbd5e1",
+            borderRadius: "8px",
+            background: "#fff",
+          }}
+        >
+          <option value="All">All Status</option>
+          <option value="In Stock">In Stock</option>
+          <option value="Low Stock">Low Stock</option>
+          <option value="Out of Stock">Out of Stock</option>
+        </select>
       </div>
 
-      {/* Add Modal */}
+      {/* TABLE */}
+      <div
+        style={{
+          background: "#fff",
+          border: "1px solid #e2e8f0",
+          borderRadius: "10px",
+          overflow: "hidden",
+        }}
+      >
+        {loading ? (
+          <div
+            style={{
+              padding: "50px",
+              textAlign: "center",
+              color: "#64748b",
+            }}
+          >
+            Loading medicines...
+          </div>
+        ) : filteredInventory.length === 0 ? (
+          <div
+            style={{
+              padding: "50px",
+              textAlign: "center",
+              color: "#64748b",
+            }}
+          >
+            <FaBoxOpen
+              style={{
+                fontSize: "32px",
+                marginBottom: "12px",
+              }}
+            />
+
+            <div>No medicines found.</div>
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table
+              style={{
+                width: "100%",
+                borderCollapse: "collapse",
+                minWidth: "950px",
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    background: "#f8fafc",
+                    borderBottom: "1px solid #e2e8f0",
+                  }}
+                >
+                  <th style={thStyle}>ID</th>
+                  <th style={thStyle}>Medicine Name</th>
+                  <th style={thStyle}>Category</th>
+                  <th style={thStyle}>Qty</th>
+                  <th style={thStyle}>Price</th>
+                  <th style={thStyle}>Expiry</th>
+                  <th style={thStyle}>Manufacturer</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={thStyle}>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredInventory.map((medicine) => {
+                  const id = getMedicineId(medicine);
+                  const stockStatus = getStockStatus(medicine.stock);
+
+                  const statusStyle =
+                    statusColor[stockStatus] ||
+                    statusColor["In Stock"];
+
+                  return (
+                    <tr
+                      key={id}
+                      style={{
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <td style={tdStyle}>
+                        {String(id).slice(-8)}
+                      </td>
+
+                      <td style={tdStyle}>
+                        <div
+                          style={{
+                            fontWeight: 600,
+                            color: "#0f172a",
+                          }}
+                        >
+                          {medicine.name || "—"}
+                        </div>
+
+                        {medicine.genericName && (
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b",
+                              marginTop: "3px",
+                            }}
+                          >
+                            {medicine.genericName}
+                          </div>
+                        )}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {medicine.category || "—"}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {medicine.stock ?? 0}
+                      </td>
+
+                      <td style={tdStyle}>
+                        ₹{Number(medicine.price || 0).toFixed(2)}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {formatDate(medicine.expiryDate)}
+                      </td>
+
+                      <td style={tdStyle}>
+                        {medicine.manufacturer || "—"}
+                      </td>
+
+                      <td style={tdStyle}>
+                        <span
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            padding: "5px 9px",
+                            borderRadius: "999px",
+                            background: statusStyle.bg,
+                            color: statusStyle.color,
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {stockStatus === "In Stock" && (
+                            <FaCheckCircle />
+                          )}
+
+                          {stockStatus}
+                        </span>
+                      </td>
+
+                      <td style={tdStyle}>
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: "8px",
+                          }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(medicine)}
+                            title="Edit medicine"
+                            style={actionButtonStyle}
+                          >
+                            <FaEdit />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(id)}
+                            title="Delete medicine"
+                            style={{
+                              ...actionButtonStyle,
+                              color: "#dc2626",
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* ADD / EDIT MODAL */}
       {showModal && (
-        <div className="ph-modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="ph-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="ph-modal-header">
-              <h3>{editingId ? "Edit Medicine" : "Add New Medicine"}</h3>
-              <button className="ph-modal-close" onClick={() => setShowModal(false)}><FaTimes /></button>
-            </div>
-            <div className="ph-modal-body">
-              <div className="ph-form-grid">
-                {[
-                  { label: "Medicine Name", key: "name", type: "text" },
-                  { label: "Manufacturer", key: "manufacturer", type: "text" },
-                  { label: "Quantity", key: "qty", type: "number" },
-                  { label: "Price (₹)", key: "price", type: "number" },
-                  { label: "Expiry Date", key: "expiry", type: "date" },
-                ].map(({ label, key, type }) => (
-                  <div key={key} className="ph-form-group">
-                    <label>{label}</label>
-                    <input type={type} value={form[key]} onChange={(e) => setForm((p) => ({ ...p, [key]: e.target.value }))} />
-                  </div>
-                ))}
-                <div className="ph-form-group">
-                  <label>Category</label>
-                  <select value={form.category} onChange={(e) => setForm((p) => ({ ...p, category: e.target.value }))}>
-                    {categories.filter((c) => c !== "All").map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div className="ph-form-group">
-                  <label>Status</label>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.55)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "650px",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              background: "#fff",
+              borderRadius: "12px",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+            }}
+          >
+            {/* MODAL HEADER */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "18px 20px",
+                borderBottom: "1px solid #e2e8f0",
+              }}
+            >
+              <h2
+                style={{
+                  margin: 0,
+                  fontSize: "20px",
+                }}
+              >
+                {editingId ? "Edit Medicine" : "Add Medicine"}
+              </h2>
 
-                  <select
-                    value={form.status}
-                    onChange={(e) =>
-                      setForm((prev) => ({
-                        ...prev,
-                        status: e.target.value,
-                      }))
-                    }
-                  >
-                    <option>In Stock</option>
-                    <option>Low Stock</option>
-                    <option>Out of Stock</option>
-                  </select>
-                </div>
-              </div>
-              <button className="ph-btn-submit" onClick={handleSubmit}>
-                {editingId ? (
-                  <>
-                    <FaEdit /> Update Medicine
-                  </>
-                ) : (
-                  <>
-                    <FaPlus /> Add Medicine
-                  </>
-                )}
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={saving}
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  fontSize: "18px",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  color: "#64748b",
+                }}
+              >
+                <FaTimes />
               </button>
             </div>
+
+            {/* MODAL FORM */}
+            <form onSubmit={handleSubmit}>
+              <div
+                style={{
+                  padding: "20px",
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(220px, 1fr))",
+                  gap: "16px",
+                }}
+              >
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Medicine Name *
+                  </label>
+
+                  <input
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Medicine name"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Generic Name
+                  </label>
+
+                  <input
+                    name="genericName"
+                    value={form.genericName}
+                    onChange={handleChange}
+                    placeholder="Generic name"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Category
+                  </label>
+
+                  <select
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  >
+                    {categories
+                      .filter((category) => category !== "All")
+                      .map((category) => (
+                        <option
+                          key={category}
+                          value={category}
+                        >
+                          {category}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Manufacturer
+                  </label>
+
+                  <input
+                    name="manufacturer"
+                    value={form.manufacturer}
+                    onChange={handleChange}
+                    placeholder="Manufacturer"
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Dosage Form
+                  </label>
+
+                  <select
+                    name="dosageForm"
+                    value={form.dosageForm}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  >
+                    <option value="Tablet">Tablet</option>
+                    <option value="Capsule">Capsule</option>
+                    <option value="Syrup">Syrup</option>
+                    <option value="Injection">Injection</option>
+                    <option value="Cream">Cream</option>
+                    <option value="Ointment">Ointment</option>
+                    <option value="Drops">Drops</option>
+                    <option value="Inhaler">Inhaler</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Quantity *
+                  </label>
+
+                  <input
+                    name="qty"
+                    type="number"
+                    min="0"
+                    value={form.qty}
+                    onChange={handleChange}
+                    placeholder="Stock quantity"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Price *
+                  </label>
+
+                  <input
+                    name="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.price}
+                    onChange={handleChange}
+                    placeholder="Price"
+                    required
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div style={fieldWrapperStyle}>
+                  <label style={labelStyle}>
+                    Expiry Date
+                  </label>
+
+                  <input
+                    name="expiry"
+                    type="date"
+                    value={form.expiry}
+                    onChange={handleChange}
+                    style={inputStyle}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    ...fieldWrapperStyle,
+                    gridColumn: "1 / -1",
+                  }}
+                >
+                  <label style={labelStyle}>
+                    Description
+                  </label>
+
+                  <textarea
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    placeholder="Medicine description"
+                    rows={3}
+                    style={{
+                      ...inputStyle,
+                      resize: "vertical",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    ...fieldWrapperStyle,
+                    gridColumn: "1 / -1",
+                  }}
+                >
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                      fontSize: "14px",
+                      color: "#334155",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      name="requiresPrescription"
+                      checked={form.requiresPrescription}
+                      onChange={handleChange}
+                    />
+
+                    Requires Prescription
+                  </label>
+                </div>
+              </div>
+
+              {/* MODAL FOOTER */}
+              <div
+                style={{
+                  padding: "16px 20px",
+                  borderTop: "1px solid #e2e8f0",
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={saving}
+                  style={{
+                    padding: "10px 16px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    background: "#fff",
+                    color: "#334155",
+                    cursor: saving
+                      ? "not-allowed"
+                      : "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "#2563eb",
+                    color: "#fff",
+                    fontWeight: 600,
+                    cursor: saving
+                      ? "not-allowed"
+                      : "pointer",
+                    opacity: saving ? 0.7 : 1,
+                  }}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingId
+                      ? "Update Medicine"
+                      : "Add Medicine"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
     </div>
   );
-}
+};
+
+const thStyle = {
+  textAlign: "left",
+  padding: "13px 14px",
+  fontSize: "12px",
+  fontWeight: 700,
+  color: "#475569",
+  whiteSpace: "nowrap",
+};
+
+const tdStyle = {
+  padding: "14px",
+  fontSize: "13px",
+  color: "#334155",
+  verticalAlign: "middle",
+};
+
+const actionButtonStyle = {
+  width: "34px",
+  height: "34px",
+  borderRadius: "7px",
+  border: "1px solid #e2e8f0",
+  background: "#fff",
+  color: "#2563eb",
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+};
+
+const fieldWrapperStyle = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "7px",
+};
+
+const labelStyle = {
+  fontSize: "13px",
+  fontWeight: 600,
+  color: "#334155",
+};
+
+const inputStyle = {
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "10px 12px",
+  border: "1px solid #cbd5e1",
+  borderRadius: "7px",
+  outline: "none",
+  fontSize: "14px",
+  background: "#fff",
+};
+
+export default MedicineInventory;

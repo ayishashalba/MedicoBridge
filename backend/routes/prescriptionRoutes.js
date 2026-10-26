@@ -1,18 +1,21 @@
-const express = require("express");
-
+const express = require('express');
 const router = express.Router();
-
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const {
-    createPrescription,
-    getPrescriptions,
-    getPrescriptionById,
-} = require("../controllers/prescriptionController");
+  createPrescription,
+  updatePrescription,
+  getPrescriptions,
+  getPrescriptionById,
+  sendPrescriptionToPatient,
+} = require('../controllers/doctorController');
 
-const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+router.use(protect);
 
-router.post("/", protect, authorize("doctor"), createPrescription);
-router.get("/", protect, getPrescriptions);
-router.get("/:id", protect, getPrescriptionById);
+router.post('/', authorizeRoles('Doctor'), createPrescription);
+router.get('/', authorizeRoles('Doctor'), getPrescriptions);
+router.get('/:id', authorizeRoles('Doctor'), getPrescriptionById);
+router.put('/:id', authorizeRoles('Doctor'), updatePrescription);
+router.post('/:id/send', authorizeRoles('Doctor'), sendPrescriptionToPatient);
 
 module.exports = router;

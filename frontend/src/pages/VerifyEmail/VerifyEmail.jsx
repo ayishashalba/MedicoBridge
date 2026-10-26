@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaHeartbeat, FaCheckCircle, FaEnvelopeOpen } from "react-icons/fa";
+import { toast } from "react-toastify";
+
 import "./VerifyEmail.css";
 
 const OTP_LENGTH = 6;
@@ -8,8 +10,13 @@ const RESEND_SECONDS = 60;
 
 function VerifyEmail() {
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const role =
+    location.state?.role ||
+    localStorage.getItem("pendingVerificationRole") ||
+    "Patient";
   // ── OTP state ────────────────────────────────────────────
+  const [verifiedRole, setVerifiedRole] = useState(role);
   const [digits, setDigits] = useState(Array(OTP_LENGTH).fill(""));
   const [otpError, setOtpError] = useState("");
   const [isVerified, setIsVerified] = useState(false);
@@ -104,22 +111,95 @@ function VerifyEmail() {
     inputRefs.current[focusIdx]?.focus();
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (!isComplete) {
       setOtpError("Please enter the complete 6-digit verification code");
       return;
     }
-    console.log("OTP verified:", otpValue);
-    setIsVerified(true);
+
+    try {
+      const email =
+        location.state?.email ||
+        localStorage.getItem("pendingVerificationEmail");
+      if (!email) {
+        setOtpError("Email not found. Please register again.");
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/verify-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            otp: otpValue,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setOtpError(data.message || "Invalid OTP. Please try again.");
+        return;
+      }
+      const backendRole = data.data?.user?.role || role;
+
+      // Only correct OTP reaches here
+      localStorage.setItem("token", data.data.token);
+      localStorage.setItem("userRole", backendRole);
+      localStorage.setItem("isLoggedIn", "true");
+
+      setVerifiedRole(backendRole);
+      setIsVerified(true);
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      setOtpError("Unable to verify OTP. Please try again.");
+    }
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (!canResend) return;
-    setDigits(Array(OTP_LENGTH).fill(""));
-    setOtpError("");
-    startCountdown();
-    inputRefs.current[0]?.focus();
-    console.log("OTP resent");
+    const email =
+      location.state?.email ||
+      localStorage.getItem("pendingVerificationEmail");
+    if (!email) {
+      setOtpError("Email not found. Please register again.");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/resend-otp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setOtpError(data.message || "Failed to resend OTP.");
+        return;
+      }
+
+      setDigits(Array(OTP_LENGTH).fill(""));
+      setOtpError("");
+      startCountdown();
+      inputRefs.current[0]?.focus();
+
+      toast.info("A new OTP has been sent to your email.");
+    } catch (error) {
+      console.error("Resend OTP error:", error);
+      setOtpError("Unable to resend OTP. Please try again.");
+    }
   };
 
   return (
@@ -161,9 +241,8 @@ function VerifyEmail() {
                       maxLength={1}
                       value={digit}
                       id={`otp-box-${idx}`}
-                      className={`otp-box ${digit ? "otp-box-filled" : ""} ${
-                        otpError ? "otp-box-error" : ""
-                      }`}
+                      className={`otp-box ${digit ? "otp-box-filled" : ""} ${otpError ? "otp-box-error" : ""
+                        }`}
                       onChange={(e) => handleChange(idx, e)}
                       onKeyDown={(e) => handleKeyDown(idx, e)}
                       onPaste={handlePaste}
@@ -209,14 +288,35 @@ function VerifyEmail() {
                 </div>
 
                 <div className="otp-links-row">
-                  <Link to="/register/patient" className="otp-change-email-link">
+                  <Link
+                    to={
+                      role === "Doctor"
+                        ? "/register/doctor"
+                        : role === "Hospital"
+                          ? "/register/hospital"
+                          : role === "Pharmacy"
+                            ? "/register/pharmacy"
+                            : "/register/patient"
+                    }
+                    className="otp-change-email-link"
+                  >
                     Change Email
                   </Link>
                   <span className="otp-link-divider">·</span>
                   <button
                     type="button"
                     className="otp-back-btn"
-                    onClick={() => navigate("/login/patient")}
+                    onClick={() =>
+                      navigate(
+                        role === "Doctor"
+                          ? "/login/doctor"
+                          : role === "Hospital"
+                            ? "/login/hospital"
+                            : role === "Pharmacy"
+                              ? "/login/pharmacy"
+                              : "/login/patient"
+                      )
+                    }
                   >
                     Back to Login
                   </button>
@@ -237,7 +337,26 @@ function VerifyEmail() {
               <button
                 type="button"
                 className="otp-submit-btn"
-                onClick={() => navigate("/patient/dashboard")}
+                onClick={() => {
+                  switch (verifiedRole) {
+                    case "Doctor":
+                      navigate("/doctor/dashboard");
+                      break;
+
+                    case "Hospital":
+                      navigate("/hospital/dashboard");
+                      break;
+
+                    case "Pharmacy":
+                      navigate("/pharmacy/dashboard");
+                      break;
+
+                    case "Patient":
+                    default:
+                      navigate("/patient/dashboard");
+                      break;
+                  }
+                }}
               >
                 Go to Dashboard
               </button>
@@ -245,7 +364,7 @@ function VerifyEmail() {
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 

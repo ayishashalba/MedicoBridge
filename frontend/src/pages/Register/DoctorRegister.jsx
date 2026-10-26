@@ -4,6 +4,7 @@ import {
   FaHeartbeat, FaStethoscope, FaEye, FaEyeSlash,
   FaUpload, FaFileAlt, FaHospital, FaMedkit, FaCamera, FaUser,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorRegister.css";
 
 const SPECIALIZATIONS = [
@@ -34,15 +35,15 @@ const INITIAL = {
 function DoctorRegister() {
   const navigate = useNavigate();
   const licenseRef = useRef(null);
-  const photoRef   = useRef(null);
+  const photoRef = useRef(null);
 
-  const [form, setForm]               = useState(INITIAL);
-  const [showPwd, setShowPwd]         = useState(false);
+  const [form, setForm] = useState(INITIAL);
+  const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [licenseFile, setLicenseFile] = useState(null);
-  const [photoFile, setPhotoFile]     = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
-  const [errors, setErrors]           = useState({});
+  const [errors, setErrors] = useState({});
 
   /* ── Change handlers ─────────────────────────────────── */
   const handleChange = (e) => {
@@ -61,7 +62,7 @@ function DoctorRegister() {
     const f = e.target.files?.[0] || null;
     setPhotoFile(f);
     if (f) setPhotoPreview(URL.createObjectURL(f));
-    else   setPhotoPreview(null);
+    else setPhotoPreview(null);
   };
 
   /* ── Validation ──────────────────────────────────────── */
@@ -69,19 +70,19 @@ function DoctorRegister() {
     const errs = {};
 
     // Personal
-    if (!form.fullName.trim())           errs.fullName = "Full name is required";
+    if (!form.fullName.trim()) errs.fullName = "Full name is required";
     else if (form.fullName.trim().length < 3) errs.fullName = "Must be at least 3 characters";
-    if (!form.email)                     errs.email = "Email is required";
+    if (!form.email) errs.email = "Email is required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Please enter a valid email";
-    if (!form.phone)                     errs.phone = "Phone number is required";
+    if (!form.phone) errs.phone = "Phone number is required";
     else if (!/^\d{10}$/.test(form.phone.replace(/\s/g, ""))) errs.phone = "Enter a valid 10-digit phone number";
-    if (!form.gender)                    errs.gender = "Please select your gender";
+    if (!form.gender) errs.gender = "Please select your gender";
 
     // Professional
-    if (!form.medRegNumber.trim())       errs.medRegNumber = "Medical registration number is required";
-    if (!form.specialization)            errs.specialization = "Please select a specialization";
-    if (!form.qualification.trim())      errs.qualification = "Qualification is required";
-    if (!form.experience)                errs.experience = "Years of experience is required";
+    if (!form.medRegNumber.trim()) errs.medRegNumber = "Medical registration number is required";
+    if (!form.specialization) errs.specialization = "Please select a specialization";
+    if (!form.qualification.trim()) errs.qualification = "Qualification is required";
+    if (!form.experience) errs.experience = "Years of experience is required";
     else if (isNaN(form.experience) || +form.experience < 0 || +form.experience > 60)
       errs.experience = "Enter a valid number (0–60)";
 
@@ -89,46 +90,126 @@ function DoctorRegister() {
     if (!form.practiceType) {
       errs.practiceType = "Please select your practice type";
     } else if (form.practiceType === "hospital") {
-      if (!form.hospitalName.trim())     errs.hospitalName    = "Hospital name is required";
-      if (!form.branchLocation.trim())   errs.branchLocation  = "Branch location is required";
-      if (!form.department.trim())       errs.department      = "Department is required";
+      if (!form.hospitalName.trim()) errs.hospitalName = "Hospital name is required";
+      if (!form.branchLocation.trim()) errs.branchLocation = "Branch location is required";
+      if (!form.department.trim()) errs.department = "Department is required";
     } else if (form.practiceType === "clinic") {
-      if (!form.clinicName.trim())       errs.clinicName      = "Clinic name is required";
-      if (!form.clinicAddress.trim())    errs.clinicAddress   = "Clinic address is required";
-      if (!form.clinicCity.trim())       errs.clinicCity      = "City is required";
-      if (!form.clinicState.trim())      errs.clinicState     = "State is required";
-      if (!form.clinicPincode.trim())    errs.clinicPincode   = "Pincode is required";
+      if (!form.clinicName.trim()) errs.clinicName = "Clinic name is required";
+      if (!form.clinicAddress.trim()) errs.clinicAddress = "Clinic address is required";
+      if (!form.clinicCity.trim()) errs.clinicCity = "City is required";
+      if (!form.clinicState.trim()) errs.clinicState = "State is required";
+      if (!form.clinicPincode.trim()) errs.clinicPincode = "Pincode is required";
       else if (!/^\d{6}$/.test(form.clinicPincode)) errs.clinicPincode = "Enter a valid 6-digit pincode";
     }
 
     // Account
-    if (!form.password)                  errs.password = "Password is required";
-    else if (form.password.length < 6)   errs.password = "Minimum 6 characters";
-    if (!form.confirmPassword)           errs.confirmPassword = "Please confirm your password";
+    if (!form.password) errs.password = "Password is required";
+    else if (form.password.length < 6) errs.password = "Minimum 6 characters";
+    if (!form.confirmPassword) errs.confirmPassword = "Please confirm your password";
     else if (form.confirmPassword !== form.password) errs.confirmPassword = "Passwords do not match";
 
     // Verification
-    if (!licenseFile)                    errs.licenseFile = "Medical license is required";
+    if (!licenseFile) errs.licenseFile = "Medical license is required";
 
     // Terms
-    if (!form.acceptTerms)               errs.acceptTerms = "You must accept the Terms & Conditions";
+    if (!form.acceptTerms) errs.acceptTerms = "You must accept the Terms & Conditions";
 
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      const payload = {
-        ...form,
-        bloodGroup: form.bloodGroup || "Not Provided",
-      };
-      console.log("Doctor registration submitted:", payload, { licenseFile, photoFile });
-      navigate("/verify-email");
+
+    if (!validate()) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("name", form.fullName);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("role", "Doctor");
+
+      formData.append("phone", form.phone);
+      formData.append("gender", form.gender);
+      formData.append(
+        "bloodGroup",
+        form.bloodGroup || "Not Provided"
+      );
+      formData.append("city", form.city || "");
+
+      formData.append(
+        "isDonorAvailable",
+        String(form.isDonorAvailable)
+      );
+
+      formData.append("medRegNumber", form.medRegNumber);
+      formData.append("specialization", form.specialization);
+      formData.append("qualification", form.qualification);
+      formData.append("experience", form.experience);
+
+      formData.append("practiceType", form.practiceType);
+
+      formData.append("hospitalName", form.hospitalName);
+      formData.append("branchLocation", form.branchLocation);
+      formData.append("department", form.department);
+
+      formData.append("clinicName", form.clinicName);
+      formData.append("clinicAddress", form.clinicAddress);
+      formData.append("clinicCity", form.clinicCity);
+      formData.append("clinicState", form.clinicState);
+      formData.append("clinicPincode", form.clinicPincode);
+
+      if (photoFile) {
+        formData.append("profileImage", photoFile);
+      }
+
+      if (licenseFile) {
+        formData.append("medicalLicense", licenseFile);
+      }
+
+      // Debug — MUST be inside handleSubmit
+      for (const [key, value] of formData.entries()) {
+        console.log(
+          key,
+          value instanceof File
+            ? `${value.name} (${value.size} bytes)`
+            : value
+        );
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("DOCTOR REGISTER RESPONSE:", data);
+      console.log("ERROR DETAILS:", JSON.stringify(data.errors, null, 2));
+
+      if (!response.ok) {
+        toast.error(data.message || "Doctor registration failed. Please try again.");
+        return;
+      }
+
+      toast.success("Registration submitted! Please verify your email.");
+      // Registration successful
+      navigate("/verify-email", {
+        state: {
+          email: form.email,
+          role: "Doctor",
+        },
+      });
+
+    } catch (error) {
+      console.error("Doctor registration error:", error);
+      toast.error("Unable to connect to the server. Please try again.");
     }
   };
-
   /* ── Helpers ─────────────────────────────────────────── */
   const fld = (name, label, type = "text", placeholder = "") => (
     <div className="doc-reg-form-group">
@@ -163,7 +244,7 @@ function DoctorRegister() {
               <h2>Create Doctor Account</h2>
               <p>Join MedicoBridge and connect with patients who need your expertise</p>
             </div>
-            
+
             {/* Top Right Avatar Upload */}
             <div className="doc-reg-avatar-upload-container">
               <div
@@ -309,8 +390,8 @@ function DoctorRegister() {
             {form.practiceType === "hospital" && (
               <div className="doc-reg-conditional">
                 <div className="doc-reg-grid-row">
-                  {fld("hospitalName",  "Hospital Name",        "text", "Enter hospital name")}
-                  {fld("branchLocation","Branch Location (City)","text", "e.g. Mumbai")}
+                  {fld("hospitalName", "Hospital Name", "text", "Enter hospital name")}
+                  {fld("branchLocation", "Branch Location (City)", "text", "e.g. Mumbai")}
                 </div>
                 <div className="doc-reg-grid-row-1">
                   {fld("department", "Department", "text", "e.g. Cardiology, ICU")}
@@ -322,12 +403,12 @@ function DoctorRegister() {
             {form.practiceType === "clinic" && (
               <div className="doc-reg-conditional">
                 <div className="doc-reg-grid-row">
-                  {fld("clinicName",    "Clinic Name",    "text", "Enter clinic name")}
+                  {fld("clinicName", "Clinic Name", "text", "Enter clinic name")}
                   {fld("clinicAddress", "Clinic Address", "text", "Street / Building")}
                 </div>
                 <div className="doc-reg-grid-row-3">
-                  {fld("clinicCity",    "City",    "text", "e.g. Bangalore")}
-                  {fld("clinicState",   "State",   "text", "e.g. Karnataka")}
+                  {fld("clinicCity", "City", "text", "e.g. Bangalore")}
+                  {fld("clinicState", "State", "text", "e.g. Karnataka")}
                   {fld("clinicPincode", "Pincode", "text", "6-digit pincode")}
                 </div>
               </div>
@@ -392,7 +473,7 @@ function DoctorRegister() {
                     <FaFileAlt className="doc-reg-file-icon" />
                     <div>
                       <span className="doc-reg-file-name">{licenseFile.name}</span>
-                      <span className="doc-reg-file-size"> ({(licenseFile.size/1024).toFixed(1)} KB)</span>
+                      <span className="doc-reg-file-size"> ({(licenseFile.size / 1024).toFixed(1)} KB)</span>
                     </div>
                   </div>
                 ) : (

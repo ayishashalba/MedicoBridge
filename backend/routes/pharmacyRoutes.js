@@ -1,36 +1,40 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const {
-    getPharmacyProfile,
-    updatePharmacyProfile,
-    getAllPharmacies,
-    getPharmacyById,
-    getPharmacyInventory,
-    addMedicine,
-    updateMedicine,
-    deleteMedicine,
-    processPrescription,
-} = require("../controllers/pharmacyController");
+  getProfile,
+  updateProfile,
+  getDashboard,
+  getMedicines,
+  addMedicine,
+  updateMedicine,
+  deleteMedicine,
+  getOrders,
+  updateOrderStatus,
+  getPrescriptions,
+  verifyPrescription,
+  getInvoices,
+  updateInvoicePaymentStatus,
+} = require('../controllers/pharmacyController');
 
-const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+router.use(protect);
+router.use(authorizeRoles('Pharmacy'));
 
-// Public routes
-router.get("/", getAllPharmacies);
-router.get("/detail/:id", getPharmacyById);
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+router.get('/dashboard', getDashboard);
 
-// Prescription processing (can be accessed by patient or pharmacy)
-router.post("/process-prescription", protect, processPrescription);
+router.get('/medicines', getMedicines);
+router.post('/medicines', addMedicine);
+router.put('/medicines/:id', updateMedicine);
+router.delete('/medicines/:id', deleteMedicine);
 
-// Authenticated Pharmacy Owner routes
-router.get("/profile", protect, authorize("pharmacy"), getPharmacyProfile);
-router.put("/profile", protect, authorize("pharmacy"), updatePharmacyProfile);
-
-// Inventory CRUD
-router.get("/medicines", protect, authorize("pharmacy"), getPharmacyInventory);
-router.post("/medicines", protect, authorize("pharmacy"), addMedicine);
-router.put("/medicines/:id", protect, authorize("pharmacy"), updateMedicine);
-router.delete("/medicines/:id", protect, authorize("pharmacy"), deleteMedicine);
+router.get('/orders', getOrders);
+router.put('/orders/:id', updateOrderStatus);
+router.get('/invoices', getInvoices);
+router.put('/invoices/:id', updateInvoicePaymentStatus);
+router.get('/prescriptions', getPrescriptions);
+router.put('/prescriptions/:id/verify', verifyPrescription);
 
 module.exports = router;

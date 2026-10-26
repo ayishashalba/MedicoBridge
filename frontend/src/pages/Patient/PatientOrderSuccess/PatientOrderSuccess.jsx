@@ -13,62 +13,98 @@ import {
     FaStore,
 } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
+import { toast } from "react-toastify";
 import "./PatientOrderSuccess.css";
-
-/* ── Static order details (mirrors checkout data) ── */
-const ORDER = {
-    id: "MB" + Date.now().toString().slice(-8),
-    date: new Date().toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    }),
-    time: new Date().toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-    }),
-    delivery: "1–2 Days (Sufficient Pharmacy Stock)",
-    payment: "Cash on Delivery",
-    total: 290,
-};
 
 function PatientOrderSuccess() {
     const navigate = useNavigate();
     const location = useLocation();
     const [visible, setVisible] = useState(false);
 
-    const paidTotal = location.state?.total !== undefined ? location.state.total : ORDER.total;
-    const appliedCoupon = location.state?.appliedCoupon;
-    const couponDiscount = location.state?.couponDiscount;
+    const rawOrder = location.state?.order;
+    const orderId = rawOrder?.orderId || rawOrder?._id || location.state?.orderId;
+    const paidTotal = rawOrder?.totalAmount ?? location.state?.total ?? 0;
+    const couponCode = rawOrder?.couponCode || location.state?.appliedCoupon?.code || (typeof location.state?.appliedCoupon === "string" ? location.state.appliedCoupon : "");
+    const couponDiscount = rawOrder?.couponDiscount !== undefined ? rawOrder.couponDiscount : (location.state?.couponDiscount ?? 0);
+    const deliveryFee = rawOrder?.deliveryFee !== undefined ? rawOrder.deliveryFee : (location.state?.deliveryFee !== undefined ? location.state.deliveryFee : 40);
+
+    const orderDate = rawOrder?.createdAt
+        ? new Date(rawOrder.createdAt).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+          })
+        : new Date().toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+          });
+
+    const orderTime = rawOrder?.createdAt
+        ? new Date(rawOrder.createdAt).toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+          })
+        : new Date().toLocaleTimeString("en-IN", {
+              hour: "2-digit",
+              minute: "2-digit",
+          });
+
+    const paymentMethod = rawOrder?.paymentMethod || "Cash on Delivery";
+
+    useEffect(() => {
+        if (!orderId && !location.state) {
+            navigate("/patient/orders", { replace: true });
+            return;
+        }
+        const t = setTimeout(() => setVisible(true), 80);
+        return () => clearTimeout(t);
+    }, [orderId, location.state, navigate]);
 
     const summaryFields = [
         {
             icon: <FaHashtag />,
             label: "Order ID",
-            value: `#${ORDER.id}`,
+            value: `#${orderId || "MB-ORDER"}`,
             highlight: true,
         },
         {
             icon: <FaCalendarAlt />,
             label: "Order Date & Time",
-            value: `${ORDER.date} · ${ORDER.time}`,
+            value: `${orderDate} · ${orderTime}`,
         },
         {
             icon: <FaTruck />,
             label: "Estimated Delivery",
-            value: ORDER.delivery,
+            value: "1–2 Days (Standard Pharmacy Delivery)",
             green: true,
         },
-        ...(appliedCoupon ? [{
+        ...(rawOrder?.subtotal ? [{
             icon: <FaWallet />,
-            label: `Coupon Applied (${appliedCoupon.code})`,
+            label: "Items Subtotal",
+            value: `₹${rawOrder.subtotal}`,
+        }] : []),
+        ...(rawOrder?.offerDiscount > 0 ? [{
+            icon: <FaWallet />,
+            label: "Special Offer Discount",
+            value: `Saved ₹${rawOrder.offerDiscount}`,
+            green: true,
+        }] : []),
+        ...(couponCode && couponDiscount > 0 ? [{
+            icon: <FaWallet />,
+            label: `Coupon Applied (${couponCode})`,
             value: `Saved ₹${couponDiscount}`,
             green: true,
         }] : []),
         {
+            icon: <FaTruck />,
+            label: "Delivery Fee",
+            value: deliveryFee === 0 ? "FREE" : `₹${deliveryFee}`,
+        },
+        {
             icon: <FaWallet />,
             label: "Payment Method",
-            value: ORDER.payment,
+            value: paymentMethod,
         },
         {
             icon: <FaRupeeSign />,
@@ -77,12 +113,6 @@ function PatientOrderSuccess() {
             bold: true,
         },
     ];
-
-    /* Trigger entrance animation after mount */
-    useEffect(() => {
-        const t = setTimeout(() => setVisible(true), 80);
-        return () => clearTimeout(t);
-    }, []);
 
     return (
         <div className={`pos-page ${visible ? "pos-page--visible" : ""}`}>
@@ -182,7 +212,7 @@ function PatientOrderSuccess() {
 
                     <button
                         className="pos-btn pos-btn--ghost"
-                        onClick={() => alert("Invoice download will be available soon!")}
+                        onClick={() => toast.info("Invoice download will be available soon!")}
                         title="Download Invoice"
                     >
                         <FaDownload />

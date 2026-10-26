@@ -1,571 +1,645 @@
-const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-const User = require("../models/User");
-const Patient = require("../models/Patient");
-const Doctor = require("../models/Doctor");
-const Hospital = require("../models/Hospital");
-const Pharmacy = require("../models/pharmacy");
-const OtpVerification = require("../models/OtpVerification");
-const { sendOtpEmail } = require("../services/emailService");
+const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+const User = require('../models/User');
+const Patient = require('../models/Patient');
+const Doctor = require('../models/Doctor');
+const Hospital = require('../models/Hospital');
+const Pharmacy = require('../models/Pharmacy');
+const generateOtp = require('../utils/generateOtp');
+const { sendOtpEmail } = require('../services/emailService');
 const {
-    successResponse,
-    validationErrorResponse,
-    unauthorizedResponse,
-    forbiddenResponse,
-    notFoundResponse,
-    serverErrorResponse,
-} = require("../utils/apiResponse");
-const { validateEmail } = require("../utils/validators");
+  sendSuccess,
+  sendValidationError,
+  sendUnauthorized,
+  sendNotFound,
+  sendServerError,
+  sendForbidden,
+} = require('../utils/responseHandler');
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID
+);
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'medicobridge_secret_key_2026', {
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  });
+};
 
-const generateToken = (user) => {
-    return jwt.sign(
-        {
-            id: user._id,
-            role: user.role,
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn: process.env.JWT_EXPIRE || "7d",
-        }
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+/**
+ * Fetch role profile helper
+ */
+const getRoleProfile = async (user) => {
+  if (user.role === 'Patient') {
+    return await Patient.findOne({ userId: user._id });
+  } else if (user.role === 'Doctor') {
+    return await Doctor.findOne({ userId: user._id });
+  } else if (user.role === 'Hospital') {
+    return await Hospital.findOne({ userId: user._id });
+  } else if (user.role === 'Pharmacy') {
+    return await Pharmacy.findOne({ userId: user._id });
+  }
+  return null;
+};
+
+// @desc    Register a new user (Patient, Doctor, Hospital, Pharmacy)
+// @route   POST /api/auth/register
+// @access  Public
+const register = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      role,
+      phone,
+      dob,
+      gender,
+      bloodGroup,
+      city,
+      address,
+      isDonorAvailable,
+      // Doctor fields
+      specialization,
+      medRegNumber,
+      qualification,
+      experience,
+      practiceType,
+      hospitalName,
+      branchLocation,
+      department,
+      clinicName,
+      clinicAddress,
+      clinicCity,
+      clinicState,
+      clinicPincode,
+      hospitalId,
+      // Hospital fields
+      regNumber,
+      state,
+      hospitalType,
+      departments,
+      // Pharmacy fields
+      licenseNumber,
+      pharmacyType,
+    } = req.body;
+
+    if (!name || !email || !password || !role) {
+      return sendValidationError(res, 'Validation failed', [
+        'Name, email, password, and role are required.',
+      ]);
+    }
+
+    if (!isValidEmail(email)) {
+      return sendValidationError(res, 'Validation failed', ['Invalid email format.']);
+    }
+
+    const allowedRoles = ['Patient', 'Doctor', 'Hospital', 'Pharmacy'];
+    if (!allowedRoles.includes(role)) {
+      return sendValidationError(res, 'Validation failed', [
+        `Role must be one of: ${allowedRoles.join(', ')}`,
+      ]);
+    }
+
+    if (password.length < 6) {
+      return sendValidationError(res, 'Validation failed', [
+        'Password must be at least 6 characters.',
+      ]);
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existingUser) {
+      if (!existingUser.isVerified) {
+        // Resend fresh OTP
+        const otp = generateOtp();
+        const otpExpiresAt = new Date(
+          Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 10) * 60 * 1000
+        );
+        existingUser.otpCode = otp;
+        existingUser.otpExpiresAt = otpExpiresAt;
+        await existingUser.save({ validateBeforeSave: false });
+
+        await sendOtpEmail(existingUser.email, otp, existingUser.role);
+        return sendSuccess(
+          res,
+          'Account already exists but is unverified. A new verification OTP has been sent to your email.',
+          {
+            email: existingUser.email,
+            role: existingUser.role,
+            requiresVerification: true,
+          },
+          200
+        );
+      }
+      return sendValidationError(res, 'Validation failed', [
+        'An account with this email already exists. Please log in.',
+      ]);
+    }
+
+    // Generate secure OTP
+    const otp = generateOtp();
+    const otpExpiresAt = new Date(
+      Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 10) * 60 * 1000
     );
+
+    // Create User record
+    const user = await User.create({
+      email: email.toLowerCase().trim(),
+      password,
+      role,
+      phone: phone || '',
+      dob: dob || null,
+      gender: gender || '',
+      bloodGroup: bloodGroup || null,
+      city: city || '',
+      address: address || '',
+      isDonorAvailable: isDonorAvailable === true || isDonorAvailable === 'true',
+      isVerified: false,
+      otpCode: otp,
+      otpExpiresAt,
+      status: 'active',
+    });
+
+    // Create Role-specific Profile
+    if (role === 'Patient') {
+      await Patient.create({
+        userId: user._id,
+        name: name.trim(),
+        email: user.email,
+        phone: phone || '',
+        dob: dob || null,
+        gender: gender || '',
+        bloodGroup: bloodGroup || null,
+        city: city || '',
+        address: address || '',
+        isDonorAvailable: isDonorAvailable === true || isDonorAvailable === 'true',
+      });
+    } else if (role === 'Doctor') {
+      const profileImg = req.files?.profileImage?.[0];
+      const licenseImg = req.files?.medicalLicense?.[0];
+
+      await Doctor.create({
+        userId: user._id,
+        name: name.trim(),
+        email: user.email,
+        phone: phone || '',
+        gender: gender || '',
+        bloodGroup: bloodGroup || null,
+        city: city || '',
+        medRegNumber: medRegNumber || '',
+        specialization: specialization || 'General Physician',
+        qualification: qualification || '',
+        experience: experience || '',
+        practiceType: practiceType || 'Hospital',
+        hospitalName: hospitalName || '',
+        branchLocation: branchLocation || '',
+        department: department || '',
+        clinicName: clinicName || '',
+        clinicAddress: clinicAddress || '',
+        clinicCity: clinicCity || '',
+        clinicState: clinicState || '',
+        clinicPincode: clinicPincode || '',
+        isDonorAvailable: isDonorAvailable === true || isDonorAvailable === 'true',
+        profileImage: profileImg ? `/uploads/doctors/${profileImg.filename}` : '',
+        medicalLicense: licenseImg ? `/uploads/doctors/${licenseImg.filename}` : '',
+        hospitalId: hospitalId || null,
+        status: 'pending',
+      });
+    } else if (role === 'Hospital') {
+      const licenseImg = req.files?.medicalLicense?.[0];
+      let depts = [];
+      if (Array.isArray(departments)) {
+        depts = departments;
+      } else if (typeof departments === 'string' && departments.trim()) {
+        try {
+          depts = JSON.parse(departments);
+        } catch {
+          depts = departments.split(',').map((d) => d.trim()).filter(Boolean);
+        }
+      }
+
+      await Hospital.create({
+        userId: user._id,
+        name: name.trim(),
+        email: user.email,
+        phone: phone || '',
+        regNumber: regNumber || `REG-${Date.now()}`,
+        address: address || '',
+        city: city || '',
+        state: state || '',
+        hospitalType: hospitalType || 'General Hospital',
+        departments: depts,
+        medicalLicense: licenseImg ? `/uploads/hospitals/${licenseImg.filename}` : '',
+        status: 'pending',
+      });
+    } else if (role === 'Pharmacy') {
+      await Pharmacy.create({
+        userId: user._id,
+        name: name.trim(),
+        email: user.email,
+        phone: phone || '',
+        licenseNumber: licenseNumber || '',
+        address: address || '',
+        city: city || '',
+        state: state || '',
+        type: pharmacyType || 'Retail',
+        status: 'pending',
+      });
+    }
+
+    // Send OTP email
+    await sendOtpEmail(user.email, otp, role);
+
+    return sendSuccess(
+      res,
+      'Registration successful! Please check your email for the OTP verification code.',
+      {
+        email: user.email,
+        role: user.role,
+        requiresVerification: true,
+      },
+      201
+    );
+  } catch (error) {
+    return sendServerError(res, 'Registration failed. Please try again.', error);
+  }
 };
 
-/**
- * Generate cryptographically secure 6-digit OTP
- */
-const generateSixDigitOtp = () => {
-    return crypto.randomInt(100000, 1000000).toString();
+// @desc    Verify OTP and activate account
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return sendValidationError(res, 'Validation failed', ['Email and OTP are required.']);
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
+    if (!user) {
+      return sendNotFound(res, 'Account not found. Please register.');
+    }
+
+    if (user.isVerified) {
+      return sendValidationError(res, 'Validation failed', [
+        'Account is already verified. Please log in.',
+      ]);
+    }
+
+    if (!user.otpCode) {
+      return sendValidationError(res, 'Validation failed', [
+        'No active OTP found. Please request a new code.',
+      ]);
+    }
+
+    if (user.otpCode !== otp.toString().trim()) {
+      return sendValidationError(res, 'Invalid OTP code. Please try again.', [
+        'Invalid OTP. Please try again.',
+      ]);
+    }
+
+    if (new Date() > new Date(user.otpExpiresAt)) {
+      return sendValidationError(res, 'OTP has expired. Please request a new code.', [
+        'OTP has expired. Please request a new code.',
+      ]);
+    }
+
+    // Mark user verified
+    user.isVerified = true;
+    user.otpCode = null;
+    user.otpExpiresAt = null;
+    await user.save({ validateBeforeSave: false });
+
+    // Fetch role profile
+    const profile = await getRoleProfile(user);
+    const token = generateToken(user._id);
+
+    return sendSuccess(res, 'Email verified successfully! Welcome to MedicoBridge.', {
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: true,
+        status: user.status,
+        profile,
+      },
+    });
+  } catch (error) {
+    return sendServerError(res, 'OTP verification failed.', error);
+  }
 };
 
-/**
- * POST /api/auth/register
- * Patient & multi-role registration with Email OTP verification for Patient.
- */
-const register = async (req, res, next) => {
-    try {
-        const {
-            name,
-            fullName,
-            email,
-            password,
-            role = "patient",
-            phone = "",
-            city = "",
-            address = "",
-            bloodGroup = "",
-            dateOfBirth,
-            dob,
-            gender = "",
-            emergencyContact = "",
-            isDonorAvailable,
-            isAvailable,
-        } = req.body;
+// @desc    Resend OTP
+// @route   POST /api/auth/resend-otp
+// @access  Public
+const resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
 
-        const displayName = (name || fullName || "").trim();
-        const birthDate = dateOfBirth || dob || null;
-        const donorStatus = isDonorAvailable !== undefined ? Boolean(isDonorAvailable) : (isAvailable !== undefined ? Boolean(isAvailable) : false);
+    if (!email) {
+      return sendValidationError(res, 'Validation failed', ['Email is required.']);
+    }
 
-        if (!displayName || !email || !password || !role) {
-            return validationErrorResponse(res, "Validation failed", [
-                "Name is required",
-                "Email is required",
-                "Password is required",
-                "Role is required",
-            ]);
-        }
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      return sendNotFound(res, 'Account not found. Please register.');
+    }
 
-        if (!validateEmail(email)) {
-            return validationErrorResponse(res, "Invalid email format");
-        }
+    if (user.isVerified) {
+      return sendValidationError(res, 'Validation failed', [
+        'Account is already verified. Please log in.',
+      ]);
+    }
 
-        if (typeof password !== "string" || password.length < 6) {
-            return validationErrorResponse(res, "Password must be at least 6 characters long");
-        }
+    const otp = generateOtp();
+    const otpExpiresAt = new Date(
+      Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 10) * 60 * 1000
+    );
 
-        const allowedRoles = ["patient", "doctor", "hospital", "pharmacy"];
-        const normalizedRole = role.toLowerCase().trim();
+    user.otpCode = otp;
+    user.otpExpiresAt = otpExpiresAt;
+    await user.save({ validateBeforeSave: false });
 
-        if (!allowedRoles.includes(normalizedRole)) {
-            return validationErrorResponse(res, "Invalid registration role");
-        }
+    await sendOtpEmail(user.email, otp, user.role);
 
-        const normalizedEmail = email.toLowerCase().trim();
+    return sendSuccess(res, 'A new verification OTP has been sent to your email.', {
+      email: user.email,
+    });
+  } catch (error) {
+    return sendServerError(res, 'Failed to resend OTP.', error);
+  }
+};
 
-        const existingUser = await User.findOne({
-            email: normalizedEmail,
-        });
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
+const login = async (req, res) => {
+  try {
+    const { email, password, role } = req.body;
 
-        // If an already verified account exists
-        if (existingUser && (existingUser.emailVerified || existingUser.isEmailVerified)) {
-            return validationErrorResponse(res, "Email is already registered");
-        }
+    if (!email || !password) {
+      return sendValidationError(res, 'Validation failed', [
+        'Email and password are required.',
+      ]);
+    }
 
-        const hashedPassword = await bcrypt.hash(password, 12);
+    if (!isValidEmail(email)) {
+      return sendValidationError(res, 'Validation failed', ['Invalid email format.']);
+    }
 
-        // ── PATIENT OTP REGISTRATION FLOW ───────────────────────
-        if (normalizedRole === "patient") {
-            const otp = generateSixDigitOtp();
-            const otpHash = await bcrypt.hash(otp, 10);
-            const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+password');
 
-            const registrationData = {
-                name: displayName,
-                email: normalizedEmail,
-                password: hashedPassword,
-                role: "patient",
-                phone: phone ? phone.trim() : "",
-                city: city ? city.trim() : "",
-                address: address ? address.trim() : "",
-                bloodGroup: bloodGroup && bloodGroup !== "Not Provided" ? bloodGroup : null,
-                dateOfBirth: birthDate,
-                gender: gender || "",
-                emergencyContact: emergencyContact || "",
-                isAvailable: donorStatus,
-            };
+    if (!user) {
+      // For Patient login: use generic message to avoid revealing whether a non-patient account exists
+      if (role === 'Patient') {
+        return sendNotFound(res, "User doesn't exist. Please register.");
+      }
+      return sendNotFound(res, 'Account not found. Please register.');
+    }
 
-            // Store in dedicated OtpVerification model
-            await OtpVerification.findOneAndUpdate(
-                { email: normalizedEmail, purpose: "registration" },
-                {
-                    email: normalizedEmail,
-                    otpHash,
-                    purpose: "registration",
-                    registrationData,
-                    expiresAt: otpExpiresAt,
-                    attempts: 0,
-                    verified: false,
-                    lastResentAt: new Date(),
-                },
-                { upsert: true, new: true, setDefaultsOnInsert: true }
-            );
+    if (role && user.role !== role && user.role !== 'Admin') {
+      // For Patient login: never reveal that the email belongs to another role
+      if (role === 'Patient') {
+        return sendNotFound(res, "User doesn't exist. Please register.");
+      }
+      return sendUnauthorized(
+        res,
+        `This account is registered as ${user.role}. Please use ${user.role} Login.`
+      );
+    }
 
-            // Also keep/update user in User collection if pending
-            if (existingUser) {
-                existingUser.name = displayName;
-                existingUser.password = hashedPassword;
-                existingUser.otpCode = otpHash;
-                existingUser.otpExpiresAt = otpExpiresAt;
-                existingUser.emailVerified = false;
-                existingUser.isEmailVerified = false;
-                await existingUser.save();
-            } else {
-                await User.create({
-                    name: displayName,
-                    email: normalizedEmail,
-                    password: hashedPassword,
-                    role: "patient",
-                    phone: phone ? phone.trim() : "",
-                    city: city ? city.trim() : "",
-                    address: address ? address.trim() : "",
-                    bloodGroup: bloodGroup && bloodGroup !== "Not Provided" ? bloodGroup : null,
-                    isAvailable: donorStatus,
-                    isActive: true,
-                    isApproved: true,
-                    emailVerified: false,
-                    isEmailVerified: false,
-                    otpCode: otpHash,
-                    otpExpiresAt,
-                });
-            }
+    if (!user.isVerified) {
+      // Send fresh OTP
+      const otp = generateOtp();
+      const otpExpiresAt = new Date(
+        Date.now() + (parseInt(process.env.OTP_EXPIRE_MINUTES) || 10) * 60 * 1000
+      );
+      user.otpCode = otp;
+      user.otpExpiresAt = otpExpiresAt;
+      await user.save({ validateBeforeSave: false });
+      await sendOtpEmail(user.email, otp, user.role);
 
-            // Send real OTP email
-            const emailResult = await sendOtpEmail(normalizedEmail, otp, displayName);
-            if (!emailResult.success && process.env.NODE_ENV === "production") {
-                return validationErrorResponse(res, "Unable to send verification email");
-            }
+      return res.status(403).json({
+        success: false,
+        message: 'Email not verified. A new OTP has been sent to your email.',
+        unverified: true,
+        email: user.email,
+        role: user.role,
+      });
+    }
 
-            return successResponse(
-                res,
-                "OTP sent to your email",
-                {
-                    email: normalizedEmail,
-                    requiresVerification: true,
-                },
-                200
-            );
-        }
+    if (user.status === 'blocked') {
+      return sendForbidden(res, 'Your account has been blocked. Please contact support.');
+    }
 
-        // ── OTHER ROLES REGISTRATION FLOW (Doctor / Hospital / Pharmacy) ──
-        const user = await User.create({
-            name: displayName,
-            email: normalizedEmail,
-            password: hashedPassword,
-            role: normalizedRole,
-            phone: phone ? phone.trim() : "",
-            city: city ? city.trim() : "",
-            address: address ? address.trim() : "",
-            bloodGroup: bloodGroup && bloodGroup !== "Not Provided" ? bloodGroup : null,
-            isActive: true,
-            isApproved: false,
-            emailVerified: true,
-            isEmailVerified: true,
-        });
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return sendUnauthorized(res, 'Invalid email or password.');
+    }
 
-        if (normalizedRole === "doctor") {
-            await Doctor.create({
-                userId: user._id,
-                doctorId: `DR-${Date.now()}`,
-                specialization: req.body.specialization || "General Medicine",
-                qualification: req.body.qualification || "",
-                experience: Number(req.body.experience) || 0,
-                licenseNumber: req.body.licenseNumber || "",
-                clinicName: req.body.clinicName || "",
-                consultationFee: Number(req.body.consultationFee) || 0,
-                isApproved: false,
-            });
-        } else if (normalizedRole === "hospital") {
-            await Hospital.create({
-                userId: user._id,
-                hospitalName: req.body.hospitalName || displayName,
-                registrationNumber: req.body.registrationNumber || "",
-                phone: user.phone,
-                address: user.address,
-                city: user.city,
-                isApproved: false,
-            });
-        } else if (normalizedRole === "pharmacy") {
-            await Pharmacy.create({
-                userId: user._id,
-                pharmacyName: req.body.pharmacyName || displayName,
-                pharmacyType: req.body.pharmacyType || "retail",
-                licenseNumber: req.body.licenseNumber || "",
-                phone: user.phone,
-                email: user.email,
-                address: user.address,
-                city: user.city,
-                isApproved: false,
-            });
-        }
+    const profile = await getRoleProfile(user);
+    const token = generateToken(user._id);
 
-        return successResponse(
-            res,
-            "User registered successfully. Account is pending approval.",
-            {
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    phone: user.phone,
-                    city: user.city,
-                    bloodGroup: user.bloodGroup,
-                    isActive: user.isActive,
-                    isApproved: user.isApproved,
-                },
-            },
-            201
+    return sendSuccess(res, 'Login successful.', {
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        profile,
+      },
+    });
+  } catch (error) {
+    return sendServerError(res, 'Login failed.', error);
+  }
+};
+// @desc    Login patient with Google
+// @route   POST /api/auth/google
+// @access  Public
+const googleLogin = async (req, res) => {
+  try {
+    const { credential, role } = req.body;
+
+    if (!credential) {
+      return sendValidationError(res, 'Validation failed', [
+        'Google credential is required.',
+      ]);
+    }
+
+    if (role !== 'Patient') {
+      return sendUnauthorized(
+        res,
+        'Google login is available only for Patient accounts.'
+      );
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return sendServerError(
+        res,
+        'Google login is not configured on the server.'
+      );
+    }
+
+    // Verify Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload) {
+      return sendUnauthorized(
+        res,
+        'Invalid Google authentication.'
+      );
+    }
+
+    const {
+      sub: googleId,
+      email,
+      email_verified: emailVerified,
+      name,
+      picture,
+    } = payload;
+
+    if (!email || !emailVerified) {
+      return sendUnauthorized(
+        res,
+        'Google account email could not be verified.'
+      );
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Find existing account
+    let user = await User.findOne({
+      email: normalizedEmail,
+    });
+
+    if (user) {
+      // Google login is only for Patient — never reveal other roles
+      if (user.role !== 'Patient') {
+        return sendNotFound(
+          res,
+          "User doesn't exist. Please register."
         );
-    } catch (error) {
-        next(error);
-    }
-};
+      }
 
-/**
- * POST /api/auth/verify-otp
- * Verifies OTP, activates account, generates JWT, and returns authenticated data for direct Dashboard login.
- */
-const verifyOtp = async (req, res, next) => {
-    try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return validationErrorResponse(res, "Invalid OTP");
-        }
-
-        if (!validateEmail(email)) {
-            return validationErrorResponse(res, "Invalid email format");
-        }
-
-        const cleanOtp = String(otp).trim();
-        if (!/^\d{6}$/.test(cleanOtp)) {
-            return validationErrorResponse(res, "Invalid OTP");
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-
-        // Check user & OTP record
-        const user = await User.findOne({ email: normalizedEmail });
-        const otpRecord = await OtpVerification.findOne({
-            email: normalizedEmail,
-            purpose: "registration",
-        });
-
-        if (!user && !otpRecord) {
-            return notFoundResponse(res, "Registration not found");
-        }
-
-        if (user && (user.emailVerified || user.isEmailVerified)) {
-            return validationErrorResponse(res, "Email is already verified");
-        }
-
-        const effectiveExpiresAt = otpRecord?.expiresAt || user?.otpExpiresAt;
-        if (!effectiveExpiresAt || new Date() > new Date(effectiveExpiresAt)) {
-            return validationErrorResponse(res, "OTP has expired");
-        }
-
-        const storedOtpHash = otpRecord?.otpHash || user?.otpCode;
-        if (!storedOtpHash) {
-            return validationErrorResponse(res, "Registration not found");
-        }
-
-        const isMatch = await bcrypt.compare(cleanOtp, storedOtpHash);
-
-        if (!isMatch) {
-            if (otpRecord) {
-                otpRecord.attempts = (otpRecord.attempts || 0) + 1;
-                await otpRecord.save();
-            }
-            return validationErrorResponse(res, "Invalid OTP");
-        }
-
-        // OTP is valid! Mark email as verified
-        const regData = otpRecord?.registrationData || {};
-
-        let activeUser = user;
-        if (!activeUser) {
-            activeUser = await User.create({
-                name: regData.name || "Patient",
-                email: normalizedEmail,
-                password: regData.password,
-                role: "patient",
-                phone: regData.phone || "",
-                city: regData.city || "",
-                address: regData.address || "",
-                bloodGroup: regData.bloodGroup || null,
-                isAvailable: Boolean(regData.isAvailable),
-                isActive: true,
-                isApproved: true,
-                emailVerified: true,
-                isEmailVerified: true,
-                otpCode: null,
-                otpExpiresAt: null,
-            });
-        } else {
-            activeUser.emailVerified = true;
-            activeUser.isEmailVerified = true;
-            activeUser.isActive = true;
-            activeUser.isApproved = true;
-            activeUser.otpCode = null;
-            activeUser.otpExpiresAt = null;
-            if (regData.password) activeUser.password = regData.password;
-            if (regData.name) activeUser.name = regData.name;
-            if (regData.phone) activeUser.phone = regData.phone;
-            if (regData.city) activeUser.city = regData.city;
-            if (regData.address) activeUser.address = regData.address;
-            if (regData.bloodGroup !== undefined) activeUser.bloodGroup = regData.bloodGroup;
-            if (regData.isAvailable !== undefined) activeUser.isAvailable = regData.isAvailable;
-            await activeUser.save();
-        }
-
-        // Ensure Patient document exists and is linked
-        let patient = await Patient.findOne({ userId: activeUser._id });
-        if (!patient) {
-            patient = await Patient.create({
-                userId: activeUser._id,
-                patientId: `PAT${Date.now()}${Math.floor(Math.random() * 1000)}`,
-                dateOfBirth: regData.dateOfBirth ? new Date(regData.dateOfBirth) : null,
-                gender: regData.gender || undefined,
-                phone: activeUser.phone,
-                address: activeUser.address,
-                city: activeUser.city,
-                bloodGroup: activeUser.bloodGroup,
-                emergencyContact: regData.emergencyContact || "",
-                isAvailable: activeUser.isAvailable,
-            });
-        } else {
-            if (regData.dateOfBirth) patient.dateOfBirth = new Date(regData.dateOfBirth);
-            if (regData.gender) patient.gender = regData.gender;
-            if (activeUser.phone) patient.phone = activeUser.phone;
-            if (activeUser.address) patient.address = activeUser.address;
-            if (activeUser.city) patient.city = activeUser.city;
-            if (activeUser.bloodGroup) patient.bloodGroup = activeUser.bloodGroup;
-            await patient.save();
-        }
-
-        // Clean up OtpVerification record
-        await OtpVerification.deleteMany({ email: normalizedEmail });
-
-        // Generate JWT token for immediate dashboard login
-        const token = generateToken(activeUser);
-
-        return successResponse(res, "Email verified successfully", {
-            token,
-            user: {
-                id: activeUser._id,
-                name: activeUser.name,
-                email: activeUser.email,
-                role: activeUser.role,
-                phone: activeUser.phone,
-                city: activeUser.city,
-                bloodGroup: activeUser.bloodGroup,
-                emailVerified: true,
-                isEmailVerified: true,
-                isActive: activeUser.isActive,
-                isApproved: activeUser.isApproved,
-            },
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-/**
- * POST /api/auth/resend-otp
- * Resends fresh 6-digit OTP with 5-minute expiry.
- */
-const resendOtp = async (req, res, next) => {
-    try {
-        const { email } = req.body;
-
-        if (!email) {
-            return validationErrorResponse(res, "Email is required");
-        }
-
-        if (!validateEmail(email)) {
-            return validationErrorResponse(res, "Invalid email format");
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-
-        const user = await User.findOne({ email: normalizedEmail });
-        const otpRecord = await OtpVerification.findOne({
-            email: normalizedEmail,
-            purpose: "registration",
-        });
-
-        if (!user && !otpRecord) {
-            return notFoundResponse(res, "Registration not found");
-        }
-
-        if (user && (user.emailVerified || user.isEmailVerified)) {
-            return validationErrorResponse(res, "Email is already verified");
-        }
-
-        // Rate limiting cooldown (30 seconds)
-        const lastSent = otpRecord?.lastResentAt ? new Date(otpRecord.lastResentAt).getTime() : 0;
-        const diffSeconds = Math.floor((Date.now() - lastSent) / 1000);
-        if (diffSeconds < 30) {
-            return validationErrorResponse(
-                res,
-                `Please wait ${30 - diffSeconds}s before requesting a new OTP`
-            );
-        }
-
-        const newOtp = generateSixDigitOtp();
-        const newOtpHash = await bcrypt.hash(newOtp, 10);
-        const newExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
-
-        if (otpRecord) {
-            otpRecord.otpHash = newOtpHash;
-            otpRecord.expiresAt = newExpiresAt;
-            otpRecord.attempts = 0;
-            otpRecord.lastResentAt = new Date();
-            await otpRecord.save();
-        }
-
-        if (user) {
-            user.otpCode = newOtpHash;
-            user.otpExpiresAt = newExpiresAt;
-            await user.save();
-        }
-
-        const recipientName = otpRecord?.registrationData?.name || user?.name || "Patient";
-        const emailResult = await sendOtpEmail(normalizedEmail, newOtp, recipientName);
-
-        if (!emailResult.success && process.env.NODE_ENV === "production") {
-            return validationErrorResponse(res, "Unable to send verification email");
-        }
-
-        return successResponse(res, "A new OTP has been sent to your email", {
-            email: normalizedEmail,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-/**
- * POST /api/auth/login
- * Blocks unverified patients from logging in.
- */
-const login = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return validationErrorResponse(res, "Validation failed", [
-                "Email is required",
-                "Password is required",
-            ]);
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-
-        const user = await User.findOne({
-            email: normalizedEmail,
-        }).select("+password");
-
-        if (!user) {
-            return unauthorizedResponse(res, "Invalid email or password");
-        }
-
-        if (!user.isActive) {
-            return forbiddenResponse(res, "Your account has been blocked");
-        }
-
-        const passwordMatch = await bcrypt.compare(
-            password,
-            user.password
+      if (user.status === 'blocked') {
+        return sendForbidden(
+          res,
+          'Your account has been blocked. Please contact support.'
         );
+      }
 
-        if (!passwordMatch) {
-            return unauthorizedResponse(res, "Invalid email or password");
-        }
+      // Google verified the email
+      if (!user.isVerified) {
+        user.isVerified = true;
+        user.otpCode = null;
+        user.otpExpiresAt = null;
+        await user.save({ validateBeforeSave: false });
+      }
 
-        // ── EMAIL VERIFICATION ENFORCEMENT ─────────────────────
-        if (user.role === "patient" && !user.emailVerified && !user.isEmailVerified) {
-            return forbiddenResponse(
-                res,
-                "Please verify your email before logging in"
-            );
-        }
+      // Update Google ID if your User model supports it
+      if (user.googleId !== googleId) {
+        user.googleId = googleId;
+        await user.save({ validateBeforeSave: false });
+      }
+    } else {
+      // Create a new Patient account from Google
+      user = await User.create({
+        email: normalizedEmail,
+        role: 'Patient',
+        password: `google_${googleId}_${Date.now()}`,
+        isVerified: true,
+        status: 'active',
+        googleId,
+      });
 
-        user.lastLogin = new Date();
-        await user.save();
-
-        const token = generateToken(user);
-
-        return successResponse(res, "Login successful", {
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                phone: user.phone,
-                city: user.city,
-                bloodGroup: user.bloodGroup,
-                isActive: user.isActive,
-                isApproved: user.isApproved,
-                emailVerified: Boolean(user.emailVerified || user.isEmailVerified),
-                isEmailVerified: Boolean(user.emailVerified || user.isEmailVerified),
-            },
-        });
-    } catch (error) {
-        next(error);
+      await Patient.create({
+        userId: user._id,
+        name: name || 'Patient',
+        email: normalizedEmail,
+        phone: '',
+        dob: null,
+        gender: '',
+        bloodGroup: null,
+        city: '',
+        address: '',
+        isDonorAvailable: false,
+      });
     }
+
+    const profile = await getRoleProfile(user);
+    const token = generateToken(user._id);
+
+    return sendSuccess(res, 'Google login successful.', {
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        isVerified: true,
+        status: user.status,
+        profile,
+        picture: picture || '',
+      },
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+
+    return sendServerError(
+      res,
+      'Google login failed. Please try again.',
+      error
+    );
+  }
+};
+// @desc    Logout (client token removal acknowledgement)
+// @route   GET /api/auth/logout
+// @access  Private
+const logout = (req, res) => {
+  return sendSuccess(res, 'Logged out successfully. Please clear your local session.');
 };
 
-const logout = async (req, res) => {
-    return successResponse(res, "User logged out successfully", {});
+// @desc    Get current authenticated user profile
+// @route   GET /api/auth/me
+// @access  Private
+const getMe = async (req, res) => {
+  try {
+    const user = req.user;
+    const profile = await getRoleProfile(user);
+
+    return sendSuccess(res, 'User fetched successfully.', {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+      profile,
+    });
+  } catch (error) {
+    return sendServerError(res, 'Failed to fetch user.', error);
+  }
 };
+
+// Alias for hospital register route if called via register-hospital
+const registerHospital = register;
+const verifyOTP = verifyOtp;
+const resendOTP = resendOtp;
 
 module.exports = {
-    register,
-    verifyOtp,
-    resendOtp,
-    login,
-    logout,
+  register,
+  registerHospital,
+  verifyOtp,
+  verifyOTP,
+  resendOtp,
+  resendOTP,
+  login,
+  googleLogin,
+  logout,
+  getMe,
 };

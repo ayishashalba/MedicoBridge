@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -19,80 +19,13 @@ import {
   FaClock,
   FaIdBadge,
   FaUserMd,
+  FaSpinner,
+  FaExclamationTriangle,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorPrescriptionDetails.css";
 
-/* ─── Static Dummy Data ─────────────────────────────────────── */
-// Toggle this to "Clinic" to test Private Clinic Doctor view
-const DOCTOR_TYPE = "Hospital";
-
-const prescriptionData = {
-  rxId: "RX-4521",
-  status: "sent",
-  date: "June 28, 2026",
-  consultationType: "In-Person",
-  patient: {
-    name: "Rahul Nair",
-    id: "PT-1024",
-    age: 32,
-    gender: "Male",
-    bloodGroup: "B+",
-  },
-  doctor: {
-    name: "Dr. Ayisha Shalba",
-    specialization: "Cardiologist",
-    type: DOCTOR_TYPE,
-    ...(DOCTOR_TYPE === "Hospital" 
-        ? { hospital: "MedicoBridge Hospital" } 
-        : { clinicName: "HeartCare Clinic", clinicAddress: "123 Main St, Kochi" }
-    ),
-    regNo: "MCI-KL-20849",
-  },
-  diagnosis: "Type 2 Diabetes Mellitus – Routine Quarterly Review",
-  symptoms: [
-    "Mild fatigue after meals",
-    "Occasional thirst",
-    "Slight dizziness in the morning",
-    "Stable blood glucose (fasting: 118 mg/dL)",
-  ],
-  medicines: [
-    {
-      name: "Metformin",
-      strength: "500 mg",
-      dosage: "1 Tablet",
-      frequency: "Twice Daily (Morning & Night)",
-      duration: "90 Days",
-      instruction: "Take with meals",
-    },
-    {
-      name: "Amlodipine",
-      strength: "5 mg",
-      dosage: "1 Tablet",
-      frequency: "Once Daily (Morning)",
-      duration: "90 Days",
-      instruction: "Take before breakfast",
-    },
-    {
-      name: "Aspirin",
-      strength: "75 mg",
-      dosage: "1 Tablet",
-      frequency: "Once Daily (Night)",
-      duration: "90 Days",
-      instruction: "Take after dinner",
-    },
-    {
-      name: "Vitamin D3",
-      strength: "1000 IU",
-      dosage: "1 Capsule",
-      frequency: "Once Daily (Morning)",
-      duration: "30 Days",
-      instruction: "Take with milk or a fatty meal",
-    },
-  ],
-  advice:
-    "Maintain a low-carbohydrate diet and avoid sugary beverages. Walk briskly for 30 minutes every day. Monitor blood pressure twice a week and log readings. Stay well-hydrated. Avoid stress and ensure at least 7 hours of sleep. Attend diabetic diet counselling session this month.",
-  followUpDate: "September 28, 2026",
-};
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 /* ─── Status Badge ──────────────────────────────────────────── */
 function StatusBadge({ status }) {
@@ -113,10 +46,159 @@ function StatusBadge({ status }) {
 /* ─── Main Component ────────────────────────────────────────── */
 function DoctorPrescriptionDetails() {
   const navigate = useNavigate();
+  const { id } = useParams();
 
+  const [prescription, setPrescription] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [sending, setSending] = useState(false);
+
+  /* ── Fetch prescription from backend ── */
+  const fetchPrescription = useCallback(async () => {
+    if (!id) {
+      setError("No prescription ID provided.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication required. Please log in.");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/prescriptions/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to load prescription.");
+        setLoading(false);
+        return;
+      }
+
+      setPrescription(data.data || data);
+    } catch (err) {
+      console.error("Fetch prescription error:", err);
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchPrescription();
+  }, [fetchPrescription]);
+
+  /* ── Print ── */
   const handlePrint = () => window.print();
-  const handleDownload = () => alert("PDF download coming soon.");
-  const handleSend = () => alert("Prescription sent to patient.");
+
+  /* ── Download PDF ── */
+  const handleDownload = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/prescriptions/${id}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok && res.headers.get("content-type")?.includes("pdf")) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `prescription-${prescription?.rxId || id}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else {
+        // Fallback: print as PDF
+        toast.info("Tip: Use Print → Save as PDF to download this prescription.");
+        window.print();
+      }
+    } catch {
+      toast.info("Tip: Use Print → Save as PDF to download this prescription.");
+      window.print();
+    }
+  };
+
+  /* ── Send to Patient ── */
+  const handleSend = async () => {
+    if (sending) return;
+    setSending(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/prescriptions/${id}/send`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Prescription sent to patient successfully.");
+        // Refresh to update status
+        fetchPrescription();
+      } else {
+        toast.error(data.message || "Failed to send prescription.");
+      }
+    } catch {
+      toast.error("Network error. Failed to send prescription.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  /* ── Loading State ── */
+  if (loading) {
+    return (
+      <div className="prx-page">
+        <div className="prx-topbar">
+          <button className="prx-back-btn" onClick={() => navigate(-1)}>
+            <FaArrowLeft />
+            Back
+          </button>
+        </div>
+        <div className="prx-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "400px", gap: "16px" }}>
+          <FaSpinner style={{ fontSize: "2rem", animation: "spin 1s linear infinite", color: "var(--prx-primary, #6366f1)" }} />
+          <p style={{ color: "var(--prx-muted, #94a3b8)", fontSize: "1rem" }}>Loading prescription details…</p>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Error State ── */
+  if (error || !prescription) {
+    return (
+      <div className="prx-page">
+        <div className="prx-topbar">
+          <button className="prx-back-btn" onClick={() => navigate(-1)}>
+            <FaArrowLeft />
+            Back
+          </button>
+        </div>
+        <div className="prx-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "400px", gap: "16px", textAlign: "center" }}>
+          <FaExclamationTriangle style={{ fontSize: "2.5rem", color: "#ef4444" }} />
+          <p style={{ color: "#ef4444", fontWeight: 600, fontSize: "1.1rem" }}>{error || "Prescription not found."}</p>
+          <button className="prx-back-btn" onClick={fetchPrescription} style={{ marginTop: "8px" }}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const rx = prescription;
 
   return (
     <div className="prx-page">
@@ -127,7 +209,7 @@ function DoctorPrescriptionDetails() {
           <FaArrowLeft />
           Back
         </button>
-        <StatusBadge status={prescriptionData.status} />
+        <StatusBadge status={rx.status} />
       </div>
 
       {/* ── Main Card ────────────────────────────────────── */}
@@ -138,18 +220,18 @@ function DoctorPrescriptionDetails() {
           <div className="prx-header-left">
             <div className="prx-rx-badge">
               <FaNotesMedical />
-              {prescriptionData.rxId}
+              {rx.rxId}
             </div>
             <h1 className="prx-title">Prescription Details</h1>
             <div className="prx-meta-row">
               <span className="prx-meta-item">
                 <FaCalendarAlt />
-                {prescriptionData.date}
+                {rx.date}
               </span>
               <span className="prx-meta-dot" />
               <span className="prx-meta-item">
-                {prescriptionData.consultationType === "Video" ? <FaVideo /> : <FaHospital />}
-                {prescriptionData.consultationType} Consultation
+                {rx.consultationType === "Video" ? <FaVideo /> : <FaHospital />}
+                {rx.consultationType} Consultation
               </span>
             </div>
           </div>
@@ -164,18 +246,18 @@ function DoctorPrescriptionDetails() {
         <div className="prx-parties-grid">
           <div className="prx-party-card prx-party-card--doctor">
             <span className="prx-party-label">Prescribing Doctor</span>
-            <span className="prx-party-name">{prescriptionData.doctor.name}</span>
-            <span className="prx-party-sub">{prescriptionData.doctor.specialization}</span>
-            {prescriptionData.doctor.type === "Hospital" ? (
-                <span className="prx-party-sub">{prescriptionData.doctor.hospital}</span>
+            <span className="prx-party-name">{rx.doctor?.name}</span>
+            <span className="prx-party-sub">{rx.doctor?.specialization}</span>
+            {rx.doctor?.type === "Hospital" ? (
+              <span className="prx-party-sub">{rx.doctor?.hospital}</span>
             ) : (
-                <>
-                    <span className="prx-party-sub">{prescriptionData.doctor.clinicName}</span>
-                    <span className="prx-party-sub">{prescriptionData.doctor.clinicAddress}</span>
-                </>
+              <>
+                <span className="prx-party-sub">{rx.doctor?.clinicName}</span>
+                <span className="prx-party-sub">{rx.doctor?.clinicAddress}</span>
+              </>
             )}
             <span className="prx-party-reg">
-              <FaIdBadge /> Reg. {prescriptionData.doctor.regNo}
+              <FaIdBadge /> Reg. {rx.doctor?.regNo}
             </span>
           </div>
 
@@ -183,12 +265,12 @@ function DoctorPrescriptionDetails() {
 
           <div className="prx-party-card prx-party-card--patient">
             <span className="prx-party-label">Patient</span>
-            <span className="prx-party-name">{prescriptionData.patient.name}</span>
+            <span className="prx-party-name">{rx.patient?.name}</span>
             <span className="prx-party-sub">
-              {prescriptionData.patient.age} yrs · {prescriptionData.patient.gender} · Blood: {prescriptionData.patient.bloodGroup}
+              {rx.patient?.age} yrs · {rx.patient?.gender} · Blood: {rx.patient?.bloodGroup}
             </span>
             <span className="prx-party-reg">
-              <FaUser /> {prescriptionData.patient.id}
+              <FaUser /> {rx.patient?.id}
             </span>
           </div>
         </div>
@@ -199,31 +281,33 @@ function DoctorPrescriptionDetails() {
             <FaStethoscope className="prx-section-icon prx-section-icon--primary" />
             <h2 className="prx-section-title">Diagnosis</h2>
           </div>
-          <p className="prx-diagnosis-text">{prescriptionData.diagnosis}</p>
+          <p className="prx-diagnosis-text">{rx.diagnosis}</p>
         </div>
 
         {/* ── Symptoms ────────────────────────────────── */}
-        <div className="prx-section">
-          <div className="prx-section-header">
-            <FaThermometerHalf className="prx-section-icon prx-section-icon--warning" />
-            <h2 className="prx-section-title">Presenting Symptoms</h2>
+        {rx.symptoms && rx.symptoms.length > 0 && (
+          <div className="prx-section">
+            <div className="prx-section-header">
+              <FaThermometerHalf className="prx-section-icon prx-section-icon--warning" />
+              <h2 className="prx-section-title">Presenting Symptoms</h2>
+            </div>
+            <div className="prx-symptom-list">
+              {rx.symptoms.map((s, i) => (
+                <div key={i} className="prx-symptom-item">
+                  <span className="prx-symptom-dot" />
+                  <span>{s}</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="prx-symptom-list">
-            {prescriptionData.symptoms.map((s, i) => (
-              <div key={i} className="prx-symptom-item">
-                <span className="prx-symptom-dot" />
-                <span>{s}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* ── Medicines Table ──────────────────────────── */}
         <div className="prx-section">
           <div className="prx-section-header">
             <FaPills className="prx-section-icon prx-section-icon--purple" />
             <h2 className="prx-section-title">Prescribed Medicines</h2>
-            <span className="prx-med-count">{prescriptionData.medicines.length} Medicines</span>
+            <span className="prx-med-count">{rx.medicines?.length || 0} Medicines</span>
           </div>
 
           {/* ── Responsive Table ─────────────────────── */}
@@ -240,7 +324,7 @@ function DoctorPrescriptionDetails() {
                 </tr>
               </thead>
               <tbody>
-                {prescriptionData.medicines.map((med, i) => (
+                {(rx.medicines || []).map((med, i) => (
                   <tr key={i}>
                     <td className="prx-td-num">{i + 1}</td>
                     <td>
@@ -263,7 +347,7 @@ function DoctorPrescriptionDetails() {
 
           {/* ── Mobile Cards (shown <640px) ───────────── */}
           <div className="prx-med-cards">
-            {prescriptionData.medicines.map((med, i) => (
+            {(rx.medicines || []).map((med, i) => (
               <div key={i} className="prx-med-card">
                 <div className="prx-med-card-header">
                   <span className="prx-med-card-num">{i + 1}</span>
@@ -296,25 +380,29 @@ function DoctorPrescriptionDetails() {
         </div>
 
         {/* ── Doctor Advice ───────────────────────────── */}
-        <div className="prx-section">
-          <div className="prx-section-header">
-            <FaClipboardList className="prx-section-icon prx-section-icon--success" />
-            <h2 className="prx-section-title">Doctor Advice</h2>
+        {rx.advice && (
+          <div className="prx-section">
+            <div className="prx-section-header">
+              <FaClipboardList className="prx-section-icon prx-section-icon--success" />
+              <h2 className="prx-section-title">Doctor Advice</h2>
+            </div>
+            <p className="prx-advice-text">{rx.advice}</p>
           </div>
-          <p className="prx-advice-text">{prescriptionData.advice}</p>
-        </div>
+        )}
 
         {/* ── Follow-up ───────────────────────────────── */}
-        <div className="prx-followup-banner">
-          <div className="prx-followup-left">
-            <FaCalendarCheck className="prx-followup-icon" />
-            <div>
-              <span className="prx-followup-label">Follow-up Appointment</span>
-              <span className="prx-followup-date">{prescriptionData.followUpDate}</span>
+        {rx.followUpDate && (
+          <div className="prx-followup-banner">
+            <div className="prx-followup-left">
+              <FaCalendarCheck className="prx-followup-icon" />
+              <div>
+                <span className="prx-followup-label">Follow-up Appointment</span>
+                <span className="prx-followup-date">{rx.followUpDate}</span>
+              </div>
             </div>
+            <span className="prx-followup-pill">Scheduled</span>
           </div>
-          <span className="prx-followup-pill">Scheduled</span>
-        </div>
+        )}
 
         {/* ── Action Buttons ───────────────────────────── */}
         <div className="prx-actions">
@@ -326,9 +414,13 @@ function DoctorPrescriptionDetails() {
             <FaDownload />
             Download PDF
           </button>
-          <button className="prx-action-btn prx-action-btn--send" onClick={handleSend}>
-            <FaPaperPlane />
-            Send to Patient
+          <button
+            className="prx-action-btn prx-action-btn--send"
+            onClick={handleSend}
+            disabled={sending}
+          >
+            {sending ? <FaSpinner style={{ animation: "spin 1s linear infinite" }} /> : <FaPaperPlane />}
+            {sending ? "Sending…" : "Send to Patient"}
           </button>
         </div>
 

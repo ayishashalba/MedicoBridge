@@ -1,92 +1,176 @@
-const Review = require("../models/Review");
-const User = require("../models/User");
-
+const Feedback = require("../models/Feedback");
 const {
-    successResponse,
-    validationErrorResponse,
-    notFoundResponse,
-    serverErrorResponse,
-} = require("../utils/apiResponse");
-const { isValidObjectId } = require("../utils/validators");
+    sendSuccess,
+    sendValidationError,
+    sendNotFound,
+    sendServerError,
+} = require("../utils/responseHandler");
 
-// Submit review / feedback
-const submitFeedback = async (req, res) => {
+// @desc    Create feedback
+// @route   POST /api/feedback
+// @access  Private (Patient, Doctor, Hospital, Pharmacy)
+const createFeedback = async (req, res) => {
     try {
-        const { targetType, targetId, rating, comment, patientName } = req.body;
+        const { type, subject, message, rating } = req.body;
 
-        if (!rating || !comment) {
-            return validationErrorResponse(res, "Rating and comment are required");
+        if (!type || !subject || !message) {
+            return sendValidationError(res, "Validation failed", [
+                "Type, subject and message are required.",
+            ]);
         }
 
-        const ratingNum = Number(rating);
-        if (isNaN(ratingNum) || ratingNum < 1 || ratingNum > 5) {
-            return validationErrorResponse(res, "Rating must be between 1 and 5");
+        const allowedTypes = [
+            "Complaint",
+            "Suggestion",
+            "General Feedback",
+            "Bug Report",
+        ];
+
+        if (!allowedTypes.includes(type)) {
+            return sendValidationError(res, "Validation failed", [
+                "Invalid feedback type.",
+            ]);
         }
 
-        const userName = patientName || (req.user ? req.user.name : "Anonymous");
+        if (
+            rating !== undefined &&
+            rating !== null &&
+            (Number(rating) < 1 || Number(rating) > 5)
+        ) {
+            return sendValidationError(res, "Validation failed", [
+                "Rating must be between 1 and 5.",
+            ]);
+        }
 
-        const review = await Review.create({
-            userId: req.user ? req.user.id : null,
-            patientName: userName,
-            targetType: targetType || "Platform",
-            targetId: targetId && isValidObjectId(targetId) ? targetId : null,
-            rating: ratingNum,
-            comment: comment.trim(),
-            isApproved: true,
+        const feedback = await Feedback.create({
+            userId: req.user._id,
+            user: req.user.name || "",
+            role: req.user.role,
+            type,
+            subject: subject.trim(),
+            message: message.trim(),
+            rating:
+                rating !== undefined && rating !== null && rating !== ""
+                    ? Number(rating)
+                    : null,
         });
 
-        return successResponse(res, "Feedback submitted successfully", { review }, 201);
+        return sendSuccess(
+            res,
+            "Feedback submitted successfully.",
+            feedback,
+            201
+        );
     } catch (error) {
-        return serverErrorResponse(res, "Unable to submit feedback", error);
+        return sendServerError(res, "Failed to submit feedback.", error);
     }
 };
 
-// Get feedback (filtered by targetId, targetType, or platform)
-const getFeedback = async (req, res) => {
+// @desc    Get all feedbacks
+// @route   GET /api/feedback
+// @access  Private (Admin)
+const getFeedbacks = async (req, res) => {
     try {
-        const { targetType, targetId } = req.query;
+        const { status, type, role, search } = req.query;
 
-        const query = { isApproved: true };
-        if (targetType) query.targetType = new RegExp(`^${targetType}$`, "i");
-        if (targetId && isValidObjectId(targetId)) query.targetId = targetId;
+        const query = {};
 
-        const reviews = await Review.find(query)
-            .populate("userId", "name profileImage role")
+        if (status) {
+            query.status = status;
+        }
+
+        if (type) {
+            query.type = type;
+        }
+
+        if (role) {
+            query.role = role;
+        }
+
+        if (search) {
+            query.$or = [
+                { user: { $regex: search, $options: "i" } },
+                { subject: { $regex: search, $options: "i" } },
+                { message: { $regex: search, $options: "i" } },
+            ];
+        }
+
+        const feedbacks = await Feedback.find(query)
+            .populate("userId", "name email role")
             .sort({ createdAt: -1 });
 
-        const averageRating =
-            reviews.length > 0
-                ? Math.round((reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length) * 10) / 10
-                : 5.0;
-
-        return successResponse(res, "Feedback retrieved successfully", {
-            reviews,
-            count: reviews.length,
-            averageRating,
-        });
+        return sendSuccess(
+            res,
+            "Feedbacks fetched successfully.",
+            feedbacks
+        );
     } catch (error) {
-        return serverErrorResponse(res, "Unable to fetch feedback", error);
+        return sendServerError(res, "Failed to fetch feedbacks.", error);
     }
 };
 
-// Get feedback for patient view
-const getPatientFeedback = async (req, res) => {
+// @desc    Resolve feedback
+// @route   PUT /api/feedback/:id/resolve
+// @access  Private (Admin)
+const resolveFeedback = async (req, res) => {
     try {
-        const reviews = await Review.find({ isApproved: true })
-            .sort({ createdAt: -1 })
-            .limit(20);
+        const feedback = await Feedback.findById(req.params.id);
 
-        return successResponse(res, "Patient feedback retrieved successfully", {
-            feedback: reviews,
-            count: reviews.length,
-        });
+        if (!feedback) {
+            return sendNotFound(res, "Feedback not found.");
+        }
+
+        feedback.status = "Resolved";
+        await feedback.save();
+
+        return sendSuccess(
+            res,
+            "Feedback marked as resolved.",
+            feedback
+        );
     } catch (error) {
-        return serverErrorResponse(res, "Unable to fetch feedback", error);
+        return sendServerError(res, "Failed to resolve feedback.", error);
+    }
+};
+
+// @desc    Reply to feedback
+// @route   PUT /api/feedback/:id/reply
+// @access  Private (Admin)
+const replyToFeedback = async (req, res) => {
+    try {
+        const { reply } = req.body;
+
+        if (!reply || !reply.trim()) {
+            return sendValidationError(res, "Validation failed", [
+                "Reply message is required.",
+            ]);
+        }
+
+        const feedback = await Feedback.findById(req.params.id);
+
+        if (!feedback) {
+            return sendNotFound(res, "Feedback not found.");
+        }
+
+        feedback.adminReply = reply.trim();
+        feedback.repliedAt = new Date();
+        feedback.status = "Resolved";
+
+        await feedback.save();
+
+        return sendSuccess(
+            res,
+            "Reply saved and feedback resolved.",
+            feedback
+        );
+    } catch (error) {
+        return sendServerError(res, "Failed to reply to feedback.", error);
     }
 };
 
 module.exports = {
-    submitFeedback,
-    getFeedback,
-    getPatientFeedback,
+    createFeedback,
+    getFeedbacks,
+    resolveFeedback,
+    replyToFeedback,
 };

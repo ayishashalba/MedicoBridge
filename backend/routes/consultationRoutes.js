@@ -1,17 +1,16 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const {
-    saveConsultation,
-    getConsultations,
-    getConsultationByAppointment,
-} = require("../controllers/consultationController");
+  saveConsultation,
+  getConsultations,
+} = require('../controllers/doctorController');
 
-const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
+router.use(protect);
+router.use(authorizeRoles('Doctor'));
 
-router.post("/save", protect, authorize("doctor"), saveConsultation);
-router.get("/", protect, getConsultations);
-router.get("/appointment/:appointmentId", protect, getConsultationByAppointment);
+router.post('/save', saveConsultation);
+router.get('/', getConsultations);
 
 module.exports = router;

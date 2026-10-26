@@ -1,4 +1,18 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
+const HOSP_ALL_DAYS = [
+  "Monday", "Tuesday", "Wednesday",
+  "Thursday", "Friday", "Saturday", "Sunday",
+];
+
+const HOSP_TIME_PRESETS = [
+  "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM",
+  "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
+  "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM",
+  "2:00 PM", "2:30 PM", "3:00 PM", "3:30 PM",
+  "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+  "6:00 PM", "6:30 PM",
+];
 import {
   FaSearch,
   FaFilter,
@@ -14,7 +28,6 @@ import {
   FaLock,
   FaBuilding,
   FaBriefcase,
-  FaCalendarAlt,
   FaClock,
   FaDownload,
   FaMapMarkerAlt,
@@ -22,150 +35,19 @@ import {
 } from "react-icons/fa";
 import { generateBloodGroupReport } from "../../utils/pdfGenerator";
 import { sortDonorsByProximity } from "../../utils/locationProximity";
+import { toast } from "react-toastify";
 import "./ManageDoctors.css";
 
-const initialDoctors = [
-  {
-    id: "DR-80241",
-    userId: "USR-DOC-1021",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Ayisha Shalba",
-    specialization: "Cardiology",
-    department: "Cardiology & Vascular Sciences",
-    qualification: "MBBS, MD (Cardiology), DM",
-    experience: "12 Years",
-    bloodGroup: "O+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    doctorType: "Hospital",
-    email: "ayisha.shalba@medicobridge.com",
-    phone: "+91 98765 43210",
-    licenseNumber: "KMC-2012-78945",
-    consultationFee: "₹1,200",
-    availability: "Mon - Fri, 09:00 AM - 04:00 PM",
-    registrationDate: "Jan 15, 2024",
-    accountStatus: "Active",
-    status: "Available",
-    avatarBg: "#0d9488",
-  },
-  {
-    id: "DR-80242",
-    userId: "USR-DOC-1022",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Rajesh K. Nair",
-    specialization: "Neurology",
-    department: "Neurology & Neuro Surgery",
-    qualification: "MBBS, MS, M.Ch (Neuro Surgery)",
-    experience: "15 Years",
-    bloodGroup: "A+",
-    city: "Malappuram",
-    isDonorAvailable: true,
-    doctorType: "Hospital",
-    email: "rajesh.nair@medicobridge.com",
-    phone: "+91 98765 43211",
-    licenseNumber: "KMC-2009-65412",
-    consultationFee: "₹1,500",
-    availability: "Mon - Sat, 10:00 AM - 03:00 PM",
-    registrationDate: "Mar 10, 2023",
-    accountStatus: "Active",
-    status: "In Surgery",
-    avatarBg: "#8b5cf6",
-  },
-  {
-    id: "DR-80243",
-    userId: "USR-DOC-1023",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Priya Thomas",
-    specialization: "Pediatrics",
-    department: "Pediatrics & Child Care",
-    qualification: "MBBS, DCH, MD (Pediatrics)",
-    experience: "9 Years",
-    bloodGroup: "B+",
-    city: "Kannur",
-    isDonorAvailable: false,
-    doctorType: "Hospital",
-    email: "priya.t@medicobridge.com",
-    phone: "+91 98765 43212",
-    licenseNumber: "KMC-2015-89632",
-    consultationFee: "₹800",
-    availability: "Tue - Sun, 08:30 AM - 01:30 PM",
-    registrationDate: "Jun 01, 2024",
-    accountStatus: "Active",
-    status: "On Leave",
-    avatarBg: "#ec4899",
-  },
-  {
-    id: "DR-80244",
-    userId: "USR-DOC-1024",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Susan George",
-    specialization: "Orthopedics",
-    department: "Orthopedics & Joint Replacement",
-    qualification: "MBBS, MS (Orthopedics), DNB",
-    experience: "11 Years",
-    bloodGroup: "AB+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    doctorType: "Hospital",
-    email: "susan.g@medicobridge.com",
-    phone: "+91 98765 43213",
-    licenseNumber: "KMC-2013-41258",
-    consultationFee: "₹1,000",
-    availability: "Mon - Fri, 09:30 AM - 04:30 PM",
-    registrationDate: "Feb 20, 2024",
-    accountStatus: "Active",
-    status: "Available",
-    avatarBg: "#f59e0b",
-  },
-  {
-    id: "DR-80245",
-    userId: "USR-DOC-1025",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Vikram Shekar",
-    specialization: "Dermatology",
-    department: "Dermatology & Cosmetology",
-    qualification: "MBBS, MD (DVL - Dermatology)",
-    experience: "8 Years",
-    bloodGroup: "O-",
-    city: "Thrissur",
-    isDonorAvailable: true,
-    doctorType: "Hospital",
-    email: "vikram.s@medicobridge.com",
-    phone: "+91 98765 43214",
-    licenseNumber: "KMC-2016-32145",
-    consultationFee: "₹900",
-    availability: "Mon - Sat, 10:30 AM - 05:00 PM",
-    registrationDate: "Apr 12, 2024",
-    accountStatus: "Active",
-    status: "Available",
-    avatarBg: "#10b981",
-  },
-  {
-    id: "DR-80246",
-    userId: "USR-DOC-1026",
-    hospitalId: "HOSP-5021",
-    name: "Dr. Amit Varma",
-    specialization: "General Medicine",
-    department: "General & Internal Medicine",
-    qualification: "MBBS, MD (General Medicine)",
-    experience: "14 Years",
-    bloodGroup: "Not Provided",
-    city: "Ernakulam",
-    isDonorAvailable: false,
-    doctorType: "Hospital",
-    email: "amit.v@medicobridge.com",
-    phone: "+91 98765 43215",
-    licenseNumber: "KMC-2010-98741",
-    consultationFee: "₹800",
-    availability: "Mon - Sun, 08:00 AM - 02:00 PM",
-    registrationDate: "Nov 15, 2023",
-    accountStatus: "Active",
-    status: "In Surgery",
-    avatarBg: "#0284c7",
-  },
+const specialties = [
+  "All",
+  "Cardiology",
+  "Neurology",
+  "Pediatrics",
+  "Orthopedics",
+  "Dermatology",
+  "General Medicine",
 ];
 
-const specialties = ["All", "Cardiology", "Neurology", "Pediatrics", "Orthopedics", "Dermatology", "General Medicine"];
 const doctorDepartmentOptions = [
   "Cardiology",
   "Neurology",
@@ -176,324 +58,766 @@ const doctorDepartmentOptions = [
   "Other",
 ];
 
+const bloodGroups = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+];
+
+const normalizeDoctor = (doctor) => ({
+  ...doctor,
+
+  id: doctor._id || doctor.id || "—",
+  userId: doctor.userId || "—",
+  hospitalId: doctor.hospitalId || "—",
+
+  name: doctor.name || "Unnamed Doctor",
+  email: doctor.email || "—",
+  phone: doctor.phone || "—",
+
+  specialization: doctor.specialization || "—",
+  department: doctor.department || "—",
+  qualification: doctor.qualification || "—",
+  experience:
+    doctor.experience !== undefined &&
+      doctor.experience !== null &&
+      doctor.experience !== ""
+      ? `${doctor.experience}`.includes("Year")
+        ? `${doctor.experience}`
+        : `${doctor.experience} Years`
+      : "—",
+
+  bloodGroup: doctor.bloodGroup || "Not Provided",
+  city: doctor.city || "—",
+  isDonorAvailable: doctor.isDonorAvailable === true,
+
+  doctorType: "Hospital",
+
+  consultationFee:
+    doctor.consultationFee !== undefined &&
+      doctor.consultationFee !== null &&
+      doctor.consultationFee !== ""
+      ? `₹${Number(doctor.consultationFee).toLocaleString("en-IN")}`
+      : "—",
+
+  accountStatus:
+    doctor.accountStatus === "active"
+      ? "Active"
+      : doctor.accountStatus === "blocked"
+        ? "Blocked"
+        : doctor.accountStatus || "—",
+
+  status: doctor.status || "—",
+
+  registrationDate: doctor.createdAt
+    ? new Date(doctor.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+    })
+    : "—",
+
+  /*
+   * Backend Doctor controller does not currently persist
+   * availability schedule or medical license number.
+   * Therefore we do not invent values.
+   */
+  availability: doctor.availability || "—",
+  licenseNumber: doctor.licenseNumber || "—",
+
+  /*
+   * UI-only avatar background.
+   * This is not business data and does not replace backend data.
+   */
+  avatarBg: doctor.avatarBg || "#0d9488",
+});
+
 function ManageDoctors() {
-  const hospitalCity = localStorage.getItem("hospitalCity") || "Kozhikode";
-  const [doctors, setDoctors] = useState(initialDoctors);
+  const hospitalCity =
+    localStorage.getItem("hospitalCity") || "Kozhikode";
+
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("All");
 
-  // Location state for donor search
   const [locationInput, setLocationInput] = useState(hospitalCity);
   const [activeLocation, setActiveLocation] = useState(hospitalCity);
 
-  // Donor search mode: a specific blood group is selected
   const isDonorSearchMode =
-    bloodGroupFilter !== "All" && bloodGroupFilter !== "All Blood Groups" && bloodGroupFilter !== "";
+    bloodGroupFilter !== "All" &&
+    bloodGroupFilter !== "All Blood Groups" &&
+    bloodGroupFilter !== "";
 
-  // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewDoctor, setViewDoctor] = useState(null);
   const [editDoctor, setEditDoctor] = useState(null);
 
-  // Add Doctor Form States (Complete 10-field Registration Form)
+  // ----------------------------------------------------
+  // ADD DOCTOR FORM
+  // ----------------------------------------------------
+
   const [addName, setAddName] = useState("");
+  const [addEmail, setAddEmail] = useState("");
   const [addPhone, setAddPhone] = useState("");
   const [addSpecialization, setAddSpecialization] = useState("");
   const [addDepartment, setAddDepartment] = useState("Cardiology");
   const [addCustomDept, setAddCustomDept] = useState("");
   const [addQualification, setAddQualification] = useState("");
   const [addExperience, setAddExperience] = useState("");
-  const [addLicenseNumber, setAddLicenseNumber] = useState("");
+  const [addBloodGroup, setAddBloodGroup] = useState("");
   const [addConsultationFee, setAddConsultationFee] = useState("");
-  const [addAvailability, setAddAvailability] = useState("");
-  const [addStatus, setAddStatus] = useState("Available");
   const [addErrors, setAddErrors] = useState({});
 
-  // Reset Add Doctor Form
   const resetAddForm = () => {
     setAddName("");
+    setAddEmail("");
     setAddPhone("");
     setAddSpecialization("");
     setAddDepartment("Cardiology");
     setAddCustomDept("");
     setAddQualification("");
     setAddExperience("");
-    setAddLicenseNumber("");
+    setAddBloodGroup("");
     setAddConsultationFee("");
-    setAddAvailability("");
-    setAddStatus("Available");
     setAddErrors({});
   };
 
-  // Edit Doctor Form States
+  // ----------------------------------------------------
+  // EDIT DOCTOR FORM
+  // ----------------------------------------------------
+
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editSpecialization, setEditSpecialization] = useState("");
   const [editDepartment, setEditDepartment] = useState("");
   const [editQualification, setEditQualification] = useState("");
   const [editExperience, setEditExperience] = useState("");
-  const [editLicenseNumber, setEditLicenseNumber] = useState("");
   const [editConsultationFee, setEditConsultationFee] = useState("");
-  const [editAvailability, setEditAvailability] = useState("");
-  const [editStatus, setEditStatus] = useState("Available");
+  const [editAccountStatus, setEditAccountStatus] = useState("active");
 
-  // Toast State
-  const [toastMsg, setToastMsg] = useState(null);
+  // ── Edit availability schedule state ───────────────────────
+  const [editSlotsByDay, setEditSlotsByDay] = useState({});
+  const [editActiveDays, setEditActiveDays] = useState([]);
+  const [editFocusedDay, setEditFocusedDay] = useState("");
+  const [editCustomSlotInput, setEditCustomSlotInput] = useState("");
 
   const showToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3500);
+    toast.success(msg);
   };
+
+  // ----------------------------------------------------
+  // FETCH REAL HOSPITAL DOCTORS
+  // ----------------------------------------------------
+
+  const fetchDoctors = async () => {
+    try {
+      setLoading(true);
+
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error("Authentication token not found.");
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/doctors",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message || "Failed to fetch hospital doctors."
+        );
+      }
+
+      const doctorData = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result)
+          ? result
+          : [];
+
+      setDoctors(doctorData.map(normalizeDoctor));
+    } catch (error) {
+      console.error("Failed to load hospital doctors:", error);
+      toast.error(error.message || "Failed to load doctors.");
+      setDoctors([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDoctors();
+  }, []);
+
+  // ----------------------------------------------------
+  // FILTERING
+  // ----------------------------------------------------
 
   const filteredDoctors = useMemo(() => {
     let result = doctors.filter((doc) => {
-      const q = search.toLowerCase();
+      const q = search.trim().toLowerCase();
+
       const matchSearch =
-        doc.name.toLowerCase().includes(q) ||
-        doc.specialization.toLowerCase().includes(q) ||
-        doc.id.toLowerCase().includes(q) ||
-        doc.department.toLowerCase().includes(q) ||
-        (doc.qualification && doc.qualification.toLowerCase().includes(q));
-      const matchDept = selectedDept === "All" || doc.specialization === selectedDept;
-      const matchStatus = selectedStatus === "All" || doc.status === selectedStatus;
+        !q ||
+        String(doc.name || "").toLowerCase().includes(q) ||
+        String(doc.specialization || "").toLowerCase().includes(q) ||
+        String(doc.id || "").toLowerCase().includes(q) ||
+        String(doc.department || "").toLowerCase().includes(q) ||
+        String(doc.qualification || "").toLowerCase().includes(q) ||
+        String(doc.email || "").toLowerCase().includes(q) ||
+        String(doc.phone || "").toLowerCase().includes(q);
+
+      const matchDept =
+        selectedDept === "All" ||
+        doc.specialization === selectedDept;
+
+      /*
+       * Backend status is:
+       * verified / pending / rejected
+       *
+       * accountStatus is:
+       * active / blocked
+       *
+       * We therefore filter according to the actual backend values.
+       */
+      const matchStatus =
+        selectedStatus === "All" ||
+        doc.status === selectedStatus ||
+        doc.accountStatus === selectedStatus;
 
       const bg = doc.bloodGroup || "Not Provided";
+
       const matchBloodGroup =
         bloodGroupFilter === "All" ||
         bloodGroupFilter === "All Blood Groups" ||
         bg === bloodGroupFilter;
 
-      // In donor search mode: auto-exclude unavailable staff
+      /*
+       * Blood donor search:
+       * only doctors whose actual backend donor flag is true.
+       */
       const matchAvailability =
-        !isDonorSearchMode || doc.isDonorAvailable === true;
+        !isDonorSearchMode ||
+        doc.isDonorAvailable === true;
 
-      return matchSearch && matchDept && matchStatus && matchBloodGroup && matchAvailability;
+      return (
+        matchSearch &&
+        matchDept &&
+        matchStatus &&
+        matchBloodGroup &&
+        matchAvailability
+      );
     });
 
-    // Proximity sort when a specific blood group is selected
     if (isDonorSearchMode) {
-      result = sortDonorsByProximity(result, activeLocation);
+      result = sortDonorsByProximity(
+        result,
+        activeLocation
+      );
     }
 
     return result;
-  }, [doctors, search, selectedDept, selectedStatus, bloodGroupFilter, isDonorSearchMode, activeLocation]);
+  }, [
+    doctors,
+    search,
+    selectedDept,
+    selectedStatus,
+    bloodGroupFilter,
+    isDonorSearchMode,
+    activeLocation,
+  ]);
+
+  // ----------------------------------------------------
+  // DOWNLOAD CURRENTLY FILTERED RESULTS
+  // ----------------------------------------------------
 
   const handleDownloadReport = () => {
     generateBloodGroupReport({
       title: "Hospital Medical Staff Blood Group Report",
-      selectedBloodGroup: bloodGroupFilter === "All" ? "All Blood Groups" : bloodGroupFilter,
-      generatedBy: "City Care Hospital Admin",
+
+      selectedBloodGroup:
+        bloodGroupFilter === "All"
+          ? "All Blood Groups"
+          : bloodGroupFilter,
+
+      generatedBy: "Hospital Admin",
+
       columns: [
-        { header: "Doctor ID", dataKey: "id" },
-        { header: "Name", dataKey: "name" },
-        { header: "Specialization", dataKey: "specialization" },
-        { header: "Department", dataKey: "department" },
-        { header: "Blood Group", dataKey: "bloodGroup" },
-        { header: "Phone", dataKey: "phone" },
-        { header: "Email", dataKey: "email" },
-        { header: "Status", dataKey: "status" },
+        {
+          header: "Doctor ID",
+          dataKey: "id",
+        },
+        {
+          header: "Name",
+          dataKey: "name",
+        },
+        {
+          header: "Specialization",
+          dataKey: "specialization",
+        },
+        {
+          header: "Department",
+          dataKey: "department",
+        },
+        {
+          header: "Blood Group",
+          dataKey: "bloodGroup",
+        },
+        {
+          header: "Phone",
+          dataKey: "phone",
+        },
+        {
+          header: "Email",
+          dataKey: "email",
+        },
+        {
+          header: "Status",
+          dataKey: "status",
+        },
       ],
+
       data: filteredDoctors,
-      activeFilters: { Department: selectedDept, Status: selectedStatus, Search: search },
+
+      activeFilters: {
+        Department: selectedDept,
+        Status: selectedStatus,
+        BloodGroup:
+          bloodGroupFilter === "All"
+            ? "All Blood Groups"
+            : bloodGroupFilter,
+        Location: activeLocation,
+        Search: search,
+      },
     });
   };
 
-  // Validation function for Add Doctor Form
+  // ----------------------------------------------------
+  // ADD DOCTOR VALIDATION
+  // ----------------------------------------------------
+
   const validateAddDoctor = () => {
     const errs = {};
+
     const trimmedName = addName.trim();
+
     if (!trimmedName) {
       errs.name = "Full Name is required";
     } else if (trimmedName.length < 3) {
       errs.name = "Full Name must be at least 3 characters";
     }
 
+    const trimmedEmail = addEmail.trim();
+
+    if (!trimmedEmail) {
+      errs.email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errs.email = "Enter a valid email address";
+    }
+
     const trimmedPhone = addPhone.trim();
     const phoneDigits = trimmedPhone.replace(/\D/g, "");
+
     if (!trimmedPhone) {
       errs.phone = "Phone Number is required";
     } else if (phoneDigits.length < 10) {
-      errs.phone = "Enter a valid phone number (min 10 digits)";
+      errs.phone =
+        "Enter a valid phone number (min 10 digits)";
     }
 
-    const trimmedSpec = addSpecialization.trim();
-    if (!trimmedSpec) {
+    if (!addSpecialization.trim()) {
       errs.specialization = "Specialization is required";
     }
 
     if (!addDepartment) {
       errs.department = "Department is required";
-    } else if (addDepartment === "Other" && !addCustomDept.trim()) {
-      errs.customDept = "Please enter the department name";
     }
 
-    const trimmedQual = addQualification.trim();
-    if (!trimmedQual) {
-      errs.qualification = "Qualifications are required";
+    if (
+      addDepartment === "Other" &&
+      !addCustomDept.trim()
+    ) {
+      errs.customDept =
+        "Please enter the department name";
+    }
+
+    if (!addQualification.trim()) {
+      errs.qualification =
+        "Qualifications are required";
     }
 
     const expNum = Number(addExperience);
-    if (addExperience === "" || addExperience === null || isNaN(expNum)) {
-      errs.experience = "Experience (Years) is required";
-    } else if (expNum < 0 || expNum > 70) {
-      errs.experience = "Enter valid experience (0 to 70 years)";
-    }
 
-    const trimmedLicense = addLicenseNumber.trim();
-    if (!trimmedLicense) {
-      errs.licenseNumber = "Medical License Number is required";
-    } else if (trimmedLicense.length < 4) {
-      errs.licenseNumber = "License number must be at least 4 characters";
-    } else {
-      const isDuplicate = doctors.some(
-        (d) => d.licenseNumber && d.licenseNumber.trim().toLowerCase() === trimmedLicense.toLowerCase()
-      );
-      if (isDuplicate) {
-        errs.licenseNumber = "This Medical License Number is already registered";
-      }
+    if (
+      addExperience === "" ||
+      addExperience === null ||
+      Number.isNaN(expNum)
+    ) {
+      errs.experience =
+        "Experience (Years) is required";
+    } else if (expNum < 0 || expNum > 70) {
+      errs.experience =
+        "Enter valid experience (0 to 70 years)";
     }
 
     const feeNum = Number(addConsultationFee);
-    if (addConsultationFee === "" || addConsultationFee === null || isNaN(feeNum)) {
-      errs.consultationFee = "Consultation Fee is required";
-    } else if (feeNum <= 0) {
-      errs.consultationFee = "Consultation Fee must be greater than 0";
-    }
 
-    const trimmedAvail = addAvailability.trim();
-    if (!trimmedAvail) {
-      errs.availability = "Availability Schedule is required";
+    if (
+      addConsultationFee === "" ||
+      addConsultationFee === null ||
+      Number.isNaN(feeNum)
+    ) {
+      errs.consultationFee =
+        "Consultation Fee is required";
+    } else if (feeNum < 0) {
+      errs.consultationFee =
+        "Consultation Fee cannot be negative";
     }
 
     return errs;
   };
 
-  // Handler: Add Doctor (Complete Registration)
-  const handleAddDoctor = (e) => {
+  // ----------------------------------------------------
+  // ADD DOCTOR -> REAL BACKEND
+  // ----------------------------------------------------
+
+  const handleAddDoctor = async (e) => {
     e.preventDefault();
+
     const errs = validateAddDoctor();
+
     if (Object.keys(errs).length > 0) {
       setAddErrors(errs);
-      showToast("Please fill in all required fields accurately.");
+      toast.error(
+        "Please fill in all required fields accurately."
+      );
       return;
     }
 
-    // Generate System IDs
-    const newDocId = `DR-${Math.floor(80000 + Math.random() * 9000)}`;
-    const newUserId = `USR-DOC-${Math.floor(1030 + Math.random() * 900)}`;
-    const loggedInHospitalId = "HOSP-5021";
+    try {
+      const token = localStorage.getItem("token");
 
-    const finalDept =
-      addDepartment === "Other" && addCustomDept.trim()
-        ? addCustomDept.trim()
-        : addDepartment;
+      if (!token) {
+        throw new Error(
+          "Authentication token not found."
+        );
+      }
 
-    const formattedFee = addConsultationFee.toString().startsWith("₹")
-      ? addConsultationFee.trim()
-      : `₹${Number(addConsultationFee).toLocaleString("en-IN")}`;
+      const finalDept =
+        addDepartment === "Other" &&
+          addCustomDept.trim()
+          ? addCustomDept.trim()
+          : addDepartment;
 
-    const formattedExp = addExperience.toString().includes("Year")
-      ? addExperience.trim()
-      : `${addExperience.trim()} Years`;
+      const payload = {
+        name: addName.trim(),
+        email: addEmail.trim().toLowerCase(),
+        phone: addPhone.trim(),
+        specialization:
+          addSpecialization.trim(),
+        department: finalDept,
+        qualification:
+          addQualification.trim(),
+        experience: Number(addExperience),
+        consultationFee:
+          Number(addConsultationFee),
 
-    const cleanDocName = addName.trim().replace(/^dr\.?\s*/i, "");
-    const emailPrefix = cleanDocName
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, ".")
-      .replace(/\.+/g, ".")
-      .replace(/^\.|\.$/g, "");
-    const generatedEmail = `${emailPrefix || "doctor"}@medicobridge.com`;
+        /*
+         * Backend accepts bloodGroup.
+         * Empty value becomes null on backend.
+         */
+        bloodGroup:
+          addBloodGroup || null,
+      };
 
-    const avatarColors = ["#0d9488", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#0284c7"];
-    const randomAvatar = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/doctors",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    const newDoc = {
-      id: newDocId,
-      userId: newUserId,
-      hospitalId: loggedInHospitalId,
-      name: addName.trim(),
-      specialization: addSpecialization.trim(),
-      department: finalDept,
-      qualification: addQualification.trim(),
-      experience: formattedExp,
-      doctorType: "Hospital",
-      email: generatedEmail,
-      phone: addPhone.trim(),
-      licenseNumber: addLicenseNumber.trim(),
-      consultationFee: formattedFee,
-      availability: addAvailability.trim(),
-      registrationDate: new Date().toLocaleDateString("en-US", {
-        month: "short",
-        day: "2-digit",
-        year: "numeric",
-      }),
-      accountStatus: "Active",
-      status: addStatus,
-      avatarBg: randomAvatar,
-    };
+      const result = await response.json();
 
-    setDoctors([newDoc, ...doctors]);
-    setShowAddModal(false);
-    resetAddForm();
+      if (!response.ok) {
+        const backendMessage =
+          result?.message ||
+          result?.errors?.join?.(", ") ||
+          "Failed to add doctor.";
 
-    showToast(`Doctor ${newDoc.name} registered successfully with ID ${newDoc.id}.`);
+        throw new Error(backendMessage);
+      }
+
+      const createdDoctor = result?.data;
+
+      if (createdDoctor) {
+        const normalized =
+          normalizeDoctor(createdDoctor);
+
+        setDoctors((prev) => [
+          normalized,
+          ...prev,
+        ]);
+      } else {
+        await fetchDoctors();
+      }
+
+      setShowAddModal(false);
+      resetAddForm();
+
+      showToast(
+        "Doctor registered successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Failed to add hospital doctor:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to register doctor."
+      );
+    }
   };
 
-  // Handler: Open Edit Doctor Modal
+  // ----------------------------------------------------
+  // OPEN EDIT
+  // ----------------------------------------------------
+
   const handleOpenEdit = (doc) => {
     setEditDoctor(doc);
+
     setEditName(doc.name || "");
     setEditPhone(doc.phone || "");
-    setEditSpecialization(doc.specialization || "");
-    setEditDepartment(doc.department || "");
-    setEditQualification(doc.qualification !== "—" ? doc.qualification : "");
-    setEditExperience(doc.experience !== "—" ? doc.experience : "");
-    setEditLicenseNumber(doc.licenseNumber !== "—" ? doc.licenseNumber : "");
-    setEditConsultationFee(doc.consultationFee !== "—" ? doc.consultationFee : "");
-    setEditAvailability(doc.availability !== "—" ? doc.availability : "");
-    setEditStatus(doc.status || "Available");
+    setEditSpecialization(
+      doc.specialization || ""
+    );
+    setEditDepartment(
+      doc.department || ""
+    );
+    setEditQualification(
+      doc.qualification !== "—"
+        ? doc.qualification || ""
+        : ""
+    );
+    setEditExperience(
+      doc.experience !== "—"
+        ? String(doc.experience || "").replace(
+          /\s*Years?\s*/i,
+          ""
+        )
+        : ""
+    );
+
+    setEditConsultationFee(
+      doc.consultationFee !== "—"
+        ? String(doc.consultationFee || "").replace(
+          /[₹,\s]/g,
+          ""
+        )
+        : ""
+    );
+
+    setEditAccountStatus(
+      doc.accountStatus === "Blocked"
+        ? "blocked"
+        : "active"
+    );
+
+    // ── Rebuild availability from raw doc ─────────────────
+    const rawSlots = Array.isArray(doc.availableSlots) ? doc.availableSlots : [];
+    const rawDays = Array.isArray(doc.availableDays) ? doc.availableDays : [];
+    const rebuilt = {};
+    rawSlots.forEach((s) => {
+      if (!s || !s.day) return;
+      if (!rebuilt[s.day]) rebuilt[s.day] = [];
+      const slotStr = s.startTime || s.endTime || "";
+      if (slotStr && !rebuilt[s.day].includes(slotStr)) rebuilt[s.day].push(slotStr);
+    });
+    rawDays.forEach((d) => { if (!rebuilt[d]) rebuilt[d] = []; });
+    setEditSlotsByDay(rebuilt);
+    const days = Object.keys(rebuilt).filter((d) => HOSP_ALL_DAYS.includes(d));
+    setEditActiveDays(days);
+    setEditFocusedDay(days[0] || "");
+    setEditCustomSlotInput("");
   };
 
-  // Handler: Save Edit Doctor Changes
-  const handleSaveEditDoctor = (e) => {
+  // ----------------------------------------------------
+  // SAVE EDIT -> REAL BACKEND
+  // ----------------------------------------------------
+
+  const handleSaveEditDoctor = async (e) => {
     e.preventDefault();
+
     if (!editDoctor) return;
 
-    const updated = {
-      ...editDoctor,
-      name: editName.trim(),
-      phone: editPhone.trim(),
-      specialization: editSpecialization.trim(),
-      department: editDepartment.trim(),
-      qualification: editQualification.trim() || "—",
-      experience: editExperience.trim() || "—",
-      licenseNumber: editLicenseNumber.trim() || "—",
-      consultationFee: editConsultationFee.trim() || "—",
-      availability: editAvailability.trim() || "—",
-      status: editStatus,
-    };
-
-    setDoctors((prev) => prev.map((d) => (d.id === editDoctor.id ? updated : d)));
-
-    if (viewDoctor && viewDoctor.id === editDoctor.id) {
-      setViewDoctor(updated);
+    if (!editName.trim()) {
+      toast.error("Doctor name is required.");
+      return;
     }
 
-    setEditDoctor(null);
-    showToast(`Doctor ${updated.name} profile updated successfully.`);
+    if (!editSpecialization.trim()) {
+      toast.error(
+        "Specialization is required."
+      );
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+
+      if (!token) {
+        throw new Error(
+          "Authentication token not found."
+        );
+      }
+
+      const payload = {
+        name: editName.trim(),
+        phone: editPhone.trim(),
+        specialization:
+          editSpecialization.trim(),
+        department:
+          editDepartment.trim(),
+        qualification:
+          editQualification.trim(),
+        experience:
+          editExperience.trim(),
+        consultationFee:
+          editConsultationFee === ""
+            ? 0
+            : Number(editConsultationFee),
+
+        accountStatus:
+          editAccountStatus,
+
+        // ── Availability ──────────────────────────
+        availableDays: editActiveDays,
+        availableSlots: editActiveDays.flatMap((day) =>
+          (editSlotsByDay[day] || []).map((slotTime) => ({
+            day,
+            startTime: slotTime,
+            endTime: slotTime,
+            isAvailable: true,
+          }))
+        ),
+      };
+
+      const response = await fetch(
+        `http://localhost:5000/api/hospital/doctors/${editDoctor.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+          "Failed to update doctor."
+        );
+      }
+
+      const updatedDoctor = result?.data;
+
+      if (updatedDoctor) {
+        const normalized =
+          normalizeDoctor(updatedDoctor);
+
+        setDoctors((prev) =>
+          prev.map((doctor) =>
+            doctor.id === editDoctor.id
+              ? normalized
+              : doctor
+          )
+        );
+
+        if (
+          viewDoctor &&
+          viewDoctor.id === editDoctor.id
+        ) {
+          setViewDoctor(normalized);
+        }
+      } else {
+        await fetchDoctors();
+      }
+
+      setEditDoctor(null);
+
+      showToast(
+        "Doctor profile updated successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Failed to update hospital doctor:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to update doctor."
+      );
+    }
   };
 
-  // Status Badge Class Helper
+  // ----------------------------------------------------
+  // STATUS BADGE
+  // ----------------------------------------------------
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "Available":
         return "hosp-doc-status-badge status--available";
+
       case "In Surgery":
         return "hosp-doc-status-badge status--in-surgery";
+
       case "On Leave":
         return "hosp-doc-status-badge status--on-leave";
+
+      case "verified":
+        return "hosp-doc-status-badge status--available";
+
+      case "active":
+        return "hosp-doc-status-badge status--available";
+
+      case "blocked":
+        return "hosp-doc-status-badge status--on-leave";
+
+      case "pending":
+        return "hosp-doc-status-badge status--on-leave";
+
+      case "rejected":
+        return "hosp-doc-status-badge status--on-leave";
+
       default:
         return "hosp-doc-status-badge";
     }
@@ -501,25 +825,24 @@ function ManageDoctors() {
 
   return (
     <div className="hosp-docs-page">
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="hosp-doc-toast" role="alert">
-          <FaCheckCircle className="toast-icon-check" />
-          <span>{toastMsg}</span>
-        </div>
-      )}
+      {/* ==================================================
+          SEARCH AND ACTION BAR
+      ================================================== */}
 
-      {/* Search and Action Bar */}
       <div className="hosp-docs-controls">
         <div className="hosp-docs-search">
           <FaSearch className="hosp-search-icon" />
+
           <input
             type="text"
             placeholder="Search doctors by name, ID, qualification, or department..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
             aria-label="Search doctors"
           />
+
           {search && (
             <button
               className="search-clear-btn"
@@ -532,109 +855,218 @@ function ManageDoctors() {
         </div>
 
         <div className="hosp-docs-filters">
+          {/* Specialty */}
+
           <div className="hosp-filter-group">
             <FaFilter className="hosp-filter-icon" />
+
             <select
               value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
+              onChange={(e) =>
+                setSelectedDept(e.target.value)
+              }
               aria-label="Filter by Specialty"
             >
               {specialties.map((spec) => (
-                <option key={spec} value={spec}>
+                <option
+                  key={spec}
+                  value={spec}
+                >
                   {spec}
                 </option>
               ))}
             </select>
           </div>
 
+          {/* Blood Group */}
+
           <div className="hosp-filter-group">
             <select
               value={bloodGroupFilter}
               onChange={(e) => {
-                setBloodGroupFilter(e.target.value);
-                setLocationInput(hospitalCity);
-                setActiveLocation(hospitalCity);
+                setBloodGroupFilter(
+                  e.target.value
+                );
+
+                setLocationInput(
+                  hospitalCity
+                );
+
+                setActiveLocation(
+                  hospitalCity
+                );
               }}
               aria-label="Filter by Blood Group"
             >
-              <option value="All">All Blood Groups</option>
-              {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"].map((bg) => (
-                <option key={bg} value={bg}>
+              <option value="All">
+                All Blood Groups
+              </option>
+
+              {bloodGroups.map((bg) => (
+                <option
+                  key={bg}
+                  value={bg}
+                >
                   {bg}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Location input — visible only in donor search mode */}
+          {/* Location only in donor search */}
+
           {isDonorSearchMode && (
             <div className="hosp-location-group">
               <div className="hosp-location-input">
                 <FaMapMarkerAlt className="hosp-loc-pin" />
+
                 <input
                   type="text"
                   placeholder="Enter location..."
                   value={locationInput}
-                  onChange={(e) => setLocationInput(e.target.value)}
+                  onChange={(e) =>
+                    setLocationInput(
+                      e.target.value
+                    )
+                  }
                   onKeyDown={(e) => {
-                    if (e.key === "Enter")
-                      setActiveLocation(locationInput.trim() || hospitalCity);
+                    if (e.key === "Enter") {
+                      setActiveLocation(
+                        locationInput.trim() ||
+                        hospitalCity
+                      );
+                    }
                   }}
                   aria-label="Search location"
                 />
               </div>
+
               <button
                 className="hosp-location-search-btn"
-                onClick={() => setActiveLocation(locationInput.trim() || hospitalCity)}
+                onClick={() =>
+                  setActiveLocation(
+                    locationInput.trim() ||
+                    hospitalCity
+                  )
+                }
               >
                 <FaSearch /> Search
               </button>
             </div>
           )}
 
+          {/* Backend status */}
+
           <div className="hosp-filter-group">
             <select
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
+              onChange={(e) =>
+                setSelectedStatus(
+                  e.target.value
+                )
+              }
               aria-label="Filter by Status"
             >
-              <option value="All">All Statuses</option>
-              <option value="Available">Available</option>
-              <option value="In Surgery">In Surgery</option>
-              <option value="On Leave">On Leave</option>
+              <option value="All">
+                All Statuses
+              </option>
+
+              <option value="verified">
+                Verified
+              </option>
+
+              <option value="pending">
+                Pending
+              </option>
+
+              <option value="rejected">
+                Rejected
+              </option>
+
+              <option value="active">
+                Active
+              </option>
+
+              <option value="blocked">
+                Blocked
+              </option>
             </select>
           </div>
 
-          <button className="hosp-btn-download" onClick={handleDownloadReport} style={{ background: "#0d9488", color: "#fff", border: "none", padding: "10px 16px", borderRadius: "8px", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-            <FaDownload /> Download Report
+          <button
+            className="hosp-btn-download"
+            onClick={handleDownloadReport}
+            style={{
+              background: "#0d9488",
+              color: "#fff",
+              border: "none",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <FaDownload />
+            Download Report
           </button>
 
-          <button className="hosp-btn-add" onClick={() => setShowAddModal(true)}>
-            <FaPlus /> Add Doctor
+          <button
+            className="hosp-btn-add"
+            onClick={() =>
+              setShowAddModal(true)
+            }
+          >
+            <FaPlus />
+            Add Doctor
           </button>
         </div>
       </div>
 
-      {/* Donor mode notice bar */}
+      {/* ==================================================
+          DONOR NOTICE
+      ================================================== */}
+
       {isDonorSearchMode && (
         <div className="hosp-donor-notice">
           <FaUserCheck className="hosp-donor-notice-icon" />
+
           <span>
-            Showing <strong>available {bloodGroupFilter} donors only</strong>, ranked nearest to{" "}
-            <strong>{activeLocation}</strong>. Unavailable staff are automatically excluded.
+            Showing{" "}
+            <strong>
+              available {bloodGroupFilter} donors only
+            </strong>
+            , ranked nearest to{" "}
+            <strong>{activeLocation}</strong>.
+            Unavailable staff are automatically
+            excluded.
           </span>
         </div>
       )}
 
-      {/* ── DOCTORS TABLE / LIST ── */}
+      {/* ==================================================
+          DOCTORS TABLE
+      ================================================== */}
+
       <div className="hosp-card hosp-doc-table-card">
         <div className="hosp-table-header-bar">
           <div>
-            <h3 className="hosp-card-title" style={{ marginBottom: "0.2rem" }}>
+            <h3
+              className="hosp-card-title"
+              style={{
+                marginBottom: "0.2rem",
+              }}
+            >
               Hospital Medical Staff Directory
             </h3>
+
             <p className="table-subtitle">
-              Showing {filteredDoctors.length} of {doctors.length} registered hospital doctors
+              Showing{" "}
+              {filteredDoctors.length} of{" "}
+              {doctors.length} registered hospital
+              doctors
             </p>
           </div>
         </div>
@@ -651,82 +1083,152 @@ function ManageDoctors() {
                 <th>Department</th>
                 <th>Doctor Type</th>
                 <th>Status</th>
-                <th style={{ textAlign: "right", paddingRight: "1.5rem" }}>Actions</th>
+                <th
+                  style={{
+                    textAlign: "right",
+                    paddingRight: "1.5rem",
+                  }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {filteredDoctors.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td
+                    colSpan="9"
+                    className="hosp-table-empty"
+                  >
+                    <FaUserMd className="empty-icon" />
+
+                    <h3>
+                      Loading doctors...
+                    </h3>
+
+                    <p>
+                      Fetching hospital medical
+                      staff from the server.
+                    </p>
+                  </td>
+                </tr>
+              ) : filteredDoctors.length > 0 ? (
                 filteredDoctors.map((doc) => (
-                  <tr key={doc.id} className="doc-table-row">
+                  <tr
+                    key={doc.id}
+                    className="doc-table-row"
+                  >
                     {/* Doctor Name */}
+
                     <td>
                       <div className="doc-name-cell">
                         <div
                           className="doc-avatar-mini"
-                          style={{ backgroundColor: doc.avatarBg }}
+                          style={{
+                            backgroundColor:
+                              doc.avatarBg,
+                          }}
                         >
-                          {doc.name.split(" ").slice(-1)[0][0]}
+                          {doc.name
+                            ?.split(" ")
+                            .slice(-1)[0]?.[0]
+                            ?.toUpperCase() || "D"}
                         </div>
+
                         <div className="doc-name-info">
-                          <span className="doc-name-text">{doc.name}</span>
-                          <span className="doc-email-text">{doc.email}</span>
+                          <span className="doc-name-text">
+                            {doc.name}
+                          </span>
+
+                          <span className="doc-email-text">
+                            {doc.email}
+                          </span>
                         </div>
                       </div>
                     </td>
 
                     {/* Doctor ID */}
+
                     <td>
-                      <span className="hosp-doc-id-badge">{doc.id}</span>
+                      <span className="hosp-doc-id-badge">
+                        {doc.id}
+                      </span>
                     </td>
 
                     {/* Specialization */}
+
                     <td>
-                      <span className="doc-spec-pill">{doc.specialization}</span>
+                      <span className="doc-spec-pill">
+                        {doc.specialization}
+                      </span>
                     </td>
 
                     {/* Qualification */}
+
                     <td>
-                      <span className="doc-qual-text">{doc.qualification}</span>
+                      <span className="doc-qual-text">
+                        {doc.qualification}
+                      </span>
                     </td>
 
                     {/* Experience */}
+
                     <td>
-                      <span className="doc-exp-badge">{doc.experience}</span>
+                      <span className="doc-exp-badge">
+                        {doc.experience}
+                      </span>
                     </td>
 
                     {/* Department */}
+
                     <td>
-                      <span className="doc-dept-text">{doc.department}</span>
+                      <span className="doc-dept-text">
+                        {doc.department}
+                      </span>
                     </td>
 
-                    {/* Doctor Type: Hospital */}
+                    {/* Doctor Type */}
+
                     <td>
                       <span className="hosp-doc-type-tag">
-                        <FaHospital className="mini-icon" /> {doc.doctorType || "Hospital"}
+                        <FaHospital className="mini-icon" />
+                        {doc.doctorType}
                       </span>
                     </td>
 
                     {/* Status */}
+
                     <td>
-                      <span className={getStatusBadge(doc.status)}>
+                      <span
+                        className={getStatusBadge(
+                          doc.status
+                        )}
+                      >
                         {doc.status}
                       </span>
                     </td>
 
-                    {/* Actions: View & Edit */}
+                    {/* Actions */}
+
                     <td>
                       <div className="hosp-doc-actions-cell">
                         <button
                           className="hosp-doc-btn btn-view-doc"
-                          onClick={() => setViewDoctor(doc)}
+                          onClick={() =>
+                            setViewDoctor(doc)
+                          }
                           title="View Doctor Details"
                         >
                           <FaEye />
                           <span>View</span>
                         </button>
+
                         <button
                           className="hosp-doc-btn btn-edit-doc"
-                          onClick={() => handleOpenEdit(doc)}
+                          onClick={() =>
+                            handleOpenEdit(doc)
+                          }
                           title="Edit Doctor"
                         >
                           <FaEdit />
@@ -738,10 +1240,21 @@ function ManageDoctors() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="9" className="hosp-table-empty">
+                  <td
+                    colSpan="9"
+                    className="hosp-table-empty"
+                  >
                     <FaUserMd className="empty-icon" />
-                    <h3>No users found for the selected blood group.</h3>
-                    <p>Try clearing your filters or selecting a different blood group.</p>
+
+                    <h3>
+                      No doctors found.
+                    </h3>
+
+                    <p>
+                      Try clearing your filters
+                      or selecting different
+                      search criteria.
+                    </p>
                   </td>
                 </tr>
               )}
@@ -750,24 +1263,43 @@ function ManageDoctors() {
         </div>
       </div>
 
-      {/* ── MODAL: VIEW DOCTOR DETAILS ── */}
+      {/* ==================================================
+          VIEW DOCTOR MODAL
+      ================================================== */}
+
       {viewDoctor && (
-        <div className="hosp-modal-overlay" onClick={() => setViewDoctor(null)}>
+        <div
+          className="hosp-modal-overlay"
+          onClick={() =>
+            setViewDoctor(null)
+          }
+        >
           <div
             className="hosp-modal hosp-doc-view-modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
             <div className="hosp-modal-header">
               <div className="modal-title-wrap">
                 <FaUserMd className="modal-header-icon" />
+
                 <div>
-                  <h2>Doctor Details</h2>
-                  <span className="modal-ref-id">{viewDoctor.id}</span>
+                  <h2>
+                    Doctor Details
+                  </h2>
+
+                  <span className="modal-ref-id">
+                    {viewDoctor.id}
+                  </span>
                 </div>
               </div>
+
               <button
                 className="hosp-modal-close"
-                onClick={() => setViewDoctor(null)}
+                onClick={() =>
+                  setViewDoctor(null)
+                }
                 aria-label="Close"
               >
                 <FaTimes />
@@ -775,128 +1307,279 @@ function ManageDoctors() {
             </div>
 
             <div className="doc-view-modal-body">
-              {/* Doctor Header Banner Card */}
               <div className="doc-view-header-card">
                 <div
                   className="doc-avatar-large"
-                  style={{ backgroundColor: viewDoctor.avatarBg }}
+                  style={{
+                    backgroundColor:
+                      viewDoctor.avatarBg,
+                  }}
                 >
-                  {viewDoctor.name.split(" ").slice(-1)[0][0]}
+                  {viewDoctor.name
+                    ?.split(" ")
+                    .slice(-1)[0]?.[0]
+                    ?.toUpperCase() || "D"}
                 </div>
+
                 <div className="doc-view-header-details">
                   <div className="doc-title-row">
-                    <h3 className="doc-fullname">{viewDoctor.name}</h3>
-                    <span className={getStatusBadge(viewDoctor.status)}>
+                    <h3 className="doc-fullname">
+                      {viewDoctor.name}
+                    </h3>
+
+                    <span
+                      className={getStatusBadge(
+                        viewDoctor.status
+                      )}
+                    >
                       {viewDoctor.status}
                     </span>
                   </div>
+
                   <p className="doc-specialty-sub">
-                    {viewDoctor.specialization} &bull; {viewDoctor.qualification}
+                    {viewDoctor.specialization}
+                    {" • "}
+                    {viewDoctor.qualification}
                   </p>
+
                   <div className="doc-quick-chips">
                     <span className="doc-chip">
-                      <FaBuilding /> {viewDoctor.department}
+                      <FaBuilding />
+                      {viewDoctor.department}
                     </span>
+
                     <span className="doc-chip">
-                      <FaBriefcase /> {viewDoctor.experience} Exp
+                      <FaBriefcase />
+                      {viewDoctor.experience} Exp
                     </span>
+
                     <span className="doc-chip doc-chip--hospital">
-                      <FaHospital /> {viewDoctor.doctorType || "Hospital"}
+                      <FaHospital />
+                      Hospital
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Complete Information Grid */}
               <div className="doc-details-section">
-                <h4 className="section-title">Doctor Profile Information</h4>
+                <h4 className="section-title">
+                  Doctor Profile Information
+                </h4>
+
                 <div className="doc-info-grid">
                   <div className="info-item">
-                    <span className="info-lbl">Full Name:</span>
-                    <span className="info-val font-bold">{viewDoctor.name}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Doctor ID:</span>
-                    <span className="info-val font-bold text-primary-color">{viewDoctor.id}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">User ID:</span>
-                    <span className="info-val">{viewDoctor.userId || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Hospital ID:</span>
-                    <span className="info-val">{viewDoctor.hospitalId || "HOSP-5021"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Phone Number:</span>
-                    <span className="info-val">{viewDoctor.phone || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Specialization:</span>
-                    <span className="info-val">{viewDoctor.specialization || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Department:</span>
-                    <span className="info-val">{viewDoctor.department || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Qualifications:</span>
-                    <span className="info-val">{viewDoctor.qualification || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Experience:</span>
-                    <span className="info-val">{viewDoctor.experience || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Medical License Number:</span>
-                    <span className="info-val font-bold">{viewDoctor.licenseNumber || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Consultation Fee:</span>
-                    <span className="info-val font-bold">{viewDoctor.consultationFee || "—"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-lbl">Availability Schedule:</span>
-                    <span className="info-val">
-                      <FaClock className="mini-icon" /> {viewDoctor.availability || "—"}
+                    <span className="info-lbl">
+                      Full Name:
+                    </span>
+
+                    <span className="info-val font-bold">
+                      {viewDoctor.name}
                     </span>
                   </div>
+
                   <div className="info-item">
-                    <span className="info-lbl">On-Duty Status:</span>
-                    <span className="info-val">
-                      <span className={getStatusBadge(viewDoctor.status)}>{viewDoctor.status}</span>
+                    <span className="info-lbl">
+                      Doctor ID:
+                    </span>
+
+                    <span className="info-val font-bold text-primary-color">
+                      {viewDoctor.id}
                     </span>
                   </div>
+
                   <div className="info-item">
-                    <span className="info-lbl">Registration Date:</span>
-                    <span className="info-val">{viewDoctor.registrationDate || "—"}</span>
+                    <span className="info-lbl">
+                      User ID:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.userId}
+                    </span>
                   </div>
+
                   <div className="info-item">
-                    <span className="info-lbl">Account Status:</span>
-                    <span className="info-val text-success font-bold">{viewDoctor.accountStatus || "Active"}</span>
+                    <span className="info-lbl">
+                      Hospital ID:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.hospitalId}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Email:
+                    </span>
+
+                    <span className="info-val">
+                      <FaEnvelope className="mini-icon" />
+                      {viewDoctor.email}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Phone Number:
+                    </span>
+
+                    <span className="info-val">
+                      <FaPhoneAlt className="mini-icon" />
+                      {viewDoctor.phone}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Blood Group:
+                    </span>
+
+                    <span className="info-val font-bold">
+                      {viewDoctor.bloodGroup}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Location:
+                    </span>
+
+                    <span className="info-val">
+                      <FaMapMarkerAlt className="mini-icon" />
+                      {viewDoctor.city}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Specialization:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.specialization}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Department:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.department}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Qualifications:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.qualification}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Experience:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.experience}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Medical License Number:
+                    </span>
+
+                    <span className="info-val font-bold">
+                      {viewDoctor.licenseNumber}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Consultation Fee:
+                    </span>
+
+                    <span className="info-val font-bold">
+                      {viewDoctor.consultationFee}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Availability Schedule:
+                    </span>
+
+                    <span className="info-val">
+                      <FaClock className="mini-icon" />
+                      {viewDoctor.availability}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Donor Availability:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.isDonorAvailable
+                        ? "Available"
+                        : "Unavailable"}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Registration Date:
+                    </span>
+
+                    <span className="info-val">
+                      {viewDoctor.registrationDate}
+                    </span>
+                  </div>
+
+                  <div className="info-item">
+                    <span className="info-lbl">
+                      Account Status:
+                    </span>
+
+                    <span className="info-val text-success font-bold">
+                      {viewDoctor.accountStatus}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
             <div className="hosp-modal-actions">
               <button
                 type="button"
                 className="hosp-btn-submit"
                 onClick={() => {
                   const doc = viewDoctor;
+
                   setViewDoctor(null);
+
                   handleOpenEdit(doc);
                 }}
               >
                 <FaEdit />
-                <span>Edit Doctor Profile</span>
+                <span>
+                  Edit Doctor Profile
+                </span>
               </button>
+
               <button
                 type="button"
                 className="btn-modal-cancel"
-                onClick={() => setViewDoctor(null)}
+                onClick={() =>
+                  setViewDoctor(null)
+                }
               >
                 Close
               </button>
@@ -905,181 +1588,444 @@ function ManageDoctors() {
         </div>
       )}
 
-      {/* ── MODAL: EDIT DOCTOR PROFILE ── */}
+      {/* ==================================================
+          EDIT DOCTOR MODAL
+      ================================================== */}
+
       {editDoctor && (
-        <div className="hosp-modal-overlay" onClick={() => setEditDoctor(null)}>
+        <div
+          className="hosp-modal-overlay"
+          onClick={() =>
+            setEditDoctor(null)
+          }
+        >
           <div
             className="hosp-modal hosp-doc-edit-modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
             <div className="hosp-modal-header">
               <div className="modal-title-wrap">
                 <FaEdit className="modal-header-icon" />
+
                 <div>
-                  <h2>Edit Doctor Profile</h2>
-                  <span className="modal-ref-id">{editDoctor.id}</span>
+                  <h2>
+                    Edit Doctor Profile
+                  </h2>
+
+                  <span className="modal-ref-id">
+                    {editDoctor.id}
+                  </span>
                 </div>
               </div>
+
               <button
                 className="hosp-modal-close"
-                onClick={() => setEditDoctor(null)}
+                onClick={() =>
+                  setEditDoctor(null)
+                }
                 aria-label="Close"
               >
                 <FaTimes />
               </button>
             </div>
 
-            <form onSubmit={handleSaveEditDoctor} className="hosp-modal-form">
-              {/* Read-Only System Identifiers: Doctor ID, User ID, Hospital ID */}
+            <form
+              onSubmit={handleSaveEditDoctor}
+              className="hosp-modal-form"
+            >
               <div className="edit-readonly-strip">
                 <div className="readonly-item">
                   <span className="readonly-lbl">
-                    <FaLock className="lock-icon" /> Doctor ID:
+                    <FaLock className="lock-icon" />
+                    Doctor ID:
                   </span>
-                  <span className="readonly-val font-bold">{editDoctor.id}</span>
+
+                  <span className="readonly-val font-bold">
+                    {editDoctor.id}
+                  </span>
                 </div>
+
                 <div className="readonly-item">
                   <span className="readonly-lbl">
-                    <FaLock className="lock-icon" /> User ID:
+                    <FaLock className="lock-icon" />
+                    User ID:
                   </span>
-                  <span className="readonly-val">{editDoctor.userId || "—"}</span>
+
+                  <span className="readonly-val">
+                    {editDoctor.userId}
+                  </span>
                 </div>
+
                 <div className="readonly-item">
                   <span className="readonly-lbl">
-                    <FaLock className="lock-icon" /> Hospital ID:
+                    <FaLock className="lock-icon" />
+                    Hospital ID:
                   </span>
-                  <span className="readonly-val">{editDoctor.hospitalId || "HOSP-5021"}</span>
+
+                  <span className="readonly-val">
+                    {editDoctor.hospitalId}
+                  </span>
                 </div>
               </div>
 
-              {/* Editable: Full Name * & Phone Number * */}
+              {/* Name + Phone */}
+
               <div className="form-row">
                 <div className="form-group half">
-                  <label>Full Name *</label>
+                  <label>
+                    Full Name *
+                  </label>
+
                   <input
                     type="text"
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(e) =>
+                      setEditName(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
+
                 <div className="form-group half">
-                  <label>Phone Number *</label>
+                  <label>
+                    Phone Number *
+                  </label>
+
                   <input
                     type="tel"
                     value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
+                    onChange={(e) =>
+                      setEditPhone(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
               </div>
 
-              {/* Editable: Specialization * & Department * */}
+              {/* Specialization + Department */}
+
               <div className="form-row">
                 <div className="form-group half">
-                  <label>Specialization *</label>
+                  <label>
+                    Specialization *
+                  </label>
+
                   <input
                     type="text"
                     value={editSpecialization}
-                    onChange={(e) => setEditSpecialization(e.target.value)}
+                    onChange={(e) =>
+                      setEditSpecialization(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
+
                 <div className="form-group half">
-                  <label>Department *</label>
+                  <label>
+                    Department *
+                  </label>
+
                   <input
                     type="text"
                     value={editDepartment}
-                    onChange={(e) => setEditDepartment(e.target.value)}
+                    onChange={(e) =>
+                      setEditDepartment(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
               </div>
 
-              {/* Editable: Qualifications * & Experience (Years) * */}
+              {/* Qualification + Experience */}
+
               <div className="form-row">
                 <div className="form-group half">
-                  <label>Qualifications *</label>
+                  <label>
+                    Qualifications *
+                  </label>
+
                   <input
                     type="text"
                     placeholder="e.g. MBBS, MD, DM"
                     value={editQualification}
-                    onChange={(e) => setEditQualification(e.target.value)}
+                    onChange={(e) =>
+                      setEditQualification(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
+
                 <div className="form-group half">
-                  <label>Experience (Years) *</label>
+                  <label>
+                    Experience (Years) *
+                  </label>
+
                   <input
                     type="text"
                     placeholder="e.g. 10 Years"
                     value={editExperience}
-                    onChange={(e) => setEditExperience(e.target.value)}
+                    onChange={(e) =>
+                      setEditExperience(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
               </div>
 
-              {/* Editable: Medical License Number * & Consultation Fee * */}
+              {/* Consultation Fee + Account Status */}
+
               <div className="form-row">
                 <div className="form-group half">
-                  <label>Medical License Number *</label>
+                  <label>
+                    Consultation Fee (₹) *
+                  </label>
+
                   <input
-                    type="text"
-                    placeholder="e.g. KMC-2015-89632"
-                    value={editLicenseNumber}
-                    onChange={(e) => setEditLicenseNumber(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group half">
-                  <label>Consultation Fee *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. ₹1,200"
+                    type="number"
+                    min="0"
+                    step="any"
                     value={editConsultationFee}
-                    onChange={(e) => setEditConsultationFee(e.target.value)}
+                    onChange={(e) =>
+                      setEditConsultationFee(
+                        e.target.value
+                      )
+                    }
                     required
                   />
                 </div>
-              </div>
 
-              {/* Editable: Availability Schedule * & On-Duty Status */}
-              <div className="form-row">
                 <div className="form-group half">
-                  <label>Availability Schedule *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Mon - Fri, 09:00 AM - 04:00 PM"
-                    value={editAvailability}
-                    onChange={(e) => setEditAvailability(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="form-group half">
-                  <label>On-Duty Status</label>
+                  <label>
+                    Account Status
+                  </label>
+
                   <select
-                    value={editStatus}
-                    onChange={(e) => setEditStatus(e.target.value)}
+                    value={editAccountStatus}
+                    onChange={(e) =>
+                      setEditAccountStatus(
+                        e.target.value
+                      )
+                    }
                   >
-                    <option value="Available">Available</option>
-                    <option value="In Surgery">In Surgery</option>
-                    <option value="On Leave">On Leave</option>
+                    <option value="active">
+                      Active
+                    </option>
+
+                    <option value="blocked">
+                      Blocked
+                    </option>
                   </select>
                 </div>
+              </div>
+
+              {/* AVAILABILITY SCHEDULE */}
+              <div style={{ marginTop: "1.2rem" }}>
+                <div style={{ marginBottom: "10px" }}>
+                  <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>
+                    🗓️ Availability Schedule
+                  </strong>
+                  <p style={{ fontSize: "0.8rem", color: "#64748b", margin: "4px 0 10px" }}>
+                    Click a day to add/remove it, then manage time slots.
+                  </p>
+                </div>
+
+                {/* Day chips */}
+                <div className="schedule-preset-chips" style={{ marginBottom: "14px" }}>
+                  {HOSP_ALL_DAYS.map((day) => {
+                    const isActive = editActiveDays.includes(day);
+                    const isFocused = editFocusedDay === day;
+                    return (
+                      <button
+                        key={day}
+                        type="button"
+                        className={`schedule-preset-chip${isFocused ? " chip-active" : ""}`}
+                        style={{
+                          background: isActive ? (isFocused ? "#0ea5e9" : "#e0f2fe") : "#f8fafc",
+                          borderColor: isActive ? (isFocused ? "#0ea5e9" : "#7dd3fc") : "#e2e8f0",
+                          color: isActive ? (isFocused ? "#fff" : "#0369a1") : "#475569",
+                        }}
+                        onClick={() => {
+                          if (!isActive) {
+                            setEditActiveDays((p) => [...p, day]);
+                            setEditSlotsByDay((p) => ({ ...p, [day]: p[day] || [] }));
+                            setEditFocusedDay(day);
+                          } else if (!isFocused) {
+                            setEditFocusedDay(day);
+                          } else {
+                            setEditActiveDays((p) => p.filter((d) => d !== day));
+                            setEditSlotsByDay((p) => { const c = { ...p }; delete c[day]; return c; });
+                            setEditFocusedDay("");
+                          }
+                        }}
+                      >
+                        {day.slice(0, 3)}
+                        {isActive && (
+                          <span style={{ fontSize: "0.72rem" }}>({(editSlotsByDay[day] || []).length})</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Slot workspace */}
+                {editFocusedDay && editActiveDays.includes(editFocusedDay) ? (
+                  <div style={{
+                    background: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "10px",
+                    padding: "14px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                      <strong style={{ fontSize: "0.88rem", color: "#1e293b" }}>
+                        🕐 {editFocusedDay} — Slots
+                      </strong>
+                      {(editSlotsByDay[editFocusedDay] || []).length > 0 && (
+                        <button
+                          type="button"
+                          style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.78rem", fontWeight: 600 }}
+                          onClick={() => setEditSlotsByDay((p) => ({ ...p, [editFocusedDay]: [] }))}
+                        >
+                          Clear All
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Configured pills */}
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "12px", minHeight: "30px" }}>
+                      {(editSlotsByDay[editFocusedDay] || []).length === 0 ? (
+                        <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>No slots yet — add below.</span>
+                      ) : (
+                        (editSlotsByDay[editFocusedDay] || []).map((slot) => (
+                          <span key={slot} style={{
+                            display: "inline-flex", alignItems: "center", gap: "5px",
+                            background: "#f0fdf4", border: "1px solid #86efac", color: "#15803d",
+                            fontSize: "0.8rem", fontWeight: 600, padding: "4px 8px", borderRadius: "20px",
+                          }}>
+                            ⏰ {slot}
+                            <button
+                              type="button"
+                              style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: 0, fontSize: "0.72rem" }}
+                              onClick={() => setEditSlotsByDay((p) => ({ ...p, [editFocusedDay]: p[editFocusedDay].filter((s) => s !== slot) }))}
+                            >✕</button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+
+                    {/* Preset chips */}
+                    <p style={{ fontSize: "0.77rem", fontWeight: 600, color: "#64748b", marginBottom: "6px" }}>Quick-add:</p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "12px" }}>
+                      {HOSP_TIME_PRESETS.map((preset) => {
+                        const already = (editSlotsByDay[editFocusedDay] || []).includes(preset);
+                        return (
+                          <button
+                            key={preset}
+                            type="button"
+                            disabled={already}
+                            style={{
+                              background: already ? "#f1f5f9" : "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "6px",
+                              padding: "3px 8px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              color: already ? "#94a3b8" : "#475569",
+                              cursor: already ? "not-allowed" : "pointer",
+                              opacity: already ? 0.5 : 1,
+                            }}
+                            onClick={() => {
+                              if (!already) {
+                                setEditSlotsByDay((p) => ({ ...p, [editFocusedDay]: [...(p[editFocusedDay] || []), preset] }));
+                              }
+                            }}
+                          >
+                            {already ? "✓ " : "+ "}{preset}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Custom input */}
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <input
+                        type="text"
+                        placeholder="e.g. 7:15 AM"
+                        value={editCustomSlotInput}
+                        onChange={(e) => setEditCustomSlotInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            const val = editCustomSlotInput.trim();
+                            if (val && !(editSlotsByDay[editFocusedDay] || []).includes(val)) {
+                              setEditSlotsByDay((p) => ({ ...p, [editFocusedDay]: [...(p[editFocusedDay] || []), val] }));
+                              setEditCustomSlotInput("");
+                            }
+                          }
+                        }}
+                        style={{ padding: "6px 10px", border: "1px solid #d1d5db", borderRadius: "8px", fontSize: "0.82rem", flex: 1, maxWidth: "180px" }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const val = editCustomSlotInput.trim();
+                          if (!val) return;
+                          if ((editSlotsByDay[editFocusedDay] || []).includes(val)) {
+                            toast.warn("That slot is already added.");
+                            return;
+                          }
+                          setEditSlotsByDay((p) => ({ ...p, [editFocusedDay]: [...(p[editFocusedDay] || []), val] }));
+                          setEditCustomSlotInput("");
+                        }}
+                        style={{ background: "#0ea5e9", color: "#fff", border: "none", padding: "7px 12px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: 600, cursor: "pointer" }}
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  </div>
+                ) : editActiveDays.length === 0 ? (
+                  <p style={{ color: "#94a3b8", fontSize: "0.83rem", fontStyle: "italic" }}>
+                    No days selected. Click a day chip above to add availability.
+                  </p>
+                ) : (
+                  <p style={{ color: "#94a3b8", fontSize: "0.83rem", fontStyle: "italic" }}>
+                    Click an active day chip to manage its slots.
+                  </p>
+                )}
               </div>
 
               <div className="hosp-modal-actions">
                 <button
                   type="button"
                   className="btn-modal-cancel"
-                  onClick={() => setEditDoctor(null)}
+                  onClick={() =>
+                    setEditDoctor(null)
+                  }
                 >
                   Cancel
                 </button>
-                <button type="submit" className="hosp-btn-submit">
+
+                <button
+                  type="submit"
+                  className="hosp-btn-submit"
+                >
                   <FaCheckCircle />
-                  <span>Save Changes</span>
+                  <span>
+                    Save Changes
+                  </span>
                 </button>
               </div>
             </form>
@@ -1087,7 +2033,10 @@ function ManageDoctors() {
         </div>
       )}
 
-      {/* ── MODAL: ADD NEW STAFF DOCTOR (COMPLETE 10-FIELD REGISTRATION FORM) ── */}
+      {/* ==================================================
+          ADD DOCTOR MODAL
+      ================================================== */}
+
       {showAddModal && (
         <div
           className="hosp-modal-overlay"
@@ -1098,16 +2047,25 @@ function ManageDoctors() {
         >
           <div
             className="hosp-modal hosp-doc-add-modal"
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
           >
             <div className="hosp-modal-header">
               <div className="modal-title-wrap">
                 <FaUserMd className="modal-header-icon" />
+
                 <div>
-                  <h2>Add New Staff Doctor</h2>
-                  <span className="modal-ref-id">Hospital Medical Staff Registration</span>
+                  <h2>
+                    Add New Staff Doctor
+                  </h2>
+
+                  <span className="modal-ref-id">
+                    Hospital Medical Staff Registration
+                  </span>
                 </div>
               </div>
+
               <button
                 className="hosp-modal-close"
                 onClick={() => {
@@ -1120,165 +2078,413 @@ function ManageDoctors() {
               </button>
             </div>
 
-            <form onSubmit={handleAddDoctor} className="hosp-modal-form hosp-doc-form-scrollable" noValidate>
-              {/* System-Generated Identifiers Notice Banner */}
+            <form
+              onSubmit={handleAddDoctor}
+              className="hosp-modal-form hosp-doc-form-scrollable"
+              noValidate
+            >
+              {/* System generated IDs */}
+
               <div className="doc-system-gen-banner">
                 <div className="sys-gen-icon-wrap">
                   <FaHospital className="sys-gen-icon" />
                 </div>
+
                 <div className="sys-gen-text">
-                  <span className="sys-gen-title">System-Generated Identifiers</span>
+                  <span className="sys-gen-title">
+                    System-Generated Identifiers
+                  </span>
+
                   <p className="sys-gen-desc">
-                    <strong>Doctor ID</strong>, <strong>User ID</strong>, and hospital linkage (<strong>HOSP-5021</strong>) are assigned automatically by the system upon registration.
+                    <strong>
+                      Doctor ID
+                    </strong>
+                    ,{" "}
+                    <strong>
+                      User ID
+                    </strong>{" "}
+                    and hospital linkage are
+                    assigned automatically by
+                    the system.
                   </p>
                 </div>
               </div>
 
-              {/* 1. Full Name * & 2. Phone Number * */}
+              {/* Name + Email */}
+
               <div className="form-row">
                 <div className="form-group half">
                   <label htmlFor="add-doc-name">
-                    Full Name <span className="req-star">*</span>
+                    Full Name{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <input
                     id="add-doc-name"
                     type="text"
                     placeholder="e.g. Dr. John Watson"
                     value={addName}
                     onChange={(e) => {
-                      setAddName(e.target.value);
-                      if (addErrors.name) setAddErrors((prev) => ({ ...prev, name: null }));
+                      setAddName(
+                        e.target.value
+                      );
+
+                      if (addErrors.name) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            name: null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.name ? "input-field-error" : ""}
+                    className={
+                      addErrors.name
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
-                  {addErrors.name && <span className="doc-field-error-msg">{addErrors.name}</span>}
+
+                  {addErrors.name && (
+                    <span className="doc-field-error-msg">
+                      {addErrors.name}
+                    </span>
+                  )}
                 </div>
 
                 <div className="form-group half">
-                  <label htmlFor="add-doc-phone">
-                    Phone Number <span className="req-star">*</span>
+                  <label htmlFor="add-doc-email">
+                    Email{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
+                  <input
+                    id="add-doc-email"
+                    type="email"
+                    placeholder="doctor@example.com"
+                    value={addEmail}
+                    onChange={(e) => {
+                      setAddEmail(
+                        e.target.value
+                      );
+
+                      if (addErrors.email) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            email: null,
+                          })
+                        );
+                      }
+                    }}
+                    className={
+                      addErrors.email
+                        ? "input-field-error"
+                        : ""
+                    }
+                    required
+                  />
+
+                  {addErrors.email && (
+                    <span className="doc-field-error-msg">
+                      {addErrors.email}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Phone + Blood Group */}
+
+              <div className="form-row">
+                <div className="form-group half">
+                  <label htmlFor="add-doc-phone">
+                    Phone Number{" "}
+                    <span className="req-star">
+                      *
+                    </span>
+                  </label>
+
                   <input
                     id="add-doc-phone"
                     type="tel"
                     placeholder="+91 98765 00000"
                     value={addPhone}
                     onChange={(e) => {
-                      setAddPhone(e.target.value);
-                      if (addErrors.phone) setAddErrors((prev) => ({ ...prev, phone: null }));
+                      setAddPhone(
+                        e.target.value
+                      );
+
+                      if (addErrors.phone) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            phone: null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.phone ? "input-field-error" : ""}
+                    className={
+                      addErrors.phone
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
-                  {addErrors.phone && <span className="doc-field-error-msg">{addErrors.phone}</span>}
+
+                  {addErrors.phone && (
+                    <span className="doc-field-error-msg">
+                      {addErrors.phone}
+                    </span>
+                  )}
+                </div>
+
+                <div className="form-group half">
+                  <label htmlFor="add-doc-blood">
+                    Blood Group
+                  </label>
+
+                  <select
+                    id="add-doc-blood"
+                    value={addBloodGroup}
+                    onChange={(e) =>
+                      setAddBloodGroup(
+                        e.target.value
+                      )
+                    }
+                  >
+                    <option value="">
+                      Not Provided
+                    </option>
+
+                    {bloodGroups.map(
+                      (bg) => (
+                        <option
+                          key={bg}
+                          value={bg}
+                        >
+                          {bg}
+                        </option>
+                      )
+                    )}
+                  </select>
                 </div>
               </div>
 
-              {/* 3. Specialization * & 4. Department * */}
+              {/* Specialization + Department */}
+
               <div className="form-row">
                 <div className="form-group half">
                   <label htmlFor="add-doc-spec">
-                    Specialization <span className="req-star">*</span>
+                    Specialization{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <input
                     id="add-doc-spec"
                     type="text"
-                    placeholder="e.g. Cardiologist"
+                    placeholder="e.g. Cardiology"
                     value={addSpecialization}
                     onChange={(e) => {
-                      setAddSpecialization(e.target.value);
-                      if (addErrors.specialization)
-                        setAddErrors((prev) => ({ ...prev, specialization: null }));
+                      setAddSpecialization(
+                        e.target.value
+                      );
+
+                      if (
+                        addErrors.specialization
+                      ) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            specialization:
+                              null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.specialization ? "input-field-error" : ""}
+                    className={
+                      addErrors.specialization
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
+
                   {addErrors.specialization && (
-                    <span className="doc-field-error-msg">{addErrors.specialization}</span>
+                    <span className="doc-field-error-msg">
+                      {
+                        addErrors.specialization
+                      }
+                    </span>
                   )}
                 </div>
 
                 <div className="form-group half">
                   <label htmlFor="add-doc-dept">
-                    Department <span className="req-star">*</span>
+                    Department{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <select
                     id="add-doc-dept"
                     value={addDepartment}
                     onChange={(e) => {
-                      setAddDepartment(e.target.value);
-                      if (addErrors.department)
-                        setAddErrors((prev) => ({ ...prev, department: null }));
+                      setAddDepartment(
+                        e.target.value
+                      );
+
+                      if (
+                        addErrors.department
+                      ) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            department: null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.department ? "input-field-error" : ""}
+                    className={
+                      addErrors.department
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   >
-                    {doctorDepartmentOptions.map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
+                    {doctorDepartmentOptions.map(
+                      (dept) => (
+                        <option
+                          key={dept}
+                          value={dept}
+                        >
+                          {dept}
+                        </option>
+                      )
+                    )}
                   </select>
+
                   {addErrors.department && (
-                    <span className="doc-field-error-msg">{addErrors.department}</span>
+                    <span className="doc-field-error-msg">
+                      {addErrors.department}
+                    </span>
                   )}
                 </div>
               </div>
 
-              {/* Custom Department input when "Other" is selected */}
+              {/* Custom Department */}
+
               {addDepartment === "Other" && (
                 <div className="form-group">
                   <label htmlFor="add-doc-custom-dept">
-                    Specify Department Name <span className="req-star">*</span>
+                    Specify Department Name{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <input
                     id="add-doc-custom-dept"
                     type="text"
                     placeholder="e.g. Oncology & Radiation Care"
                     value={addCustomDept}
                     onChange={(e) => {
-                      setAddCustomDept(e.target.value);
-                      if (addErrors.customDept)
-                        setAddErrors((prev) => ({ ...prev, customDept: null }));
+                      setAddCustomDept(
+                        e.target.value
+                      );
+
+                      if (
+                        addErrors.customDept
+                      ) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            customDept: null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.customDept ? "input-field-error" : ""}
+                    className={
+                      addErrors.customDept
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
+
                   {addErrors.customDept && (
-                    <span className="doc-field-error-msg">{addErrors.customDept}</span>
+                    <span className="doc-field-error-msg">
+                      {addErrors.customDept}
+                    </span>
                   )}
                 </div>
               )}
 
-              {/* 5. Qualifications * & 6. Experience (Years) * */}
+              {/* Qualification + Experience */}
+
               <div className="form-row">
                 <div className="form-group half">
                   <label htmlFor="add-doc-qual">
-                    Qualifications <span className="req-star">*</span>
+                    Qualifications{" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <input
                     id="add-doc-qual"
                     type="text"
                     placeholder="e.g. MBBS, MD"
                     value={addQualification}
                     onChange={(e) => {
-                      setAddQualification(e.target.value);
-                      if (addErrors.qualification)
-                        setAddErrors((prev) => ({ ...prev, qualification: null }));
+                      setAddQualification(
+                        e.target.value
+                      );
+
+                      if (
+                        addErrors.qualification
+                      ) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            qualification:
+                              null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.qualification ? "input-field-error" : ""}
+                    className={
+                      addErrors.qualification
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
+
                   {addErrors.qualification && (
-                    <span className="doc-field-error-msg">{addErrors.qualification}</span>
+                    <span className="doc-field-error-msg">
+                      {
+                        addErrors.qualification
+                      }
+                    </span>
                   )}
                 </div>
 
                 <div className="form-group half">
                   <label htmlFor="add-doc-exp">
-                    Experience (Years) <span className="req-star">*</span>
+                    Experience (Years){" "}
+                    <span className="req-star">
+                      *
+                    </span>
                   </label>
+
                   <input
                     id="add-doc-exp"
                     type="number"
@@ -1288,130 +2494,110 @@ function ManageDoctors() {
                     placeholder="e.g. 8"
                     value={addExperience}
                     onChange={(e) => {
-                      setAddExperience(e.target.value);
-                      if (addErrors.experience)
-                        setAddErrors((prev) => ({ ...prev, experience: null }));
+                      setAddExperience(
+                        e.target.value
+                      );
+
+                      if (
+                        addErrors.experience
+                      ) {
+                        setAddErrors(
+                          (prev) => ({
+                            ...prev,
+                            experience: null,
+                          })
+                        );
+                      }
                     }}
-                    className={addErrors.experience ? "input-field-error" : ""}
+                    className={
+                      addErrors.experience
+                        ? "input-field-error"
+                        : ""
+                    }
                     required
                   />
+
                   {addErrors.experience && (
-                    <span className="doc-field-error-msg">{addErrors.experience}</span>
+                    <span className="doc-field-error-msg">
+                      {addErrors.experience}
+                    </span>
                   )}
                 </div>
               </div>
 
-              {/* 7. Medical License Number * & 8. Consultation Fee * */}
-              <div className="form-row">
-                <div className="form-group half">
-                  <label htmlFor="add-doc-license">
-                    Medical License Number <span className="req-star">*</span>
-                  </label>
-                  <input
-                    id="add-doc-license"
-                    type="text"
-                    placeholder="e.g. MED-LIC-2026-001"
-                    value={addLicenseNumber}
-                    onChange={(e) => {
-                      setAddLicenseNumber(e.target.value);
-                      if (addErrors.licenseNumber)
-                        setAddErrors((prev) => ({ ...prev, licenseNumber: null }));
-                    }}
-                    className={addErrors.licenseNumber ? "input-field-error" : ""}
-                    required
-                  />
-                  {addErrors.licenseNumber && (
-                    <span className="doc-field-error-msg">{addErrors.licenseNumber}</span>
-                  )}
-                </div>
+              {/* Consultation Fee */}
 
-                <div className="form-group half">
-                  <label htmlFor="add-doc-fee">
-                    Consultation Fee (₹) <span className="req-star">*</span>
-                  </label>
-                  <input
-                    id="add-doc-fee"
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="e.g. 1200"
-                    value={addConsultationFee}
-                    onChange={(e) => {
-                      setAddConsultationFee(e.target.value);
-                      if (addErrors.consultationFee)
-                        setAddErrors((prev) => ({ ...prev, consultationFee: null }));
-                    }}
-                    className={addErrors.consultationFee ? "input-field-error" : ""}
-                    required
-                  />
-                  {addErrors.consultationFee && (
-                    <span className="doc-field-error-msg">{addErrors.consultationFee}</span>
-                  )}
-                </div>
-              </div>
-
-              {/* 9. Availability Schedule * */}
               <div className="form-group">
-                <div className="schedule-header-row">
-                  <label htmlFor="add-doc-sched">
-                    Availability Schedule <span className="req-star">*</span>
-                  </label>
-                  <span className="schedule-hint-text">Select a preset or enter working hours</span>
-                </div>
+                <label htmlFor="add-doc-fee">
+                  Consultation Fee (₹){" "}
+                  <span className="req-star">
+                    *
+                  </span>
+                </label>
+
                 <input
-                  id="add-doc-sched"
-                  type="text"
-                  placeholder="e.g. Mon - Fri, 09:00 AM - 04:00 PM"
-                  value={addAvailability}
+                  id="add-doc-fee"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="e.g. 1200"
+                  value={addConsultationFee}
                   onChange={(e) => {
-                    setAddAvailability(e.target.value);
-                    if (addErrors.availability)
-                      setAddErrors((prev) => ({ ...prev, availability: null }));
+                    setAddConsultationFee(
+                      e.target.value
+                    );
+
+                    if (
+                      addErrors.consultationFee
+                    ) {
+                      setAddErrors(
+                        (prev) => ({
+                          ...prev,
+                          consultationFee:
+                            null,
+                        })
+                      );
+                    }
                   }}
-                  className={addErrors.availability ? "input-field-error" : ""}
+                  className={
+                    addErrors.consultationFee
+                      ? "input-field-error"
+                      : ""
+                  }
                   required
                 />
-                {addErrors.availability && (
-                  <span className="doc-field-error-msg">{addErrors.availability}</span>
+
+                {addErrors.consultationFee && (
+                  <span className="doc-field-error-msg">
+                    {
+                      addErrors.consultationFee
+                    }
+                  </span>
                 )}
-                <div className="schedule-preset-chips">
-                  {[
-                    "Mon - Fri, 09:00 AM - 04:00 PM",
-                    "Mon - Sat, 10:00 AM - 05:00 PM",
-                    "Tue - Sun, 08:30 AM - 02:00 PM",
-                    "24/7 On-Call / Emergency Duty",
-                  ].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      className={`schedule-preset-chip ${addAvailability === preset ? "chip-active" : ""}`}
-                      onClick={() => {
-                        setAddAvailability(preset);
-                        if (addErrors.availability)
-                          setAddErrors((prev) => ({ ...prev, availability: null }));
-                      }}
-                    >
-                      <FaClock className="chip-icon" /> {preset}
-                    </button>
-                  ))}
+              </div>
+
+              {/* Backend limitation notice */}
+
+              <div className="doc-system-gen-banner">
+                <div className="sys-gen-icon-wrap">
+                  <FaHospital className="sys-gen-icon" />
+                </div>
+
+                <div className="sys-gen-text">
+                  <span className="sys-gen-title">
+                    Hospital Location
+                  </span>
+
+                  <p className="sys-gen-desc">
+                    Doctor location is automatically
+                    linked to the hospital's registered
+                    city.
+                  </p>
                 </div>
               </div>
 
-              {/* 10. On-Duty Status */}
-              <div className="form-group">
-                <label htmlFor="add-doc-status">On-Duty Status</label>
-                <select
-                  id="add-doc-status"
-                  value={addStatus}
-                  onChange={(e) => setAddStatus(e.target.value)}
-                >
-                  <option value="Available">Available</option>
-                  <option value="In Surgery">In Surgery</option>
-                  <option value="On Leave">On Leave</option>
-                </select>
-              </div>
+              {/* Actions */}
 
-              {/* Form Action Buttons */}
               <div className="hosp-modal-actions">
                 <button
                   type="button"
@@ -1423,9 +2609,15 @@ function ManageDoctors() {
                 >
                   Cancel
                 </button>
-                <button type="submit" className="hosp-btn-submit">
+
+                <button
+                  type="submit"
+                  className="hosp-btn-submit"
+                >
                   <FaCheckCircle />
-                  <span>Register Doctor</span>
+                  <span>
+                    Register Doctor
+                  </span>
                 </button>
               </div>
             </form>

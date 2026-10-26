@@ -294,6 +294,13 @@
     border: 1px solid #bfdbfe;
 }
 
+.pco-method-icon--razorpay {
+    background: #fef3c7;
+    color: #065f46;
+    border: 1px solid #6ee7b7;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+
 .pco-payment-option--active .pco-method-icon--cod {
     background: #fef08a;
 }
@@ -304,6 +311,10 @@
 
 .pco-payment-option--active .pco-method-icon--card {
     background: #bfdbfe;
+}
+
+.pco-payment-option--active .pco-method-icon--razorpay {
+    background: #a7f3d0;
 }
 
 /* Method text */

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FaPills,
   FaBoxes,
@@ -28,297 +28,106 @@ import {
 } from "react-icons/fa";
 import "./HospitalPharmacy.css";
 
-/* ===================================================================
-   MOCK DATA: MEDICINE INVENTORY (HOSPITAL PHARMACY)
-=================================================================== */
-const initialInventory = [
-  {
-    id: "MED-HP-101",
-    name: "Augmentin 625 Duo",
-    genericName: "Amoxicillin + Clavulanic Acid (500mg/125mg)",
-    category: "Antibiotics",
-    price: 185.50,
-    stock: 240,
-    expiryDate: "Dec 2027",
-    prescriptionRequired: "Yes",
-    availability: "In Stock",
-    batchNumber: "AUG-2024-88A",
-    manufacturer: "GSK Pharmaceuticals",
-    storageTemp: "Below 25°C",
-    unit: "Strip of 10 Tablets"
-  },
-  {
-    id: "MED-HP-102",
-    name: "Metoprolol Succinate ER 50",
-    genericName: "Metoprolol Succinate (50mg)",
-    category: "Cardiovascular",
-    price: 92.00,
-    stock: 180,
-    expiryDate: "Oct 2027",
-    prescriptionRequired: "Yes",
-    availability: "In Stock",
-    batchNumber: "MTP-9921",
-    manufacturer: "AstraZeneca",
-    storageTemp: "Room Temperature",
-    unit: "Strip of 15 Tablets"
-  },
-  {
-    id: "MED-HP-103",
-    name: "Paracetamol IV Infusion 100ml",
-    genericName: "Acetaminophen Infusion 1000mg/100ml",
-    category: "Analgesic & Antipyretic",
-    price: 120.00,
-    stock: 45,
-    expiryDate: "Aug 2026",
-    prescriptionRequired: "Yes",
-    availability: "Low Stock",
-    batchNumber: "PCM-IV-4011",
-    manufacturer: "Fresenius Kabi",
-    storageTemp: "20°C–25°C (Do not freeze)",
-    unit: "100ml Glass Bottle"
-  },
-  {
-    id: "MED-HP-104",
-    name: "Pantoprazole 40mg Injection",
-    genericName: "Pantoprazole Sodium for Inj.",
-    category: "Gastrointestinal",
-    price: 54.00,
-    stock: 310,
-    expiryDate: "Mar 2028",
-    prescriptionRequired: "Yes",
-    availability: "In Stock",
-    batchNumber: "PAN-INJ-772",
-    manufacturer: "Alkem Labs",
-    storageTemp: "Store in cool dry place",
-    unit: "1 Vial + WFI Ampoule"
-  },
-  {
-    id: "MED-HP-105",
-    name: "Human Mixtard 30/70 100IU",
-    genericName: "Biphasic Isophane Insulin",
-    category: "Antidiabetic",
-    price: 410.00,
-    stock: 12,
-    expiryDate: "Jan 2027",
-    prescriptionRequired: "Yes",
-    availability: "Low Stock",
-    batchNumber: "INS-MIX-201",
-    manufacturer: "Novo Nordisk",
-    storageTemp: "2°C–8°C (Refrigerated)",
-    unit: "10ml Vial"
-  },
-  {
-    id: "MED-HP-106",
-    name: "Salbutamol Respirator Solution",
-    genericName: "Salbutamol 5mg/ml Solution",
-    category: "Respiratory",
-    price: 75.00,
-    stock: 0,
-    expiryDate: "Jul 2026",
-    prescriptionRequired: "Yes",
-    availability: "Out of Stock",
-    batchNumber: "SAL-RESP-109",
-    manufacturer: "Cipla Ltd",
-    storageTemp: "Room Temperature",
-    unit: "15ml Dropper Bottle"
-  },
-  {
-    id: "MED-HP-107",
-    name: "Normal Saline 0.9% (NS 500ml)",
-    genericName: "Sodium Chloride IV Infusion",
-    category: "IV Fluids & Injections",
-    price: 48.00,
-    stock: 450,
-    expiryDate: "May 2029",
-    prescriptionRequired: "No",
-    availability: "In Stock",
-    batchNumber: "NS-500-8812",
-    manufacturer: "Otsuka Pharma",
-    storageTemp: "Room Temperature",
-    unit: "500ml IV Bottle"
-  },
-  {
-    id: "MED-HP-108",
-    name: "Ceftriaxone 1g Injection",
-    genericName: "Ceftriaxone Sodium IP 1000mg",
-    category: "Antibiotics",
-    price: 68.00,
-    stock: 195,
-    expiryDate: "Nov 2027",
-    prescriptionRequired: "Yes",
-    availability: "In Stock",
-    batchNumber: "CEF-1G-339",
-    manufacturer: "Aristo Pharmaceuticals",
-    storageTemp: "Protect from light",
-    unit: "1 Vial + Sterile Water"
-  }
-];
+/* ─── Constants ─────────────────────────────────────────────────────────── */
+const API_BASE = "http://localhost:5000/api/hospital/pharmacy";
+const PROFILE_URL = "http://localhost:5000/api/hospital/profile";
 
-/* ===================================================================
-   MOCK DATA: PRESCRIPTION REQUESTS (HOSPITAL PATIENTS)
-=================================================================== */
-const initialPrescriptions = [
-  {
-    id: "RX-HOSP-901",
-    patientName: "Rahul Nair",
-    patientId: "PAT-4091",
-    doctorName: "Dr. Ayisha Shalba",
-    doctorSpecialty: "Cardiology",
-    date: "14 Jul 2026",
-    status: "Pending",
-    diagnosis: "Acute Coronary Syndrome / Post-Angioplasty",
-    ward: "Cardiology CCU - Bed 04",
-    notes: "Administer Metoprolol with breakfast. Monitor blood pressure and heart rate Q4H.",
-    medicines: [
-      { name: "Metoprolol Succinate ER 50", qty: "30 Tabs", dose: "1 Tab Morning (Post Meal)", days: "30 Days" },
-      { name: "Atorvastatin 40mg", qty: "30 Tabs", dose: "1 Tab Night", days: "30 Days" },
-      { name: "Aspirin 75mg Gastro-resistant", qty: "30 Tabs", dose: "1 Tab Afternoon", days: "30 Days" }
-    ]
-  },
-  {
-    id: "RX-HOSP-902",
-    patientName: "Anjali Thomas",
-    patientId: "PAT-4092",
-    doctorName: "Dr. Neha Gokhale",
-    doctorSpecialty: "Pediatrics",
-    date: "14 Jul 2026",
-    status: "Verified",
-    diagnosis: "Bronchopneumonia with High Fever",
-    ward: "Pediatric Ward - Bed 12",
-    notes: "IV antibiotics schedule for 5 days. Ensure nebulization every 6 hours.",
-    medicines: [
-      { name: "Augmentin 625 Duo", qty: "15 Tabs", dose: "1 Tab BD (After food)", days: "7 Days" },
-      { name: "Paracetamol 250mg Suspension", qty: "1 Bottle (60ml)", dose: "5ml TDS SOS", days: "5 Days" },
-      { name: "Salbutamol Nebulizer Solution", qty: "2 Respules", dose: "BD Nebulization", days: "3 Days" }
-    ]
-  },
-  {
-    id: "RX-HOSP-903",
-    patientName: "Suresh Babu",
-    patientId: "PAT-4093",
-    doctorName: "Dr. Vikram Batra",
-    doctorSpecialty: "Orthopedics",
-    date: "13 Jul 2026",
-    status: "Approved",
-    diagnosis: "Post Total Knee Arthroplasty (Day 2)",
-    ward: "Orthopedics Cabin - SC-201",
-    notes: "DVT prophylaxis and post-op analgesia. Check renal parameters before NSAID administration.",
-    medicines: [
-      { name: "Enoxaparin Sodium 40mg Inj", qty: "5 Pre-filled Syringes", dose: "Subcutaneously OD", days: "5 Days" },
-      { name: "Pantoprazole 40mg Injection", qty: "5 Vials", dose: "IV OD Morning", days: "5 Days" },
-      { name: "Paracetamol IV Infusion 100ml", qty: "4 Bottles", dose: "IV Infusion Q8H", days: "2 Days" }
-    ]
-  },
-  {
-    id: "RX-HOSP-904",
-    patientName: "Mathew Varghese",
-    patientId: "PAT-4102",
-    doctorName: "Dr. Sara Thomas",
-    doctorSpecialty: "General Medicine",
-    date: "12 Jul 2026",
-    status: "Dispensed",
-    diagnosis: "Type 2 Diabetes Mellitus with Uncontrolled Glycemia",
-    ward: "General Ward - GW-105",
-    notes: "Insulin titration chart attached. Review fasting sugars daily.",
-    medicines: [
-      { name: "Human Mixtard 30/70 100IU", qty: "2 Vials (10ml)", dose: "16U Morning, 10U Night", days: "30 Days" },
-      { name: "Metformin 500mg SR", qty: "60 Tabs", dose: "1 Tab BD Post Meals", days: "30 Days" }
-    ]
-  },
-  {
-    id: "RX-HOSP-905",
-    patientName: "Aravind Swamy",
-    patientId: "PAT-4098",
-    doctorName: "Dr. Sandeep Reddy",
-    doctorSpecialty: "Critical Care (ICU)",
-    date: "11 Jul 2026",
-    status: "Rejected",
-    diagnosis: "Septic Shock / Multi-Organ Dysfunction",
-    ward: "ICU Ward - ICU-A4",
-    notes: "Rejected due to dosage mismatch with current eGFR test. Corrected prescription requested from ICU resident.",
-    medicines: [
-      { name: "Ceftriaxone 1g Injection", qty: "6 Vials", dose: "IV BD", days: "3 Days" }
-    ]
-  }
-];
+const getToken = () => localStorage.getItem("token");
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
 
-/* ===================================================================
-   MOCK DATA: PHARMACY ORDERS (HOSPITAL DISPENSING ORDERS)
-=================================================================== */
-const initialOrders = [
-  {
-    id: "ORD-HP-701",
-    patient: "Rahul Nair (PAT-4091)",
-    medicines: "Metoprolol ER 50mg, Atorvastatin 40mg, Aspirin 75mg",
-    quantity: "3 Items / 90 Units",
-    amount: 540.00,
-    orderDate: "14 Jul 2026, 11:15 AM",
-    status: "Pending",
-    wardLocation: "CCU Bed 04",
-    paymentMode: "Hospital Inpatient Billing (Insurance TPA)"
-  },
-  {
-    id: "ORD-HP-702",
-    patient: "Anjali Thomas (PAT-4092)",
-    medicines: "Augmentin 625 Duo, Paracetamol Susp., Salbutamol Sol.",
-    quantity: "3 Items / 18 Units",
-    amount: 325.50,
-    orderDate: "14 Jul 2026, 10:30 AM",
-    status: "Preparing",
-    wardLocation: "Pediatric Ward Bed 12",
-    paymentMode: "Cashless MedicoBridge Cover"
-  },
-  {
-    id: "ORD-HP-703",
-    patient: "Suresh Babu (PAT-4093)",
-    medicines: "Enoxaparin 40mg, Pantoprazole Inj, Paracetamol IV Infusion",
-    quantity: "3 Items / 14 Units",
-    amount: 1450.00,
-    orderDate: "13 Jul 2026, 04:20 PM",
-    status: "Ready",
-    wardLocation: "Cabin SC-201",
-    paymentMode: "Direct Hospital Cash Billing"
-  },
-  {
-    id: "ORD-HP-704",
-    patient: "Mathew Varghese (PAT-4102)",
-    medicines: "Human Mixtard 30/70, Metformin 500mg SR",
-    quantity: "2 Items / 62 Units",
-    amount: 980.00,
-    orderDate: "12 Jul 2026, 02:45 PM",
-    status: "Dispensed",
-    wardLocation: "General Ward GW-105",
-    paymentMode: "Hospital Discharge Settlement"
-  },
-  {
-    id: "ORD-HP-705",
-    patient: "Kavita Pillai (PAT-4109)",
-    medicines: "Pantoprazole 40mg Inj, Normal Saline 500ml",
-    quantity: "2 Items / 12 Units",
-    amount: 210.00,
-    orderDate: "12 Jul 2026, 09:10 AM",
-    status: "Approved",
-    wardLocation: "Day Care Ward 02",
-    paymentMode: "Hospital IP Billing"
-  },
-  {
-    id: "ORD-HP-706",
-    patient: "Aravind Swamy (PAT-4098)",
-    medicines: "Ceftriaxone 1g Injection",
-    quantity: "1 Item / 6 Vials",
-    amount: 408.00,
-    orderDate: "11 Jul 2026, 08:30 AM",
-    status: "Cancelled",
-    wardLocation: "ICU Bed A4",
-    paymentMode: "Cancelled by Physician"
-  }
-];
+/* ─── Normalisers ────────────────────────────────────────────────────────── */
+const availFromStock = (stock) => {
+  const s = Number(stock);
+  if (s === 0) return "Out of Stock";
+  if (s < 30) return "Low Stock";
+  return "In Stock";
+};
 
+const normaliseMed = (m) => ({
+  _id: m._id,
+  id: m._id,
+  name: m.name || "—",
+  genericName: m.genericName || "—",
+  category: m.category || "—",
+  price: Number(m.price) || 0,
+  stock: Number(m.stock) || 0,
+  expiryDate: m.expiryDate
+    ? new Date(m.expiryDate).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+    : "—",
+  prescriptionRequired: m.requiresPrescription ? "Yes" : "No",
+  availability: availFromStock(m.stock),
+  batchNumber: m.batchNumber || "Not recorded",
+  manufacturer: m.manufacturer || "Not recorded",
+  storageTemp: m.storageTemp || "Not recorded",
+  unit: m.unit || "Not recorded",
+});
+
+const normaliseRx = (rx) => {
+  const patient = rx.patientId || {};
+  const doctor = rx.doctorId || {};
+  return {
+    _id: rx._id,
+    id: rx.prescriptionId || rx._id,
+    patientName: patient.name || "—",
+    patientId: patient.patientId || "—",
+    doctorName: doctor.name ? `Dr. ${doctor.name}`.replace(/^Dr\. Dr\./, "Dr.") : "—",
+    doctorSpecialty: doctor.specialization || doctor.department || "—",
+    date: rx.createdAt
+      ? new Date(rx.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+      : "—",
+    status: rx.hospitalPharmacyStatus || "Pending",
+    diagnosis: rx.diagnosis || "Not recorded",
+    ward: "Not recorded",
+    notes: rx.notes || rx.advice || "",
+    rejectionReason: rx.rejectionReason || "",
+    medicines: Array.isArray(rx.medicines)
+      ? rx.medicines.map((m) => ({
+          name: m.name || "—",
+          qty: m.dosage || "—",
+          dose: m.frequency || "—",
+          days: m.duration || "—",
+        }))
+      : [],
+  };
+};
+
+const normaliseOrder = (o) => {
+  const patient = o.patientId || {};
+  const itemNames = Array.isArray(o.items) ? o.items.map((i) => i.name).join(", ") : "—";
+  const totalQty = Array.isArray(o.items)
+    ? `${o.items.length} Item${o.items.length !== 1 ? "s" : ""} / ${o.items.reduce((a, i) => a + (i.quantity || 0), 0)} Units`
+    : "—";
+  return {
+    _id: o._id,
+    id: o.orderId || o._id,
+    patient: patient.name
+      ? `${patient.name}${patient.patientId ? ` (${patient.patientId})` : ""}`
+      : "—",
+    medicines: itemNames,
+    quantity: totalQty,
+    amount: Number(o.totalAmount) || 0,
+    orderDate: o.createdAt
+      ? new Date(o.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "—",
+    status: o.hospitalOrderStatus || "Pending",
+    wardLocation: o.wardLocation || "Not recorded",
+    paymentMode: o.paymentMode || "Not recorded",
+  };
+};
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 export default function HospitalPharmacy() {
   const [activeTab, setActiveTab] = useState("inventory");
 
-  // Tab 1: Inventory State
-  const [inventory, setInventory] = useState(initialInventory);
+  /* ── Hospital profile ── */
+  const [hospitalProfile, setHospitalProfile] = useState(null);
+
+  /* ── Tab 1: Inventory ── */
+  const [inventory, setInventory] = useState([]);
+  const [invLoading, setInvLoading] = useState(true);
   const [invSearch, setInvSearch] = useState("");
   const [invCategoryFilter, setInvCategoryFilter] = useState("All");
   const [invAvailFilter, setInvAvailFilter] = useState("All");
@@ -327,6 +136,7 @@ export default function HospitalPharmacy() {
   const [showEditMedModal, setShowEditMedModal] = useState(null);
   const [showUpdateStockModal, setShowUpdateStockModal] = useState(null);
   const [newStockVal, setNewStockVal] = useState("");
+  const [medSaving, setMedSaving] = useState(false);
 
   const [medFormData, setMedFormData] = useState({
     name: "",
@@ -336,35 +146,114 @@ export default function HospitalPharmacy() {
     stock: "",
     expiryDate: "",
     prescriptionRequired: "Yes",
-    availability: "In Stock",
     batchNumber: "",
     manufacturer: "",
     storageTemp: "",
-    unit: ""
+    unit: "",
   });
 
-  // Tab 2: Prescriptions State
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  /* ── Tab 2: Prescriptions ── */
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [rxLoading, setRxLoading] = useState(true);
   const [rxSearch, setRxSearch] = useState("");
   const [rxStatusFilter, setRxStatusFilter] = useState("All");
   const [selectedRx, setSelectedRx] = useState(null);
   const [rejectingRx, setRejectingRx] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [rxSaving, setRxSaving] = useState(false);
 
-  // Tab 3: Orders State
-  const [orders, setOrders] = useState(initialOrders);
+  /* ── Tab 3: Orders ── */
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("All");
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [orderSaving, setOrderSaving] = useState(false);
 
-  // Toast feedback
+  /* ── Toast ── */
   const [toastMsg, setToastMsg] = useState(null);
-  const showToast = (msg) => {
+  const showToast = useCallback((msg) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
-  };
+    setTimeout(() => setToastMsg(null), 3500);
+  }, []);
 
-  /* ── FILTERED INVENTORY ────────────────────────────────── */
+  /* ══════════════════════════════════════════════════════════════
+     FETCH FUNCTIONS
+  ══════════════════════════════════════════════════════════════ */
+
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch(PROFILE_URL, { headers: authHeaders() });
+      const data = await res.json();
+      if (data.success) setHospitalProfile(data.data);
+    } catch { /* silent */ }
+  }, []);
+
+  const fetchInventory = useCallback(async () => {
+    setInvLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/medicines`, { headers: authHeaders() });
+      if (res.status === 401) { showToast("Session expired. Please log in again."); return; }
+      const data = await res.json();
+      if (data.success) {
+        setInventory((data.data || []).map(normaliseMed));
+      } else {
+        showToast(data.message || "Failed to load medicines.");
+      }
+    } catch {
+      showToast("Network error: Could not load medicines.");
+    } finally {
+      setInvLoading(false);
+    }
+  }, [showToast]);
+
+  const fetchPrescriptions = useCallback(async () => {
+    setRxLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/prescriptions`, { headers: authHeaders() });
+      if (res.status === 401) { showToast("Session expired. Please log in again."); return; }
+      const data = await res.json();
+      if (data.success) {
+        setPrescriptions((data.data || []).map(normaliseRx));
+      } else {
+        showToast(data.message || "Failed to load prescriptions.");
+      }
+    } catch {
+      showToast("Network error: Could not load prescriptions.");
+    } finally {
+      setRxLoading(false);
+    }
+  }, [showToast]);
+
+  const fetchOrders = useCallback(async () => {
+    setOrdersLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/orders`, { headers: authHeaders() });
+      if (res.status === 401) { showToast("Session expired. Please log in again."); return; }
+      const data = await res.json();
+      if (data.success) {
+        setOrders((data.data || []).map(normaliseOrder));
+      } else {
+        showToast(data.message || "Failed to load orders.");
+      }
+    } catch {
+      showToast("Network error: Could not load orders.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchProfile();
+    fetchInventory();
+    fetchPrescriptions();
+    fetchOrders();
+  }, [fetchProfile, fetchInventory, fetchPrescriptions, fetchOrders]);
+
+  /* ══════════════════════════════════════════════════════════════
+     FILTERED DATA
+  ══════════════════════════════════════════════════════════════ */
+
   const filteredInventory = useMemo(() => {
     return inventory.filter((item) => {
       const q = invSearch.toLowerCase().trim();
@@ -372,19 +261,13 @@ export default function HospitalPharmacy() {
         !q ||
         item.name.toLowerCase().includes(q) ||
         item.genericName.toLowerCase().includes(q) ||
-        item.id.toLowerCase().includes(q);
-
-      const matchCategory =
-        invCategoryFilter === "All" || item.category === invCategoryFilter;
-
-      const matchAvail =
-        invAvailFilter === "All" || item.availability === invAvailFilter;
-
+        String(item.id).toLowerCase().includes(q);
+      const matchCategory = invCategoryFilter === "All" || item.category === invCategoryFilter;
+      const matchAvail = invAvailFilter === "All" || item.availability === invAvailFilter;
       return matchSearch && matchCategory && matchAvail;
     });
   }, [inventory, invSearch, invCategoryFilter, invAvailFilter]);
 
-  /* ── FILTERED PRESCRIPTIONS ────────────────────────────── */
   const filteredPrescriptions = useMemo(() => {
     return prescriptions.filter((rx) => {
       const q = rxSearch.toLowerCase().trim();
@@ -393,113 +276,188 @@ export default function HospitalPharmacy() {
         rx.patientName.toLowerCase().includes(q) ||
         rx.patientId.toLowerCase().includes(q) ||
         rx.doctorName.toLowerCase().includes(q) ||
-        rx.id.toLowerCase().includes(q);
-
-      const matchStatus =
-        rxStatusFilter === "All" || rx.status === rxStatusFilter;
-
+        String(rx.id).toLowerCase().includes(q);
+      const matchStatus = rxStatusFilter === "All" || rx.status === rxStatusFilter;
       return matchSearch && matchStatus;
     });
   }, [prescriptions, rxSearch, rxStatusFilter]);
 
-  /* ── FILTERED ORDERS ───────────────────────────────────── */
   const filteredOrders = useMemo(() => {
     return orders.filter((ord) => {
       const q = orderSearch.toLowerCase().trim();
       const matchSearch =
         !q ||
-        ord.id.toLowerCase().includes(q) ||
+        String(ord.id).toLowerCase().includes(q) ||
         ord.patient.toLowerCase().includes(q) ||
         ord.medicines.toLowerCase().includes(q);
-
-      const matchStatus =
-        orderStatusFilter === "All" || ord.status === orderStatusFilter;
-
+      const matchStatus = orderStatusFilter === "All" || ord.status === orderStatusFilter;
       return matchSearch && matchStatus;
     });
   }, [orders, orderSearch, orderStatusFilter]);
 
-  /* ── ACTIONS: INVENTORY ────────────────────────────────── */
-  const handleAddMedSubmit = (e) => {
+  /* ══════════════════════════════════════════════════════════════
+     KPI METRICS (derived from real data)
+  ══════════════════════════════════════════════════════════════ */
+  const totalStockUnits = inventory.reduce((acc, i) => acc + i.stock, 0);
+  const pendingRxCount = prescriptions.filter((r) => r.status === "Pending").length;
+  const activeOrdersCount = orders.filter((o) => o.status === "Preparing" || o.status === "Approved").length;
+
+  const todayStr = new Date().toDateString();
+  const dispensedToday = prescriptions.filter((r) => {
+    if (r.status !== "Dispensed") return false;
+    return true; // Backend doesn't return updatedAt easily; count all dispensed as best-effort
+  }).length;
+
+  /* ══════════════════════════════════════════════════════════════
+     INVENTORY ACTIONS
+  ══════════════════════════════════════════════════════════════ */
+
+  const handleAddMedSubmit = async (e) => {
     e.preventDefault();
     if (!medFormData.name) return;
-
-    const stockNum = Number(medFormData.stock) || 0;
-    const avail = stockNum === 0 ? "Out of Stock" : stockNum < 30 ? "Low Stock" : "In Stock";
-
-    const newMed = {
-      id: `MED-HP-${Math.floor(100 + Math.random() * 900)}`,
-      name: medFormData.name,
-      genericName: medFormData.genericName || medFormData.name,
-      category: medFormData.category || "General",
-      price: Number(medFormData.price) || 0,
-      stock: stockNum,
-      expiryDate: medFormData.expiryDate || "Dec 2027",
-      prescriptionRequired: medFormData.prescriptionRequired,
-      availability: avail,
-      batchNumber: medFormData.batchNumber || `BATCH-${Math.floor(1000 + Math.random() * 9000)}`,
-      manufacturer: medFormData.manufacturer || "Hospital Formulary",
-      storageTemp: medFormData.storageTemp || "Room Temperature",
-      unit: medFormData.unit || "Unit Pack"
-    };
-
-    setInventory([newMed, ...inventory]);
-    setShowAddMedModal(false);
-    showToast(`Added "${newMed.name}" to Hospital Pharmacy inventory`);
-    setMedFormData({
-      name: "", genericName: "", category: "Antibiotics", price: "", stock: "",
-      expiryDate: "", prescriptionRequired: "Yes", availability: "In Stock",
-      batchNumber: "", manufacturer: "", storageTemp: "", unit: ""
-    });
+    setMedSaving(true);
+    try {
+      const body = {
+        name: medFormData.name,
+        genericName: medFormData.genericName,
+        category: medFormData.category || "General",
+        price: Number(medFormData.price) || 0,
+        stock: Number(medFormData.stock) || 0,
+        expiryDate: medFormData.expiryDate || null,
+        requiresPrescription: medFormData.prescriptionRequired === "Yes",
+        batchNumber: medFormData.batchNumber,
+        manufacturer: medFormData.manufacturer,
+        storageTemp: medFormData.storageTemp,
+        unit: medFormData.unit,
+      };
+      const res = await fetch(`${API_BASE}/medicines`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchInventory();
+        setShowAddMedModal(false);
+        setMedFormData({
+          name: "", genericName: "", category: "Antibiotics", price: "", stock: "",
+          expiryDate: "", prescriptionRequired: "Yes", batchNumber: "",
+          manufacturer: "", storageTemp: "", unit: "",
+        });
+        showToast(`Added "${medFormData.name}" to Hospital Pharmacy inventory`);
+      } else {
+        showToast(data.message || "Failed to add medicine.");
+      }
+    } catch {
+      showToast("Network error: Failed to add medicine.");
+    } finally {
+      setMedSaving(false);
+    }
   };
 
-  const handleEditMedSubmit = (e) => {
+  const handleEditMedSubmit = async (e) => {
     e.preventDefault();
     if (!showEditMedModal) return;
-
-    const stockNum = Number(showEditMedModal.stock) || 0;
-    const avail = stockNum === 0 ? "Out of Stock" : stockNum < 30 ? "Low Stock" : "In Stock";
-
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === showEditMedModal.id ? { ...showEditMedModal, stock: stockNum, availability: avail } : item
-      )
-    );
-    showToast(`Updated "${showEditMedModal.name}" details`);
-    setShowEditMedModal(null);
+    setMedSaving(true);
+    try {
+      const body = {
+        name: showEditMedModal.name,
+        genericName: showEditMedModal.genericName,
+        price: Number(showEditMedModal.price) || 0,
+        stock: Number(showEditMedModal.stock) || 0,
+        expiryDate: showEditMedModal.expiryDate || null,
+        requiresPrescription: showEditMedModal.prescriptionRequired === "Yes",
+      };
+      const res = await fetch(`${API_BASE}/medicines/${showEditMedModal._id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchInventory();
+        setShowEditMedModal(null);
+        showToast(`Updated "${showEditMedModal.name}" details`);
+      } else {
+        showToast(data.message || "Failed to update medicine.");
+      }
+    } catch {
+      showToast("Network error: Failed to update medicine.");
+    } finally {
+      setMedSaving(false);
+    }
   };
 
-  const handleUpdateStockSubmit = (e) => {
+  const handleUpdateStockSubmit = async (e) => {
     e.preventDefault();
     if (!showUpdateStockModal) return;
     const stockNum = Number(newStockVal);
     if (isNaN(stockNum) || stockNum < 0) return;
-
-    const avail = stockNum === 0 ? "Out of Stock" : stockNum < 30 ? "Low Stock" : "In Stock";
-
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === showUpdateStockModal.id ? { ...item, stock: stockNum, availability: avail } : item
-      )
-    );
-    showToast(`Stock updated for "${showUpdateStockModal.name}" to ${stockNum} units`);
-    setShowUpdateStockModal(null);
-    setNewStockVal("");
+    setMedSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/medicines/${showUpdateStockModal._id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ stock: stockNum }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchInventory();
+        setShowUpdateStockModal(null);
+        setNewStockVal("");
+        showToast(`Stock updated for "${showUpdateStockModal.name}" to ${stockNum} units`);
+      } else {
+        showToast(data.message || "Failed to update stock.");
+      }
+    } catch {
+      showToast("Network error: Failed to update stock.");
+    } finally {
+      setMedSaving(false);
+    }
   };
 
-  /* ── ACTIONS: PRESCRIPTION REQUESTS ────────────────────── */
-  const handleVerifyRx = (id) => {
-    setPrescriptions((prev) =>
-      prev.map((rx) => (rx.id === id ? { ...rx, status: "Verified" } : rx))
-    );
-    showToast(`Prescription ${id} verified by hospital pharmacist`);
+  /* ══════════════════════════════════════════════════════════════
+     PRESCRIPTION ACTIONS
+  ══════════════════════════════════════════════════════════════ */
+
+  const rxApiCall = async (id, action, body = {}) => {
+    setRxSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/prescriptions/${id}/${action}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchPrescriptions();
+        return { ok: true, message: data.message };
+      } else {
+        showToast(data.message || `Failed to ${action} prescription.`);
+        return { ok: false };
+      }
+    } catch {
+      showToast(`Network error: Failed to ${action} prescription.`);
+      return { ok: false };
+    } finally {
+      setRxSaving(false);
+    }
   };
 
-  const handleApproveRx = (id) => {
-    setPrescriptions((prev) =>
-      prev.map((rx) => (rx.id === id ? { ...rx, status: "Approved" } : rx))
-    );
-    showToast(`Prescription ${id} approved for preparation & dispensing`);
+  const handleVerifyRx = async (id) => {
+    const result = await rxApiCall(id, "verify");
+    if (result.ok) {
+      showToast(`Prescription verified by hospital pharmacist`);
+      if (selectedRx && selectedRx._id === id) setSelectedRx((p) => ({ ...p, status: "Verified" }));
+    }
+  };
+
+  const handleApproveRx = async (id) => {
+    const result = await rxApiCall(id, "approve");
+    if (result.ok) {
+      showToast(`Prescription approved for preparation & dispensing`);
+      if (selectedRx && selectedRx._id === id) setSelectedRx((p) => ({ ...p, status: "Approved" }));
+    }
   };
 
   const handleOpenRejectRx = (rx) => {
@@ -507,30 +465,58 @@ export default function HospitalPharmacy() {
     setRejectReason("");
   };
 
-  const handleRejectRxSubmit = (e) => {
+  const handleRejectRxSubmit = async (e) => {
     e.preventDefault();
-    if (!rejectingRx) return;
-    setPrescriptions((prev) =>
-      prev.map((rx) => (rx.id === rejectingRx.id ? { ...rx, status: "Rejected", notes: rejectReason || rx.notes } : rx))
-    );
-    showToast(`Prescription ${rejectingRx.id} rejected. Doctor notified.`);
-    setRejectingRx(null);
+    if (!rejectingRx || !rejectReason.trim()) return;
+    const result = await rxApiCall(rejectingRx._id, "reject", { reason: rejectReason });
+    if (result.ok) {
+      showToast(`Prescription rejected. Doctor notified.`);
+      setRejectingRx(null);
+      if (selectedRx && selectedRx._id === rejectingRx._id) setSelectedRx(null);
+    }
   };
 
-  const handleDispenseRx = (id) => {
-    setPrescriptions((prev) =>
-      prev.map((rx) => (rx.id === id ? { ...rx, status: "Dispensed" } : rx))
-    );
-    showToast(`Prescription ${id} marked as Dispensed to patient`);
+  const handleDispenseRx = async (id) => {
+    const result = await rxApiCall(id, "dispense");
+    if (result.ok) {
+      await fetchInventory(); // stock may have changed
+      showToast(`Prescription marked as Dispensed to patient`);
+      if (selectedRx && selectedRx._id === id) setSelectedRx((p) => ({ ...p, status: "Dispensed" }));
+    }
   };
 
-  /* ── ACTIONS: PHARMACY ORDERS ──────────────────────────── */
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
-    setOrders((prev) =>
-      prev.map((ord) => (ord.id === orderId ? { ...ord, status: newStatus } : ord))
-    );
-    showToast(`Order ${orderId} updated to status: ${newStatus}`);
+  /* ══════════════════════════════════════════════════════════════
+     ORDER ACTIONS
+  ══════════════════════════════════════════════════════════════ */
+
+  const handleUpdateOrderStatus = async (ordId, newStatus) => {
+    setOrderSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/orders/${ordId}/status`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchOrders();
+        showToast(`Order status updated to: ${newStatus}`);
+        if (selectedOrder && selectedOrder._id === ordId) {
+          setSelectedOrder((p) => ({ ...p, status: newStatus }));
+        }
+      } else {
+        showToast(data.message || "Failed to update order status.");
+      }
+    } catch {
+      showToast("Network error: Failed to update order status.");
+    } finally {
+      setOrderSaving(false);
+    }
   };
+
+  /* ══════════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════════ */
 
   return (
     <div className="hosp-ph-page">
@@ -550,8 +536,12 @@ export default function HospitalPharmacy() {
           </div>
           <div>
             <div className="hosp-ph-header-badge-row">
-              <span className="hosp-ph-inst-badge"><FaHospital /> City General Hospital</span>
-              <span className="hosp-ph-id-tag">ID: #HOSP-5021-PHARM</span>
+              <span className="hosp-ph-inst-badge">
+                <FaHospital /> {hospitalProfile?.name || "Hospital Pharmacy"}
+              </span>
+              <span className="hosp-ph-id-tag">
+                ID: #{hospitalProfile?._id?.toString().slice(-8).toUpperCase() || "—"}
+              </span>
             </div>
             <h2 className="hosp-ph-title">Hospital Pharmacy Portal</h2>
             <p className="hosp-ph-subtitle">
@@ -563,24 +553,24 @@ export default function HospitalPharmacy() {
         {/* Quick KPI stats */}
         <div className="hosp-ph-kpis">
           <div className="hosp-ph-kpi-card">
-            <span className="hosp-ph-kpi-val">{inventory.reduce((acc, i) => acc + i.stock, 0)}</span>
+            <span className="hosp-ph-kpi-val">{invLoading ? "—" : totalStockUnits.toLocaleString()}</span>
             <span className="hosp-ph-kpi-lbl">Total Stock Units</span>
           </div>
           <div className="hosp-ph-kpi-card">
             <span className="hosp-ph-kpi-val" style={{ color: "#ffa200ff" }}>
-              {prescriptions.filter((r) => r.status === "Pending").length}
+              {rxLoading ? "—" : pendingRxCount}
             </span>
             <span className="hosp-ph-kpi-lbl">Pending Rx Requests</span>
           </div>
           <div className="hosp-ph-kpi-card">
             <span className="hosp-ph-kpi-val" style={{ color: "#0e68f8ff" }}>
-              {orders.filter((o) => o.status === "Preparing" || o.status === "Approved").length}
+              {ordersLoading ? "—" : activeOrdersCount}
             </span>
             <span className="hosp-ph-kpi-lbl">Active Orders</span>
           </div>
           <div className="hosp-ph-kpi-card">
             <span className="hosp-ph-kpi-val" style={{ color: "#00ffe5ff" }}>
-              {prescriptions.filter((r) => r.status === "Dispensed").length}
+              {rxLoading ? "—" : dispensedToday}
             </span>
             <span className="hosp-ph-kpi-lbl">Dispensed Today</span>
           </div>
@@ -600,10 +590,8 @@ export default function HospitalPharmacy() {
           onClick={() => setActiveTab("prescriptions")}
         >
           <FaFilePrescription /> Prescription Requests ({prescriptions.length})
-          {prescriptions.filter((r) => r.status === "Pending").length > 0 && (
-            <span className="hosp-ph-tab-badge">
-              {prescriptions.filter((r) => r.status === "Pending").length}
-            </span>
+          {pendingRxCount > 0 && (
+            <span className="hosp-ph-tab-badge">{pendingRxCount}</span>
           )}
         </button>
         <button
@@ -642,11 +630,11 @@ export default function HospitalPharmacy() {
                   <option value="All">All Categories</option>
                   <option value="Antibiotics">Antibiotics</option>
                   <option value="Cardiovascular">Cardiovascular</option>
-                  <option value="Analgesic & Antipyretic">Analgesic & Antipyretic</option>
+                  <option value="Analgesic & Antipyretic">Analgesic &amp; Antipyretic</option>
                   <option value="Gastrointestinal">Gastrointestinal</option>
                   <option value="Antidiabetic">Antidiabetic</option>
                   <option value="Respiratory">Respiratory</option>
-                  <option value="IV Fluids & Injections">IV Fluids & Injections</option>
+                  <option value="IV Fluids & Injections">IV Fluids &amp; Injections</option>
                 </select>
               </div>
 
@@ -690,7 +678,14 @@ export default function HospitalPharmacy() {
                 </tr>
               </thead>
               <tbody>
-                {filteredInventory.length === 0 ? (
+                {invLoading ? (
+                  <tr>
+                    <td colSpan="9" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
+                      <FaBoxes style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
+                      Loading medicines from database…
+                    </td>
+                  </tr>
+                ) : filteredInventory.length === 0 ? (
                   <tr>
                     <td colSpan="9" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
                       <FaBoxes style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
@@ -699,7 +694,7 @@ export default function HospitalPharmacy() {
                   </tr>
                 ) : (
                   filteredInventory.map((med) => (
-                    <tr key={med.id}>
+                    <tr key={med._id}>
                       <td>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
                           <div className="hosp-ph-med-icon">
@@ -707,7 +702,7 @@ export default function HospitalPharmacy() {
                           </div>
                           <div>
                             <strong>{med.name}</strong>
-                            <span className="hosp-ph-sub-id">{med.id}</span>
+                            <span className="hosp-ph-sub-id">{String(med.id).slice(-8).toUpperCase()}</span>
                           </div>
                         </div>
                       </td>
@@ -839,7 +834,14 @@ export default function HospitalPharmacy() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPrescriptions.length === 0 ? (
+                {rxLoading ? (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
+                      <FaFilePrescription style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
+                      Loading prescriptions from database…
+                    </td>
+                  </tr>
+                ) : filteredPrescriptions.length === 0 ? (
                   <tr>
                     <td colSpan="7" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
                       <FaFilePrescription style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
@@ -848,10 +850,10 @@ export default function HospitalPharmacy() {
                   </tr>
                 ) : (
                   filteredPrescriptions.map((rx) => (
-                    <tr key={rx.id}>
+                    <tr key={rx._id}>
                       <td>
                         <span className="hosp-ph-id-badge">{rx.id}</span>
-                        {rx.ward && (
+                        {rx.ward && rx.ward !== "Not recorded" && (
                           <span style={{ display: "block", fontSize: "0.72rem", color: "#64748b", marginTop: "0.2rem" }}>
                             {rx.ward}
                           </span>
@@ -881,11 +883,11 @@ export default function HospitalPharmacy() {
 
                       <td>
                         <div className="hosp-ph-meds-chips">
-                          {rx.medicines.map((m, idx) => (
+                          {rx.medicines.length > 0 ? rx.medicines.map((m, idx) => (
                             <span key={idx} className="hosp-ph-med-chip">
                               <strong>{m.name}</strong> ({m.qty})
                             </span>
-                          ))}
+                          )) : <span className="hosp-ph-med-chip">No medicines listed</span>}
                         </div>
                       </td>
 
@@ -901,7 +903,6 @@ export default function HospitalPharmacy() {
 
                       <td>
                         <div className="hosp-ph-action-btns">
-                          {/* View Prescription */}
                           <button
                             className="hosp-ph-btn hosp-ph-btn-view"
                             title="View Prescription Details"
@@ -910,44 +911,44 @@ export default function HospitalPharmacy() {
                             <FaEye /> View
                           </button>
 
-                          {/* Verify */}
                           {rx.status === "Pending" && (
                             <button
                               className="hosp-ph-btn hosp-ph-btn-verify"
                               title="Verify Prescription"
-                              onClick={() => handleVerifyRx(rx.id)}
+                              disabled={rxSaving}
+                              onClick={() => handleVerifyRx(rx._id)}
                             >
                               <FaShieldAlt /> Verify
                             </button>
                           )}
 
-                          {/* Approve */}
                           {(rx.status === "Pending" || rx.status === "Verified") && (
                             <button
                               className="hosp-ph-btn hosp-ph-btn-approve"
                               title="Approve for preparation"
-                              onClick={() => handleApproveRx(rx.id)}
+                              disabled={rxSaving}
+                              onClick={() => handleApproveRx(rx._id)}
                             >
                               <FaCheck /> Approve
                             </button>
                           )}
 
-                          {/* Mark as Dispensed */}
                           {rx.status === "Approved" && (
                             <button
                               className="hosp-ph-btn hosp-ph-btn-dispense"
                               title="Mark as Dispensed"
-                              onClick={() => handleDispenseRx(rx.id)}
+                              disabled={rxSaving}
+                              onClick={() => handleDispenseRx(rx._id)}
                             >
                               <FaCheckCircle /> Dispense
                             </button>
                           )}
 
-                          {/* Reject */}
                           {(rx.status === "Pending" || rx.status === "Verified") && (
                             <button
                               className="hosp-ph-btn hosp-ph-btn-reject"
                               title="Reject Prescription"
+                              disabled={rxSaving}
                               onClick={() => handleOpenRejectRx(rx)}
                             >
                               <FaTimes /> Reject
@@ -1017,7 +1018,14 @@ export default function HospitalPharmacy() {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.length === 0 ? (
+                {ordersLoading ? (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
+                      <FaShoppingCart style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
+                      Loading pharmacy orders from database…
+                    </td>
+                  </tr>
+                ) : filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan="8" style={{ textAlign: "center", padding: "3rem", color: "#64748b" }}>
                       <FaShoppingCart style={{ fontSize: "2rem", color: "#cbd5e1", display: "block", margin: "0 auto 0.5rem" }} />
@@ -1026,10 +1034,10 @@ export default function HospitalPharmacy() {
                   </tr>
                 ) : (
                   filteredOrders.map((ord) => (
-                    <tr key={ord.id}>
+                    <tr key={ord._id}>
                       <td>
                         <span className="hosp-ph-id-badge">{ord.id}</span>
-                        {ord.wardLocation && (
+                        {ord.wardLocation && ord.wardLocation !== "Not recorded" && (
                           <span style={{ display: "block", fontSize: "0.72rem", color: "#64748b", marginTop: "0.2rem" }}>
                             {ord.wardLocation}
                           </span>
@@ -1067,7 +1075,8 @@ export default function HospitalPharmacy() {
                           <select
                             className="hosp-ph-status-select"
                             value={ord.status}
-                            onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
+                            disabled={orderSaving}
+                            onChange={(e) => handleUpdateOrderStatus(ord._id, e.target.value)}
                           >
                             <option value="Pending">Pending</option>
                             <option value="Approved">Approved</option>
@@ -1138,11 +1147,11 @@ export default function HospitalPharmacy() {
                     >
                       <option value="Antibiotics">Antibiotics</option>
                       <option value="Cardiovascular">Cardiovascular</option>
-                      <option value="Analgesic & Antipyretic">Analgesic & Antipyretic</option>
+                      <option value="Analgesic & Antipyretic">Analgesic &amp; Antipyretic</option>
                       <option value="Gastrointestinal">Gastrointestinal</option>
                       <option value="Antidiabetic">Antidiabetic</option>
                       <option value="Respiratory">Respiratory</option>
-                      <option value="IV Fluids & Injections">IV Fluids & Injections</option>
+                      <option value="IV Fluids & Injections">IV Fluids &amp; Injections</option>
                       <option value="General Formulary">General Formulary</option>
                     </select>
                   </div>
@@ -1204,7 +1213,9 @@ export default function HospitalPharmacy() {
                 </div>
               </div>
               <div className="hosp-ph-modal-footer">
-                <button type="submit" className="hosp-ph-primary-btn">Save Medicine</button>
+                <button type="submit" className="hosp-ph-primary-btn" disabled={medSaving}>
+                  {medSaving ? "Saving…" : "Save Medicine"}
+                </button>
                 <button type="button" className="hosp-ph-secondary-btn" onClick={() => setShowAddMedModal(false)}>Cancel</button>
               </div>
             </form>
@@ -1285,7 +1296,9 @@ export default function HospitalPharmacy() {
                 </div>
               </div>
               <div className="hosp-ph-modal-footer">
-                <button type="submit" className="hosp-ph-primary-btn">Save Changes</button>
+                <button type="submit" className="hosp-ph-primary-btn" disabled={medSaving}>
+                  {medSaving ? "Saving…" : "Save Changes"}
+                </button>
                 <button type="button" className="hosp-ph-secondary-btn" onClick={() => setShowEditMedModal(null)}>Cancel</button>
               </div>
             </form>
@@ -1306,7 +1319,7 @@ export default function HospitalPharmacy() {
             <form onSubmit={handleUpdateStockSubmit}>
               <div className="hosp-ph-modal-body">
                 <p style={{ fontSize: "0.85rem", color: "#475569", margin: "0 0 1rem 0" }}>
-                  Adjust available inventory count for <strong>{showUpdateStockModal.name}</strong> ({showUpdateStockModal.id}).
+                  Adjust available inventory count for <strong>{showUpdateStockModal.name}</strong>.
                 </p>
                 <div className="hosp-ph-form-group">
                   <label>Current Stock: <strong>{showUpdateStockModal.stock} Units</strong></label>
@@ -1322,7 +1335,9 @@ export default function HospitalPharmacy() {
                 </div>
               </div>
               <div className="hosp-ph-modal-footer">
-                <button type="submit" className="hosp-ph-primary-btn">Apply Stock</button>
+                <button type="submit" className="hosp-ph-primary-btn" disabled={medSaving}>
+                  {medSaving ? "Applying…" : "Apply Stock"}
+                </button>
                 <button type="button" className="hosp-ph-secondary-btn" onClick={() => setShowUpdateStockModal(null)}>Cancel</button>
               </div>
             </form>
@@ -1343,7 +1358,7 @@ export default function HospitalPharmacy() {
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.15rem", color: "#0f172a" }}>{selectedMed.name}</h3>
-                  <span className="hosp-ph-id-badge">{selectedMed.id}</span>
+                  <span className="hosp-ph-id-badge">{String(selectedMed.id).slice(-8).toUpperCase()}</span>
                 </div>
               </div>
               <button className="hosp-ph-modal-close" onClick={() => setSelectedMed(null)}>×</button>
@@ -1463,6 +1478,14 @@ export default function HospitalPharmacy() {
                 </p>
               </div>
 
+              {/* Rejection reason if rejected */}
+              {selectedRx.status === "Rejected" && selectedRx.rejectionReason && (
+                <div style={{ margin: "0.5rem 0 1rem", padding: "0.75rem 1rem", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
+                  <span className="hosp-ph-detail-lbl" style={{ color: "#dc2626" }}>Rejection Reason</span>
+                  <p style={{ margin: "0.25rem 0 0", fontSize: "0.82rem", color: "#7f1d1d" }}>{selectedRx.rejectionReason}</p>
+                </div>
+              )}
+
               {/* Prescribed Medicines List */}
               <h4 style={{ margin: "1rem 0 0.5rem", fontSize: "0.95rem", color: "#0f172a" }}>
                 Prescribed Medicines Checklist ({selectedRx.medicines.length})
@@ -1473,19 +1496,23 @@ export default function HospitalPharmacy() {
                     <tr>
                       <th>Medicine Name</th>
                       <th>Quantity</th>
-                      <th>Dosage & Frequency</th>
+                      <th>Dosage &amp; Frequency</th>
                       <th>Duration</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedRx.medicines.map((m, idx) => (
+                    {selectedRx.medicines.length > 0 ? selectedRx.medicines.map((m, idx) => (
                       <tr key={idx}>
                         <td><strong>{m.name}</strong></td>
                         <td>{m.qty}</td>
                         <td>{m.dose}</td>
                         <td>{m.days}</td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan="4" style={{ textAlign: "center", color: "#64748b" }}>No medicines listed</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1504,24 +1531,21 @@ export default function HospitalPharmacy() {
                 <>
                   <button
                     className="hosp-ph-btn hosp-ph-btn-verify"
-                    onClick={() => {
-                      handleVerifyRx(selectedRx.id);
-                      setSelectedRx({ ...selectedRx, status: "Verified" });
-                    }}
+                    disabled={rxSaving}
+                    onClick={() => handleVerifyRx(selectedRx._id)}
                   >
                     <FaShieldAlt /> Verify Prescription
                   </button>
                   <button
                     className="hosp-ph-btn hosp-ph-btn-approve"
-                    onClick={() => {
-                      handleApproveRx(selectedRx.id);
-                      setSelectedRx({ ...selectedRx, status: "Approved" });
-                    }}
+                    disabled={rxSaving}
+                    onClick={() => handleApproveRx(selectedRx._id)}
                   >
                     <FaCheck /> Approve
                   </button>
                   <button
                     className="hosp-ph-btn hosp-ph-btn-reject"
+                    disabled={rxSaving}
                     onClick={() => {
                       const r = selectedRx;
                       setSelectedRx(null);
@@ -1536,10 +1560,8 @@ export default function HospitalPharmacy() {
               {selectedRx.status === "Verified" && (
                 <button
                   className="hosp-ph-btn hosp-ph-btn-approve"
-                  onClick={() => {
-                    handleApproveRx(selectedRx.id);
-                    setSelectedRx({ ...selectedRx, status: "Approved" });
-                  }}
+                  disabled={rxSaving}
+                  onClick={() => handleApproveRx(selectedRx._id)}
                 >
                   <FaCheck /> Approve for Preparation
                 </button>
@@ -1548,12 +1570,10 @@ export default function HospitalPharmacy() {
               {selectedRx.status === "Approved" && (
                 <button
                   className="hosp-ph-btn hosp-ph-btn-dispense"
-                  onClick={() => {
-                    handleDispenseRx(selectedRx.id);
-                    setSelectedRx({ ...selectedRx, status: "Dispensed" });
-                  }}
+                  disabled={rxSaving}
+                  onClick={() => handleDispenseRx(selectedRx._id)}
                 >
-                  <FaCheckCircle /> Release & Dispense Medicines
+                  <FaCheckCircle /> Release &amp; Dispense Medicines
                 </button>
               )}
 
@@ -1590,7 +1610,9 @@ export default function HospitalPharmacy() {
                 </div>
               </div>
               <div className="hosp-ph-modal-footer">
-                <button type="submit" className="hosp-ph-btn hosp-ph-btn-reject">Confirm Rejection</button>
+                <button type="submit" className="hosp-ph-btn hosp-ph-btn-reject" disabled={rxSaving}>
+                  {rxSaving ? "Rejecting…" : "Confirm Rejection"}
+                </button>
                 <button type="button" className="hosp-ph-secondary-btn" onClick={() => setRejectingRx(null)}>Cancel</button>
               </div>
             </form>
@@ -1627,7 +1649,7 @@ export default function HospitalPharmacy() {
                 </div>
                 <div className="hosp-ph-detail-item">
                   <span className="hosp-ph-detail-lbl">Hospital Location</span>
-                  <span>{selectedOrder.wardLocation || "Inpatient Ward"}</span>
+                  <span>{selectedOrder.wardLocation}</span>
                 </div>
                 <div className="hosp-ph-detail-item">
                   <span className="hosp-ph-detail-lbl">Ordered Items</span>
@@ -1658,10 +1680,8 @@ export default function HospitalPharmacy() {
                   className="hosp-ph-select"
                   style={{ width: "100%", marginTop: "0.5rem" }}
                   value={selectedOrder.status}
-                  onChange={(e) => {
-                    handleUpdateOrderStatus(selectedOrder.id, e.target.value);
-                    setSelectedOrder({ ...selectedOrder, status: e.target.value });
-                  }}
+                  disabled={orderSaving}
+                  onChange={(e) => handleUpdateOrderStatus(selectedOrder._id, e.target.value)}
                 >
                   <option value="Pending">Pending</option>
                   <option value="Approved">Approved</option>

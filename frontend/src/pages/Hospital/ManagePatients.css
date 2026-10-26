@@ -46,6 +46,17 @@
   width: 100%;
 }
 
+.hosp-btn-download {
+  background: linear-gradient(135deg, #059669, #10b981);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+  cursor: pointer;
+  border-radius: 13px;
+  color: white;
+  border: 2px solid #10b981;
+  height: 34px;
+  width: 150px;
+}
+
 .hosp-pats-filters {
   display: flex;
   align-items: center;
@@ -85,9 +96,20 @@
   display: inline-block;
 }
 
-.hosp-status-badge--admitted { background-color: #fee2e2; color: #dc2626; }
-.hosp-status-badge--discharged { background-color: #dcfce7; color: #16a34a; }
-.hosp-status-badge--outpatient { background-color: #e0f2fe; color: #0284c7; }
+.hosp-status-badge--admitted {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.hosp-status-badge--discharged {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.hosp-status-badge--outpatient {
+  background-color: #e0f2fe;
+  color: #0284c7;
+}
 
 /* Buttons */
 .hosp-btn-discharge {
@@ -227,4 +249,3 @@
   font-size: 1rem;
   flex-shrink: 0;
 }
-

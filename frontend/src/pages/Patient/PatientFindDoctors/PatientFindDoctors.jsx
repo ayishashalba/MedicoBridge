@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
 import { NavLink } from "react-router-dom";
+
 import {
   FaSearch,
   FaStethoscope,
@@ -11,7 +13,6 @@ import {
   FaClinicMedical,
   FaMoneyBillWave,
   FaBriefcase,
-  FaFilter,
   FaTimes,
   FaUserMd,
   FaCheckCircle,
@@ -19,285 +20,221 @@ import {
   FaHeart,
   FaRegHeart,
 } from "react-icons/fa";
-import { isDoctorSaved, toggleSaveDoctorInStorage } from "../../../utils/savedDoctorsStorage";
+
+import {
+  isDoctorSaved,
+  toggleSaveDoctorInStorage,
+} from "../../../utils/savedDoctorsStorage";
+import { API_BASE_URL } from "../../../services/apiConfig";
+
 import "./PatientFindDoctors.css";
 
-/* ─── Dummy Doctor Data ──────────────────────────────────────────── */
-const doctorsData = [
-  {
-    id: 1,
-    name: "Dr. Aisha Khan",
-    specialization: "Cardiologist",
-    experience: 14,
-    hospital: "Apollo Hospitals",
-    city: "Mumbai",
-    type: "hospital",
-    fee: 800,
-    rating: 4.9,
-    reviews: 312,
-    available: true,
-    gender: "female",
-    initials: "AK",
-    color: "#7c3aed",
-  },
-  {
-    id: 2,
-    name: "Dr. Rahul Verma",
-    specialization: "Orthopedic Surgeon",
-    experience: 10,
-    hospital: "Fortis Healthcare",
-    city: "Delhi",
-    type: "hospital",
-    fee: 700,
-    rating: 4.7,
-    reviews: 245,
-    available: true,
-    gender: "male",
-    initials: "RV",
-    color: "#0284c7",
-  },
-  {
-    id: 3,
-    name: "Dr. Priya Sharma",
-    specialization: "Dermatologist",
-    experience: 8,
-    hospital: "Skin Care Clinic",
-    city: "Bangalore",
-    type: "clinic",
-    fee: 500,
-    rating: 4.8,
-    reviews: 198,
-    available: false,
-    gender: "female",
-    initials: "PS",
-    color: "#0d9488",
-  },
-  {
-    id: 4,
-    name: "Dr. Suresh Nair",
-    specialization: "Neurologist",
-    experience: 18,
-    hospital: "AIIMS",
-    city: "Chennai",
-    type: "hospital",
-    fee: 1200,
-    rating: 4.9,
-    reviews: 512,
-    available: true,
-    gender: "male",
-    initials: "SN",
-    color: "#f59e0b",
-  },
-  {
-    id: 5,
-    name: "Dr. Meera Patel",
-    specialization: "Gynecologist",
-    experience: 12,
-    hospital: "Wockhardt Hospital",
-    city: "Pune",
-    type: "hospital",
-    fee: 600,
-    rating: 4.6,
-    reviews: 178,
-    available: true,
-    gender: "female",
-    initials: "MP",
-    color: "#ec4899",
-  },
-  {
-    id: 6,
-    name: "Dr. Arjun Mehta",
-    specialization: "Pediatrician",
-    experience: 7,
-    hospital: "Child Care Clinic",
-    city: "Hyderabad",
-    type: "clinic",
-    fee: 450,
-    rating: 4.5,
-    reviews: 133,
-    available: false,
-    gender: "male",
-    initials: "AM",
-    color: "#10b981",
-  },
-  {
-    id: 7,
-    name: "Dr. Kavitha Reddy",
-    specialization: "Ophthalmologist",
-    experience: 9,
-    hospital: "Vision Eye Hospital",
-    city: "Kochi",
-    type: "hospital",
-    fee: 550,
-    rating: 4.7,
-    reviews: 162,
-    available: true,
-    gender: "female",
-    initials: "KR",
-    color: "#6366f1",
-  },
-  {
-    id: 8,
-    name: "Dr. Vikram Singh",
-    specialization: "Psychiatrist",
-    experience: 11,
-    hospital: "MindCare Clinic",
-    city: "Jaipur",
-    type: "clinic",
-    fee: 700,
-    rating: 4.8,
-    reviews: 89,
-    available: true,
-    gender: "male",
-    initials: "VS",
-    color: "#8b5cf6",
-  },
-  {
-    id: 9,
-    name: "Dr. Ananya Das",
-    specialization: "Endocrinologist",
-    experience: 13,
-    hospital: "Max Healthcare",
-    city: "Kolkata",
-    type: "hospital",
-    fee: 900,
-    rating: 4.6,
-    reviews: 204,
-    available: false,
-    gender: "female",
-    initials: "AD",
-    color: "#ef4444",
-  },
-  {
-    id: 10,
-    name: "Dr. Rohit Gupta",
-    specialization: "General Physician",
-    experience: 5,
-    hospital: "HealthFirst Clinic",
-    city: "Lucknow",
-    type: "clinic",
-    fee: 300,
-    rating: 4.4,
-    reviews: 76,
-    available: true,
-    gender: "male",
-    initials: "RG",
-    color: "#f97316",
-  },
-  {
-    id: 11,
-    name: "Dr. Sunita Joshi",
-    specialization: "Rheumatologist",
-    experience: 16,
-    hospital: "Medanta Hospital",
-    city: "Gurugram",
-    type: "hospital",
-    fee: 1000,
-    rating: 4.9,
-    reviews: 298,
-    available: true,
-    gender: "female",
-    initials: "SJ",
-    color: "#14b8a6",
-  },
-  {
-    id: 12,
-    name: "Dr. Kiran Kumar",
-    specialization: "Urologist",
-    experience: 15,
-    hospital: "Urology Specialty Clinic",
-    city: "Ahmedabad",
-    type: "clinic",
-    fee: 750,
-    rating: 4.5,
-    reviews: 141,
-    available: false,
-    gender: "male",
-    initials: "KK",
-    color: "#64748b",
-  },
-];
+const IMAGE_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
 
 const FILTERS = ["All Doctors", "Hospital Doctors", "Clinic Doctors"];
 
-/* ─── Star Rating Component ──────────────────────────────────────── */
 function StarRating({ rating }) {
   const stars = [];
-  const full = Math.floor(rating);
-  const half = rating % 1 >= 0.5;
+  const numericRating = Number(rating) || 0;
+
+  const full = Math.floor(numericRating);
+  const half = numericRating % 1 >= 0.5;
+
   for (let i = 1; i <= 5; i++) {
-    if (i <= full) stars.push(<FaStar key={i} />);
-    else if (i === full + 1 && half) stars.push(<FaStarHalfAlt key={i} />);
-    else stars.push(<FaRegStar key={i} />);
+    if (i <= full) {
+      stars.push(<FaStar key={i} />);
+    } else if (i === full + 1 && half) {
+      stars.push(<FaStarHalfAlt key={i} />);
+    } else {
+      stars.push(<FaRegStar key={i} />);
+    }
   }
+
   return <span className="fd-stars">{stars}</span>;
 }
 
-/* ─── Doctor Card ────────────────────────────────────────────────── */
-function DoctorCard({ doctor }) {
-  const [saved, setSaved] = useState(() => isDoctorSaved(doctor.id));
+function getInitials(name = "Doctor") {
+  return name
+    .replace(/^Dr\.?\s*/i, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join("");
+}
 
-  React.useEffect(() => {
-    const handleUpdate = () => setSaved(isDoctorSaved(doctor.id));
+function getDoctorType(doctor) {
+  const practiceType = String(doctor.practiceType || "").toLowerCase();
+
+  if (practiceType === "clinic") return "clinic";
+
+  if (practiceType === "both") {
+    return doctor.hospitalName ? "hospital" : "clinic";
+  }
+
+  return "hospital";
+}
+
+function getDoctorLocation(doctor) {
+  if (doctor.city) return doctor.city;
+
+  if (doctor.clinicCity) return doctor.clinicCity;
+
+  if (doctor.hospitalId?.city) return doctor.hospitalId.city;
+
+  return "Location not provided";
+}
+
+function getDoctorHospital(doctor) {
+  const type = getDoctorType(doctor);
+
+  if (type === "clinic") {
+    return doctor.clinicName || "Clinic";
+  }
+
+  return (
+    doctor.hospitalName ||
+    doctor.hospitalId?.name ||
+    "Hospital not provided"
+  );
+}
+
+function DoctorCard({ doctor }) {
+  const doctorId = doctor._id;
+
+  const [saved, setSaved] = useState(() =>
+    isDoctorSaved(doctorId)
+  );
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSaved(isDoctorSaved(doctorId));
+    };
+
     window.addEventListener("savedDoctorsUpdated", handleUpdate);
-    return () => window.removeEventListener("savedDoctorsUpdated", handleUpdate);
-  }, [doctor.id]);
+
+    return () => {
+      window.removeEventListener(
+        "savedDoctorsUpdated",
+        handleUpdate
+      );
+    };
+  }, [doctorId]);
 
   const handleToggleSave = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const nowSaved = toggleSaveDoctorInStorage(doctor);
+
+    const nowSaved = toggleSaveDoctorInStorage({
+      ...doctor,
+      id: doctorId,
+    });
+
     setSaved(nowSaved);
   };
 
+  const doctorType = getDoctorType(doctor);
+  const doctorName = doctor.name || "Doctor";
+  const initials = getInitials(doctorName);
+  const rating = Number(doctor.rating) || 0;
+
+  const experience = doctor.experience
+    ? `${doctor.experience} years experience`
+    : "Experience not provided";
+
+  const consultationFee =
+    doctor.consultationFee ?? 500;
+
+  const hospitalOrClinic = getDoctorHospital(doctor);
+  const location = getDoctorLocation(doctor);
+
   return (
-    <article className="fd-card" aria-label={`Doctor card for ${doctor.name}`}>
-      {/* Availability ribbon */}
+    <article
+      className="fd-card"
+      aria-label={`Doctor card for ${doctorName}`}
+    >
+      {/* Availability */}
       <div
-        className={`fd-card-ribbon ${doctor.available ? "fd-ribbon--available" : "fd-ribbon--busy"}`}
+        className={`fd-card-ribbon fd-ribbon--available`}
       >
         <span>
-          {doctor.available ? (
-            <>
-              <FaCheckCircle /> Available Today
-            </>
-          ) : (
-            <>
-              <FaClock /> Unavailable
-            </>
-          )}
+          <FaCheckCircle /> Available Today
         </span>
+
         <button
           className="fd-card-save-btn"
           onClick={handleToggleSave}
-          title={saved ? "Remove from saved doctors" : "Save doctor"}
-          aria-label={saved ? "Remove from saved doctors" : "Save doctor"}
+          title={
+            saved
+              ? "Remove from saved doctors"
+              : "Save doctor"
+          }
+          aria-label={
+            saved
+              ? "Remove from saved doctors"
+              : "Save doctor"
+          }
         >
-          {saved ? <FaHeart style={{ color: "#ef4444" }} /> : <FaRegHeart />}
+          {saved ? (
+            <FaHeart style={{ color: "#ef4444" }} />
+          ) : (
+            <FaRegHeart />
+          )}
         </button>
       </div>
 
-      {/* Photo / Avatar */}
+      {/* Doctor Identity */}
       <div className="fd-card-top">
         <div
           className="fd-avatar"
-          style={{ background: `linear-gradient(135deg, ${doctor.color}cc, ${doctor.color}66)`, border: `2.5px solid ${doctor.color}55` }}
-          aria-label={`Photo of ${doctor.name}`}
+          style={{
+            background:
+              "linear-gradient(135deg, var(--primary-color), var(--secondary-color))",
+            border:
+              "2.5px solid rgba(13, 148, 136, 0.25)",
+          }}
+          aria-label={`Photo of ${doctorName}`}
         >
-          <span className="fd-avatar-initials">{doctor.initials}</span>
-          <span className={`fd-avatar-status ${doctor.available ? "fd-status--online" : "fd-status--offline"}`} />
+          {doctor.profileImage ? (
+            <img
+              src={
+                doctor.profileImage.startsWith("http")
+                  ? doctor.profileImage
+                  : `${IMAGE_BASE}${doctor.profileImage}`
+              }
+              alt={doctorName}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <span className="fd-avatar-initials">
+              {initials}
+            </span>
+          )}
+
+          <span className="fd-avatar-status fd-status--online" />
         </div>
 
         <div className="fd-card-identity">
-          <h3 className="fd-doctor-name">{doctor.name}</h3>
+          <h3 className="fd-doctor-name">
+            {doctorName}
+          </h3>
+
           <p className="fd-specialization">
             <FaStethoscope className="fd-meta-icon" />
-            {doctor.specialization}
+            {doctor.specialization || "Specialist"}
           </p>
+
           <div className="fd-rating-row">
-            <StarRating rating={doctor.rating} />
-            <span className="fd-rating-value">{doctor.rating}</span>
-            <span className="fd-reviews">({doctor.reviews} reviews)</span>
+            <StarRating rating={rating} />
+
+            <span className="fd-rating-value">
+              {rating > 0 ? rating.toFixed(1) : "N/A"}
+            </span>
           </div>
         </div>
       </div>
@@ -305,41 +242,60 @@ function DoctorCard({ doctor }) {
       {/* Details */}
       <div className="fd-card-details">
         <div className="fd-detail-item">
-          {doctor.type === "hospital" ? (
+          {doctorType === "hospital" ? (
             <FaHospital className="fd-detail-icon fd-icon--hospital" />
           ) : (
             <FaClinicMedical className="fd-detail-icon fd-icon--clinic" />
           )}
-          <span className="fd-detail-text">{doctor.hospital}</span>
-          <span className={`fd-type-badge fd-type-badge--${doctor.type}`}>
-            {doctor.type}
+
+          <span className="fd-detail-text">
+            {hospitalOrClinic}
+          </span>
+
+          <span
+            className={`fd-type-badge fd-type-badge--${doctorType}`}
+          >
+            {doctorType}
           </span>
         </div>
 
         <div className="fd-detail-item">
           <FaMapMarkerAlt className="fd-detail-icon fd-icon--location" />
-          <span className="fd-detail-text">{doctor.city}</span>
+
+          <span className="fd-detail-text">
+            {location}
+          </span>
         </div>
 
         <div className="fd-detail-item">
           <FaBriefcase className="fd-detail-icon fd-icon--exp" />
-          <span className="fd-detail-text">{doctor.experience} years experience</span>
+
+          <span className="fd-detail-text">
+            {experience}
+          </span>
         </div>
       </div>
 
-      {/* Fee + CTA */}
+      {/* Fee + Profile */}
       <div className="fd-card-footer">
         <div className="fd-fee">
           <FaMoneyBillWave className="fd-fee-icon" />
+
           <div>
-            <span className="fd-fee-label">Consultation Fee</span>
-            <span className="fd-fee-value">₹{doctor.fee}</span>
+            <span className="fd-fee-label">
+              Consultation Fee
+            </span>
+
+            <span className="fd-fee-value">
+              ₹{consultationFee}
+            </span>
           </div>
         </div>
+
         <NavLink
-          to={`/patient/doctor-profile/${doctor.id}`}
+          to={`/patient/doctor-profile/${doctorId}`}
           className="fd-view-btn"
-          aria-label={`View profile of ${doctor.name}`}
+          aria-label={`View profile of ${doctorName}`}
         >
           <FaUserMd />
           View Profile
@@ -349,147 +305,200 @@ function DoctorCard({ doctor }) {
   );
 }
 
-/* ─── Main Page Component ────────────────────────────────────────── */
 function PatientFindDoctors() {
+  const [doctors, setDoctors] = useState([]);
+
   const [searchName, setSearchName] = useState("");
   const [searchSpec, setSearchSpec] = useState("");
   const [searchHospital, setSearchHospital] = useState("");
   const [searchCity, setSearchCity] = useState("");
-  const [activeFilter, setActiveFilter] = useState("All Doctors");
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // New location feature states
-  const [selectedCity, setSelectedCity] = useState("All");
-  const [locationMessage, setLocationMessage] = useState("");
-  const [isLocationError, setIsLocationError] = useState(false);
-  const [isLocating, setIsLocating] = useState(false);
+  const [activeFilter, setActiveFilter] =
+    useState("All Doctors");
 
-  // Dynamically compute list of unique cities from doctors data
-  const uniqueCities = useMemo(() => {
-    return Array.from(new Set(doctorsData.map((doc) => doc.city))).sort();
-  }, []);
+  const [selectedCity, setSelectedCity] =
+    useState("All");
 
-  // Offline mock mapping from lat/lng to one of the cities
-  const getMockCityFromCoords = (lat, lng) => {
-    const sum = Math.abs(lat + lng);
-    const index = Math.floor(sum) % uniqueCities.length;
-    return uniqueCities[index];
-  };
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleUseMyLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationMessage("Location access denied. Please select your city manually.");
-      setIsLocationError(true);
-      return;
+  const fetchDoctors = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const token = localStorage.getItem("token");
+
+      const params = new URLSearchParams();
+
+      if (searchName.trim()) {
+        params.append("search", searchName.trim());
+      }
+
+      if (searchSpec.trim()) {
+        params.append(
+          "specialization",
+          searchSpec.trim()
+        );
+      }
+
+      if (searchCity.trim()) {
+        params.append("city", searchCity.trim());
+      }
+
+      const response = await fetch(
+        `${API_BASE_URL}/patient/doctors?${params.toString()}`,
+        {
+          headers: token
+            ? {
+              Authorization: `Bearer ${token}`,
+            }
+            : {},
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to fetch doctors."
+        );
+      }
+
+      setDoctors(data.data || []);
+    } catch (error) {
+      console.error("Find doctors error:", error);
+      setDoctors([]);
+      setErrorMessage(
+        error.message || "Unable to load doctors."
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLocating(true);
-    setLocationMessage("");
-    setIsLocationError(false);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        const detectedCity = getMockCityFromCoords(latitude, longitude);
-        setSelectedCity(detectedCity);
-        setLocationMessage(`📍 Showing doctors near ${detectedCity}`);
-        setIsLocationError(false);
-        setIsLocating(false);
-      },
-      (error) => {
-        setLocationMessage("Location access denied. Please select your city manually.");
-        setIsLocationError(true);
-        setIsLocating(false);
-      },
-      { timeout: 10000 }
-    );
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDoctors();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchName, searchSpec, searchCity]);
+
+  const uniqueCities = useMemo(() => {
+    const cities = doctors
+      .map((doctor) => getDoctorLocation(doctor))
+      .filter(
+        (city) =>
+          city && city !== "Location not provided"
+      );
+
+    return Array.from(new Set(cities)).sort();
+  }, [doctors]);
 
   const handleCityChange = (city) => {
     setSelectedCity(city);
-    setLocationMessage(""); // Clear status message on manual select
-    setIsLocationError(false);
+
+    if (city === "All") {
+      setSearchCity("");
+    } else {
+      setSearchCity(city);
+    }
   };
 
-  /* Clear all search inputs */
   const handleClearSearch = () => {
     setSearchName("");
     setSearchSpec("");
     setSearchHospital("");
     setSearchCity("");
     setSelectedCity("All");
-    setLocationMessage("");
-    setIsLocationError(false);
   };
 
-  const hasSearch =
-    searchName || searchSpec || searchHospital || searchCity || selectedCity !== "All";
-
-  /* Filtered list */
   const filteredDoctors = useMemo(() => {
-    return doctorsData.filter((doc) => {
+    return doctors.filter((doctor) => {
+      const doctorType = getDoctorType(doctor);
+
       const matchType =
         activeFilter === "All Doctors" ||
-        (activeFilter === "Hospital Doctors" && doc.type === "hospital") ||
-        (activeFilter === "Clinic Doctors" && doc.type === "clinic");
+        (activeFilter === "Hospital Doctors" &&
+          doctorType === "hospital") ||
+        (activeFilter === "Clinic Doctors" &&
+          doctorType === "clinic");
 
-      const q = (str) => str.toLowerCase();
-      const matchName = doc.name.toLowerCase().includes(q(searchName));
-      const matchSpec = doc.specialization
-        .toLowerCase()
-        .includes(q(searchSpec));
-      const matchHosp = doc.hospital
-        .toLowerCase()
-        .includes(q(searchHospital));
-      const matchCity = doc.city.toLowerCase().includes(q(searchCity));
-      const matchSelectedCity =
-        selectedCity === "All" || doc.city.toLowerCase() === selectedCity.toLowerCase();
+      const hospitalName =
+        getDoctorHospital(doctor).toLowerCase();
 
-      return matchType && matchName && matchSpec && matchHosp && matchCity && matchSelectedCity;
+      const matchHospital =
+        !searchHospital.trim() ||
+        hospitalName.includes(
+          searchHospital.trim().toLowerCase()
+        );
+
+      return matchType && matchHospital;
     });
-  }, [activeFilter, searchName, searchSpec, searchHospital, searchCity, selectedCity]);
+  }, [
+    doctors,
+    activeFilter,
+    searchHospital,
+  ]);
+
+  const hasSearch =
+    searchName ||
+    searchSpec ||
+    searchHospital ||
+    searchCity ||
+    selectedCity !== "All";
 
   return (
     <div className="fd-page">
-      {/* ── Page Header ─────────────────────────────────────── */}
+      {/* Header */}
       <header className="fd-page-header">
         <div className="fd-header-text">
-          <h1 className="fd-page-title">Find Doctors</h1>
+          <h1 className="fd-page-title">
+            Find Doctors
+          </h1>
+
           <p className="fd-page-subtitle">
-            Search verified specialists across hospitals and clinics near you.
+            Search verified specialists across hospitals
+            and clinics near you.
           </p>
         </div>
+
         <div className="fd-header-count">
           <span className="fd-count-badge">
             <FaUserMd />
-            Showing {filteredDoctors.length} of {doctorsData.length} doctors
+
+            Showing {filteredDoctors.length} of{" "}
+            {doctors.length} doctors
           </span>
         </div>
       </header>
 
-      {/* ── Search & Filter Panel ────────────────────────────── */}
-      <section className="fd-search-panel" aria-label="Doctor search and filters">
-        {/* Location Row */}
+      {/* Search */}
+      <section
+        className="fd-search-panel"
+        aria-label="Doctor search and filters"
+      >
+        {/* Location */}
         <div className="fd-location-row">
-          <button
-            type="button"
-            className={`fd-location-btn ${isLocating ? "fd-location-btn--locating" : ""}`}
-            onClick={handleUseMyLocation}
-            disabled={isLocating}
-          >
-            <span>{isLocating ? "Locating..." : "📍 Use My Location"}</span>
-          </button>
-
           <div className="fd-city-dropdown-container">
-            <span className="fd-dropdown-label">City:</span>
+            <span className="fd-dropdown-label">
+              City:
+            </span>
+
             <select
               id="fd-city-select"
               className="fd-city-select"
               value={selectedCity}
-              onChange={(e) => handleCityChange(e.target.value)}
-              aria-label="Filter doctors by city dropdown"
+              onChange={(e) =>
+                handleCityChange(e.target.value)
+              }
+              aria-label="Filter doctors by city"
             >
-              <option value="All">All Locations</option>
+              <option value="All">
+                All Locations
+              </option>
+
               {uniqueCities.map((city) => (
                 <option key={city} value={city}>
                   {city}
@@ -497,35 +506,32 @@ function PatientFindDoctors() {
               ))}
             </select>
           </div>
-
-          {locationMessage && (
-            <span
-              className={`fd-location-message ${isLocationError ? "fd-location-message--error" : "fd-location-message--success"}`}
-            >
-              {locationMessage}
-            </span>
-          )}
         </div>
 
-        {/* Search bar row */}
+        {/* Search Fields */}
         <div className="fd-search-row">
           <div className="fd-search-grid">
-            {/* Doctor Name */}
+            {/* Name */}
             <div className="fd-search-field">
               <FaUserMd className="fd-search-field-icon" />
+
               <input
                 id="fd-search-name"
                 type="text"
                 className="fd-search-input"
                 placeholder="Doctor name…"
                 value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                aria-label="Search by doctor name"
+                onChange={(e) =>
+                  setSearchName(e.target.value)
+                }
               />
+
               {searchName && (
                 <button
                   className="fd-input-clear"
-                  onClick={() => setSearchName("")}
+                  onClick={() =>
+                    setSearchName("")
+                  }
                   aria-label="Clear doctor name"
                 >
                   <FaTimes />
@@ -536,19 +542,24 @@ function PatientFindDoctors() {
             {/* Specialization */}
             <div className="fd-search-field">
               <FaStethoscope className="fd-search-field-icon" />
+
               <input
                 id="fd-search-spec"
                 type="text"
                 className="fd-search-input"
                 placeholder="Specialization…"
                 value={searchSpec}
-                onChange={(e) => setSearchSpec(e.target.value)}
-                aria-label="Search by specialization"
+                onChange={(e) =>
+                  setSearchSpec(e.target.value)
+                }
               />
+
               {searchSpec && (
                 <button
                   className="fd-input-clear"
-                  onClick={() => setSearchSpec("")}
+                  onClick={() =>
+                    setSearchSpec("")
+                  }
                   aria-label="Clear specialization"
                 >
                   <FaTimes />
@@ -556,22 +567,27 @@ function PatientFindDoctors() {
               )}
             </div>
 
-            {/* Hospital */}
+            {/* Hospital / Clinic */}
             <div className="fd-search-field">
               <FaHospital className="fd-search-field-icon" />
+
               <input
                 id="fd-search-hospital"
                 type="text"
                 className="fd-search-input"
                 placeholder="Hospital / Clinic name…"
                 value={searchHospital}
-                onChange={(e) => setSearchHospital(e.target.value)}
-                aria-label="Search by hospital or clinic name"
+                onChange={(e) =>
+                  setSearchHospital(e.target.value)
+                }
               />
+
               {searchHospital && (
                 <button
                   className="fd-input-clear"
-                  onClick={() => setSearchHospital("")}
+                  onClick={() =>
+                    setSearchHospital("")
+                  }
                   aria-label="Clear hospital name"
                 >
                   <FaTimes />
@@ -579,22 +595,29 @@ function PatientFindDoctors() {
               )}
             </div>
 
-            {/* City */}
+            {/* Location */}
             <div className="fd-search-field">
               <FaMapMarkerAlt className="fd-search-field-icon" />
+
               <input
                 id="fd-search-city"
                 type="text"
                 className="fd-search-input"
                 placeholder="City / Location…"
                 value={searchCity}
-                onChange={(e) => setSearchCity(e.target.value)}
-                aria-label="Search by city or location"
+                onChange={(e) => {
+                  setSearchCity(e.target.value);
+                  setSelectedCity("All");
+                }}
               />
+
               {searchCity && (
                 <button
                   className="fd-input-clear"
-                  onClick={() => setSearchCity("")}
+                  onClick={() => {
+                    setSearchCity("");
+                    setSelectedCity("All");
+                  }}
                   aria-label="Clear city"
                 >
                   <FaTimes />
@@ -603,69 +626,159 @@ function PatientFindDoctors() {
             </div>
           </div>
 
-          {/* Search button */}
-          <button className="fd-search-btn" aria-label="Search doctors">
+          <button
+            className="fd-search-btn"
+            onClick={fetchDoctors}
+            aria-label="Search doctors"
+          >
             <FaSearch />
             <span>Search</span>
           </button>
         </div>
 
-        {/* Clear all & count row */}
+        {/* Clear */}
         {hasSearch && (
           <div className="fd-search-meta">
             <span className="fd-search-meta-text">
               Showing results for your filters
             </span>
+
             <button
               className="fd-clear-all-btn"
               onClick={handleClearSearch}
               aria-label="Clear all search filters"
             >
-              <FaTimes /> Clear all
+              <FaTimes />
+              Clear all
             </button>
           </div>
         )}
 
-        {/* Filter tabs */}
-        <div className="fd-filter-tabs" role="tablist" aria-label="Doctor type filter">
-          {FILTERS.map((f) => (
+        {/* Type Filters */}
+        <div
+          className="fd-filter-tabs"
+          role="tablist"
+          aria-label="Doctor type filter"
+        >
+          {FILTERS.map((filter) => (
             <button
-              key={f}
+              key={filter}
               role="tab"
-              aria-selected={activeFilter === f}
-              className={`fd-filter-tab ${activeFilter === f ? "fd-filter-tab--active" : ""}`}
-              onClick={() => setActiveFilter(f)}
+              aria-selected={
+                activeFilter === filter
+              }
+              className={`fd-filter-tab ${activeFilter === filter
+                  ? "fd-filter-tab--active"
+                  : ""
+                }`}
+              onClick={() =>
+                setActiveFilter(filter)
+              }
             >
-              {f === "Hospital Doctors" && <FaHospital />}
-              {f === "Clinic Doctors" && <FaClinicMedical />}
-              {f === "All Doctors" && <FaUserMd />}
-              {f}
+              {filter === "Hospital Doctors" && (
+                <FaHospital />
+              )}
+
+              {filter === "Clinic Doctors" && (
+                <FaClinicMedical />
+              )}
+
+              {filter === "All Doctors" && (
+                <FaUserMd />
+              )}
+
+              {filter}
             </button>
           ))}
         </div>
       </section>
 
-      {/* ── Doctor Cards Grid ─────────────────────────────────── */}
-      {filteredDoctors.length > 0 ? (
-        <section className="fd-cards-grid" aria-label="Doctor listings">
-          {filteredDoctors.map((doc) => (
-            <DoctorCard key={doc.id} doctor={doc} />
-          ))}
-        </section>
-      ) : (
+      {/* Loading */}
+      {isLoading && (
         <div className="fd-empty-state">
           <div className="fd-empty-icon">
             <FaStethoscope />
           </div>
-          <h3 className="fd-empty-title">No doctors found</h3>
+
+          <h3 className="fd-empty-title">
+            Loading doctors...
+          </h3>
+
           <p className="fd-empty-desc">
-            Try adjusting your search terms or removing filters.
+            Please wait while we fetch verified doctors.
           </p>
-          <button className="fd-empty-clear-btn" onClick={handleClearSearch}>
-            <FaTimes /> Clear Search
+        </div>
+      )}
+
+      {/* Error */}
+      {!isLoading && errorMessage && (
+        <div className="fd-empty-state">
+          <div className="fd-empty-icon">
+            <FaTimes />
+          </div>
+
+          <h3 className="fd-empty-title">
+            Unable to load doctors
+          </h3>
+
+          <p className="fd-empty-desc">
+            {errorMessage}
+          </p>
+
+          <button
+            className="fd-empty-clear-btn"
+            onClick={fetchDoctors}
+          >
+            <FaSearch />
+            Try Again
           </button>
         </div>
       )}
+
+      {/* Doctors */}
+      {!isLoading &&
+        !errorMessage &&
+        filteredDoctors.length > 0 && (
+          <section
+            className="fd-cards-grid"
+            aria-label="Doctor listings"
+          >
+            {filteredDoctors.map((doctor) => (
+              <DoctorCard
+                key={doctor._id}
+                doctor={doctor}
+              />
+            ))}
+          </section>
+        )}
+
+      {/* Empty */}
+      {!isLoading &&
+        !errorMessage &&
+        filteredDoctors.length === 0 && (
+          <div className="fd-empty-state">
+            <div className="fd-empty-icon">
+              <FaStethoscope />
+            </div>
+
+            <h3 className="fd-empty-title">
+              No doctors found
+            </h3>
+
+            <p className="fd-empty-desc">
+              Try adjusting your search terms or
+              removing filters.
+            </p>
+
+            <button
+              className="fd-empty-clear-btn"
+              onClick={handleClearSearch}
+            >
+              <FaTimes />
+              Clear Search
+            </button>
+          </div>
+        )}
     </div>
   );
 }

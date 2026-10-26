@@ -1,316 +1,1358 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
 import {
   FaChartBar,
   FaFileDownload,
-  FaFileCsv,
-  FaFilePdf,
-  FaArrowUp,
-  FaCalendarAlt,
   FaTimes,
   FaShieldAlt,
   FaPills,
   FaCalendarCheck,
-  FaCheckCircle,
-  FaUserMd,
+  FaShoppingCart,
+  FaMoneyBillWave,
 } from "react-icons/fa";
-import {
-  getStoredMedicines,
-  getStoredAppointments,
-} from "../../utils/adminData";
+
 import { generateBloodGroupReport } from "../../utils/pdfGenerator";
+import { toast } from "react-toastify";
+
 import "./AdminPages.css";
+
+const REPORTS_API = "http://localhost:5000/api/admin/reports";
+const MEDICINES_API = "http://localhost:5000/api/admin/medicines";
 
 export default function AdminReports() {
   const [medicines, setMedicines] = useState([]);
-  const [appointments, setAppointments] = useState([]);
+  const [reportData, setReportData] = useState(null);
+
   const [showExportModal, setShowExportModal] = useState(false);
   const [reportDomain, setReportDomain] = useState("DrugSafety");
   const [reportFormat, setReportFormat] = useState("PDF");
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
 
-  useEffect(() => {
-    setMedicines(getStoredMedicines());
-    setAppointments(getStoredAppointments());
-  }, []);
+  const [loading, setLoading] = useState(true);
+  const [exportLoading, setExportLoading] = useState(false);
 
-  const totalApproved = medicines.filter((m) => m.approvalStatus === "Approved").length;
-  const totalBlocked = medicines.filter((m) => m.approvalStatus === "Blocked").length;
-  const totalPending = medicines.filter((m) => m.approvalStatus === "Pending Review").length;
-  const completedAptsCount = appointments.filter((a) => a.status === "Completed").length;
+  // =========================================================
+  // FETCH REPORT DATA
+  // =========================================================
 
-  const handleExport = (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+      const token = localStorage.getItem("token");
 
-      if (reportFormat === "PDF") {
-        let cols = [];
-        let data = [];
-        let title = "";
-
-        if (reportDomain === "DrugSafety") {
-          title = "Administrative Drug Safety & Regulatory Compliance Report";
-          cols = [
-            { header: "Drug ID", dataKey: "id" },
-            { header: "Medicine Name", dataKey: "name" },
-            { header: "Manufacturer", dataKey: "manufacturer" },
-            { header: "Batch No", dataKey: "batchNumber" },
-            { header: "Submitting Pharmacy", dataKey: "submittingPharmacy" },
-            { header: "Expiry Date", dataKey: "expiryDate" },
-            { header: "Approval Status", dataKey: "approvalStatus" },
-          ];
-          data = medicines;
-        } else if (reportDomain === "Appointments") {
-          title = "Platform Telehealth & Consultation Audit Report";
-          cols = [
-            { header: "Apt ID", dataKey: "id" },
-            { header: "Patient Name", dataKey: "patientName" },
-            { header: "Doctor Name", dataKey: "doctorName" },
-            { header: "Specialization", dataKey: "specialization" },
-            { header: "Mode", dataKey: "type" },
-            { header: "Date", dataKey: "date" },
-            { header: "Status", dataKey: "status" },
-          ];
-          data = appointments;
-        } else {
-          title = "Platform Provider Compliance & Verification Registry";
-          cols = [
-            { header: "Drug ID", dataKey: "id" },
-            { header: "Dispensary Entity", dataKey: "submittingPharmacy" },
-            { header: "Category", dataKey: "pharmacyType" },
-            { header: "Drug Listed", dataKey: "name" },
-            { header: "Status", dataKey: "approvalStatus" },
-          ];
-          data = medicines;
-        }
-
-        generateBloodGroupReport({
-          title,
-          selectedBloodGroup: "N/A (Regulatory Platform Audit)",
-          generatedBy: "System Super Administrator",
-          columns: cols,
-          data,
-          activeFilters: { ReportDomain: reportDomain, Timestamp: new Date().toLocaleDateString() },
-        });
+      if (!token) {
+        toast.error("Admin authentication token not found.");
+        return;
       }
 
-      setSuccessMsg(`Successfully generated & exported ${reportDomain} audit report (${reportFormat}).`);
-      setShowExportModal(false);
-      setTimeout(() => setSuccessMsg(""), 3500);
-    }, 1200);
+      const [reportsResponse, medicinesResponse] = await Promise.all([
+        fetch(REPORTS_API, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }),
+
+        fetch(MEDICINES_API, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }),
+      ]);
+
+      const reportsJson = await reportsResponse.json();
+      const medicinesJson = await medicinesResponse.json();
+
+      if (!reportsResponse.ok || reportsJson.success === false) {
+        throw new Error(
+          reportsJson.message || "Failed to fetch platform reports."
+        );
+      }
+
+      if (!medicinesResponse.ok || medicinesJson.success === false) {
+        throw new Error(
+          medicinesJson.message || "Failed to fetch medicine reports."
+        );
+      }
+
+      setReportData(reportsJson.data || {});
+
+      // Admin medicine controller uses sendSuccess(),
+      // so medicine records are inside data.
+      const medicineList = Array.isArray(medicinesJson.data)
+        ? medicinesJson.data
+        : medicinesJson.data?.medicines || [];
+
+      setMedicines(medicineList);
+    } catch (error) {
+      console.error("Admin reports fetch error:", error);
+
+      toast.error(error.message || "Failed to load reports.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const monthlyComplianceData = [
-    { label: "Jan", val: 94, height: 75 },
-    { label: "Feb", val: 96, height: 80 },
-    { label: "Mar", val: 95, height: 78 },
-    { label: "Apr", val: 98, height: 88 },
-    { label: "May", val: 97, height: 84 },
-    { label: "Jun", val: 99, height: 95 },
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  // =========================================================
+  // REAL ANALYTICS
+  // =========================================================
+
+  const analytics = reportData?.analytics || {};
+
+  const totalAppointments = Number(
+    analytics.totalAppointments || 0
+  );
+
+  const completedAppointments = Number(
+    analytics.completedAppointments || 0
+  );
+
+  const cancelledAppointments = Number(
+    analytics.cancelledAppointments || 0
+  );
+
+  const appointmentCompletionRate = Number(
+    analytics.appointmentCompletionRate || 0
+  );
+
+  const totalOrders = Number(
+    analytics.totalOrders || 0
+  );
+
+  const deliveredOrders = Number(
+    analytics.deliveredOrders || 0
+  );
+
+  const totalSales = Number(
+    analytics.totalSales || 0
+  );
+
+  // =========================================================
+  // MEDICINE COUNTS
+  // =========================================================
+
+  const totalApproved = useMemo(
+    () =>
+      medicines.filter(
+        (medicine) =>
+          medicine.approvalStatus === "Approved"
+      ).length,
+    [medicines]
+  );
+
+  const totalBlocked = useMemo(
+    () =>
+      medicines.filter(
+        (medicine) =>
+          medicine.approvalStatus === "Blocked"
+      ).length,
+    [medicines]
+  );
+
+  const totalPending = useMemo(
+    () =>
+      medicines.filter(
+        (medicine) =>
+          medicine.approvalStatus === "Pending Review"
+      ).length,
+    [medicines]
+  );
+
+  // =========================================================
+  // HELPERS
+  // =========================================================
+
+  const getMedicineId = (medicine) => {
+    if (medicine?.medicineId) {
+      return medicine.medicineId;
+    }
+
+    if (medicine?._id) {
+      return `MED-${medicine._id
+        .slice(-6)
+        .toUpperCase()}`;
+    }
+
+    if (medicine?.id) {
+      return medicine.id;
+    }
+
+    return "N/A";
+  };
+
+  const getMedicineName = (medicine) => {
+    return (
+      medicine?.name ||
+      medicine?.medicineName ||
+      "Unnamed Medicine"
+    );
+  };
+
+  const getGenericName = (medicine) => {
+    return (
+      medicine?.genericName ||
+      medicine?.generic ||
+      "Generic name not provided"
+    );
+  };
+
+  const getManufacturer = (medicine) => {
+    return medicine?.manufacturer || "N/A";
+  };
+
+  const getSubmittingPharmacy = (medicine) => {
+    if (typeof medicine?.submittingPharmacy === "string") {
+      return medicine.submittingPharmacy;
+    }
+
+    return (
+      medicine?.pharmacyId?.name ||
+      medicine?.pharmacy?.name ||
+      "N/A"
+    );
+  };
+
+  const getLabStatus = (medicine) => {
+    return (
+      medicine?.labVerificationStatus ||
+      "Standard Review"
+    );
+  };
+
+  const getApprovalStatus = (medicine) => {
+    return (
+      medicine?.approvalStatus ||
+      "Pending Review"
+    );
+  };
+
+  const getExpiryDate = (medicine) => {
+    if (!medicine?.expiryDate) {
+      return "N/A";
+    }
+
+    const date = new Date(medicine.expiryDate);
+
+    if (Number.isNaN(date.getTime())) {
+      return "N/A";
+    }
+
+    return date.toLocaleDateString();
+  };
+
+  const formatCurrency = (value) => {
+    return `₹${Number(value || 0).toLocaleString(
+      "en-IN",
+      {
+        maximumFractionDigits: 2,
+      }
+    )}`;
+  };
+
+  const getStatusStyle = (status) => {
+    if (status === "Approved") {
+      return {
+        background: "#dcfce7",
+        color: "#16a34a",
+      };
+    }
+
+    if (status === "Blocked") {
+      return {
+        background: "#fee2e2",
+        color: "#dc2626",
+      };
+    }
+
+    if (status === "Rejected") {
+      return {
+        background: "#fee2e2",
+        color: "#dc2626",
+      };
+    }
+
+    return {
+      background: "#fef3c7",
+      color: "#d97706",
+    };
+  };
+
+  // =========================================================
+  // CSV EXPORT
+  // =========================================================
+
+  const downloadCSV = (
+    columns,
+    data,
+    filename
+  ) => {
+    if (
+      !Array.isArray(data) ||
+      data.length === 0
+    ) {
+      toast.warning(
+        "No data available for this report."
+      );
+      return;
+    }
+
+    const escapeCSV = (value) => {
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return "";
+      }
+
+      const stringValue = String(value).replace(
+        /"/g,
+        '""'
+      );
+
+      return `"${stringValue}"`;
+    };
+
+    const headerRow = columns
+      .map((column) =>
+        escapeCSV(column.header)
+      )
+      .join(",");
+
+    const dataRows = data.map((row) =>
+      columns
+        .map((column) =>
+          escapeCSV(row[column.dataKey])
+        )
+        .join(",")
+    );
+
+    const csvContent = [
+      headerRow,
+      ...dataRows,
+    ].join("\n");
+
+    const blob = new Blob(
+      [csvContent],
+      {
+        type: "text/csv;charset=utf-8;",
+      }
+    );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+    link.download = filename;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  };
+
+  // =========================================================
+  // PREPARE DRUG REPORT
+  // =========================================================
+
+  const getDrugReportData = () => {
+    return medicines.map((medicine) => ({
+      id: getMedicineId(medicine),
+
+      name: getMedicineName(medicine),
+
+      manufacturer:
+        getManufacturer(medicine),
+
+      batchNumber:
+        medicine?.batchNumber || "N/A",
+
+      submittingPharmacy:
+        getSubmittingPharmacy(medicine),
+
+      expiryDate:
+        getExpiryDate(medicine),
+
+      approvalStatus:
+        getApprovalStatus(medicine),
+    }));
+  };
+
+  // =========================================================
+  // APPOINTMENT REPORT
+  // =========================================================
+
+  // Current Admin Reports API provides
+  // appointment analytics only, not individual
+  // appointment records.
+  //
+  // Do NOT fabricate appointment rows.
+
+  const getAppointmentReportData = () => {
+    return [];
+  };
+
+  // =========================================================
+  // PROVIDER REPORT
+  // =========================================================
+
+  // Current Admin Reports API does not provide
+  // provider registry rows.
+  //
+  // Do NOT reuse medicine records as provider data.
+
+  const getProviderReportData = () => {
+    return [];
+  };
+
+  // =========================================================
+  // EXPORT
+  // =========================================================
+
+  const handleExport = async (event) => {
+    event.preventDefault();
+
+    try {
+      setExportLoading(true);
+
+      // =====================================================
+      // DRUG SAFETY EXPORT
+      // =====================================================
+
+      if (reportDomain === "DrugSafety") {
+        const data =
+          getDrugReportData();
+
+        if (data.length === 0) {
+          toast.warning(
+            "No medicine records available for export."
+          );
+          return;
+        }
+
+        const columns = [
+          {
+            header: "Drug ID",
+            dataKey: "id",
+          },
+
+          {
+            header: "Medicine Name",
+            dataKey: "name",
+          },
+
+          {
+            header: "Manufacturer",
+            dataKey: "manufacturer",
+          },
+
+          {
+            header: "Batch No",
+            dataKey: "batchNumber",
+          },
+
+          {
+            header: "Submitting Pharmacy",
+            dataKey: "submittingPharmacy",
+          },
+
+          {
+            header: "Expiry Date",
+            dataKey: "expiryDate",
+          },
+
+          {
+            header: "Approval Status",
+            dataKey: "approvalStatus",
+          },
+        ];
+
+        // CSV
+        if (reportFormat === "CSV") {
+          downloadCSV(
+            columns,
+            data,
+            `drug-safety-report-${new Date()
+              .toISOString()
+              .slice(0, 10)}.csv`
+          );
+        }
+
+        // PDF
+        else {
+          generateBloodGroupReport({
+            title:
+              "Administrative Drug Safety & Regulatory Compliance Report",
+
+            selectedBloodGroup:
+              "N/A (Regulatory Platform Audit)",
+
+            generatedBy:
+              "System Super Administrator",
+
+            columns,
+
+            data,
+
+            activeFilters: {
+              ReportDomain:
+                reportDomain,
+
+              Timestamp:
+                new Date().toLocaleDateString(),
+            },
+          });
+        }
+
+        toast.success(
+          `Successfully generated & exported ${reportDomain} audit report (${reportFormat}).`
+        );
+
+        setShowExportModal(false);
+      }
+
+      // =====================================================
+      // APPOINTMENT EXPORT
+      // =====================================================
+
+      else if (
+        reportDomain === "Appointments"
+      ) {
+        const data =
+          getAppointmentReportData();
+
+        if (data.length === 0) {
+          toast.info(
+            "Appointment analytics are available, but detailed appointment rows are not currently provided by the Admin Reports API."
+          );
+          return;
+        }
+      }
+
+      // =====================================================
+      // PROVIDER EXPORT
+      // =====================================================
+
+      else if (
+        reportDomain === "Providers"
+      ) {
+        const data =
+          getProviderReportData();
+
+        if (data.length === 0) {
+          toast.info(
+            "Provider analytics are not currently available as registry rows from the Admin Reports API."
+          );
+          return;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Report export error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to generate report."
+      );
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
+  if (loading) {
+    return (
+      <div className="ad-page">
+        <div
+          className="ad-card"
+          style={{
+            minHeight: "300px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
+          <FaChartBar
+            style={{
+              fontSize: "2rem",
+              color:
+                "var(--ad-primary)",
+            }}
+          />
+
+          <strong>
+            Loading platform reports...
+          </strong>
+
+          <span
+            style={{
+              color:
+                "var(--ad-text-muted)",
+              fontSize: "0.85rem",
+            }}
+          >
+            Fetching real-time
+            administrative data
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================
+  // UI
+  // =========================================================
 
   return (
     <div className="ad-page">
-      {/* Toast Alert */}
-      {successMsg && (
-        <div style={{
-          position: "fixed",
-          bottom: "2rem",
-          right: "2rem",
-          background: "#10b981",
-          color: "#fff",
-          padding: "1rem 1.5rem",
-          borderRadius: "12px",
-          boxShadow: "0 10px 25px rgba(16,185,129,0.25)",
-          zIndex: 1200,
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          animation: "adFadeIn 0.3s ease"
-        }}>
-          <FaCheckCircle />
-          <span style={{ fontSize: "0.85rem", fontWeight: "600" }}>{successMsg}</span>
-        </div>
-      )}
+
+      {/* =====================================================
+          PAGE HEADER
+      ====================================================== */}
 
       <div className="ad-page-header">
-        <h2 style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <FaChartBar style={{ color: "var(--ad-primary)" }} /> Platform Reports &amp; Regulatory Audits
+        <h2
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.6rem",
+          }}
+        >
+          <FaChartBar
+            style={{
+              color:
+                "var(--ad-primary)",
+            }}
+          />
+
+          Platform Reports & Regulatory Audits
         </h2>
-        <p>Analyze platform-level regulatory metrics, drug safety verifications, telehealth uptime, and export structured compliance audit documents</p>
+
+        <p>
+          Analyze platform-level regulatory
+          metrics, drug safety verifications,
+          telehealth activity, orders, revenue,
+          and export structured compliance audit
+          documents.
+        </p>
       </div>
 
-      {/* KPI Row */}
+      {/* =====================================================
+          KPI ROW
+      ====================================================== */}
+
       <div className="ad-kpi-grid">
+
+        {/* Drug compliance */}
+
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#dcfce7", color: "#16a34a" }}><FaShieldAlt /></div>
+          <div
+            className="ad-kpi-icon"
+            style={{
+              background: "#dcfce7",
+              color: "#16a34a",
+            }}
+          >
+            <FaShieldAlt />
+          </div>
+
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Drug Regulatory Compliance</span>
-            <h3 className="ad-kpi-value">{totalApproved} / {medicines.length}</h3>
-            <span className="ad-kpi-delta up">{totalBlocked} Flagged/Banned</span>
+            <span className="ad-kpi-label">
+              Drug Regulatory Compliance
+            </span>
+
+            <h3 className="ad-kpi-value">
+              {totalApproved} /{" "}
+              {medicines.length}
+            </h3>
+
+            <span className="ad-kpi-delta up">
+              {totalBlocked} Flagged/Banned
+            </span>
           </div>
         </div>
 
+        {/* Pending */}
+
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0e7ff", color: "#4f46e5" }}><FaPills /></div>
+          <div
+            className="ad-kpi-icon"
+            style={{
+              background: "#e0e7ff",
+              color: "#4f46e5",
+            }}
+          >
+            <FaPills />
+          </div>
+
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Pending Verification Queue</span>
-            <h3 className="ad-kpi-value">{totalPending} Submissions</h3>
-            <span style={{ fontSize: "0.75rem", color: "#d97706", fontWeight: "600" }}>Quality Checks Pending</span>
+            <span className="ad-kpi-label">
+              Pending Verification Queue
+            </span>
+
+            <h3 className="ad-kpi-value">
+              {totalPending} Submissions
+            </h3>
+
+            <span
+              style={{
+                fontSize: "0.75rem",
+                color: "#d97706",
+                fontWeight: "600",
+              }}
+            >
+              Quality Checks Pending
+            </span>
           </div>
         </div>
 
+        {/* Appointments */}
+
         <div className="ad-kpi-card">
-          <div className="ad-kpi-icon" style={{ background: "#e0f2fe", color: "#0284c7" }}><FaCalendarCheck /></div>
+          <div
+            className="ad-kpi-icon"
+            style={{
+              background: "#e0f2fe",
+              color: "#0284c7",
+            }}
+          >
+            <FaCalendarCheck />
+          </div>
+
           <div className="ad-kpi-body">
-            <span className="ad-kpi-label">Verified Consultations</span>
-            <h3 className="ad-kpi-value">{completedAptsCount} Sessions</h3>
-            <span className="ad-kpi-delta up">98.4% Telehealth Uptime</span>
+            <span className="ad-kpi-label">
+              Verified Consultations
+            </span>
+
+            <h3 className="ad-kpi-value">
+              {completedAppointments} Sessions
+            </h3>
+
+            <span className="ad-kpi-delta up">
+              {appointmentCompletionRate}%
+              Completion Rate
+            </span>
           </div>
         </div>
 
-        <div className="ad-card" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <button className="ad-btn ad-btn-primary" onClick={() => setShowExportModal(true)} style={{ width: "100%", height: "100%", justifyContent: "center" }}>
-            <FaFileDownload /> Export Regulatory Audit Report
+        {/* Export */}
+
+        <div
+          className="ad-card"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem",
+          }}
+        >
+          <button
+            className="ad-btn ad-btn-primary"
+            onClick={() =>
+              setShowExportModal(true)
+            }
+            style={{
+              width: "100%",
+              height: "100%",
+              justifyContent: "center",
+            }}
+          >
+            <FaFileDownload />
+
+            Export Regulatory Audit Report
           </button>
         </div>
       </div>
 
-      {/* Platform Analytics Grid */}
+      {/* =====================================================
+          PLATFORM ANALYTICS
+      ====================================================== */}
+
       <div className="ad-grid-3">
-        {/* Compliance Growth Chart */}
-        <div className="ad-card" style={{ gridColumn: "span 2" }}>
+
+        {/* Appointment analytics */}
+
+        <div
+          className="ad-card"
+          style={{
+            gridColumn: "span 2",
+          }}
+        >
           <div className="ad-card-header">
-            <h3 className="ad-card-title">Platform Regulatory Compliance Index</h3>
-            <span style={{ fontSize: "0.75rem", background: "var(--ad-bg-secondary)", padding: "0.25rem 0.5rem", borderRadius: "4px", fontWeight: "600" }}>
-              Safety Score (%)
+            <h3 className="ad-card-title">
+              Platform Appointment Analytics
+            </h3>
+
+            <span
+              style={{
+                fontSize: "0.75rem",
+                background:
+                  "var(--ad-bg-secondary)",
+                padding:
+                  "0.25rem 0.5rem",
+                borderRadius: "4px",
+                fontWeight: "600",
+              }}
+            >
+              Live API Data
             </span>
           </div>
-          <div className="ad-chart-container">
-            {monthlyComplianceData.map((bar, idx) => (
-              <div key={idx} className="ad-chart-bar-wrap">
-                <div className="ad-chart-bar-bg">
-                  <div className="ad-chart-bar-fill" style={{ height: `${bar.height}%`, background: "linear-gradient(to top, #10b981, #34d399)" }} />
-                </div>
-                <span style={{ fontSize: "0.72rem", color: "var(--ad-text-muted)", marginTop: "0.2rem" }}>{bar.val}%</span>
-                <span className="ad-chart-label" style={{ fontWeight: "700" }}>{bar.label}</span>
-              </div>
-            ))}
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns:
+                "repeat(auto-fit, minmax(150px, 1fr))",
+              gap: "1rem",
+              padding: "1rem 0",
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                }}
+              >
+                Total Appointments
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.5rem",
+                }}
+              >
+                {totalAppointments}
+              </strong>
+            </div>
+
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                }}
+              >
+                Completed
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.5rem",
+                  color: "#16a34a",
+                }}
+              >
+                {completedAppointments}
+              </strong>
+            </div>
+
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                }}
+              >
+                Cancelled
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.5rem",
+                  color: "#dc2626",
+                }}
+              >
+                {cancelledAppointments}
+              </strong>
+            </div>
+
+            <div>
+              <span
+                style={{
+                  display: "block",
+                  fontSize: "0.76rem",
+                  color: "#0284c7",
+                }}
+              >
+                Completion Rate
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.5rem",
+                  color: "#0284c7",
+                }}
+              >
+                {appointmentCompletionRate}%
+              </strong>
+            </div>
           </div>
         </div>
 
-        {/* Operational Statistics */}
+        {/* Supervision indicators */}
+
         <div className="ad-card">
           <div className="ad-card-header">
-            <h3 className="ad-card-title">Supervision Indicators</h3>
+            <h3 className="ad-card-title">
+              Supervision Indicators
+            </h3>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+            }}
+          >
             <div>
-              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>DCGI Standard Adherence</span>
-              <strong style={{ fontSize: "1.25rem", color: "#16a34a" }}>99.2%</strong>
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                  display: "block",
+                }}
+              >
+                Total Orders
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.25rem",
+                  color: "#4f46e5",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <FaShoppingCart />
+
+                {totalOrders}
+              </strong>
             </div>
+
             <div>
-              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Telehealth Audit Compliance</span>
-              <strong style={{ fontSize: "1.25rem", color: "#0284c7" }}>100% Encrypted</strong>
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                  display: "block",
+                }}
+              >
+                Delivered Orders
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.25rem",
+                  color: "#16a34a",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <FaCalendarCheck />
+
+                {deliveredOrders}
+              </strong>
             </div>
+
             <div>
-              <span style={{ fontSize: "0.76rem", color: "var(--ad-text-muted)", display: "block" }}>Substandard Batch Interception</span>
-              <strong style={{ fontSize: "1.25rem", color: "#4f46e5" }}>100% Blocked</strong>
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  color:
+                    "var(--ad-text-muted)",
+                  display: "block",
+                }}
+              >
+                Platform Sales
+              </span>
+
+              <strong
+                style={{
+                  fontSize: "1.25rem",
+                  color: "#0284c7",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.4rem",
+                }}
+              >
+                <FaMoneyBillWave />
+
+                {formatCurrency(totalSales)}
+              </strong>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Drug Safety Inspection Table */}
+      {/* =====================================================
+          DRUG TABLE
+      ====================================================== */}
+
       <div className="ad-card">
         <div className="ad-card-header">
-          <h3 className="ad-card-title">Recent Drug Compliance &amp; Verification Audits</h3>
+          <h3 className="ad-card-title">
+            Recent Drug Compliance & Verification
+            Audits
+          </h3>
+
+          <span
+            style={{
+              fontSize: "0.75rem",
+              color:
+                "var(--ad-text-muted)",
+            }}
+          >
+            {medicines.length} records
+          </span>
         </div>
+
         <div className="ad-table-wrap">
           <table className="ad-table">
             <thead>
               <tr>
                 <th>Drug Code</th>
-                <th>Medicine Name &amp; Generic</th>
+
+                <th>
+                  Medicine Name & Generic
+                </th>
+
                 <th>Manufacturer</th>
-                <th>Submitting Pharmacy</th>
-                <th>Lab Assay Status</th>
-                <th>Regulatory Decision</th>
+
+                <th>
+                  Submitting Pharmacy
+                </th>
+
+                <th>
+                  Lab Assay Status
+                </th>
+
+                <th>
+                  Regulatory Decision
+                </th>
               </tr>
             </thead>
+
             <tbody>
-              {medicines.map((med) => (
-                <tr key={med.id}>
-                  <td><span className="ad-id-badge">{med.id}</span></td>
-                  <td>
-                    <strong>{med.name}</strong>
-                    <span style={{ display: "block", fontSize: "0.72rem", color: "var(--ad-text-muted)" }}>
-                      {med.genericName}
-                    </span>
-                  </td>
-                  <td>{med.manufacturer}</td>
-                  <td>{med.submittingPharmacy}</td>
-                  <td>
-                    <span style={{ fontSize: "0.8rem", color: med.approvalStatus === "Blocked" ? "#dc2626" : "var(--ad-text-primary)" }}>
-                      {med.labVerificationStatus || "Standard Review"}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="ad-pill" style={{
-                      background: med.approvalStatus === "Approved" ? "#dcfce7" : med.approvalStatus === "Blocked" ? "#fee2e2" : "#fef3c7",
-                      color: med.approvalStatus === "Approved" ? "#16a34a" : med.approvalStatus === "Blocked" ? "#dc2626" : "#d97706"
-                    }}>
-                      {med.approvalStatus}
-                    </span>
+              {medicines.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan="6"
+                    style={{
+                      textAlign: "center",
+                      padding: "2rem",
+                      color:
+                        "var(--ad-text-muted)",
+                    }}
+                  >
+                    No medicine compliance
+                    records found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                medicines.map((medicine) => {
+                  const status =
+                    getApprovalStatus(
+                      medicine
+                    );
+
+                  return (
+                    <tr
+                      key={
+                        medicine._id ||
+                        medicine.id ||
+                        getMedicineId(
+                          medicine
+                        )
+                      }
+                    >
+                      <td>
+                        <span className="ad-id-badge">
+                          {getMedicineId(
+                            medicine
+                          )}
+                        </span>
+                      </td>
+
+                      <td>
+                        <strong>
+                          {getMedicineName(
+                            medicine
+                          )}
+                        </strong>
+
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "0.72rem",
+                            color:
+                              "var(--ad-text-muted)",
+                          }}
+                        >
+                          {getGenericName(
+                            medicine
+                          )}
+                        </span>
+                      </td>
+
+                      <td>
+                        {getManufacturer(
+                          medicine
+                        )}
+                      </td>
+
+                      <td>
+                        {getSubmittingPharmacy(
+                          medicine
+                        )}
+                      </td>
+
+                      <td>
+                        <span
+                          style={{
+                            fontSize: "0.8rem",
+                            color:
+                              status ===
+                                "Blocked"
+                                ? "#dc2626"
+                                : "var(--ad-text-primary)",
+                          }}
+                        >
+                          {getLabStatus(
+                            medicine
+                          )}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span
+                          className="ad-pill"
+                          style={getStatusStyle(
+                            status
+                          )}
+                        >
+                          {status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* ── Export Modal ── */}
+      {/* =====================================================
+          EXPORT MODAL
+      ====================================================== */}
+
       {showExportModal && (
-        <div className="ad-modal-overlay" onClick={() => setShowExportModal(false)}>
-          <div className="ad-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "500px" }}>
+        <div
+          className="ad-modal-overlay"
+          onClick={() =>
+            !exportLoading &&
+            setShowExportModal(false)
+          }
+        >
+          <div
+            className="ad-modal"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+            style={{
+              maxWidth: "500px",
+            }}
+          >
             <div className="ad-modal-header">
-              <h3 className="ad-modal-title"><FaFileDownload /> Export Regulatory Audit Report</h3>
-              <button className="ad-modal-close" onClick={() => setShowExportModal(false)}><FaTimes /></button>
+              <h3 className="ad-modal-title">
+                <FaFileDownload />
+
+                Export Regulatory Audit
+                Report
+              </h3>
+
+              <button
+                className="ad-modal-close"
+                onClick={() =>
+                  !exportLoading &&
+                  setShowExportModal(false)
+                }
+                disabled={exportLoading}
+              >
+                <FaTimes />
+              </button>
             </div>
-            <form onSubmit={handleExport} className="ad-modal-body">
+
+            <form
+              onSubmit={handleExport}
+              className="ad-modal-body"
+            >
+              {/* Domain */}
+
               <div className="ad-form-group">
-                <label>Select Audit Domain *</label>
+                <label>
+                  Select Audit Domain *
+                </label>
+
                 <select
                   className="ad-select"
                   value={reportDomain}
-                  onChange={(e) => setReportDomain(e.target.value)}
+                  onChange={(event) =>
+                    setReportDomain(
+                      event.target.value
+                    )
+                  }
+                  disabled={exportLoading}
                 >
-                  <option value="DrugSafety">Drug Safety &amp; Batch Verification Audit</option>
-                  <option value="Appointments">Clinical Telehealth &amp; Appointments Audit</option>
-                  <option value="Providers">Healthcare Provider Verification Registry</option>
+                  <option value="DrugSafety">
+                    Drug Safety & Batch
+                    Verification Audit
+                  </option>
+
+                  <option value="Appointments">
+                    Clinical Telehealth &
+                    Appointments Audit
+                  </option>
+
+                  <option value="Providers">
+                    Healthcare Provider
+                    Verification Registry
+                  </option>
                 </select>
               </div>
 
+              {/* Format */}
+
               <div className="ad-form-group">
-                <label>Export Format</label>
+                <label>
+                  Export Format
+                </label>
+
                 <select
                   className="ad-select"
                   value={reportFormat}
-                  onChange={(e) => setReportFormat(e.target.value)}
+                  onChange={(event) =>
+                    setReportFormat(
+                      event.target.value
+                    )
+                  }
+                  disabled={exportLoading}
                 >
-                  <option value="PDF">Formatted Regulatory Document (PDF)</option>
-                  <option value="CSV">Spreadsheet Dataset (CSV)</option>
+                  <option value="PDF">
+                    Formatted Regulatory
+                    Document (PDF)
+                  </option>
+
+                  <option value="CSV">
+                    Spreadsheet Dataset
+                    (CSV)
+                  </option>
                 </select>
               </div>
 
-              <div className="ad-modal-footer" style={{ marginTop: "1.5rem" }}>
-                <button type="button" className="ad-btn ad-btn-outline" onClick={() => setShowExportModal(false)}>Cancel</button>
-                <button type="submit" className="ad-btn ad-btn-primary" disabled={loading}>
-                  <FaFileDownload /> {loading ? "Generating Report..." : "Download Report"}
+              {/* Appointment info */}
+
+              {reportDomain ===
+                "Appointments" && (
+                  <div
+                    style={{
+                      padding: "0.75rem",
+                      marginTop: "1rem",
+                      background: "#eff6ff",
+                      color: "#1d4ed8",
+                      borderRadius: "6px",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    Appointment analytics are
+                    available from the API, but
+                    detailed appointment rows are
+                    not currently returned by the
+                    backend report endpoint.
+                  </div>
+                )}
+
+              {/* Provider info */}
+
+              {reportDomain ===
+                "Providers" && (
+                  <div
+                    style={{
+                      padding: "0.75rem",
+                      marginTop: "1rem",
+                      background: "#eff6ff",
+                      color: "#1d4ed8",
+                      borderRadius: "6px",
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    Provider registry rows are not
+                    currently returned by the
+                    backend report endpoint.
+                    No fake provider data is
+                    generated.
+                  </div>
+                )}
+
+              {/* Footer */}
+
+              <div
+                className="ad-modal-footer"
+                style={{
+                  marginTop: "1.5rem",
+                }}
+              >
+                <button
+                  type="button"
+                  className="ad-btn ad-btn-outline"
+                  onClick={() =>
+                    setShowExportModal(false)
+                  }
+                  disabled={exportLoading}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="ad-btn ad-btn-primary"
+                  disabled={exportLoading}
+                >
+                  <FaFileDownload />
+
+                  {exportLoading
+                    ? "Generating Report..."
+                    : "Download Report"}
                 </button>
               </div>
             </form>

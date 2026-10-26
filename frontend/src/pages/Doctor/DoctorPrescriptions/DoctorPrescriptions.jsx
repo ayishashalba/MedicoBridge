@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaPills,
@@ -12,109 +12,189 @@ import {
   FaClock,
   FaPlus,
   FaFileMedical,
+  FaSyncAlt,
+  FaSpinner,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorPrescriptions.css";
 
-/* ─── Static Dummy Data ─────────────────────────────────────── */
-const prescriptionsData = [
-  {
-    id: 1,
-    rxId: "RX-4521",
-    patientName: "Rahul Nair",
-    patientId: "PT-1024",
-    initials: "RN",
-    avatarColor: "#0d9488",
-    diagnosis: "Type 2 Diabetes Mellitus Follow-up",
-    medicinesCount: 3,
-    date: "June 28, 2026",
-    status: "Active",
-  },
-  {
-    id: 2,
-    rxId: "RX-4189",
-    patientName: "Anjali Thomas",
-    patientId: "PT-1031",
-    initials: "AT",
-    avatarColor: "#7c3aed",
-    diagnosis: "Hypertension Management",
-    medicinesCount: 2,
-    date: "March 10, 2026",
-    status: "Completed",
-  },
-  {
-    id: 3,
-    rxId: "RX-3877",
-    patientName: "Arun Kumar",
-    patientId: "PT-1018",
-    initials: "AK",
-    avatarColor: "#0284c7",
-    diagnosis: "Seasonal Allergic Rhinitis",
-    medicinesCount: 2,
-    date: "December 5, 2025",
-    status: "Completed",
-  },
-  {
-    id: 4,
-    rxId: "RX-3512",
-    patientName: "Meera Pillai",
-    patientId: "PT-1045",
-    initials: "MP",
-    avatarColor: "#d97706",
-    diagnosis: "Mild Anxiety and Fatigue",
-    medicinesCount: 1,
-    date: "October 14, 2025",
-    status: "Completed",
-  },
-  {
-    id: 5,
-    rxId: "RX-3298",
-    patientName: "Suresh Babu",
-    patientId: "PT-1052",
-    initials: "SB",
-    avatarColor: "#dc2626",
-    diagnosis: "Post-Surgery Cardiac Follow-up",
-    medicinesCount: 4,
-    date: "August 30, 2025",
-    status: "Completed",
-  },
-  {
-    id: 6,
-    rxId: "RX-3045",
-    patientName: "Lakshmi Nair",
-    patientId: "PT-1060",
-    initials: "LN",
-    avatarColor: "#059669",
-    diagnosis: "Chronic Migraine Management",
-    medicinesCount: 2,
-    date: "June 12, 2025",
-    status: "Completed",
-  },
+const API_BASE = "http://localhost:5000";
+
+const AVATAR_COLORS = [
+  "#0d9488",
+  "#7c3aed",
+  "#0284c7",
+  "#d97706",
+  "#dc2626",
+  "#059669",
+  "#9333ea",
+  "#e11d48",
 ];
+
+function getColor(name = "") {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash << 5) - hash + name.charCodeAt(i);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name = "") {
+  const parts = name.trim().split(" ").filter(Boolean);
+  if (!parts.length) return "PT";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
 
 function DoctorPrescriptions() {
   const navigate = useNavigate();
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
+  const fetchPrescriptions = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login to view prescriptions.");
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/doctor/prescriptions`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        const mapped = data.data.map((p) => {
+          const pat = p.patientId || {};
+          const patName = pat.name || "Patient";
+          const patId = pat.patientId || (pat._id ? `PT-${String(pat._id).slice(-4).toUpperCase()}` : "PT-1000");
+          const rxId = p.prescriptionId || `RX-${String(p._id).slice(-4).toUpperCase()}`;
+          const rawStatus = (p.status || "Active").toLowerCase();
+          const status = rawStatus === "completed" || rawStatus === "dispensed" ? "Completed" : "Active";
+          const date = new Date(p.createdAt || new Date()).toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+
+          return {
+            id: p._id,
+            rxId,
+            patientName: patName,
+            patientId: patId,
+            initials: getInitials(patName),
+            avatarColor: getColor(patName),
+            diagnosis: p.diagnosis || "General Consultation",
+            medicinesCount: Array.isArray(p.medicines) ? p.medicines.length : 0,
+            medicines: p.medicines || [],
+            advice: p.advice || "",
+            date,
+            status,
+            rawStatus: p.status,
+          };
+        });
+        setPrescriptions(mapped);
+      } else {
+        setPrescriptions([]);
+      }
+    } catch (err) {
+      console.error("Error fetching prescriptions:", err);
+      toast.error("Failed to load prescriptions.");
+      setPrescriptions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate]);
+
+  useEffect(() => {
+    fetchPrescriptions();
+  }, [fetchPrescriptions]);
+
   const filteredPrescriptions = useMemo(() => {
-    return prescriptionsData.filter((prescription) => {
+    return prescriptions.filter((prescription) => {
+      const q = search.toLowerCase();
       const matchesSearch =
-        prescription.patientName.toLowerCase().includes(search.toLowerCase()) ||
-        prescription.rxId.toLowerCase().includes(search.toLowerCase()) ||
-        prescription.diagnosis.toLowerCase().includes(search.toLowerCase());
+        (prescription.patientName || "").toLowerCase().includes(q) ||
+        (prescription.rxId || "").toLowerCase().includes(q) ||
+        (prescription.diagnosis || "").toLowerCase().includes(q);
 
       const matchesFilter =
         filter === "All" || prescription.status === filter;
 
       return matchesSearch && matchesFilter;
     });
-  }, [search, filter]);
+  }, [prescriptions, search, filter]);
 
-  const activeCount = prescriptionsData.filter(p => p.status === "Active").length;
-  const completedCount = prescriptionsData.filter(p => p.status === "Completed").length;
+  const activeCount = prescriptions.filter(p => p.status === "Active").length;
+  const completedCount = prescriptions.filter(p => p.status === "Completed").length;
 
-  const handleDownload = (rxId) => {
-    alert(`Downloading PDF for Prescription ${rxId}`);
+  const handleDownload = (p) => {
+    if (!p) return;
+    const divider = "=".repeat(64);
+    const subDivider = "-".repeat(64);
+
+    let content = `${divider}\n`;
+    content += `             MEDICOBRIDGE MEDICAL PRESCRIPTION\n`;
+    content += `${divider}\n\n`;
+    content += `Prescription ID:     ${p.rxId}\n`;
+    content += `Date:                ${p.date}\n`;
+    content += `Status:              ${p.status}\n\n`;
+
+    content += `${subDivider}\n`;
+    content += `PATIENT INFORMATION\n`;
+    content += `${subDivider}\n`;
+    content += `Patient Name:        ${p.patientName}\n`;
+    content += `Patient ID:          ${p.patientId}\n\n`;
+
+    content += `${subDivider}\n`;
+    content += `CLINICAL DIAGNOSIS\n`;
+    content += `${subDivider}\n`;
+    content += `Diagnosis:           ${p.diagnosis}\n\n`;
+
+    content += `${subDivider}\n`;
+    content += `PRESCRIBED MEDICINES (${p.medicinesCount})\n`;
+    content += `${subDivider}\n`;
+    (p.medicines || []).forEach((m, idx) => {
+      content += `${idx + 1}. ${m.name} | Dosage: ${m.dosage || "1 Tab"} | Frequency: ${m.frequency || "Daily"} | Duration: ${m.duration || "5 days"}\n`;
+      if (m.instructions || m.timing) {
+        content += `   Instructions: ${m.instructions || m.timing}\n`;
+      }
+    });
+    content += `\n`;
+
+    if (p.advice) {
+      content += `${subDivider}\n`;
+      content += `DOCTOR ADVICE & INSTRUCTIONS\n`;
+      content += `${subDivider}\n`;
+      content += `${p.advice}\n\n`;
+    }
+
+    content += `${divider}\n`;
+    content += `Generated electronically via MedicoBridge Integrated Healthcare System.\n`;
+    content += `Timestamp: ${new Date().toLocaleString()}\n`;
+    content += `${divider}\n`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${p.rxId}_Prescription.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Prescription ${p.rxId} downloaded.`);
   };
 
   return (
@@ -127,19 +207,30 @@ function DoctorPrescriptions() {
           </h2>
           <p>Create and manage digital prescriptions for your patients.</p>
         </div>
-        <button
-          className="create-prescription-btn"
-          onClick={() => navigate("/doctor/edit-prescription/new")}
-        >
-          <FaPlus /> Create Prescription
-        </button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <button
+            className="create-prescription-btn"
+            onClick={fetchPrescriptions}
+            disabled={loading}
+            style={{ background: "#ffffff", color: "#475569", border: "1px solid #e2e8f0" }}
+            title="Refresh prescriptions"
+          >
+            <FaSyncAlt className={loading ? "mr-spin" : ""} /> Refresh
+          </button>
+          <button
+            className="create-prescription-btn"
+            onClick={() => navigate("/doctor/edit-prescription/new")}
+          >
+            <FaPlus /> Create Prescription
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Summary Bar ─────────────────────────── */}
       <div className="prescriptions-stats-bar">
         <div className="stat-pill stat-pill--total">
           <FaFileMedical />
-          <span className="stat-val">{prescriptionsData.length}</span>
+          <span className="stat-val">{prescriptions.length}</span>
           <span className="stat-lbl">Total Prescriptions</span>
         </div>
         <div className="stat-pill stat-pill--active">
@@ -186,7 +277,13 @@ function DoctorPrescriptions() {
       </div>
 
       {/* ── Table Layout (Desktop) & Card Layout (Mobile) ── */}
-      {filteredPrescriptions.length === 0 ? (
+      {loading ? (
+        <div className="no-prescriptions-card">
+          <FaPills className="empty-icon" />
+          <h3>Loading Prescriptions...</h3>
+          <p>Fetching prescription records from database.</p>
+        </div>
+      ) : filteredPrescriptions.length === 0 ? (
         <div className="no-prescriptions-card">
           <FaPills className="empty-icon" />
           <h3>No Prescriptions Found</h3>
@@ -254,14 +351,14 @@ function DoctorPrescriptions() {
                       <div className="action-buttons-cell">
                         <button
                           className="action-btn action-btn--view"
-                          onClick={() => navigate(`/doctor/prescription-preview/${p.id}`)}
+                          onClick={() => navigate(`/doctor/prescriptions/${p.id}`)}
                           title="View Prescription"
                         >
                           <FaEye /> View
                         </button>
                         <button
                           className="action-btn action-btn--download"
-                          onClick={() => handleDownload(p.rxId)}
+                          onClick={() => handleDownload(p)}
                           title="Download PDF"
                         >
                           <FaDownload />
@@ -326,13 +423,13 @@ function DoctorPrescriptions() {
                 <div className="card-actions">
                   <button
                     className="action-btn action-btn--view"
-                    onClick={() => navigate(`/doctor/prescription-preview/${p.id}`)}
+                    onClick={() => navigate(`/doctor/prescriptions/${p.id}`)}
                   >
                     <FaEye /> View Prescription
                   </button>
                   <button
                     className="action-btn action-btn--download"
-                    onClick={() => handleDownload(p.rxId)}
+                    onClick={() => handleDownload(p)}
                   >
                     <FaDownload /> Download
                   </button>

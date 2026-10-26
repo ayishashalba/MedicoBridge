@@ -1,25 +1,26 @@
-const authorize = (...roles) => {
-    const normalizedRoles = roles.map((r) => String(r).toLowerCase());
+const { sendForbidden } = require('../utils/responseHandler');
 
-    return (req, res, next) => {
-        if (!req.user || !req.user.role) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized access",
-            });
-        }
+/**
+ * Role-based authorization middleware
+ * @param  {...string} roles - Allowed roles e.g. 'Patient', 'Doctor', 'Hospital', 'Pharmacy', 'Admin'
+ */
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return sendForbidden(res, 'User context missing. Authentication required.');
+    }
 
-        const userRole = String(req.user.role).toLowerCase();
+    if (!roles.includes(req.user.role)) {
+      return sendForbidden(
+        res,
+        `Access denied. Role '${req.user.role}' is not authorized to access this resource.`
+      );
+    }
 
-        if (!normalizedRoles.includes(userRole)) {
-            return res.status(403).json({
-                success: false,
-                message: "Access forbidden: insufficient permissions",
-            });
-        }
-
-        next();
-    };
+    next();
+  };
 };
 
-module.exports = authorize;
+module.exports = {
+  authorizeRoles,
+};

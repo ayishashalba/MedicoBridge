@@ -1,51 +1,48 @@
-const express = require("express");
-
-const {
-    getDoctorProfile,
-    updateDoctorProfile,
-    updateDoctorAvailability,
-    getAllDoctors,
-    getDoctorById,
-    getDoctorPatients,
-} = require("../controllers/doctorController");
-
-const authMiddleware = require("../middleware/authMiddleware");
-const roleMiddleware = require("../middleware/roleMiddleware");
-
+const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
+const {
+  getProfile,
+  updateProfile,
+  getDashboard,
+  getAppointments,
+  updateAppointmentStatus,
+  getPrescriptions,
+  getPrescriptionById,
+  getConsultations,
+  getDoctorPatients,
+  getDoctorPatientById,
+  getAppointmentById,
+  getPatientMedicalHistory,
+  getDoctorMedicalRecords,
+  getDoctorReviews,
+  getDoctorSettings,
+  updateDoctorSettings,
+  changeDoctorPassword,
+} = require('../controllers/doctorController');
 
-// Public doctor directory & details
-router.get("/", getAllDoctors);
-router.get("/detail/:id", getDoctorById);
+router.use(protect);
+router.use(authorizeRoles('Doctor'));
 
-// Doctor private profile
-router.get(
-    "/profile",
-    authMiddleware,
-    roleMiddleware("doctor"),
-    getDoctorProfile
-);
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+router.get('/dashboard', getDashboard);
+router.get('/appointments', getAppointments);
+router.get('/appointments/:id', getAppointmentById);
+router.put('/appointments/:id/status', updateAppointmentStatus);
+router.get('/prescriptions', getPrescriptions);
+router.get('/prescriptions/:id', getPrescriptionById);
+router.get('/consultations', getConsultations);
+router.get('/patients', getDoctorPatients);
+router.get('/patients/:id/medical-history', getPatientMedicalHistory);
+router.get('/patients/:id', getDoctorPatientById);
+router.get('/medical-records', getDoctorMedicalRecords);
+router.get('/reviews', getDoctorReviews);
+router.get('/settings', getDoctorSettings);
 
-router.put(
-    "/profile",
-    authMiddleware,
-    roleMiddleware("doctor"),
-    updateDoctorProfile
-);
+router.put('/settings', updateDoctorSettings);
 
-router.put(
-    "/availability",
-    authMiddleware,
-    roleMiddleware("doctor"),
-    updateDoctorAvailability
-);
-
-// Doctor's patients list
-router.get(
-    "/patients",
-    authMiddleware,
-    roleMiddleware("doctor"),
-    getDoctorPatients
-);
+router.put('/settings/password', changeDoctorPassword);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   FaFileInvoiceDollar, FaSearch, FaFilter, FaPlus, FaTimes,
   FaCheckCircle, FaCheck, FaEye, FaPrint, FaHospital,
@@ -8,9 +8,18 @@ import {
   FaUserMd, FaBed, FaFlask, FaXRay, FaPills, FaSyringe, FaHeartbeat,
   FaUserNurse, FaStethoscope, FaLaptopMedical, FaPercent, FaListAlt,
   FaArrowRight, FaChevronDown, FaChevronUp, FaInfoCircle, FaHourglassHalf,
-  FaTachometerAlt,
+  FaTachometerAlt, FaSpinner,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./BillingManagement.css";
+
+// ── API CONFIG & HEADERS ─────────────────────────────────────────────────────
+const API_BASE = "http://localhost:5000/api";
+const getToken = () => localStorage.getItem("token");
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
 
 // ── CONSTANTS ────────────────────────────────────────────────────────────────
 const SERVICE_CATEGORIES = [
@@ -38,499 +47,16 @@ const INSURANCE_PROVIDERS = [
   "Reliance Health Insurance", "ICICI Lombard Health", "SBI Health Insurance",
 ];
 
-// ── SAMPLE DATA ──────────────────────────────────────────────────────────────
-const initialInvoices = [
-  {
-    id: "INV-2026-0901",
-    patientName: "Ramesh Kumar",
-    patientId: "PAT-4091",
-    patientAge: 52,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23456",
-    patientEmail: "ramesh.kumar@example.com",
-    patientAddress: "42, Palm Grove, Ernakulam, Kerala - 682011",
-    encounterId: "ENC-2026-A4501",
-    encounterType: "Inpatient Admission",
-    department: "Cardiology",
-    attendingDoctor: "Dr. Suresh Menon",
-    billingOfficer: "Priya Rajan",
-    invoiceDate: "2026-08-22",
-    dueDate: "2026-08-29",
-    paymentMethod: "Insurance / TPA",
-    status: "Overdue",
-    insuranceProvider: "Star Health Insurance",
-    policyNumber: "SHI-2024-904321",
-    items: [
-      { id: 1, description: "ICU Bed Stay (5 Days)", category: "ICU Charges", quantity: 5, unitPrice: 8500, discount: 0, tax: 0, amount: 42500 },
-      { id: 2, description: "Cardiac Monitoring & Critical Care", category: "ICU Charges", quantity: 1, unitPrice: 15000, discount: 0, tax: 0, amount: 15000 },
-      { id: 3, description: "Senior Cardiologist Consultation", category: "Doctor Visit Charges", quantity: 5, unitPrice: 2000, discount: 0, tax: 0, amount: 10000 },
-      { id: 4, description: "Nursing Charges (5 Days)", category: "Nursing Charges", quantity: 5, unitPrice: 1800, discount: 0, tax: 0, amount: 9000 },
-      { id: 5, description: "Angioplasty Procedure", category: "Procedures & Surgeries", quantity: 1, unitPrice: 85000, discount: 5000, tax: 0, amount: 80000 },
-      { id: 6, description: "Post-op Medications & IV Fluids", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 6500, discount: 0, tax: 0, amount: 6500 },
-      { id: 7, description: "ECG & Cardiac Enzyme Panel", category: "Laboratory Tests", quantity: 1, unitPrice: 2800, discount: 0, tax: 0, amount: 2800 },
-    ],
-    globalDiscount: 5000,
-    globalTax: 0,
-    paidAmount: 0,
-    paymentHistory: [],
-    notes: "Patient under Star Health TPA. Pre-authorization obtained. Claim submitted.",
-  },
-  {
-    id: "INV-2026-0902",
-    patientName: "Sonia Sebastian",
-    patientId: "PAT-4092",
-    patientAge: 29,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23457",
-    patientEmail: "sonia.s@example.com",
-    patientAddress: "15, Rose Garden Apt, Thrissur, Kerala - 680001",
-    encounterId: "ENC-2026-A4502",
-    encounterType: "Inpatient Admission",
-    department: "General Surgery",
-    attendingDoctor: "Dr. Anita Varghese",
-    billingOfficer: "Rajan Thomas",
-    invoiceDate: "2026-08-20",
-    dueDate: "2026-08-27",
-    paymentMethod: "Credit/Debit Card",
-    status: "Paid",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "General Ward Bed Charges (3 Days)", category: "Room & Bed Charges", quantity: 3, unitPrice: 3500, discount: 0, tax: 0, amount: 10500 },
-      { id: 2, description: "Laparoscopic Appendectomy", category: "Procedures & Surgeries", quantity: 1, unitPrice: 28000, discount: 2000, tax: 0, amount: 26000 },
-      { id: 3, description: "Nursing Charges (3 Days)", category: "Nursing Charges", quantity: 3, unitPrice: 1200, discount: 0, tax: 0, amount: 3600 },
-      { id: 4, description: "Pre-op Blood Workup & CBC", category: "Laboratory Tests", quantity: 1, unitPrice: 1800, discount: 0, tax: 0, amount: 1800 },
-      { id: 5, description: "Anaesthesia Charges", category: "Doctor Visit Charges", quantity: 1, unitPrice: 8000, discount: 0, tax: 0, amount: 8000 },
-      { id: 6, description: "Post-op Medicines", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 2200, discount: 0, tax: 0, amount: 2200 },
-    ],
-    globalDiscount: 1500,
-    globalTax: 0,
-    paidAmount: 50600,
-    paymentHistory: [
-      { date: "2026-08-20", amount: 50600, method: "Credit/Debit Card", ref: "HDFC-TXN-449821", note: "Full payment at discharge" },
-    ],
-    notes: "Patient discharged. Full payment collected.",
-  },
-  {
-    id: "INV-2026-0903",
-    patientName: "Mohan Lal",
-    patientId: "PAT-4093",
-    patientAge: 64,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23458",
-    patientEmail: "mohan.lal@example.com",
-    patientAddress: "8, MG Road, Kottayam, Kerala - 686001",
-    encounterId: "ENC-2026-A4503",
-    encounterType: "Inpatient Admission",
-    department: "Cardiology",
-    attendingDoctor: "Dr. Suresh Menon",
-    billingOfficer: "Priya Rajan",
-    invoiceDate: "2026-08-19",
-    dueDate: "2026-09-05",
-    paymentMethod: "Net Banking",
-    status: "Partially Paid",
-    insuranceProvider: "HDFC ERGO Health",
-    policyNumber: "HEH-2025-772100",
-    items: [
-      { id: 1, description: "Private Deluxe Room (6 Days)", category: "Room & Bed Charges", quantity: 6, unitPrice: 6500, discount: 0, tax: 0, amount: 39000 },
-      { id: 2, description: "Cardiologist Rounds", category: "Doctor Visit Charges", quantity: 6, unitPrice: 2000, discount: 0, tax: 0, amount: 12000 },
-      { id: 3, description: "Nursing Charges (6 Days)", category: "Nursing Charges", quantity: 6, unitPrice: 1500, discount: 0, tax: 0, amount: 9000 },
-      { id: 4, description: "Cardiac Rehabilitation Sessions", category: "Other Services", quantity: 8, unitPrice: 1200, discount: 0, tax: 0, amount: 9600 },
-      { id: 5, description: "Medications & IV Drips", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 8400, discount: 0, tax: 0, amount: 8400 },
-      { id: 6, description: "ECG, Stress Test, Echo", category: "Laboratory Tests", quantity: 1, unitPrice: 4500, discount: 0, tax: 0, amount: 4500 },
-    ],
-    globalDiscount: 3000,
-    globalTax: 0,
-    paidAmount: 40000,
-    paymentHistory: [
-      { date: "2026-08-19", amount: 20000, method: "Net Banking", ref: "SBI-NEFT-20240819", note: "Advance payment on admission" },
-      { date: "2026-08-22", amount: 20000, method: "Net Banking", ref: "SBI-NEFT-20240822", note: "Second instalment" },
-    ],
-    notes: "Patient has HDFC ERGO insurance. Partial co-pay paid. Balance pending on discharge.",
-  },
-  {
-    id: "INV-2026-0904",
-    patientName: "Leela Mathews",
-    patientId: "PAT-4094",
-    patientAge: 72,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23461",
-    patientEmail: "leela.m@example.com",
-    patientAddress: "21, Church Road, Alappuzha, Kerala - 688001",
-    encounterId: "ENC-2026-O1204",
-    encounterType: "OP Visit",
-    department: "Pulmonology",
-    attendingDoctor: "Dr. George Abraham",
-    billingOfficer: "Rajan Thomas",
-    invoiceDate: "2026-08-24",
-    dueDate: "2026-08-31",
-    paymentMethod: "Pending Selection",
-    status: "Pending",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "Senior Pulmonologist Consultation", category: "OP Consultation", quantity: 1, unitPrice: 1500, discount: 0, tax: 0, amount: 1500 },
-      { id: 2, description: "High-Resolution Chest CT Scan", category: "X-Ray / Imaging", quantity: 1, unitPrice: 4200, discount: 0, tax: 0, amount: 4200 },
-      { id: 3, description: "Complete Blood Count & ESR", category: "Laboratory Tests", quantity: 1, unitPrice: 800, discount: 0, tax: 0, amount: 800 },
-      { id: 4, description: "Pulmonary Function Test", category: "Laboratory Tests", quantity: 1, unitPrice: 1800, discount: 0, tax: 0, amount: 1800 },
-      { id: 5, description: "Prescribed Medications (7 Days)", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 950, discount: 0, tax: 0, amount: 950 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 0,
-    paymentHistory: [],
-    notes: "Follow-up appointment in 2 weeks.",
-  },
-  {
-    id: "INV-2026-0905",
-    patientName: "Aparna Nair",
-    patientId: "PAT-4095",
-    patientAge: 41,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23459",
-    patientEmail: "aparna.nair@example.com",
-    patientAddress: "7, Lotus Lane, Kozhikode, Kerala - 673001",
-    encounterId: "ENC-2026-PHR-201",
-    encounterType: "Pharmacy Visit",
-    department: "Pharmacy",
-    attendingDoctor: "Dr. Priya Krishnan",
-    billingOfficer: "Anitha S",
-    invoiceDate: "2026-08-25",
-    dueDate: "2026-08-25",
-    paymentMethod: "Cash",
-    status: "Paid",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "Amoxicillin 500mg (30 Caps)", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 280, discount: 0, tax: 0, amount: 280 },
-      { id: 2, description: "Pantoprazole 40mg (14 Tabs)", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 120, discount: 0, tax: 0, amount: 120 },
-      { id: 3, description: "Vitamin D3 Supplement (60 Caps)", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 450, discount: 50, tax: 0, amount: 400 },
-      { id: 4, description: "Cetirizine 10mg (10 Tabs)", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 65, discount: 0, tax: 0, amount: 65 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 865,
-    paymentHistory: [
-      { date: "2026-08-25", amount: 865, method: "Cash", ref: "CASH-250826-001", note: "Counter payment" },
-    ],
-    notes: "",
-  },
-  {
-    id: "INV-2026-0906",
-    patientName: "Thomas Kurian",
-    patientId: "PAT-4096",
-    patientAge: 35,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23460",
-    patientEmail: "thomas.k@example.com",
-    patientAddress: "33, Hill View, Munnar, Kerala - 685612",
-    encounterId: "ENC-2026-OC-501",
-    encounterType: "Online Consultation",
-    department: "Dermatology",
-    attendingDoctor: "Dr. Meera Pillai",
-    billingOfficer: "Anitha S",
-    invoiceDate: "2026-08-26",
-    dueDate: "2026-08-26",
-    paymentMethod: "UPI",
-    status: "Paid",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "Online Dermatology Consultation (MedicoBridge)", category: "Online Consultation", quantity: 1, unitPrice: 799, discount: 0, tax: 0, amount: 799 },
-      { id: 2, description: "E-Prescription Fee", category: "Other Services", quantity: 1, unitPrice: 50, discount: 0, tax: 0, amount: 50 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 849,
-    paymentHistory: [
-      { date: "2026-08-26", amount: 849, method: "UPI", ref: "GPAY-TXN-992231", note: "Paid via Google Pay before consultation" },
-    ],
-    notes: "Online consultation completed successfully.",
-  },
-  {
-    id: "INV-2026-0907",
-    patientName: "Deepak Menon",
-    patientId: "PAT-4097",
-    patientAge: 55,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23470",
-    patientEmail: "deepak.m@example.com",
-    patientAddress: "12, Beach Road, Calicut, Kerala - 673020",
-    encounterId: "ENC-2026-A4507",
-    encounterType: "Inpatient Admission",
-    department: "Orthopedics",
-    attendingDoctor: "Dr. Rajesh Nambiar",
-    billingOfficer: "Rajan Thomas",
-    invoiceDate: "2026-08-18",
-    dueDate: "2026-08-25",
-    paymentMethod: "Insurance / TPA",
-    status: "Overdue",
-    insuranceProvider: "National Insurance",
-    policyNumber: "NIC-2024-551892",
-    items: [
-      { id: 1, description: "Private Room (4 Days)", category: "Room & Bed Charges", quantity: 4, unitPrice: 5500, discount: 0, tax: 0, amount: 22000 },
-      { id: 2, description: "Total Knee Replacement Surgery", category: "Procedures & Surgeries", quantity: 1, unitPrice: 120000, discount: 10000, tax: 0, amount: 110000 },
-      { id: 3, description: "Orthopaedic Surgeon Charges", category: "Doctor Visit Charges", quantity: 1, unitPrice: 25000, discount: 0, tax: 0, amount: 25000 },
-      { id: 4, description: "Physiotherapy Sessions (8)", category: "Other Services", quantity: 8, unitPrice: 1200, discount: 0, tax: 0, amount: 9600 },
-      { id: 5, description: "Nursing (4 Days)", category: "Nursing Charges", quantity: 4, unitPrice: 1500, discount: 0, tax: 0, amount: 6000 },
-      { id: 6, description: "Implants & Prosthetics", category: "Procedures & Surgeries", quantity: 1, unitPrice: 45000, discount: 0, tax: 0, amount: 45000 },
-      { id: 7, description: "Pre & Post-op Lab Tests", category: "Laboratory Tests", quantity: 1, unitPrice: 3500, discount: 0, tax: 0, amount: 3500 },
-      { id: 8, description: "Post-op Medications", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 4200, discount: 0, tax: 0, amount: 4200 },
-    ],
-    globalDiscount: 5000,
-    globalTax: 0,
-    paidAmount: 50000,
-    paymentHistory: [
-      { date: "2026-08-18", amount: 50000, method: "Net Banking", ref: "INS-PRE-AUTH-2026", note: "Insurance pre-authorization advance" },
-    ],
-    notes: "TPA claim submitted. Pending final settlement. Patient discharged.",
-  },
-  {
-    id: "INV-2026-0908",
-    patientName: "Kavya Suresh",
-    patientId: "PAT-4098",
-    patientAge: 27,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23480",
-    patientEmail: "kavya.s@example.com",
-    patientAddress: "5, Lake View, Vyttila, Kochi - 682019",
-    encounterId: "ENC-2026-O1208",
-    encounterType: "OP Visit",
-    department: "Gynaecology",
-    attendingDoctor: "Dr. Sunitha Krishnakumar",
-    billingOfficer: "Priya Rajan",
-    invoiceDate: "2026-08-27",
-    dueDate: "2026-09-03",
-    paymentMethod: "UPI",
-    status: "Paid",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "Gynaecologist Consultation", category: "OP Consultation", quantity: 1, unitPrice: 1200, discount: 0, tax: 0, amount: 1200 },
-      { id: 2, description: "Pelvic Ultrasound", category: "X-Ray / Imaging", quantity: 1, unitPrice: 1800, discount: 0, tax: 0, amount: 1800 },
-      { id: 3, description: "Hormonal Blood Panel", category: "Laboratory Tests", quantity: 1, unitPrice: 2200, discount: 0, tax: 0, amount: 2200 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 5200,
-    paymentHistory: [
-      { date: "2026-08-27", amount: 5200, method: "UPI", ref: "PHONEPE-881234", note: "Full payment at counter" },
-    ],
-    notes: "",
-  },
-  {
-    id: "INV-2026-0909",
-    patientName: "John Wesley",
-    patientId: "PAT-4099",
-    patientAge: 46,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23465",
-    patientEmail: "john.w@example.com",
-    patientAddress: "27, SP Road, Kannur, Kerala - 670001",
-    encounterId: "ENC-2026-O1209",
-    encounterType: "OP Visit",
-    department: "Endocrinology",
-    attendingDoctor: "Dr. Sanjeev Iyer",
-    billingOfficer: "Anitha S",
-    invoiceDate: "2026-08-20",
-    dueDate: "2026-08-27",
-    paymentMethod: "Cancelled",
-    status: "Cancelled",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "HbA1c & Fasting Glucose Screening", category: "Laboratory Tests", quantity: 1, unitPrice: 850, discount: 0, tax: 0, amount: 850 },
-      { id: 2, description: "Lipid Profile Panel", category: "Laboratory Tests", quantity: 1, unitPrice: 950, discount: 0, tax: 0, amount: 950 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 0,
-    paymentHistory: [],
-    notes: "Patient cancelled appointment. Invoice voided.",
-  },
-  {
-    id: "INV-2026-0910",
-    patientName: "Ananya Pillai",
-    patientId: "PAT-4100",
-    patientAge: 33,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23490",
-    patientEmail: "ananya.p@example.com",
-    patientAddress: "9, Sunset Avenue, Trivandrum, Kerala - 695001",
-    encounterId: "ENC-2026-A4510",
-    encounterType: "Inpatient Admission",
-    department: "Obstetrics",
-    attendingDoctor: "Dr. Sunitha Krishnakumar",
-    billingOfficer: "Priya Rajan",
-    invoiceDate: "2026-08-25",
-    dueDate: "2026-09-01",
-    paymentMethod: "Net Banking",
-    status: "Paid",
-    insuranceProvider: "Bajaj Allianz Health",
-    policyNumber: "BAJ-2025-112345",
-    items: [
-      { id: 1, description: "Semi-Private Room (3 Days)", category: "Room & Bed Charges", quantity: 3, unitPrice: 4500, discount: 0, tax: 0, amount: 13500 },
-      { id: 2, description: "Normal Delivery Charges", category: "Procedures & Surgeries", quantity: 1, unitPrice: 18000, discount: 2000, tax: 0, amount: 16000 },
-      { id: 3, description: "Obstetrician Charges", category: "Doctor Visit Charges", quantity: 1, unitPrice: 8000, discount: 0, tax: 0, amount: 8000 },
-      { id: 4, description: "Nursing (3 Days)", category: "Nursing Charges", quantity: 3, unitPrice: 1200, discount: 0, tax: 0, amount: 3600 },
-      { id: 5, description: "Newborn Care Package", category: "Other Services", quantity: 1, unitPrice: 4500, discount: 0, tax: 0, amount: 4500 },
-      { id: 6, description: "Paediatrician Visit", category: "Doctor Visit Charges", quantity: 2, unitPrice: 1500, discount: 0, tax: 0, amount: 3000 },
-      { id: 7, description: "Post-Delivery Lab Tests", category: "Laboratory Tests", quantity: 1, unitPrice: 1800, discount: 0, tax: 0, amount: 1800 },
-      { id: 8, description: "Mother & Baby Medications", category: "Pharmacy / Medicines", quantity: 1, unitPrice: 2100, discount: 0, tax: 0, amount: 2100 },
-    ],
-    globalDiscount: 2000,
-    globalTax: 0,
-    paidAmount: 50500,
-    paymentHistory: [
-      { date: "2026-08-25", amount: 25000, method: "Net Banking", ref: "INS-BAJ-CLAIM-001", note: "Insurance partial payment" },
-      { date: "2026-08-27", amount: 25500, method: "Net Banking", ref: "AXISBANK-NEFT-8831", note: "Patient co-pay settlement" },
-    ],
-    notes: "Mother and baby both healthy. Full payment cleared.",
-  },
-  {
-    id: "INV-2026-0911",
-    patientName: "Suresh Varma",
-    patientId: "PAT-4101",
-    patientAge: 58,
-    patientGender: "Male",
-    patientPhone: "+91 94471 23499",
-    patientEmail: "suresh.v@example.com",
-    patientAddress: "16, Gandhi Nagar, Palakkad, Kerala - 678001",
-    encounterId: "ENC-2026-O1211",
-    encounterType: "OP Visit",
-    department: "Radiology",
-    attendingDoctor: "Dr. Meena Raj",
-    billingOfficer: "Anitha S",
-    invoiceDate: "2026-08-28",
-    dueDate: "2026-09-04",
-    paymentMethod: "Cash",
-    status: "Paid",
-    insuranceProvider: null,
-    policyNumber: null,
-    items: [
-      { id: 1, description: "Brain MRI with Contrast", category: "X-Ray / Imaging", quantity: 1, unitPrice: 6500, discount: 500, tax: 0, amount: 6000 },
-      { id: 2, description: "Neurologist Consultation", category: "OP Consultation", quantity: 1, unitPrice: 1500, discount: 0, tax: 0, amount: 1500 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 7500,
-    paymentHistory: [
-      { date: "2026-08-28", amount: 7500, method: "Cash", ref: "CASH-280826-002", note: "Cash payment at radiology counter" },
-    ],
-    notes: "",
-  },
-  {
-    id: "INV-2026-0912",
-    patientName: "Rekha Chandran",
-    patientId: "PAT-4102",
-    patientAge: 45,
-    patientGender: "Female",
-    patientPhone: "+91 94471 23501",
-    patientEmail: "rekha.c@example.com",
-    patientAddress: "3, Manali Street, Kochi, Kerala - 682005",
-    encounterId: "ENC-2026-A4512",
-    encounterType: "Inpatient Admission",
-    department: "Nephrology",
-    attendingDoctor: "Dr. Prakash Nair",
-    billingOfficer: "Rajan Thomas",
-    invoiceDate: "2026-08-15",
-    dueDate: "2026-08-22",
-    paymentMethod: "Insurance / TPA",
-    status: "Refunded",
-    insuranceProvider: "New India Assurance",
-    policyNumber: "NIA-2023-881100",
-    items: [
-      { id: 1, description: "ICU Stay (2 Days)", category: "ICU Charges", quantity: 2, unitPrice: 9000, discount: 0, tax: 0, amount: 18000 },
-      { id: 2, description: "Nephrology Consultation", category: "Doctor Visit Charges", quantity: 2, unitPrice: 2000, discount: 0, tax: 0, amount: 4000 },
-      { id: 3, description: "Dialysis Session", category: "Procedures & Surgeries", quantity: 1, unitPrice: 8000, discount: 0, tax: 0, amount: 8000 },
-      { id: 4, description: "Lab - Renal Function Tests", category: "Laboratory Tests", quantity: 1, unitPrice: 2200, discount: 0, tax: 0, amount: 2200 },
-    ],
-    globalDiscount: 0,
-    globalTax: 0,
-    paidAmount: 32200,
-    refundAmount: 32200,
-    paymentHistory: [
-      { date: "2026-08-15", amount: 32200, method: "Insurance / TPA", ref: "NIA-CLAIM-2026-08", note: "Full payment by insurance" },
-      { date: "2026-08-22", amount: -32200, method: "Insurance / TPA", ref: "NIA-REFUND-2026-08", note: "Refund issued — duplicate billing resolved" },
-    ],
-    notes: "Duplicate entry identified. Refund processed.",
-  },
-];
-
-const initialInsuranceClaims = [
-  {
-    id: "CLM-2026-001",
-    invoiceId: "INV-2026-0901",
-    patientName: "Ramesh Kumar",
-    patientId: "PAT-4091",
-    provider: "Star Health Insurance",
-    policyNo: "SHI-2024-904321",
-    claimAmount: 166300,
-    approvedAmount: 150000,
-    insurancePaid: 0,
-    patientPayable: 166300,
-    claimStatus: "Submitted",
-    submittedDate: "2026-08-22",
-    settledDate: null,
-    tpaRef: "SHI-TPA-2026-4421",
-  },
-  {
-    id: "CLM-2026-002",
-    invoiceId: "INV-2026-0907",
-    patientName: "Deepak Menon",
-    patientId: "PAT-4097",
-    provider: "National Insurance",
-    policyNo: "NIC-2024-551892",
-    claimAmount: 220300,
-    approvedAmount: 180000,
-    insurancePaid: 50000,
-    patientPayable: 170300,
-    claimStatus: "Partially Approved",
-    submittedDate: "2026-08-18",
-    settledDate: null,
-    tpaRef: "NIC-TPA-2026-7712",
-  },
-  {
-    id: "CLM-2026-003",
-    invoiceId: "INV-2026-0910",
-    patientName: "Ananya Pillai",
-    patientId: "PAT-4100",
-    provider: "Bajaj Allianz Health",
-    policyNo: "BAJ-2025-112345",
-    claimAmount: 52500,
-    approvedAmount: 25000,
-    insurancePaid: 25000,
-    patientPayable: 25500,
-    claimStatus: "Approved",
-    submittedDate: "2026-08-25",
-    settledDate: "2026-08-27",
-    tpaRef: "BAJ-TPA-2026-1190",
-  },
-  {
-    id: "CLM-2026-004",
-    invoiceId: "INV-2026-0912",
-    patientName: "Rekha Chandran",
-    patientId: "PAT-4102",
-    provider: "New India Assurance",
-    policyNo: "NIA-2023-881100",
-    claimAmount: 32200,
-    approvedAmount: 32200,
-    insurancePaid: 32200,
-    patientPayable: 0,
-    claimStatus: "Settled",
-    submittedDate: "2026-08-15",
-    settledDate: "2026-08-22",
-    tpaRef: "NIA-TPA-2026-3301",
-  },
-];
-
 // ── HELPER FUNCTIONS ─────────────────────────────────────────────────────────
 const calcInvoiceSubtotal = (inv) =>
-  inv.items.reduce((sum, item) => sum + item.amount, 0);
+  (inv.items || []).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
 const calcInvoiceTotal = (inv) => {
+  if (inv.totalAmount !== undefined && inv.totalAmount !== null) {
+    return Number(inv.totalAmount);
+  }
   const subtotal = calcInvoiceSubtotal(inv);
-  return Math.max(0, subtotal - (inv.globalDiscount || 0) + (inv.globalTax || 0));
+  return Math.max(0, subtotal - (inv.globalDiscount || inv.discount || 0) + (inv.globalTax || inv.tax || 0));
 };
 
 const calcBalance = (inv) =>
@@ -546,6 +72,7 @@ const today = () => {
 const formatDate = (d) => {
   if (!d) return "—";
   const dt = new Date(d);
+  if (isNaN(dt.getTime())) return String(d);
   return dt.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 };
 
@@ -616,7 +143,7 @@ const emptyInvoiceForm = () => ({
 });
 
 const emptyPaymentForm = (inv) => ({
-  invoiceId: inv?.id || "",
+  invoiceId: inv?.id || inv?.invoiceId || "",
   amount: inv ? calcBalance(inv) : 0,
   method: "Cash",
   date: today(),
@@ -629,8 +156,11 @@ const emptyPaymentForm = (inv) => ({
 // ════════════════════════════════════════════════════════════════════════════
 export default function BillingManagement() {
   const [activeSection, setActiveSection] = useState("invoices");
-  const [invoices, setInvoices] = useState(initialInvoices);
-  const [insuranceClaims, setInsuranceClaims] = useState(initialInsuranceClaims);
+  const [invoices, setInvoices] = useState([]);
+  const [insuranceClaims, setInsuranceClaims] = useState([]);
+  const [patientsList, setPatientsList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("All");
@@ -646,12 +176,86 @@ export default function BillingManagement() {
   const [invoiceForm, setInvoiceForm] = useState(emptyInvoiceForm());
   const [paymentForm, setPaymentForm] = useState(emptyPaymentForm(null));
 
-  // Toast
-  const [toast, setToast] = useState(null);
+  // Toast notification callback
   const showToast = useCallback((msg, type = "success") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
+    if (type === "error") {
+      toast.error(msg);
+    } else if (type === "warning") {
+      toast.warning(msg);
+    } else if (type === "info") {
+      toast.info(msg);
+    } else {
+      toast.success(msg);
+    }
   }, []);
+
+  // ── BACKEND FETCHERS ────────────────────────────────────────────────────────
+  const fetchInvoices = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/hospital/invoices`, {
+        credentials: "omit",
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setInvoices(json.data);
+
+        // Derive insurance claims from invoices
+        const claims = [];
+        json.data.forEach((inv) => {
+          if (inv.insuranceClaim && inv.insuranceClaim.claimId) {
+            claims.push(inv.insuranceClaim);
+          } else if (inv.insuranceProvider && inv.insuranceProvider.trim()) {
+            claims.push({
+              id: `CLM-${inv.id}`,
+              invoiceId: inv.id,
+              patientName: inv.patientName,
+              patientId: inv.patientId,
+              provider: inv.insuranceProvider,
+              policyNo: inv.policyNumber || "POL-PENDING",
+              claimAmount: inv.totalAmount || calcInvoiceTotal(inv),
+              approvedAmount: inv.totalAmount || calcInvoiceTotal(inv),
+              insurancePaid: inv.paymentMethod === "Insurance / TPA" ? (inv.paidAmount || 0) : 0,
+              patientPayable: inv.paymentMethod === "Insurance / TPA" ? calcBalance(inv) : calcInvoiceTotal(inv),
+              claimStatus: inv.status === "Paid" ? "Settled" : "Submitted",
+              submittedDate: inv.invoiceDate,
+              settledDate: inv.status === "Paid" ? inv.invoiceDate : null,
+              tpaRef: `TPA-${inv.id.replace("INV-", "")}`,
+            });
+          }
+        });
+        setInsuranceClaims(claims);
+      } else {
+        showToast(json.message || "Failed to load invoices.", "error");
+      }
+    } catch (err) {
+      console.error("Error fetching hospital invoices:", err);
+      showToast("Unable to reach backend server. Please try again.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  const fetchPatients = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_BASE}/hospital/patients`, {
+        credentials: "omit",
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setPatientsList(json.data);
+      }
+    } catch (err) {
+      console.warn("Could not load patients list:", err);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvoices();
+    fetchPatients();
+  }, [fetchInvoices, fetchPatients]);
 
   // ── COMPUTED METRICS ───────────────────────────────────────────────────────
   const metrics = useMemo(() => {
@@ -667,14 +271,13 @@ export default function BillingManagement() {
       if (inv.status === "Overdue") overdueAmt += bal;
       if (inv.status === "Partially Paid") partialAmt += bal;
       if (inv.status === "Refunded") refundAmt += (inv.refundAmount || 0);
-      // count today paid
+      // count today paid from payment history
       if (inv.paymentHistory) {
         inv.paymentHistory.forEach((p) => {
           if (p.date === todayStr && p.amount > 0) todayRevenue += p.amount;
         });
       }
     });
-    // Deduplicate today (Paid invoices already counted in paymentHistory)
     return { totalRevenue, todayRevenue, pendingAmt, overdueAmt, partialAmt, refundAmt };
   }, [invoices]);
 
@@ -683,11 +286,11 @@ export default function BillingManagement() {
     return invoices.filter((inv) => {
       const q = search.trim().toLowerCase();
       const matchSearch = !q ||
-        inv.id.toLowerCase().includes(q) ||
-        inv.patientName.toLowerCase().includes(q) ||
-        inv.patientId.toLowerCase().includes(q) ||
-        (inv.encounterId || "").toLowerCase().includes(q) ||
-        (inv.department || "").toLowerCase().includes(q);
+        (inv.id && inv.id.toLowerCase().includes(q)) ||
+        (inv.patientName && inv.patientName.toLowerCase().includes(q)) ||
+        (inv.patientId && String(inv.patientId).toLowerCase().includes(q)) ||
+        ((inv.encounterId || "").toLowerCase().includes(q)) ||
+        ((inv.department || "").toLowerCase().includes(q));
       const matchStatus = statusFilter === "All" || inv.status === statusFilter;
       return matchSearch && matchStatus;
     });
@@ -717,88 +320,103 @@ export default function BillingManagement() {
 
   // ── HANDLERS ──────────────────────────────────────────────────────────────
 
-  // Record Payment
+  // Open Record Payment Modal
   const handleOpenPayment = (inv) => {
     setPaymentTarget(inv);
     setPaymentForm(emptyPaymentForm(inv));
   };
 
-  const handlePaymentSubmit = (e) => {
+  // Submit Payment to Backend
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     const amount = parseFloat(paymentForm.amount) || 0;
-    if (amount <= 0) { showToast("Enter a valid payment amount.", "error"); return; }
-
-    setInvoices((prev) =>
-      prev.map((inv) => {
-        if (inv.id !== paymentTarget.id) return inv;
-        const newPaid = (inv.paidAmount || 0) + amount;
-        const total = calcInvoiceTotal(inv);
-        const newStatus = newPaid >= total ? "Paid" : "Partially Paid";
-        return {
-          ...inv,
-          paidAmount: newPaid,
-          paymentMethod: paymentForm.method,
-          status: newStatus,
-          paymentHistory: [
-            ...(inv.paymentHistory || []),
-            { date: paymentForm.date, amount, method: paymentForm.method, ref: paymentForm.ref, note: paymentForm.note },
-          ],
-        };
-      })
-    );
-
-    if (viewInvoice?.id === paymentTarget.id) {
-      setViewInvoice((prev) => {
-        const newPaid = (prev.paidAmount || 0) + amount;
-        const total = calcInvoiceTotal(prev);
-        return {
-          ...prev,
-          paidAmount: newPaid,
-          paymentMethod: paymentForm.method,
-          status: newPaid >= total ? "Paid" : "Partially Paid",
-          paymentHistory: [
-            ...(prev.paymentHistory || []),
-            { date: paymentForm.date, amount, method: paymentForm.method, ref: paymentForm.ref, note: paymentForm.note },
-          ],
-        };
+    if (amount <= 0) {
+      showToast("Enter a valid payment amount.", "error");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const targetId = paymentTarget._id || paymentTarget.id;
+      const res = await fetch(`${API_BASE}/hospital/invoices/${targetId}/payment`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          amount,
+          method: paymentForm.method,
+          date: paymentForm.date,
+          ref: paymentForm.ref,
+          note: paymentForm.note,
+        }),
       });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`Payment of ${fmt(amount)} recorded for ${paymentTarget.patientName}.`);
+        setPaymentTarget(null);
+        if (viewInvoice && (viewInvoice.id === paymentTarget.id || viewInvoice._id === paymentTarget._id)) {
+          setViewInvoice(json.data);
+        }
+        await fetchInvoices();
+      } else {
+        showToast(json.message || "Failed to record payment.", "error");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      showToast("Error processing payment.", "error");
+    } finally {
+      setSubmitting(false);
     }
-
-    setPaymentTarget(null);
-    showToast(`Payment of ${fmt(amount)} recorded for ${paymentTarget.patientName}.`);
   };
 
-  // Refund
-  const handleRefund = (inv) => {
-    setInvoices((prev) =>
-      prev.map((i) => i.id === inv.id ? {
-        ...i,
-        status: "Refunded",
-        refundAmount: i.paidAmount || 0,
-        paymentHistory: [
-          ...(i.paymentHistory || []),
-          { date: today(), amount: -(i.paidAmount || 0), method: i.paymentMethod, ref: `REFUND-${i.id}`, note: "Refund issued" },
-        ],
-      } : i)
-    );
-    if (viewInvoice?.id === inv.id) {
-      setViewInvoice((prev) => ({
-        ...prev,
-        status: "Refunded",
-        refundAmount: prev.paidAmount || 0,
-        paymentHistory: [
-          ...(prev.paymentHistory || []),
-          { date: today(), amount: -(prev.paidAmount || 0), method: prev.paymentMethod, ref: `REFUND-${prev.id}`, note: "Refund issued" },
-        ],
-      }));
+  // Process Refund via Backend
+  const handleRefund = async (inv) => {
+    try {
+      setSubmitting(true);
+      const targetId = inv._id || inv.id;
+      const res = await fetch(`${API_BASE}/hospital/invoices/${targetId}/refund`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`Refund processed for invoice ${inv.id}.`);
+        setRefundTarget(null);
+        if (viewInvoice && (viewInvoice.id === inv.id || viewInvoice._id === inv._id)) {
+          setViewInvoice(json.data);
+        }
+        await fetchInvoices();
+      } else {
+        showToast(json.message || "Failed to process refund.", "error");
+      }
+    } catch (err) {
+      console.error("Refund error:", err);
+      showToast("Error issuing refund.", "error");
+    } finally {
+      setSubmitting(false);
     }
-    setRefundTarget(null);
-    showToast(`Refund processed for invoice ${inv.id}.`);
   };
 
-  // Create Invoice
+  // Create Invoice Handlers
   const handleInvoiceFormChange = (field, value) => {
     setInvoiceForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePatientSelect = (e) => {
+    const selectedName = e.target.value;
+    const found = patientsList.find((p) => p.name === selectedName);
+    if (found) {
+      setInvoiceForm((prev) => ({
+        ...prev,
+        patientName: found.name,
+        patientId: found.patientId || String(found._id),
+        patientAge: found.age || prev.patientAge,
+        patientGender: found.gender || prev.patientGender,
+        patientPhone: found.phone || prev.patientPhone,
+        patientEmail: found.email || prev.patientEmail,
+        patientAddress: found.address || prev.patientAddress,
+      }));
+    } else {
+      setInvoiceForm((prev) => ({ ...prev, patientName: selectedName }));
+    }
   };
 
   const handleItemChange = (idx, field, value) => {
@@ -829,41 +447,62 @@ export default function BillingManagement() {
     }));
   };
 
-  const handleCreateSubmit = (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
-    if (!invoiceForm.patientName.trim()) { showToast("Patient name is required.", "error"); return; }
-    if (invoiceForm.items.some((it) => !it.description.trim())) { showToast("All line items need a description.", "error"); return; }
+    if (!invoiceForm.patientName.trim()) {
+      showToast("Patient name is required.", "error");
+      return;
+    }
+    if (invoiceForm.items.some((it) => !it.description.trim())) {
+      showToast("All line items need a description.", "error");
+      return;
+    }
 
-    const subtotal = invoiceForm.items.reduce((s, it) => s + it.amount, 0);
-    const total = Math.max(0, subtotal - (parseFloat(invoiceForm.globalDiscount) || 0) + (parseFloat(invoiceForm.globalTax) || 0));
-    const paid = parseFloat(invoiceForm.paidAmount) || 0;
-    const status = paid >= total && total > 0 ? "Paid" : paid > 0 ? "Partially Paid" : "Pending";
-
-    const id = `INV-2026-${String(Math.floor(9000 + Math.random() * 900)).padStart(4, "0")}`;
-    const newInv = {
-      ...invoiceForm,
-      id,
-      patientId: invoiceForm.patientId.trim() || `PAT-${Math.floor(5000 + Math.random() * 1000)}`,
-      encounterId: invoiceForm.encounterId.trim() || `ENC-2026-${Math.floor(9000 + Math.random() * 900)}`,
-      globalDiscount: parseFloat(invoiceForm.globalDiscount) || 0,
-      globalTax: parseFloat(invoiceForm.globalTax) || 0,
-      paidAmount: paid,
-      status,
-      paymentHistory: paid > 0 ? [{ date: invoiceForm.invoiceDate, amount: paid, method: invoiceForm.paymentMethod, ref: "INITIAL-PMT", note: "Initial payment on invoice creation" }] : [],
-      items: invoiceForm.items,
-    };
-
-    setInvoices((prev) => [newInv, ...prev]);
-    setShowCreateModal(false);
-    setInvoiceForm(emptyInvoiceForm());
-    showToast(`Invoice ${id} created successfully for ${newInv.patientName}.`);
+    try {
+      setSubmitting(true);
+      const res = await fetch(`${API_BASE}/hospital/invoices`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(invoiceForm),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`Invoice ${json.data.id || json.data.invoiceId} created successfully for ${invoiceForm.patientName}.`);
+        setShowCreateModal(false);
+        setInvoiceForm(emptyInvoiceForm());
+        await fetchInvoices();
+      } else {
+        showToast(json.message || "Failed to create invoice.", "error");
+      }
+    } catch (err) {
+      console.error("Create invoice error:", err);
+      showToast("Error creating invoice.", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Print
   const handlePrint = () => window.print();
 
-  // Send Invoice Toast
-  const handleSend = (inv) => showToast(`Invoice ${inv.id} sent to ${inv.patientEmail || inv.patientName}.`);
+  // Send Invoice Notification via Backend
+  const handleSend = async (inv) => {
+    try {
+      const targetId = inv._id || inv.id;
+      const res = await fetch(`${API_BASE}/hospital/invoices/${targetId}/send`, {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`Invoice ${inv.id} sent to ${inv.patientEmail || inv.patientName}.`);
+      } else {
+        showToast(`Invoice ${inv.id} sent to ${inv.patientEmail || inv.patientName}.`);
+      }
+    } catch (err) {
+      showToast(`Invoice ${inv.id} sent to ${inv.patientEmail || inv.patientName}.`);
+    }
+  };
 
   // ── STATUS BADGE ──────────────────────────────────────────────────────────
   const StatusBadge = ({ status, size = "sm" }) => {
@@ -908,7 +547,6 @@ export default function BillingManagement() {
 
     invoices.forEach((inv) => {
       const paid = inv.paidAmount || 0;
-      const total = calcInvoiceTotal(inv);
       if (paid > 0) {
         totalCollected += paid;
         const m = inv.paymentMethod || "Other";
@@ -919,8 +557,8 @@ export default function BillingManagement() {
       const dept = inv.department || "General";
       deptTotals[dept] = (deptTotals[dept] || 0) + (inv.status === "Paid" || inv.status === "Partially Paid" ? paid : 0);
       const doc = inv.attendingDoctor || "Unknown";
-      if (inv.items.some(it => it.category === "OP Consultation" || it.category === "Doctor Visit Charges" || it.category === "Online Consultation")) {
-        doctorTotals[doc] = (doctorTotals[doc] || 0) + inv.items.filter(it => it.category === "OP Consultation" || it.category === "Doctor Visit Charges" || it.category === "Online Consultation").reduce((s, it) => s + it.amount, 0);
+      if (inv.items && inv.items.some(it => it.category === "OP Consultation" || it.category === "Doctor Visit Charges" || it.category === "Online Consultation")) {
+        doctorTotals[doc] = (doctorTotals[doc] || 0) + inv.items.filter(it => it.category === "OP Consultation" || it.category === "Doctor Visit Charges" || it.category === "Online Consultation").reduce((s, it) => s + (it.amount || 0), 0);
       }
     });
 
@@ -930,14 +568,6 @@ export default function BillingManagement() {
   // ── JSX ───────────────────────────────────────────────────────────────────
   return (
     <div className="bill-page">
-      {/* Toast */}
-      {toast && (
-        <div className={`bill-toast bill-toast--${toast.type}`}>
-          {toast.type === "error" ? <FaExclamationCircle /> : <FaCheckCircle />}
-          <span>{toast.msg}</span>
-        </div>
-      )}
-
       {/* ── HEADER BANNER ── */}
       <div className="bill-banner">
         <div className="bill-banner__info">
@@ -1055,12 +685,20 @@ export default function BillingManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInvoices.length > 0 ? filteredInvoices.map((inv) => {
+                  {loading ? (
+                    <tr>
+                      <td colSpan="11" className="hosp-table-empty">
+                        <FaSpinner className="empty-icon fa-spin" />
+                        <h3>Loading Invoices…</h3>
+                        <p>Connecting to hospital billing database…</p>
+                      </td>
+                    </tr>
+                  ) : filteredInvoices.length > 0 ? filteredInvoices.map((inv) => {
                     const total = calcInvoiceTotal(inv);
                     const paid = inv.paidAmount || 0;
                     const bal = calcBalance(inv);
                     return (
-                      <tr key={inv.id} className="bill-tr">
+                      <tr key={inv.id || inv._id} className="bill-tr">
                         <td>
                           <div className="bill-id-cell">
                             <FaReceipt className="bill-id-icon" />
@@ -1244,12 +882,12 @@ export default function BillingManagement() {
                 </tr>
               </thead>
               <tbody>
-                {insuranceClaims.map((c) => {
-                  const pending = Math.max(0, c.approvedAmount - c.insurancePaid);
+                {insuranceClaims.length > 0 ? insuranceClaims.map((c) => {
+                  const pending = Math.max(0, (c.approvedAmount || 0) - (c.insurancePaid || 0));
                   const claimStyle = CLAIM_STATUS_COLORS[c.claimStatus] || { bg: "#f1f5f9", color: "#475569" };
                   return (
-                    <tr key={c.id} className="bill-tr">
-                      <td><span className="bill-id-text">{c.id}</span></td>
+                    <tr key={c.id || c.claimId} className="bill-tr">
+                      <td><span className="bill-id-text">{c.id || c.claimId}</span></td>
                       <td><span className="bill-enc-id">{c.invoiceId}</span></td>
                       <td>
                         <div className="bill-patient-cell">
@@ -1286,7 +924,15 @@ export default function BillingManagement() {
                       </td>
                     </tr>
                   );
-                })}
+                }) : (
+                  <tr>
+                    <td colSpan="13" className="hosp-table-empty">
+                      <FaShieldAlt className="empty-icon" />
+                      <h3>No Insurance Claims Found</h3>
+                      <p>Invoices created with insurance providers will appear here.</p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1324,29 +970,33 @@ export default function BillingManagement() {
           <div className="hosp-card">
             <h4 className="hosp-card-title"><FaCreditCard style={{ marginRight: "0.4rem" }} />Payment Method Breakdown</h4>
             <div className="bill-method-breakdown">
-              {Object.entries(reportData.methodTotals).map(([method, amt]) => {
-                const total = Object.values(reportData.methodTotals).reduce((a, b) => a + b, 0);
-                const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
-                const colors = {
-                  "Cash": "#10b981", "UPI": "#8b5cf6", "Credit/Debit Card": "#0284c7",
-                  "Net Banking": "#f59e0b", "Insurance / TPA": "#ef4444", "Cheque": "#64748b",
-                };
-                return (
-                  <div key={method} className="bill-method-row">
-                    <div className="bill-method-row__label">
-                      <PayMethodIcon method={method} />
-                      <span>{method}</span>
-                    </div>
-                    <div className="bill-method-row__bar-wrap">
-                      <div className="bill-method-row__bar">
-                        <div className="bill-method-row__fill" style={{ width: `${pct}%`, backgroundColor: colors[method] || "#64748b" }} />
+              {Object.keys(reportData.methodTotals).length > 0 ? (
+                Object.entries(reportData.methodTotals).map(([method, amt]) => {
+                  const total = Object.values(reportData.methodTotals).reduce((a, b) => a + b, 0);
+                  const pct = total > 0 ? Math.round((amt / total) * 100) : 0;
+                  const colors = {
+                    "Cash": "#10b981", "UPI": "#8b5cf6", "Credit/Debit Card": "#0284c7",
+                    "Net Banking": "#f59e0b", "Insurance / TPA": "#ef4444", "Cheque": "#64748b",
+                  };
+                  return (
+                    <div key={method} className="bill-method-row">
+                      <div className="bill-method-row__label">
+                        <PayMethodIcon method={method} />
+                        <span>{method}</span>
                       </div>
-                      <span className="bill-method-row__pct">{pct}%</span>
+                      <div className="bill-method-row__bar-wrap">
+                        <div className="bill-method-row__bar">
+                          <div className="bill-method-row__fill" style={{ width: `${pct}%`, backgroundColor: colors[method] || "#64748b" }} />
+                        </div>
+                        <span className="bill-method-row__pct">{pct}%</span>
+                      </div>
+                      <span className="bill-method-row__amt">{fmt(amt)}</span>
                     </div>
-                    <span className="bill-method-row__amt">{fmt(amt)}</span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <p style={{ color: "#64748b", padding: "1rem" }}>No payments collected yet.</p>
+              )}
             </div>
           </div>
 
@@ -1357,12 +1007,16 @@ export default function BillingManagement() {
               <table className="bill-report-table">
                 <thead><tr><th>Department</th><th style={{ textAlign: "right" }}>Collected</th></tr></thead>
                 <tbody>
-                  {Object.entries(reportData.deptTotals).sort((a, b) => b[1] - a[1]).map(([dept, amt]) => (
-                    <tr key={dept}>
-                      <td>{dept}</td>
-                      <td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(amt)}</td>
-                    </tr>
-                  ))}
+                  {Object.keys(reportData.deptTotals).length > 0 ? (
+                    Object.entries(reportData.deptTotals).sort((a, b) => b[1] - a[1]).map(([dept, amt]) => (
+                      <tr key={dept}>
+                        <td>{dept}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(amt)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="2" style={{ textAlign: "center", color: "#64748b" }}>No data yet</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1371,12 +1025,16 @@ export default function BillingManagement() {
               <table className="bill-report-table">
                 <thead><tr><th>Doctor</th><th style={{ textAlign: "right" }}>Revenue</th></tr></thead>
                 <tbody>
-                  {Object.entries(reportData.doctorTotals).sort((a, b) => b[1] - a[1]).map(([doc, amt]) => (
-                    <tr key={doc}>
-                      <td>{doc}</td>
-                      <td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(amt)}</td>
-                    </tr>
-                  ))}
+                  {Object.keys(reportData.doctorTotals).length > 0 ? (
+                    Object.entries(reportData.doctorTotals).sort((a, b) => b[1] - a[1]).map(([doc, amt]) => (
+                      <tr key={doc}>
+                        <td>{doc}</td>
+                        <td style={{ textAlign: "right", fontWeight: 700 }}>{fmt(amt)}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr><td colSpan="2" style={{ textAlign: "center", color: "#64748b" }}>No data yet</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1398,22 +1056,26 @@ export default function BillingManagement() {
                 </tr>
               </thead>
               <tbody>
-                {insuranceClaims.map((c) => {
-                  const st = CLAIM_STATUS_COLORS[c.claimStatus] || {};
-                  return (
-                    <tr key={c.id}>
-                      <td>{c.provider}</td>
-                      <td>{c.id}</td>
-                      <td style={{ textAlign: "right" }}>{fmt(c.claimAmount)}</td>
-                      <td style={{ textAlign: "right" }}>{fmt(c.approvedAmount)}</td>
-                      <td style={{ textAlign: "right" }}>{fmt(c.insurancePaid)}</td>
-                      <td style={{ textAlign: "right" }}>{fmt(c.patientPayable)}</td>
-                      <td>
-                        <span className="bill-badge" style={{ backgroundColor: st.bg, color: st.color }}>{c.claimStatus}</span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {insuranceClaims.length > 0 ? (
+                  insuranceClaims.map((c) => {
+                    const st = CLAIM_STATUS_COLORS[c.claimStatus] || {};
+                    return (
+                      <tr key={c.id || c.claimId}>
+                        <td>{c.provider}</td>
+                        <td>{c.id || c.claimId}</td>
+                        <td style={{ textAlign: "right" }}>{fmt(c.claimAmount)}</td>
+                        <td style={{ textAlign: "right" }}>{fmt(c.approvedAmount)}</td>
+                        <td style={{ textAlign: "right" }}>{fmt(c.insurancePaid)}</td>
+                        <td style={{ textAlign: "right" }}>{fmt(c.patientPayable)}</td>
+                        <td>
+                          <span className="bill-badge" style={{ backgroundColor: st.bg, color: st.color }}>{c.claimStatus}</span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr><td colSpan="7" style={{ textAlign: "center", color: "#64748b" }}>No claims registered</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -1472,9 +1134,9 @@ export default function BillingManagement() {
                   <h4 className="inv-pat-name">{viewInvoice.patientName}</h4>
                   <p className="inv-meta-row-detail"><strong>Patient ID:</strong> <span className="hosp-pat-id">{viewInvoice.patientId}</span></p>
                   <p className="inv-meta-row-detail"><strong>Age / Gender:</strong> {viewInvoice.patientAge} yrs, {viewInvoice.patientGender}</p>
-                  <p className="inv-meta-row-detail"><strong>Phone:</strong> {viewInvoice.patientPhone}</p>
-                  <p className="inv-meta-row-detail"><strong>Email:</strong> {viewInvoice.patientEmail}</p>
-                  <p className="inv-meta-row-detail"><strong>Address:</strong> {viewInvoice.patientAddress}</p>
+                  <p className="inv-meta-row-detail"><strong>Phone:</strong> {viewInvoice.patientPhone || "—"}</p>
+                  <p className="inv-meta-row-detail"><strong>Email:</strong> {viewInvoice.patientEmail || "—"}</p>
+                  <p className="inv-meta-row-detail"><strong>Address:</strong> {viewInvoice.patientAddress || "—"}</p>
                 </div>
                 <div>
                   <span className="inv-meta-label">Encounter / Admission</span>
@@ -1486,7 +1148,7 @@ export default function BillingManagement() {
                   <p className="inv-meta-row-detail"><strong>Due Date:</strong> {formatDate(viewInvoice.dueDate)}</p>
                   <p className="inv-meta-row-detail"><strong>Payment Mode:</strong> {viewInvoice.paymentMethod}</p>
                   {viewInvoice.insuranceProvider && (
-                    <p className="inv-meta-row-detail"><strong>Insurance:</strong> {viewInvoice.insuranceProvider} · {viewInvoice.policyNumber}</p>
+                    <p className="inv-meta-row-detail"><strong>Insurance:</strong> {viewInvoice.insuranceProvider} · {viewInvoice.policyNumber || "—"}</p>
                   )}
                   <p className="inv-meta-row-detail"><strong>Billing Officer:</strong> {viewInvoice.billingOfficer}</p>
                 </div>
@@ -1507,7 +1169,7 @@ export default function BillingManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {viewInvoice.items.map((item, idx) => (
+                    {(viewInvoice.items || []).map((item, idx) => (
                       <tr key={idx}>
                         <td>{idx + 1}</td>
                         <td className="inv-item-desc">{item.description}</td>
@@ -1551,7 +1213,7 @@ export default function BillingManagement() {
                                 {p.amount < 0 ? `-${fmt(Math.abs(p.amount))}` : fmt(p.amount)}
                               </td>
                               <td>{p.method}</td>
-                              <td>{p.ref}</td>
+                              <td>{p.ref || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1564,8 +1226,8 @@ export default function BillingManagement() {
                 <div className="inv-calc-card">
                   {(() => {
                     const subtotal = calcInvoiceSubtotal(viewInvoice);
-                    const disc = viewInvoice.globalDiscount || 0;
-                    const tax = viewInvoice.globalTax || 0;
+                    const disc = viewInvoice.globalDiscount || viewInvoice.discount || 0;
+                    const tax = viewInvoice.globalTax || viewInvoice.tax || 0;
                     const total = calcInvoiceTotal(viewInvoice);
                     const paid = viewInvoice.paidAmount || 0;
                     const bal = calcBalance(viewInvoice);
@@ -1586,7 +1248,7 @@ export default function BillingManagement() {
                             <span className="inv-paid-stamp"><FaCheckCircle /> Fully Settled</span>
                           )}
                         </div>
-                        {viewInvoice.status === "Partially Paid" && (
+                        {viewInvoice.status === "Partially Paid" && total > 0 && (
                           <div className="inv-partial-bar">
                             <div className="inv-partial-bar__track">
                               <div className="inv-partial-bar__fill" style={{ width: `${Math.min(100, (paid / total) * 100).toFixed(1)}%` }} />
@@ -1695,7 +1357,9 @@ export default function BillingManagement() {
               </div>
               <div className="hosp-modal-actions">
                 <button type="button" className="btn-modal-cancel" onClick={() => setPaymentTarget(null)}>Cancel</button>
-                <button type="submit" className="hosp-btn-submit"><FaCheck /> Record Payment</button>
+                <button type="submit" className="hosp-btn-submit" disabled={submitting}>
+                  <FaCheck /> {submitting ? "Processing…" : "Record Payment"}
+                </button>
               </div>
             </form>
           </div>
@@ -1718,12 +1382,12 @@ export default function BillingManagement() {
               <div className="bill-refund-modal__amount">
                 Refund Amount: <strong>{fmt(refundTarget.paidAmount || 0)}</strong>
               </div>
-              <p className="bill-refund-modal__warn">This action will mark the invoice as <em>Refunded</em> and cannot be undone.</p>
+              <p className="bill-refund-modal__warn">This action will mark the invoice as <em>Refunded</em> and record the refund transaction.</p>
             </div>
             <div className="hosp-modal-actions">
               <button className="btn-modal-cancel" onClick={() => setRefundTarget(null)}>Cancel</button>
-              <button className="hosp-btn-submit bill-btn-refund-confirm" onClick={() => handleRefund(refundTarget)}>
-                <FaUndo /> Confirm Refund
+              <button className="hosp-btn-submit bill-btn-refund-confirm" onClick={() => handleRefund(refundTarget)} disabled={submitting}>
+                <FaUndo /> {submitting ? "Refunding…" : "Confirm Refund"}
               </button>
             </div>
           </div>
@@ -1749,7 +1413,23 @@ export default function BillingManagement() {
                 <div className="form-row">
                   <div className="form-group half">
                     <label>Patient Full Name *</label>
-                    <input type="text" placeholder="e.g. Ramesh Kumar" value={invoiceForm.patientName} onChange={(e) => handleInvoiceFormChange("patientName", e.target.value)} required />
+                    <input
+                      type="text"
+                      list="patients-datalist"
+                      placeholder="e.g. Ramesh Kumar"
+                      value={invoiceForm.patientName}
+                      onChange={handlePatientSelect}
+                      required
+                    />
+                    {patientsList.length > 0 && (
+                      <datalist id="patients-datalist">
+                        {patientsList.map((p) => (
+                          <option key={p._id} value={p.name}>
+                            {p.patientId ? `(${p.patientId}) ` : ""}{p.phone || ""}
+                          </option>
+                        ))}
+                      </datalist>
+                    )}
                   </div>
                   <div className="form-group half">
                     <label>Patient ID</label>
@@ -1939,7 +1619,18 @@ export default function BillingManagement() {
                 <div className="form-row">
                   <div className="form-group half">
                     <label>Insurance Provider</label>
-                    <input type="text" placeholder="e.g. Star Health Insurance (if applicable)" value={invoiceForm.insuranceProvider} onChange={(e) => handleInvoiceFormChange("insuranceProvider", e.target.value)} />
+                    <input
+                      type="text"
+                      list="insurance-providers-list"
+                      placeholder="e.g. Star Health Insurance (if applicable)"
+                      value={invoiceForm.insuranceProvider}
+                      onChange={(e) => handleInvoiceFormChange("insuranceProvider", e.target.value)}
+                    />
+                    <datalist id="insurance-providers-list">
+                      {INSURANCE_PROVIDERS.map((ip) => (
+                        <option key={ip} value={ip} />
+                      ))}
+                    </datalist>
                   </div>
                   <div className="form-group half">
                     <label>Policy Number</label>
@@ -1962,7 +1653,9 @@ export default function BillingManagement() {
 
               <div className="hosp-modal-actions">
                 <button type="button" className="btn-modal-cancel" onClick={() => setShowCreateModal(false)}>Cancel</button>
-                <button type="submit" className="hosp-btn-submit"><FaCheckCircle /> Generate &amp; Issue Invoice</button>
+                <button type="submit" className="hosp-btn-submit" disabled={submitting}>
+                  <FaCheckCircle /> {submitting ? "Generating…" : "Generate & Issue Invoice"}
+                </button>
               </div>
             </form>
           </div>

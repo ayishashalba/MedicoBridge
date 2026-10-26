@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaUserMd,
@@ -12,106 +12,111 @@ import {
   FaVideo,
   FaMapMarkerAlt,
   FaArrowRight,
+  FaSpinner,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./ConsultationDetails.css";
-
-/* ── Mock Data (same source as listing) ── */
-const consultations = [
-  {
-    id: "consultation-1",
-    doctor: "Dr. Sarah Johnson",
-    specialization: "Cardiologist",
-    hospital: "Apollo Hospital",
-    city: "Kochi",
-    date: "20 June 2026",
-    type: "Online Consultation",
-    diagnosis: "Mild Hypertension",
-    status: "Completed",
-    consultationFee: "₹800",
-    followUpDate: "20 July 2026",
-    notes:
-      "Patient advised to monitor blood pressure daily. Reduce salt intake and exercise 30 min/day. Prescribed Amlodipine 5mg and Aspirin 75mg. Lifestyle modifications include weight management and stress reduction techniques.",
-    symptoms: ["Headache", "Dizziness", "Elevated BP readings"],
-    vitalSigns: {
-      bp: "140/90 mmHg",
-      pulse: "82 bpm",
-      temp: "98.4°F",
-      spo2: "98%",
-    },
-  },
-  {
-    id: "consultation-2",
-    doctor: "Dr. John Smith",
-    specialization: "Dermatologist",
-    hospital: "Aster Clinic",
-    city: "Kochi",
-    date: "12 June 2026",
-    type: "Hospital Visit",
-    diagnosis: "Skin Allergy",
-    status: "Follow-up Scheduled",
-    consultationFee: "₹600",
-    followUpDate: "12 July 2026",
-    notes:
-      "Prescribed antihistamines and topical cream. Avoid exposure to allergens. Patient should maintain a diary of foods and environmental triggers. If rashes worsen, consider patch testing.",
-    symptoms: ["Itching", "Red rashes", "Swelling on arms"],
-    vitalSigns: {
-      bp: "120/80 mmHg",
-      pulse: "76 bpm",
-      temp: "98.6°F",
-      spo2: "99%",
-    },
-  },
-  {
-    id: "consultation-3",
-    doctor: "Dr. Emily Wilson",
-    specialization: "Neurologist",
-    hospital: "Lakeshore Hospital",
-    city: "Ernakulam",
-    date: "03 June 2026",
-    type: "Online Consultation",
-    diagnosis: "Migraine",
-    status: "Completed",
-    consultationFee: "₹1,000",
-    followUpDate: null,
-    notes:
-      "Prescribed Sumatriptan for acute episodes. Maintain a headache diary tracking frequency, intensity, and triggers. Adequate hydration and sleep hygiene recommended. Follow up only if frequency increases.",
-    symptoms: [
-      "Severe headache",
-      "Nausea",
-      "Sensitivity to light",
-      "Aura",
-    ],
-    vitalSigns: {
-      bp: "118/76 mmHg",
-      pulse: "72 bpm",
-      temp: "98.2°F",
-      spo2: "99%",
-    },
-  },
-];
 
 const STATUS_CLASS_MAP = {
   Completed: "cd-status--completed",
   "Follow-up Scheduled": "cd-status--followup",
   "In Progress": "cd-status--inprogress",
   Cancelled: "cd-status--cancelled",
+  Confirmed: "cd-status--completed",
+  Pending: "cd-status--inprogress",
 };
+
+function formatDate(dateStr) {
+  if (!dateStr) return "Not specified";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("en-IN", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
+}
 
 function ConsultationDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const record = consultations.find((c) => c.id === id);
 
-  if (!record) {
+  const [record, setRecord] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) {
+      setError("Invalid consultation ID.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchRecord = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login/patient");
+          return;
+        }
+        const res = await fetch(`${API_BASE_URL}/patient/appointments/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.data) {
+          const appt = data.data;
+          const doc = appt.doctorId || {};
+          const hosp = appt.hospitalId || {};
+          setRecord({
+            doctor: doc.name || "Doctor",
+            specialization: doc.specialization || "General Physician",
+            hospital: hosp.name || doc.hospitalName || "Facility",
+            city: hosp.city || doc.city || "",
+            date: appt.date ? new Date(appt.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) : "",
+            type: appt.type || "Consultation",
+            diagnosis: appt.consultationId?.diagnosis || appt.notes || "—",
+            status: appt.status || "Completed",
+            consultationFee: appt.fee ? `₹${appt.fee}` : (doc.consultationFee ? `₹${doc.consultationFee}` : "—"),
+            followUpDate: appt.followUpDate || null,
+            notes: appt.consultationId?.notes || appt.notes || "—",
+            symptoms: appt.consultationId?.symptoms || [],
+            vitalSigns: appt.consultationId?.vitalSigns || null,
+          });
+        } else {
+          setError(data.message || "Consultation record not found.");
+        }
+      } catch (err) {
+        setError("Unable to connect to server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecord();
+  }, [id, navigate]);
+
+  if (loading) {
+    return (
+      <div className="cd-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "1rem", color: "#0d9488" }}>
+        <FaSpinner className="fa-spin" /> Loading consultation details...
+      </div>
+    );
+  }
+
+  if (error || !record) {
     return (
       <div className="cd-page">
         <button className="cd-back-btn" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Back
         </button>
-        <div className="cd-not-found">
+        <div className="cd-not-found" style={{ textAlign: "center", padding: "3rem" }}>
+          <FaExclamationCircle style={{ fontSize: "2.5rem", color: "#ef4444", marginBottom: "1rem" }} />
           <h2>Consultation Not Found</h2>
-          <p>The consultation record you're looking for doesn't exist.</p>
+          <p>{error || "The consultation record you're looking for doesn't exist."}</p>
+          <button className="cd-action-btn" style={{ marginTop: "1rem" }} onClick={() => navigate("/patient/medical-records")}>
+            Back to Records
+          </button>
         </div>
       </div>
     );
@@ -140,7 +145,7 @@ function ConsultationDetails() {
             </p>
           </div>
         </div>
-        <span className={`cd-status-badge ${STATUS_CLASS_MAP[record.status]}`}>
+        <span className={`cd-status-badge ${STATUS_CLASS_MAP[record.status] || "cd-status--completed"}`}>
           {record.status}
         </span>
       </div>
@@ -159,10 +164,10 @@ function ConsultationDetails() {
             <p className="cd-doctor-spec">{record.specialization}</p>
             <div className="cd-doctor-meta">
               <span>
-                <FaHospital /> {record.hospital}, {record.city}
+                <FaHospital /> {record.hospital}{record.city ? `, ${record.city}` : ""}
               </span>
               <span>
-                {record.type === "Online Consultation" ? (
+                {record.type?.toLowerCase().includes("online") || record.type?.toLowerCase().includes("video") ? (
                   <FaVideo />
                 ) : (
                   <FaMapMarkerAlt />
@@ -198,9 +203,7 @@ function ConsultationDetails() {
           </div>
           <div className="cd-info-item">
             <span className="cd-info-label">Status</span>
-            <span
-              className={`cd-status-badge cd-status-badge--sm ${STATUS_CLASS_MAP[record.status]}`}
-            >
+            <span className={`cd-status-badge cd-status-badge--sm ${STATUS_CLASS_MAP[record.status] || ""}`}>
               {record.status}
             </span>
           </div>
@@ -214,22 +217,30 @@ function ConsultationDetails() {
             <FaNotesMedical className="cd-label-icon" /> Vital Signs
           </div>
           <div className="cd-vitals-grid">
-            <div className="cd-vital-item">
-              <span className="cd-vital-label">Blood Pressure</span>
-              <span className="cd-vital-value">{record.vitalSigns.bp}</span>
-            </div>
-            <div className="cd-vital-item">
-              <span className="cd-vital-label">Pulse Rate</span>
-              <span className="cd-vital-value">{record.vitalSigns.pulse}</span>
-            </div>
-            <div className="cd-vital-item">
-              <span className="cd-vital-label">Temperature</span>
-              <span className="cd-vital-value">{record.vitalSigns.temp}</span>
-            </div>
-            <div className="cd-vital-item">
-              <span className="cd-vital-label">SpO₂</span>
-              <span className="cd-vital-value">{record.vitalSigns.spo2}</span>
-            </div>
+            {record.vitalSigns.bp && (
+              <div className="cd-vital-item">
+                <span className="cd-vital-label">Blood Pressure</span>
+                <span className="cd-vital-value">{record.vitalSigns.bp}</span>
+              </div>
+            )}
+            {record.vitalSigns.pulse && (
+              <div className="cd-vital-item">
+                <span className="cd-vital-label">Pulse Rate</span>
+                <span className="cd-vital-value">{record.vitalSigns.pulse}</span>
+              </div>
+            )}
+            {record.vitalSigns.temp && (
+              <div className="cd-vital-item">
+                <span className="cd-vital-label">Temperature</span>
+                <span className="cd-vital-value">{record.vitalSigns.temp}</span>
+              </div>
+            )}
+            {record.vitalSigns.spo2 && (
+              <div className="cd-vital-item">
+                <span className="cd-vital-label">SpO₂</span>
+                <span className="cd-vital-value">{record.vitalSigns.spo2}</span>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -237,9 +248,9 @@ function ConsultationDetails() {
       {/* Symptoms & Diagnosis */}
       <div className="cd-section-card">
         <div className="cd-section-label">
-          <FaClipboardCheck className="cd-label-icon" /> Symptoms & Diagnosis
+          <FaClipboardCheck className="cd-label-icon" /> Symptoms &amp; Diagnosis
         </div>
-        {record.symptoms && (
+        {record.symptoms && record.symptoms.length > 0 && (
           <div className="cd-symptoms">
             <p className="cd-sub-label">Reported Symptoms</p>
             <div className="cd-symptom-tags">
@@ -252,18 +263,20 @@ function ConsultationDetails() {
           </div>
         )}
         <div className="cd-diagnosis-block">
-          <p className="cd-sub-label">Diagnosis</p>
+          <p className="cd-sub-label">Diagnosis / Notes</p>
           <p className="cd-diagnosis-value">{record.diagnosis}</p>
         </div>
       </div>
 
       {/* Doctor Notes */}
-      <div className="cd-section-card">
-        <div className="cd-section-label">
-          <FaNotesMedical className="cd-label-icon" /> Doctor's Notes
+      {record.notes && record.notes !== "—" && (
+        <div className="cd-section-card">
+          <div className="cd-section-label">
+            <FaNotesMedical className="cd-label-icon" /> Doctor's Notes
+          </div>
+          <p className="cd-notes-text">{record.notes}</p>
         </div>
-        <p className="cd-notes-text">{record.notes}</p>
-      </div>
+      )}
 
       {/* Follow-up */}
       {record.followUpDate && (
@@ -274,7 +287,7 @@ function ConsultationDetails() {
           <div className="cd-followup-row">
             <div className="cd-followup-info">
               <FaCalendarAlt />
-              <span>{record.followUpDate}</span>
+              <span>{formatDate(record.followUpDate)}</span>
             </div>
             <button
               className="cd-action-btn"

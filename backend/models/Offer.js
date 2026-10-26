@@ -1,44 +1,59 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const offerSchema = new mongoose.Schema(
-    {
-        title: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-        description: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-        bannerImage: {
-            type: String,
-            default: "",
-        },
-        discountPercentage: {
-            type: Number,
-            required: true,
-            min: 0,
-            max: 100,
-        },
-        category: {
-            type: String,
-            default: "All",
-        },
-        startDate: {
-            type: Date,
-            default: Date.now,
-        },
-        endDate: {
-            type: Date,
-        },
-        isActive: {
-            type: Boolean,
-            default: true,
-        },
+  {
+    offerName: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    { timestamps: true }
+    description: {
+      type: String,
+      default: '',
+    },
+    discountType: {
+      type: String,
+      enum: ['flat', 'percentage'],
+      required: true,
+      default: 'flat',
+    },
+    discountValue: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    medicineId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Medicine',
+      required: true,
+    },
+    pharmacyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Pharmacy',
+      default: null,
+    },
+    startDate: {
+      type: Date,
+      required: true,
+    },
+    endDate: {
+      type: Date,
+      required: true,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
 );
 
-module.exports = mongoose.model("Offer", offerSchema);
+// Helper method to check if offer is currently valid
+offerSchema.methods.isCurrentlyActive = function () {
+  const now = new Date();
+  return this.isActive && now >= new Date(this.startDate) && now <= new Date(this.endDate);
+};
+
+module.exports = mongoose.model('Offer', offerSchema);

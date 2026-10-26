@@ -1,4 +1,4 @@
-﻿/* =====================================================================
+/* =====================================================================
    PatientMedicineDetails.css
    All class names prefixed with: medicine-details-
    Apollo Pharmacy / Tata 1mg-inspired clean professional design
@@ -110,6 +110,13 @@
 }
 .medicine-details-image-wrap:hover { transform: scale(1.02); }
 
+.medicine-details-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 18px;
+}
+
 .medicine-details-emoji {
   font-size: 90px;
   line-height: 1;
@@ -120,6 +127,30 @@
 @keyframes medicine-details-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
+}
+
+.medicine-details-loading-state,
+.medicine-details-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.medicine-details-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: med-spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes med-spin {
+  to { transform: rotate(360deg); }
 }
 
 .medicine-details-ribbon {

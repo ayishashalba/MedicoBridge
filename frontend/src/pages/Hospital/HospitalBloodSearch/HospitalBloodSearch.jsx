@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FaTint,
   FaSearch,
@@ -12,6 +12,7 @@ import {
   FaUser,
   FaCheckCircle,
   FaBuilding,
+  FaSpinner,
 } from "react-icons/fa";
 import { sortDonorsByProximity, getProximityLabel, getProximityScore } from "../../../utils/locationProximity";
 import { generateBloodGroupReport } from "../../../utils/pdfGenerator";
@@ -19,132 +20,83 @@ import "./HospitalBloodSearch.css";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-const hospitalDonorPool = [
-  {
-    id: "PAT-106",
-    name: "Rahul Nair",
-    type: "Registered Patient",
-    age: 32,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    phone: "+91 98765 43210",
-    email: "rahul.nair@example.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "DR-80242",
-    name: "Dr. Rajesh K. Nair",
-    type: "Hospital Doctor",
-    age: 42,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    phone: "+91 98765 43211",
-    email: "rajesh.nair@medicobridge.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "PAT-107",
-    name: "Anjali Thomas",
-    type: "Registered Patient",
-    age: 27,
-    gender: "Female",
-    bloodGroup: "B+",
-    city: "Malappuram",
-    isDonorAvailable: true,
-    phone: "+91 98765 43211",
-    email: "anjali.thomas@example.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "PAT-108",
-    name: "Arun Kumar",
-    type: "Registered Patient",
-    age: 41,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Kannur",
-    isDonorAvailable: true,
-    phone: "+91 98765 43212",
-    email: "arun.kumar@example.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "DR-80243",
-    name: "Dr. Priya Thomas",
-    type: "Hospital Doctor",
-    age: 36,
-    gender: "Female",
-    bloodGroup: "B+",
-    city: "Wayanad",
-    isDonorAvailable: true,
-    phone: "+91 98765 43213",
-    email: "priya.t@medicobridge.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "PAT-109",
-    name: "Firoz Khan",
-    type: "Registered Patient",
-    age: 36,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Ernakulam",
-    isDonorAvailable: true,
-    phone: "+91 98765 43219",
-    email: "firoz.khan@example.com",
-    facility: "City Care Hospital",
-  },
-  {
-    id: "PAT-110",
-    name: "Deepak Sharma",
-    type: "Registered Patient",
-    age: 29,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Delhi",
-    isDonorAvailable: true,
-    phone: "+91 98765 43220",
-    email: "deepak.sharma@example.com",
-    facility: "External Registered",
-  },
-  {
-    id: "PAT-111",
-    name: "Vikas Patel",
-    type: "Registered Patient",
-    age: 34,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Goa",
-    isDonorAvailable: false, // EXCLUDED AUTOMATICALLY
-    phone: "+91 98765 43221",
-    email: "vikas.patel@example.com",
-    facility: "External Registered",
-  },
-  {
-    id: "PAT-101",
-    name: "Aarav Sharma",
-    type: "Registered Patient",
-    age: 32,
-    gender: "Male",
-    bloodGroup: "O+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    phone: "+91 98765 43210",
-    email: "aarav.sharma@example.com",
-    facility: "City Care Hospital",
-  },
-];
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 function HospitalBloodSearch() {
-  const hospitalCity = localStorage.getItem("hospitalCity") || "Kozhikode";
+  const [hospitalName, setHospitalName] = useState("");
+  const [hospitalCity, setHospitalCity] = useState("");
   const [selectedBloodGroup, setSelectedBloodGroup] = useState("B+");
-  // locationInput: what the user types; activeLocation: what's actually used for search
-  const [locationInput, setLocationInput] = useState(hospitalCity);
-  const [activeLocation, setActiveLocation] = useState(hospitalCity);
+  const [locationInput, setLocationInput] = useState("");
+  const [activeLocation, setActiveLocation] = useState("");
+  const [donors, setDonors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  const authHeaders = useCallback(() => {
+    const token = localStorage.getItem("token");
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  }, []);
+
+  // Fetch hospital profile on mount
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/hospital/profile`, {
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const city = data.data.city || "Kozhikode";
+          setHospitalName(data.data.name || "Hospital");
+          setHospitalCity(city);
+          setLocationInput(city);
+          setActiveLocation(city);
+        }
+      } catch (err) {
+        console.error("Failed to fetch hospital profile:", err);
+        // Fallback
+        const fallbackCity = localStorage.getItem("hospitalCity") || "Kozhikode";
+        setHospitalCity(fallbackCity);
+        setLocationInput(fallbackCity);
+        setActiveLocation(fallbackCity);
+        setHospitalName("Hospital");
+      } finally {
+        setProfileLoaded(true);
+      }
+    };
+    fetchProfile();
+  }, [authHeaders]);
+
+  // Fetch donors when blood group or active location changes (and profile is loaded)
+  useEffect(() => {
+    if (!profileLoaded || !activeLocation) return;
+    const fetchDonors = async () => {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ bloodGroup: selectedBloodGroup });
+        // Don't send originCity filter to backend — we want ALL donors for this blood group
+        // and let the frontend sort by proximity
+        const res = await fetch(`${API_BASE}/api/blood-donors/search?${params.toString()}`, {
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setDonors(data.data);
+        } else {
+          setDonors([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch blood donors:", err);
+        setDonors([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDonors();
+  }, [selectedBloodGroup, activeLocation, profileLoaded, authHeaders]);
 
   const handleSearch = () => {
     const loc = locationInput.trim() || hospitalCity;
@@ -156,17 +108,15 @@ function HospitalBloodSearch() {
   };
 
   const filteredDonors = useMemo(() => {
-    const result = hospitalDonorPool.filter(
-      (donor) => donor.bloodGroup === selectedBloodGroup && donor.isDonorAvailable === true
-    );
-    return sortDonorsByProximity(result, activeLocation);
-  }, [selectedBloodGroup, activeLocation]);
+    // All donors from API already have isDonorAvailable === true (filtered server-side)
+    return sortDonorsByProximity(donors, activeLocation);
+  }, [donors, activeLocation]);
 
   const handleDownload = () => {
     generateBloodGroupReport({
       title: `Hospital Emergency Blood Donor Report (${selectedBloodGroup})`,
       selectedBloodGroup: selectedBloodGroup,
-      generatedBy: "City Care Hospital Admin",
+      generatedBy: `${hospitalName || "Hospital"} Admin`,
       columns: [
         { header: "Donor ID", dataKey: "id" },
         { header: "Name", dataKey: "name" },
@@ -181,7 +131,7 @@ function HospitalBloodSearch() {
         ...d,
         proximityLabel: getProximityLabel(d.city, activeLocation),
       })),
-      activeFilters: { "Hospital Center": `City Care Hospital (${hospitalCity})`, "Search Location": activeLocation },
+      activeFilters: { "Hospital Center": `${hospitalName} (${hospitalCity})`, "Search Location": activeLocation },
     });
   };
 
@@ -203,7 +153,7 @@ function HospitalBloodSearch() {
           <FaBuilding className="h-icon" />
           <div>
             <span className="h-label">Hospital Center Location</span>
-            <strong className="h-val">City Care Hospital ({hospitalCity})</strong>
+            <strong className="h-val">{hospitalName || "Hospital"} ({hospitalCity || "..." })</strong>
           </div>
         </div>
       </div>
@@ -271,7 +221,13 @@ function HospitalBloodSearch() {
       </div>
 
       {/* Grid */}
-      {filteredDonors.length === 0 ? (
+      {loading ? (
+        <div className="hbs-empty">
+          <FaSpinner className="empty-icon" style={{ animation: "spin 1s linear infinite" }} />
+          <h3>Searching for {selectedBloodGroup} donors...</h3>
+          <p>Loading results from the database.</p>
+        </div>
+      ) : filteredDonors.length === 0 ? (
         <div className="hbs-empty">
           <FaTint className="empty-icon" />
           <h3>No available {selectedBloodGroup} donors found near {activeLocation}.</h3>
@@ -294,14 +250,14 @@ function HospitalBloodSearch() {
 
                 <div className="hbs-donor-info">
                   <div className="hbs-avatar">
-                    {donor.type.includes("Doctor") ? <FaUserMd /> : <FaUser />}
+                    {(donor.type || donor.role || "").includes("Doctor") ? <FaUserMd /> : <FaUser />}
                   </div>
                   <div>
                     <h4>{donor.name}</h4>
                     <span className="hbs-meta">
-                      {donor.id} • {donor.age} Yrs • {donor.gender}
+                      {donor.id}{donor.age ? ` • ${donor.age} Yrs` : ""}{donor.gender ? ` • ${donor.gender}` : ""}
                     </span>
-                    <span className="hbs-type-pill">{donor.type}</span>
+                    <span className="hbs-type-pill">{donor.type || (donor.role === 'Doctor' ? 'Hospital Doctor' : 'Registered Patient')}</span>
                   </div>
                 </div>
 

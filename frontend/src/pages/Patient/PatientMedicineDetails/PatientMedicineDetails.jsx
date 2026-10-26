@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -13,44 +13,38 @@ import {
   FaBoxOpen,
   FaThermometerHalf,
   FaCalendarAlt,
-  FaHeart,
   FaShareAlt,
   FaStar,
   FaShieldAlt,
   FaTruck,
   FaUndo,
   FaInfoCircle,
+  FaStore,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
 import { getEffectiveMedicinePrice } from "../../../utils/productOffers";
 import "./PatientMedicineDetails.css";
 
-/* ─── Medicine Data Store ──────────────────────────────────────── */
-const medicinesDB = {
-  1: { id: 1, name: "Paracetamol 650mg", brand: "Calpol", manufacturer: "GlaxoSmithKline Pharmaceuticals Ltd.", category: "Tablet", isRx: false, emoji: "💊", highlight: "#e8f5e9", accentColor: "#2e7d32", price: 28, mrp: 35, stockUnits: 120, stock: "in-stock", expiryDate: "March 2027", description: "Calpol 650mg Tablet is a common painkiller used to treat aches and pain. It also helps in reducing high temperature (fever). It works by blocking the release of certain chemical messengers that cause fever and pain. It is used to relieve pain in conditions like headache, migraine, nerve pain, toothache, sore throat, period (menstrual) pains, arthritis, muscle aches, and the common cold.", dosageInstructions: "Take this medicine in the dose and duration as advised by your doctor. Swallow it as a whole. Do not chew, crush or break it. Calpol 650mg Tablet may be taken with or without food, but it is better to take it at a fixed time. Adults: 1-2 tablets every 4-6 hours. Maximum: 8 tablets (5200mg) in 24 hours.", sideEffects: ["Nausea", "Vomiting", "Allergic skin reactions", "Liver damage (on overdose)", "Stomach upset"], storageInstructions: "Store below 30°C in a cool, dry place away from direct sunlight and moisture. Keep out of reach of children. Do not use after the expiry date.", genericAlternatives: [{ name: "Dolo 650", brand: "Micro Labs", price: 26 }, { name: "Paracip 650", brand: "Cipla", price: 24 }, { name: "Fepanil 650", brand: "FDC Ltd.", price: 22 }], rating: 4.7, reviewCount: 2841 },
-  2: { id: 2, name: "Amoxicillin 500mg", brand: "Novamox", manufacturer: "Cipla Ltd.", category: "Capsule", isRx: true, emoji: "💉", highlight: "#e3f2fd", accentColor: "#1565c0", price: 145, mrp: 185, stockUnits: 55, stock: "in-stock", expiryDate: "June 2027", description: "Novamox 500mg Capsule is a penicillin-type antibiotic. It is used to treat bacterial infections of the ear, nose, throat, lung, skin, and urinary tract. It works by preventing the formation of the bacterial protective covering (cell wall) which is necessary for the survival of bacteria in the human body.", dosageInstructions: "Take this medicine in the dose and duration as advised by your doctor. Swallow it as a whole. Novamox 500mg Capsule may be taken with or without food. Complete the full course of treatment even if you feel better.", sideEffects: ["Diarrhoea", "Nausea", "Skin rash", "Vomiting", "Superinfection"], storageInstructions: "Store below 25°C in a cool, dry place. Keep out of reach of children. Do not refrigerate unless directed.", genericAlternatives: [{ name: "Mox 500", brand: "Ranbaxy", price: 138 }, { name: "Amoxil 500", brand: "GSK", price: 155 }], rating: 4.5, reviewCount: 1204 },
-  3: { id: 3, name: "Vitamin C 1000mg", brand: "Limcee", manufacturer: "Abbott India Ltd.", category: "Supplement", isRx: false, emoji: "🍊", highlight: "#fff8e1", accentColor: "#e65100", price: 62, mrp: 80, stockUnits: 8, stock: "low-stock", expiryDate: "January 2028", description: "Limcee 1000mg is a Vitamin C supplement used to prevent and treat Vitamin C deficiency and scurvy. Vitamin C acts as an antioxidant and helps in maintaining healthy teeth and gums. It helps the body absorb iron and is essential for wound healing.", dosageInstructions: "Take one tablet daily or as directed by your doctor. The tablet can be chewed or dissolved in water. Best taken with meals to reduce the risk of stomach upset.", sideEffects: ["Nausea", "Heartburn", "Stomach cramps", "Diarrhoea (at high doses)", "Kidney stones (prolonged very high doses)"], storageInstructions: "Store in a cool, dry place below 30°C. Protect from light and moisture. Keep out of reach of children.", genericAlternatives: [{ name: "Celin 1000", brand: "GSK", price: 58 }, { name: "Ascorbic Acid 1000mg", brand: "Mankind", price: 45 }], rating: 4.8, reviewCount: 3512 },
-  4: { id: 4, name: "Azithromycin 500mg", brand: "Zithromax", manufacturer: "Pfizer Ltd.", category: "Tablet", isRx: true, emoji: "🔬", highlight: "#f3e5f5", accentColor: "#6a1b9a", price: 210, mrp: 265, stockUnits: 25, stock: "in-stock", expiryDate: "September 2027", description: "Zithromax 500mg Tablet is an antibiotic medicine used to treat bacterial infections of the respiratory tract, skin, and soft tissues. It works by preventing the synthesis of essential proteins required by bacteria to carry out vital functions.", dosageInstructions: "Take as directed by your doctor. Usually taken once daily for 3-5 days. Can be taken with or without food. Take at the same time each day. Complete the full prescribed course.", sideEffects: ["Diarrhoea", "Nausea", "Stomach pain", "Vomiting", "Headache"], storageInstructions: "Store at room temperature (below 30°C). Keep away from heat, moisture, and direct sunlight. Keep out of reach of children.", genericAlternatives: [{ name: "Azee 500", brand: "Cipla", price: 190 }, { name: "Aziwin 500", brand: "Mankind", price: 175 }], rating: 4.6, reviewCount: 980 },
-  5: { id: 5, name: "Omeprazole 20mg", brand: "Omez", manufacturer: "Dr. Reddy's Laboratories Ltd.", category: "Capsule", isRx: false, emoji: "🌿", highlight: "#e8f5e9", accentColor: "#2e7d32", price: 55, mrp: 68, stockUnits: 5, stock: "low-stock", expiryDate: "May 2027", description: "Omez 20mg Capsule is a proton pump inhibitor (PPI) used to treat conditions related to excess acid production in the stomach, such as acid reflux (GERD), peptic ulcers, and Zollinger-Ellison syndrome.", dosageInstructions: "Swallow the capsule whole before meals. Usually taken once or twice daily. Do not crush, chew, or open the capsule. Follow your doctor's instructions carefully.", sideEffects: ["Headache", "Diarrhoea", "Nausea", "Stomach pain", "Vitamin B12 deficiency (long term)"], storageInstructions: "Store below 25°C in a dry place. Keep out of reach of children. Protect from light and moisture.", genericAlternatives: [{ name: "Omeprazole 20", brand: "Ranbaxy", price: 48 }, { name: "Prilosec 20", brand: "AstraZeneca", price: 72 }], rating: 4.5, reviewCount: 1623 },
-  6: { id: 6, name: "Cetirizine 10mg", brand: "Zyrtec", manufacturer: "Strides Pharma", category: "Tablet", isRx: false, emoji: "🌸", highlight: "#fce4ec", accentColor: "#880e4f", price: 38, mrp: 50, stockUnits: 0, stock: "out-of-stock", expiryDate: "November 2027", description: "Zyrtec 10mg Tablet is an antiallergic medication used to treat symptoms of allergy such as runny nose, watery eyes, sneezing, and skin rashes. It blocks histamine, a natural substance that causes allergic symptoms.", dosageInstructions: "Take one tablet once daily with or without food. Best taken in the evening if drowsiness is a concern. Swallow with water. Do not exceed 10mg per day.", sideEffects: ["Drowsiness", "Dry mouth", "Fatigue", "Headache", "Stomach upset"], storageInstructions: "Store at room temperature below 30°C. Keep away from sunlight and moisture.", genericAlternatives: [{ name: "Cetzine 10", brand: "GSK", price: 32 }, { name: "Alerid 10", brand: "Cipla", price: 29 }], rating: 4.4, reviewCount: 2110 },
-  7: { id: 7, name: "Metformin 500mg", brand: "Glycomet", manufacturer: "USV Ltd.", category: "Tablet", isRx: true, emoji: "⚡", highlight: "#e3f2fd", accentColor: "#0d47a1", price: 35, mrp: 45, stockUnits: 80, stock: "in-stock", expiryDate: "August 2027", description: "Glycomet 500mg Tablet is an antidiabetic medicine used to treat type 2 diabetes mellitus. It works by lowering blood glucose production in the liver and by improving the body's sensitivity to insulin.", dosageInstructions: "Take with meals to reduce stomach upset. Usually taken 2-3 times daily as directed by your doctor. Swallow whole with water. Regular blood glucose monitoring is recommended.", sideEffects: ["Nausea", "Vomiting", "Diarrhoea", "Stomach upset", "Lactic acidosis (rare but serious)"], storageInstructions: "Store below 25°C in a cool, dry place away from sunlight. Keep out of reach of children.", genericAlternatives: [{ name: "Glucophage 500", brand: "Merck", price: 42 }, { name: "Metforal 500", brand: "Torrent", price: 30 }], rating: 4.6, reviewCount: 3890 },
-  8: { id: 8, name: "D3 Vitamin 60K", brand: "Calcirol", manufacturer: "Cadila Healthcare Ltd.", category: "Supplement", isRx: false, emoji: "☀️", highlight: "#fffde7", accentColor: "#f57f17", price: 90, mrp: 120, stockUnits: 60, stock: "in-stock", expiryDate: "December 2027", description: "Calcirol 60K is a Vitamin D3 supplement used to treat and prevent Vitamin D deficiency. Vitamin D is essential for the absorption of calcium and phosphorus, helping maintain healthy bones and teeth. It also supports immune function and muscle health.", dosageInstructions: "Dissolve one sachet in water or juice and consume once a week, or as directed by your doctor. Can be taken with or without food. Do not exceed the recommended dose without medical advice.", sideEffects: ["Nausea", "Vomiting", "Constipation", "Weakness", "Hypercalcaemia (at very high doses)"], storageInstructions: "Store in a cool, dry place below 25°C. Protect from direct sunlight. Keep out of reach of children.", genericAlternatives: [{ name: "D-Rise 60K", brand: "USV", price: 82 }, { name: "Arachitol 60K", brand: "Abbott", price: 95 }], rating: 4.9, reviewCount: 5201 },
+const CATEGORY_EMOJIS = {
+  Tablet: "💊",
+  Capsule: "💊",
+  Supplement: "🍊",
+  Syrup: "🧪",
+  Injection: "💉",
+  Ointment: "🩹",
+  Drops: "💧",
+  Inhaler: "🫁",
+  Cream: "🧴",
+  Gel: "🧴",
+  Powder: "🧂",
 };
 
-const defaultMedicine = medicinesDB[1];
-
-const discountPct = (price, mrp) => Math.round(((mrp - price) / mrp) * 100);
-
-function StarRating({ rating }) {
-  return (
-    <div className="medicine-details-stars">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <span key={s} className={s <= Math.round(rating) ? "medicine-details-star medicine-details-star--filled" : "medicine-details-star"}>★</span>
-      ))}
-      <span className="medicine-details-rating-val">{rating}</span>
-    </div>
-  );
-}
+const discountPct = (price, mrp) => {
+  if (!mrp || mrp <= price) return 0;
+  return Math.round(((mrp - price) / mrp) * 100);
+};
 
 function InfoBlock({ icon, title, children }) {
   return (
@@ -69,265 +63,776 @@ export default function PatientMedicineDetails() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const medicine = medicinesDB[parseInt(id)] || defaultMedicine;
+  const [medicine, setMedicine] = useState(() => location.state?.medicine || null);
+  const [loading, setLoading] = useState(!location.state?.medicine);
+  const [error, setError] = useState(null);
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [showRxModal, setShowRxModal] = useState(false);
   const [hasUploadedRx, setHasUploadedRx] = useState(false);
 
-  const deliveryStockInfo = getStockAndDeliveryInfo(medicine.stockUnits ?? medicine.stock);
-  const outOfStock = !deliveryStockInfo.canOrder;
-  
-  // Evaluate live automatic product offer
+  useEffect(() => {
+    if (!id) {
+      setError("Medicine ID is missing.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchMed = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`${API_BASE_URL}/medicines/${id}`);
+        const data = await res.json();
+
+        if (res.ok && data.data) {
+          setMedicine(data.data);
+          const rawStock = data.data.stock;
+          const numStock =
+            typeof rawStock === "number"
+              ? rawStock
+              : rawStock !== null && rawStock !== undefined
+              ? Number(rawStock)
+              : 0;
+          const isAvail = data.data.isAvailable !== false && numStock > 0;
+          if (!isAvail) {
+            setQty(0);
+          } else {
+            setQty(1);
+          }
+        } else {
+          setError(data.message || "Medicine not found.");
+          setMedicine(null);
+        }
+      } catch (err) {
+        console.error("Failed to load medicine details:", err);
+        setError("Medicine not found.");
+        setMedicine(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMed();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="medicine-details-page">
+        <div className="medicine-details-topbar">
+          <button
+            className="medicine-details-back-btn"
+            onClick={() => navigate("/patient/pharmacy")}
+            aria-label="Go back"
+            id="medicine-details-back"
+          >
+            <FaArrowLeft />
+            <span>Back to Pharmacy</span>
+          </button>
+        </div>
+        <div className="medicine-details-loading-state">
+          <div className="medicine-details-spinner"></div>
+          <p style={{ color: "#64748b", fontWeight: "500" }}>Loading medicine details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !medicine) {
+    return (
+      <div className="medicine-details-page">
+        <div className="medicine-details-topbar">
+          <button
+            className="medicine-details-back-btn"
+            onClick={() => navigate("/patient/pharmacy")}
+            aria-label="Go back"
+            id="medicine-details-back"
+          >
+            <FaArrowLeft />
+            <span>Back to Pharmacy</span>
+          </button>
+        </div>
+        <div className="medicine-details-error-state">
+          <FaExclamationTriangle style={{ fontSize: "3.5rem", color: "#f59e0b", marginBottom: "1rem" }} />
+          <h2 style={{ fontSize: "1.75rem", color: "#1e293b", marginBottom: "0.5rem", fontWeight: "700" }}>
+            Medicine not found.
+          </h2>
+          <p style={{ color: "#64748b", maxWidth: "420px", marginBottom: "1.75rem", lineHeight: "1.5" }}>
+            The medicine you requested could not be located in our verified pharmacy catalog or has been removed.
+          </p>
+          <button
+            className="medicine-details-back-btn"
+            style={{ background: "#2563eb", color: "#fff", borderColor: "#2563eb" }}
+            onClick={() => navigate("/patient/pharmacy")}
+          >
+            Browse Available Medicines
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Stock availability based on real MongoDB stock quantity
+  const rawStock = medicine.stock;
+  const numStock =
+    typeof rawStock === "number"
+      ? rawStock
+      : rawStock !== null && rawStock !== undefined
+      ? Number(rawStock)
+      : 0;
+  const isAvailable = medicine.isAvailable !== false;
+
+  // Show "Out of Stock" only when the actual MongoDB stock quantity is 0 or less, or the medicine is unavailable.
+  const isOutOfStock = !isAvailable || numStock <= 0;
+  const availableStock = isOutOfStock ? 0 : numStock;
+  const isRx = Boolean(medicine.requiresPrescription);
+
+  // Delivery estimation
+  const deliveryInfo = getStockAndDeliveryInfo(medicine.stock, isAvailable);
+
+  // Live Automatic Product Offers calculation
   const pricing = getEffectiveMedicinePrice(medicine);
-  const effectivePrice = pricing.finalPrice;
-  const originalPrice = pricing.originalPrice;
-  const mrp = pricing.mrp;
+  const effectivePrice = pricing.finalPrice ?? medicine.price ?? 0;
+  const originalPrice = pricing.originalPrice ?? medicine.price ?? 0;
+  const mrp = pricing.mrp || Math.round(originalPrice * 1.25);
   const discount = discountPct(effectivePrice, mrp);
-  const totalPrice = (effectivePrice * qty).toFixed(2);
+  const totalPrice = (effectivePrice * (isOutOfStock ? 0 : qty)).toFixed(2);
 
-  const handleAddToCart = () => {
-    if (outOfStock) return;
-    if ((medicine.requiresPrescription || medicine.isRx) && !hasUploadedRx) {
+  const emoji = CATEGORY_EMOJIS[medicine.category] || "💊";
+
+  // Quantity controls: 1 up to availableStock (0 when out of stock)
+  const handleDecreaseQty = () => {
+    if (qty > 1) {
+      setQty((prev) => prev - 1);
+    }
+  };
+
+  const handleIncreaseQty = () => {
+    if (availableStock > 0 && qty < availableStock) {
+      setQty((prev) => prev + 1);
+    } else if (availableStock > 0) {
+      toast.info(`Maximum available quantity is ${availableStock}.`);
+    }
+  };
+
+  // Add to Cart
+  const handleAddToCart = async () => {
+    if (isOutOfStock) {
+      toast.error("This medicine is currently out of stock.");
+      return;
+    }
+    if (isRx && !hasUploadedRx) {
       setShowRxModal(true);
       return;
     }
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2500);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.info("Please log in to add items to your cart.");
+      navigate("/login/patient");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          medicineId: medicine._id || medicine.id,
+          quantity: qty,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent("cartUpdated"));
+        setAddedToCart(true);
+        toast.success(`${medicine.name} (${qty}) added to cart!`);
+        setTimeout(() => setAddedToCart(false), 2500);
+      } else {
+        if (data.message && data.message.includes("All available stock is already added")) {
+          toast.info("All available stock is already added to your cart.");
+        } else {
+          toast.error(data.message || "Failed to add medicine to cart.");
+        }
+      }
+    } catch (err) {
+      console.error("Cart error:", err);
+      toast.error("Network error while adding to cart.");
+    }
   };
 
-  const handleBuyNow = () => {
-    if (outOfStock) return;
-    if ((medicine.requiresPrescription || medicine.isRx) && !hasUploadedRx) {
+  // Buy Now
+  const handleBuyNow = async () => {
+    if (isOutOfStock) {
+      toast.error("This medicine is currently out of stock.");
+      return;
+    }
+    if (isRx && !hasUploadedRx) {
       setShowRxModal(true);
       return;
     }
-    navigate("/patient/checkout");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.info("Please log in to proceed with purchase.");
+      navigate("/login/patient");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          medicineId: medicine._id || medicine.id,
+          quantity: qty,
+        }),
+      });
+
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent("cartUpdated"));
+        navigate("/patient/checkout");
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "Failed to prepare order.");
+      }
+    } catch (err) {
+      console.error("Buy now error:", err);
+      navigate("/patient/checkout");
+    }
   };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: medicine.name,
+          text: `Check out ${medicine.name} on MedicoBridge!`,
+          url: window.location.href,
+        })
+        .catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(window.location.href);
+      toast.success("Medicine link copied to clipboard!");
+    }
+  };
+
+  const formattedExpiry = medicine.expiryDate
+    ? new Date(medicine.expiryDate).toLocaleDateString("en-IN", {
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
   return (
     <div className="medicine-details-page">
-      {/* Top Nav */}
+      {/* Top Nav Bar */}
       <div className="medicine-details-topbar">
-        <button className="medicine-details-back-btn" onClick={() => navigate(-1)} aria-label="Go back" id="medicine-details-back">
-          <FaArrowLeft /><span>Back to Pharmacy</span>
+        <button
+          className="medicine-details-back-btn"
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+          id="medicine-details-back"
+        >
+          <FaArrowLeft />
+          <span>Back to Pharmacy</span>
         </button>
         <div className="medicine-details-topbar-actions">
-          <button className="medicine-details-share-btn" aria-label="Share" id="medicine-details-share">
-            <FaShareAlt /><span>Share</span>
+          <button
+            className="medicine-details-share-btn"
+            onClick={handleShare}
+            aria-label="Share"
+            id="medicine-details-share"
+          >
+            <FaShareAlt />
+            <span>Share</span>
           </button>
         </div>
       </div>
 
-      {/* Hero */}
+      {/* Hero Container */}
       <div className="medicine-details-container">
-        {/* Left */}
+        {/* Left Side: Product Media */}
         <div className="medicine-details-left">
-          <div className="medicine-details-image-wrap" style={{ background: medicine.highlight }}>
+          <div className="medicine-details-image-wrap" style={{ background: "#f8fafc" }}>
             {discount > 0 && (
-              <div className="medicine-details-ribbon"><FaTag /><span>{discount}% OFF</span></div>
+              <div className="medicine-details-ribbon">
+                <FaTag />
+                <span>{discount}% OFF</span>
+              </div>
             )}
-            <span className="medicine-details-emoji" role="img" aria-label={medicine.name}>{medicine.emoji}</span>
-            <span className="medicine-details-cat-chip" style={{ background: medicine.accentColor + "22", color: medicine.accentColor, border: `1px solid ${medicine.accentColor}44` }}>{medicine.category}</span>
+            {medicine.image ? (
+              <img
+                src={medicine.image}
+                alt={medicine.name}
+                className="medicine-details-img"
+              />
+            ) : (
+              <span className="medicine-details-emoji" role="img" aria-label={medicine.name}>
+                {emoji}
+              </span>
+            )}
+            <span
+              className="medicine-details-cat-chip"
+              style={{
+                background: "#eff6ff",
+                color: "#1d4ed8",
+                border: "1px solid #bfdbfe",
+              }}
+            >
+              {medicine.category || "General"}
+            </span>
           </div>
+
           <div className="medicine-details-trust-row">
-            <div className="medicine-details-trust-item"><FaShieldAlt className="medicine-details-trust-icon" /><span>100% Genuine</span></div>
-            <div className="medicine-details-trust-item"><FaTruck className="medicine-details-trust-icon" /><span>{deliveryStockInfo.deliveryEta}</span></div>
-            <div className="medicine-details-trust-item"><FaUndo className="medicine-details-trust-icon" /><span>Easy Returns</span></div>
+            <div className="medicine-details-trust-item">
+              <FaShieldAlt className="medicine-details-trust-icon" />
+              <span>100% Genuine Medicine</span>
+            </div>
+            <div className="medicine-details-trust-item">
+              <FaTruck className="medicine-details-trust-icon" />
+              <span>{deliveryInfo.deliveryEta} Delivery</span>
+            </div>
+            <div className="medicine-details-trust-item">
+              <FaUndo className="medicine-details-trust-icon" />
+              <span>Easy Returns &amp; Replacement</span>
+            </div>
           </div>
         </div>
 
-        {/* Right */}
+        {/* Right Side: Product Details & Controls */}
         <div className="medicine-details-right">
           <div className="medicine-details-badge-row">
-            <span className={`medicine-details-rx-badge${medicine.isRx ? " medicine-details-rx-badge--rx" : " medicine-details-rx-badge--otc"}`}>
-              {medicine.isRx ? "℞ Prescription Required" : "OTC"}
+            <span
+              className={`medicine-details-rx-badge ${
+                isRx ? "medicine-details-rx-badge--rx" : "medicine-details-rx-badge--otc"
+              }`}
+            >
+              {isRx ? "℞ Prescription Required" : "OTC (No Prescription Required)"}
             </span>
             <span className="medicine-details-cat-badge">{medicine.category}</span>
           </div>
 
           <h1 className="medicine-details-name">{medicine.name}</h1>
+
           <div className="medicine-details-meta-row">
-            <span className="medicine-details-brand"><strong>Brand:</strong> {medicine.brand}</span>
-            <span className="medicine-details-manufacturer"><strong>Mfr:</strong> {medicine.manufacturer}</span>
+            {medicine.genericName && (
+              <span className="medicine-details-brand">
+                <strong>Salt / Generic:</strong> {medicine.genericName}
+              </span>
+            )}
+            <span className="medicine-details-manufacturer">
+              <strong>Manufacturer:</strong>{" "}
+              {medicine.manufacturer || "Verified Pharmaceutical"}
+            </span>
+            {medicine.pharmacyId?.name && (
+              <span className="medicine-details-brand">
+                <strong><FaStore style={{ marginRight: "4px" }} />Pharmacy:</strong>{" "}
+                {medicine.pharmacyId.name} {medicine.pharmacyId.city ? `(${medicine.pharmacyId.city})` : ""}
+              </span>
+            )}
           </div>
-          <StarRating rating={medicine.rating} />
-          <p className="medicine-details-review-count">{medicine.reviewCount?.toLocaleString()} verified reviews</p>
 
-          <hr className="medicine-details-divider" />
-
-          {pricing.hasOffer && (
-            <div style={{
-              background: "#fef3c7",
-              color: "#b45309",
-              fontSize: "0.85rem",
-              fontWeight: "700",
-              padding: "0.4rem 0.8rem",
-              borderRadius: "6px",
-              marginBottom: "0.75rem",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              border: "1px solid #fde68a"
-            }}>
-              🏷️ {pricing.badgeText} (No Coupon Code Needed)
+          {medicine.pharmacyId?.rating && (
+            <div className="medicine-details-stars" style={{ margin: "4px 0 12px" }}>
+              <span style={{ color: "#f59e0b", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.95rem" }}>
+                <FaStar /> {medicine.pharmacyId.rating.toFixed(1)}
+              </span>
+              <span style={{ color: "#64748b", fontSize: "0.85rem", marginLeft: "4px" }}>
+                Verified Partner Rating
+              </span>
             </div>
           )}
 
+          <hr className="medicine-details-divider" />
+
+          {/* Automatic Product Offer Banner */}
+          {pricing.hasOffer && (
+            <div
+              style={{
+                background: "#fef3c7",
+                color: "#b45309",
+                fontSize: "0.85rem",
+                fontWeight: "700",
+                padding: "0.45rem 0.85rem",
+                borderRadius: "6px",
+                marginBottom: "0.75rem",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                border: "1px solid #fde68a",
+              }}
+            >
+              🏷️ {pricing.badgeText} (Auto Applied)
+            </div>
+          )}
+
+          {/* Pricing */}
           <div className="medicine-details-pricing">
             <span className="medicine-details-price">₹{effectivePrice}</span>
             {pricing.hasOffer && (
-              <span style={{ fontSize: "1.1rem", textDecoration: "line-through", color: "#94a3b8", fontWeight: "600", marginRight: "0.4rem" }}>
+              <span
+                style={{
+                  fontSize: "1.1rem",
+                  textDecoration: "line-through",
+                  color: "#94a3b8",
+                  fontWeight: "600",
+                  marginRight: "0.4rem",
+                }}
+              >
                 ₹{originalPrice}
               </span>
             )}
             <span className="medicine-details-mrp">MRP ₹{mrp}</span>
-            {discount > 0 && <span className="medicine-details-discount-badge">{discount}% OFF</span>}
+            {discount > 0 && (
+              <span className="medicine-details-discount-badge">{discount}% OFF</span>
+            )}
           </div>
           <p className="medicine-details-incl-tax">Inclusive of all taxes</p>
 
-          <div className={`medicine-details-stock-badge ${deliveryStockInfo.status === "in-stock" || deliveryStockInfo.status === "medium-stock" ? "medicine-details-stock--in" : deliveryStockInfo.status === "low-stock" ? "medicine-details-stock--low" : "medicine-details-stock--out"}`}>
-            <span className="medicine-details-stock-icon">{deliveryStockInfo.canOrder ? "✓" : "✕"}</span>
-            <span>{deliveryStockInfo.label} ({deliveryStockInfo.stockText})</span>
+          {/* Stock Status Badge: Show Out of Stock only if 0/unavailable, else In Stock without warnings */}
+          <div
+            className={`medicine-details-stock-badge ${
+              isOutOfStock
+                ? "medicine-details-stock--out"
+                : "medicine-details-stock--in"
+            }`}
+          >
+            <span className="medicine-details-stock-icon">
+              {isOutOfStock ? "✕" : "✓"}
+            </span>
+            <span>
+              {isOutOfStock ? "Out of Stock" : "In Stock"}
+            </span>
           </div>
 
           <div className="medicine-details-expiry" style={{ marginTop: "0.5rem" }}>
-            <FaTruck className="medicine-details-expiry-icon" style={{ color: "var(--primary-color)" }} />
-            <span>Estimated Delivery: <strong>{deliveryStockInfo.deliveryEta}</strong> ({deliveryStockInfo.deliveryDesc})</span>
+            <FaTruck
+              className="medicine-details-expiry-icon"
+              style={{ color: "var(--primary-color, #2563eb)" }}
+            />
+            <span>
+              Estimated Delivery: <strong>{deliveryInfo.deliveryEta}</strong>
+            </span>
           </div>
 
-          {/* Qty */}
+          {/* Quantity Selector: 1 up to availableStock */}
           <div className="medicine-details-qty-section">
             <label className="medicine-details-qty-label">Quantity</label>
             <div className="medicine-details-qty-ctrl">
-              <button className="medicine-details-qty-btn" onClick={() => setQty(q => Math.max(1, q - 1))} disabled={outOfStock || qty <= 1} aria-label="Decrease quantity" id="medicine-details-qty-dec">−</button>
-              <span className="medicine-details-qty-val">{qty}</span>
-              <button className="medicine-details-qty-btn" onClick={() => setQty(q => Math.min(99, q + 1))} disabled={outOfStock} aria-label="Increase quantity" id="medicine-details-qty-inc">+</button>
+              <button
+                className="medicine-details-qty-btn"
+                onClick={handleDecreaseQty}
+                disabled={isOutOfStock || qty <= 1}
+                aria-label="Decrease quantity"
+                id="medicine-details-qty-dec"
+              >
+                −
+              </button>
+              <span className="medicine-details-qty-val">
+                {isOutOfStock ? 0 : qty}
+              </span>
+              <button
+                className="medicine-details-qty-btn"
+                onClick={handleIncreaseQty}
+                disabled={isOutOfStock || qty >= availableStock}
+                aria-label="Increase quantity"
+                id="medicine-details-qty-inc"
+              >
+                +
+              </button>
             </div>
-            {!outOfStock && <span className="medicine-details-qty-total">Total: <strong>₹{totalPrice}</strong></span>}
+            {!isOutOfStock && (
+              <span className="medicine-details-qty-total">
+                Total: <strong>₹{totalPrice}</strong>
+              </span>
+            )}
           </div>
 
           {/* Actions */}
           <div className="medicine-details-actions">
-            <button className={`medicine-details-cart-btn${addedToCart ? " medicine-details-cart-btn--added" : ""}`} onClick={handleAddToCart} disabled={outOfStock} id="medicine-details-add-cart" aria-label="Add to cart">
-              <FaShoppingCart /><span>{outOfStock ? "Unavailable" : addedToCart ? "✓ Added to Cart!" : "Add to Cart"}</span>
+            <button
+              className={`medicine-details-cart-btn${
+                addedToCart ? " medicine-details-cart-btn--added" : ""
+              }`}
+              onClick={handleAddToCart}
+              disabled={isOutOfStock}
+              id="medicine-details-add-cart"
+              aria-label="Add to cart"
+            >
+              <FaShoppingCart />
+              <span>
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : addedToCart
+                  ? "✓ Added to Cart!"
+                  : "Add to Cart"}
+              </span>
             </button>
-            <button className="medicine-details-buy-btn" onClick={handleBuyNow} disabled={outOfStock} id="medicine-details-buy-now" aria-label="Buy now">
-              <FaBolt /><span>Buy Now</span>
+            <button
+              className="medicine-details-buy-btn"
+              onClick={handleBuyNow}
+              disabled={isOutOfStock}
+              id="medicine-details-buy-now"
+              aria-label="Buy now"
+            >
+              <FaBolt />
+              <span>Buy Now</span>
             </button>
           </div>
 
-          {outOfStock && (
+          {isOutOfStock && (
             <p className="medicine-details-oos-msg">
-              <FaInfoCircle /> This item is currently out of stock. Please check back later.
+              <FaInfoCircle /> This medicine is currently out of stock. Please check back later.
             </p>
           )}
         </div>
       </div>
 
-      {/* Info Sections */}
+      {/* Information Sections */}
       <div className="medicine-details-sections">
-        <InfoBlock icon={<FaInfoCircle />} title="About this Medicine">
-          <p className="medicine-details-description">{medicine.description}</p>
-        </InfoBlock>
+        {medicine.description && (
+          <InfoBlock icon={<FaInfoCircle />} title="About this Medicine">
+            <p className="medicine-details-description">{medicine.description}</p>
+          </InfoBlock>
+        )}
 
         <InfoBlock icon={<FaPills />} title="Dosage &amp; Usage Instructions">
-          <p className="medicine-details-description">{medicine.dosageInstructions}</p>
-        </InfoBlock>
-
-        <InfoBlock icon={<FaExclamationTriangle />} title="Side Effects">
-          <ul className="medicine-details-side-effects-list">
-            {(medicine.sideEffects || []).map((effect, i) => (
-              <li key={i} className="medicine-details-side-effect-item"><span className="medicine-details-dot" />{effect}</li>
-            ))}
-          </ul>
-          <p className="medicine-details-side-effects-note">Not all side effects may occur. If you notice any unexpected effects, consult your doctor or pharmacist.</p>
+          <p className="medicine-details-description">
+            {medicine.dosageForm
+              ? `Dosage Form: ${medicine.dosageForm}. Take as directed by your physician or pharmacist.`
+              : "Take this medicine in the dosage and frequency prescribed by your healthcare professional."}
+          </p>
         </InfoBlock>
 
         <InfoBlock icon={<FaThermometerHalf />} title="Storage Instructions">
-          <p className="medicine-details-description">{medicine.storageInstructions}</p>
+          <p className="medicine-details-description">
+            {medicine.storageTemp
+              ? `Store at ${medicine.storageTemp}. Keep in a cool, dry place away from direct heat and moisture.`
+              : "Store below 30°C in a dry place. Protect from direct heat, sunlight, and moisture. Keep out of reach of children."}
+          </p>
         </InfoBlock>
 
-        <InfoBlock icon={<FaCalendarAlt />} title="Expiry Date">
-          <div className="medicine-details-expiry-detail">
-            <FaCalendarAlt className="medicine-details-expiry-detail-icon" />
-            <span>This batch expires in <strong>{medicine.expiryDate}</strong></span>
-          </div>
-        </InfoBlock>
-
-        {medicine.genericAlternatives && medicine.genericAlternatives.length > 0 && (
-          <InfoBlock icon={<FaFlask />} title="Generic Alternatives">
-            <p className="medicine-details-generics-note">The following generics contain the same active ingredient and may be substituted as advised by your doctor:</p>
-            <div className="medicine-details-generics-grid">
-              {(medicine.genericAlternatives || []).map((alt, i) => (
-                <div key={i} className="medicine-details-generic-card">
-                  <div className="medicine-details-generic-info">
-                    <span className="medicine-details-generic-name">{alt.name}</span>
-                    <span className="medicine-details-generic-brand">{alt.brand}</span>
-                  </div>
-                  <span className="medicine-details-generic-price">₹{alt.price}</span>
-                </div>
-              ))}
+        {formattedExpiry && (
+          <InfoBlock icon={<FaCalendarAlt />} title="Expiry Date">
+            <div className="medicine-details-expiry-detail">
+              <FaCalendarAlt className="medicine-details-expiry-detail-icon" />
+              <span>
+                Batch expires in <strong>{formattedExpiry}</strong>
+              </span>
             </div>
           </InfoBlock>
         )}
 
-        <InfoBlock icon={<FaBoxOpen />} title="Product Information">
+        <InfoBlock icon={<FaBoxOpen />} title="Product Specifications">
           <div className="medicine-details-product-grid">
-            <div className="medicine-details-product-item"><span className="medicine-details-product-key">Brand</span><span className="medicine-details-product-val">{medicine.brand}</span></div>
-            <div className="medicine-details-product-item"><span className="medicine-details-product-key">Manufacturer</span><span className="medicine-details-product-val">{medicine.manufacturer}</span></div>
-            <div className="medicine-details-product-item"><span className="medicine-details-product-key">Category</span><span className="medicine-details-product-val">{medicine.category}</span></div>
-            <div className="medicine-details-product-item"><span className="medicine-details-product-key">Prescription Type</span><span className="medicine-details-product-val">{medicine.isRx ? "Prescription Required (Rx)" : "Over The Counter (OTC)"}</span></div>
-            <div className="medicine-details-product-item"><span className="medicine-details-product-key">Expiry Date</span><span className="medicine-details-product-val">{medicine.expiryDate}</span></div>
+            <div className="medicine-details-product-item">
+              <span className="medicine-details-product-key">Medicine Name</span>
+              <span className="medicine-details-product-val">{medicine.name}</span>
+            </div>
+            {medicine.genericName && (
+              <div className="medicine-details-product-item">
+                <span className="medicine-details-product-key">Generic Composition</span>
+                <span className="medicine-details-product-val">{medicine.genericName}</span>
+              </div>
+            )}
+            <div className="medicine-details-product-item">
+              <span className="medicine-details-product-key">Category</span>
+              <span className="medicine-details-product-val">{medicine.category}</span>
+            </div>
+            {medicine.dosageForm && (
+              <div className="medicine-details-product-item">
+                <span className="medicine-details-product-key">Dosage Form</span>
+                <span className="medicine-details-product-val">{medicine.dosageForm}</span>
+              </div>
+            )}
+            <div className="medicine-details-product-item">
+              <span className="medicine-details-product-key">Manufacturer</span>
+              <span className="medicine-details-product-val">
+                {medicine.manufacturer || "Verified Pharmaceutical"}
+              </span>
+            </div>
+            {medicine.unit && (
+              <div className="medicine-details-product-item">
+                <span className="medicine-details-product-key">Packaging Unit</span>
+                <span className="medicine-details-product-val">{medicine.unit}</span>
+              </div>
+            )}
+            {medicine.batchNumber && (
+              <div className="medicine-details-product-item">
+                <span className="medicine-details-product-key">Batch Number</span>
+                <span className="medicine-details-product-val">{medicine.batchNumber}</span>
+              </div>
+            )}
+            <div className="medicine-details-product-item">
+              <span className="medicine-details-product-key">Prescription Requirement</span>
+              <span className="medicine-details-product-val">
+                {isRx ? "Prescription Required (Rx)" : "Over-The-Counter (OTC)"}
+              </span>
+            </div>
+            <div className="medicine-details-product-item">
+              <span className="medicine-details-product-key">Stock Availability</span>
+              <span className="medicine-details-product-val">
+                {isOutOfStock ? "Out of Stock" : "In Stock"}
+              </span>
+            </div>
+            {formattedExpiry && (
+              <div className="medicine-details-product-item">
+                <span className="medicine-details-product-key">Expiry Date</span>
+                <span className="medicine-details-product-val">{formattedExpiry}</span>
+              </div>
+            )}
           </div>
         </InfoBlock>
       </div>
 
-      {/* Sticky Bar */}
+      {/* Sticky Bottom Actions Bar */}
       <div className="medicine-details-sticky-bar">
         <div className="medicine-details-sticky-price">
-          <span>₹{medicine.price}</span>
-          {discount > 0 && <span className="medicine-details-sticky-off">{discount}% off</span>}
+          <span>₹{effectivePrice}</span>
+          {discount > 0 && (
+            <span className="medicine-details-sticky-off">{discount}% off</span>
+          )}
         </div>
         <div className="medicine-details-sticky-actions">
-          <button className="medicine-details-sticky-cart" onClick={handleAddToCart} disabled={outOfStock} id="medicine-details-sticky-cart"><FaShoppingCart /> Cart</button>
-          <button className="medicine-details-sticky-buy" onClick={handleBuyNow} disabled={outOfStock} id="medicine-details-sticky-buy"><FaBolt /> Buy Now</button>
+          <button
+            className="medicine-details-sticky-cart"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            id="medicine-details-sticky-cart"
+          >
+            <FaShoppingCart /> Cart
+          </button>
+          <button
+            className="medicine-details-sticky-buy"
+            onClick={handleBuyNow}
+            disabled={isOutOfStock}
+            id="medicine-details-sticky-buy"
+          >
+            <FaBolt /> Buy Now
+          </button>
         </div>
       </div>
 
-      {/* ── Prescription Requirement Modal Overlay ───────────────────────── */}
+      {/* Prescription Requirement Modal */}
       {showRxModal && (
-        <div className="appt-modal-overlay" style={{ position: "fixed", inset: 0, backgroundColor: "rgba(15, 23, 42, 0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999, padding: "1rem" }} onClick={() => setShowRxModal(false)}>
-          <div style={{ background: "var(--bg-primary)", borderRadius: "12px", width: "100%", maxWidth: "460px", padding: "1.5rem", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2)", border: "1px solid var(--border-color)" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", color: "#d97706" }}>
+        <div
+          className="appt-modal-overlay"
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.65)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 999,
+            padding: "1rem",
+          }}
+          onClick={() => setShowRxModal(false)}
+        >
+          <div
+            style={{
+              background: "var(--bg-primary, #ffffff)",
+              borderRadius: "12px",
+              width: "100%",
+              maxWidth: "460px",
+              padding: "1.5rem",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
+              border: "1px solid var(--border-color, #e2e8f0)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginBottom: "1rem",
+                color: "#d97706",
+              }}
+            >
               <span style={{ fontSize: "1.5rem" }}>℞</span>
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "var(--text-primary)" }}>Prescription Required</h3>
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: "1.2rem",
+                  fontWeight: 700,
+                  color: "#0f172a",
+                }}
+              >
+                Prescription Required
+              </h3>
             </div>
-            <p style={{ fontSize: "0.88rem", color: "var(--text-secondary)", lineHeight: "1.5", marginBottom: "1.25rem" }}>
-              <strong>{medicine.name}</strong> is a prescription-only medicine (Rx). Please upload a valid doctor's prescription to continue with your purchase.
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "#475569",
+                lineHeight: "1.5",
+                marginBottom: "1.25rem",
+              }}
+            >
+              <strong>{medicine.name}</strong> is a prescription medication (Rx). Please
+              upload a doctor's prescription or attach an existing record to complete your
+              order.
             </p>
-            <div style={{ backgroundColor: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "8px", padding: "0.85rem", marginBottom: "1.25rem" }}>
+            <div
+              style={{
+                backgroundColor: "#f0f9ff",
+                border: "1px solid #bae6fd",
+                borderRadius: "8px",
+                padding: "0.85rem",
+                marginBottom: "1.25rem",
+              }}
+            >
               <input
                 type="file"
                 accept="image/*,.pdf"
                 id="rx-modal-file"
                 style={{ display: "none" }}
                 onChange={(e) => {
-                  if (e.target.files[0]) {
+                  if (e.target.files && e.target.files[0]) {
                     setHasUploadedRx(true);
                     setShowRxModal(false);
-                    setAddedToCart(true);
-                    setTimeout(() => setAddedToCart(false), 2500);
+                    toast.success("Prescription attached successfully!");
                   }
                 }}
               />
-              <label htmlFor="rx-modal-file" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "0.65rem 1rem", background: "var(--primary-color)", color: "#fff", borderRadius: "6px", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}>
+              <label
+                htmlFor="rx-modal-file"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "0.5rem",
+                  padding: "0.65rem 1rem",
+                  background: "#2563eb",
+                  color: "#fff",
+                  borderRadius: "6px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}
+              >
                 Upload Prescription (JPG, PNG, PDF)
               </label>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
               <button
-                style={{ padding: "0.55rem 1.25rem", borderRadius: "6px", border: "1px solid var(--border-color)", background: "transparent", cursor: "pointer", fontSize: "0.85rem" }}
+                style={{
+                  padding: "0.55rem 1.25rem",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  background: "transparent",
+                  cursor: "pointer",
+                  fontSize: "0.85rem",
+                }}
                 onClick={() => setShowRxModal(false)}
               >
                 Cancel

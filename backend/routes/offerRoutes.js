@@ -1,24 +1,17 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-
+const { protect } = require('../middleware/authMiddleware');
+const { authorizeRoles } = require('../middleware/roleMiddleware');
 const {
-    getActiveOffers,
-    getAllOffers,
-    createOffer,
-    updateOffer,
-    deleteOffer,
-} = require("../controllers/offerController");
+  getOffers,
+  createOffer,
+  updateOffer,
+  deleteOffer,
+} = require('../controllers/offerController');
 
-const protect = require("../middleware/authMiddleware");
-const authorize = require("../middleware/roleMiddleware");
-
-// Public
-router.get("/", getActiveOffers);
-
-// Admin
-router.get("/all", protect, authorize("admin"), getAllOffers);
-router.post("/", protect, authorize("admin"), createOffer);
-router.put("/:id", protect, authorize("admin"), updateOffer);
-router.delete("/:id", protect, authorize("admin"), deleteOffer);
+router.get('/', getOffers);
+router.post('/', protect, authorizeRoles('Pharmacy', 'Admin'), createOffer);
+router.put('/:id', protect, authorizeRoles('Pharmacy', 'Admin'), updateOffer);
+router.delete('/:id', protect, authorizeRoles('Pharmacy', 'Admin'), deleteOffer);
 
 module.exports = router;

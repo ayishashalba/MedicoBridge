@@ -302,6 +302,38 @@
     letter-spacing: 0.01em;
 }
 
+.order-id-group {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.reorder-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.refund-pill {
+    display: inline-flex;
+    align-items: center;
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
 /* Status Badge */
 .status-badge {
     display: inline-flex;
@@ -327,7 +359,14 @@
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
 }
 
-.status-badge--pending {
+.status-badge--confirmed {
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    color: #0369a1;
+    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.2);
+}
+
+.status-badge--pending,
+.status-badge--processing {
     background: linear-gradient(135deg, #fef3c7, #fde68a);
     color: #92400e;
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
@@ -337,6 +376,12 @@
     background: linear-gradient(135deg, #fee2e2, #fecaca);
     color: #991b1b;
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.status-badge--partially-cancelled {
+    background: linear-gradient(135deg, #ffedd5, #fed7aa);
+    color: #c2410c;
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
 }
 
 /* Medicines List */
@@ -418,6 +463,81 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+}
+
+/* Card Actions Group */
+.order-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Quick Reorder Button */
+.quick-reorder-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8fafc;
+    color: #0d9488;
+    border: 1.5px solid #ccfbf1;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.quick-reorder-btn:hover {
+    background: #f0fdfa;
+    border-color: #14b8a6;
+    color: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+}
+
+.quick-reorder-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Quick Cancel Button */
+.quick-cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    color: #ef4444;
+    border: 1.5px solid #fecaca;
+    padding: 10px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+}
+
+.quick-cancel-btn:hover {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+.quick-cancel-btn--disabled,
+.quick-cancel-btn:disabled {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.65;
 }
 
 /* View Order Button */

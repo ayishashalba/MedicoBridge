@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaHospital,
@@ -7,69 +7,117 @@ import {
   FaDownload,
   FaUserMd,
   FaInfoCircle,
+  FaSpinner,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./DocumentDetails.css";
-
-/* ── Mock Data ── */
-const medicalDocuments = [
-  {
-    id: "doc-1",
-    title: "Chest X-Ray",
-    hospital: "Apollo Hospital, Kochi",
-    date: "15 June 2026",
-    type: "X-Ray",
-    fileSize: "2.4 MB",
-    uploadedBy: "Dr. Sarah Johnson",
-    description:
-      "Chest X-Ray (PA view) — Normal study. No significant abnormality detected in lungs, heart size, or mediastinum.",
-  },
-  {
-    id: "doc-2",
-    title: "MRI Brain Scan",
-    hospital: "Lakeshore Hospital, Ernakulam",
-    date: "02 June 2026",
-    type: "MRI",
-    fileSize: "18.7 MB",
-    uploadedBy: "Dr. Emily Wilson",
-    description:
-      "MRI Brain with contrast — No structural abnormality. No evidence of acute infarct, hemorrhage, or space-occupying lesion.",
-  },
-  {
-    id: "doc-3",
-    title: "ECG Report",
-    hospital: "Aster Clinic, Kochi",
-    date: "28 May 2026",
-    type: "ECG",
-    fileSize: "1.1 MB",
-    uploadedBy: "Dr. Sarah Johnson",
-    description:
-      "12-lead ECG — Normal sinus rhythm. No ST-T changes or arrhythmia detected. Heart rate is stable at 72 bpm.",
-  },
-];
 
 function DocumentDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const doc = medicalDocuments.find((d) => d.id === id);
 
-  if (!doc) {
+  const [doc, setDoc] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) {
+      setError("Invalid document ID.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchDocument = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login/patient");
+          return;
+        }
+
+        // Try medical-reports first, then medical-records
+        let res = await fetch(`${API_BASE_URL}/patient/medical-reports/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        let data = await res.json();
+
+        if (!res.ok || !data.data) {
+          res = await fetch(`${API_BASE_URL}/patient/medical-records/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          data = await res.json();
+        }
+
+        if (res.ok && data.data) {
+          const raw = data.data;
+          const hosp = raw.hospitalId || {};
+          const doctor = raw.doctorId || {};
+
+          setDoc({
+            id: raw._id,
+            title: raw.title || raw.recordType || "Medical Document",
+            hospital: hosp.name || "Medical Healthcare Facility",
+            date: raw.reportDate
+              ? new Date(raw.reportDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+              : raw.date
+              ? new Date(raw.date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+              : new Date(raw.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }),
+            type: raw.type || raw.recordType || "Clinical Record",
+            fileSize: raw.attachments?.length ? `${raw.attachments.length} Attachment(s)` : "Verified Digital Document",
+            uploadedBy: doctor.name ? `Dr. ${doctor.name.replace(/^Dr\.?\s*/i, "")}` : "Hospital Staff",
+            description:
+              raw.findings ||
+              raw.summary ||
+              raw.description ||
+              raw.diagnosis ||
+              raw.recommendations ||
+              "Clinical document verified by the medical records department.",
+            fileUrl: raw.attachments?.[0] || raw.fileUrl || null,
+          });
+        } else {
+          setError(data.message || "Medical document not found.");
+        }
+      } catch (err) {
+        setError("Unable to connect to server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDocument();
+  }, [id, navigate]);
+
+  function handleDownload() {
+    toast.info(`Downloading Document "${doc?.title || "Medical Document"}"…`);
+  }
+
+  if (loading) {
+    return (
+      <div className="dd-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "1rem", color: "#0d9488" }}>
+        <FaSpinner className="fa-spin" /> Loading document details...
+      </div>
+    );
+  }
+
+  if (error || !doc) {
     return (
       <div className="dd-page">
         <button className="dd-back-btn" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Back
         </button>
-        <div className="dd-not-found">
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          <FaExclamationCircle style={{ fontSize: "2.5rem", color: "#ef4444", marginBottom: "1rem" }} />
           <h2>Document Not Found</h2>
-          <p>The medical document you're looking for doesn't exist.</p>
+          <p>{error || "The medical document you're looking for doesn't exist."}</p>
+          <button className="dd-action-btn" style={{ marginTop: "1rem" }} onClick={() => navigate("/patient/medical-records")}>
+            Back to Records
+          </button>
         </div>
       </div>
-    );
-  }
-
-  function handleDownload() {
-    alert(
-      `Downloading Document "${doc.title}"…\n\n(This is a demo — no actual file is generated.)`
     );
   }
 

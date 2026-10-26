@@ -1,135 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getStockAndDeliveryInfo } from "../../../utils/pharmacyDelivery";
 import { getEffectiveMedicinePrice } from "../../../utils/productOffers";
+import { API_BASE_URL } from "../../../services/apiConfig";
+import { toast } from "react-toastify";
 import "./FeaturedMedicines.css";
 
-/* ─── Medicine Data ─────────────────────────────────────────────── */
-const medicines = [
-  {
-    id: 1,
-    name: "Paracetamol 650mg",
-    brand: "Calpol",
-    price: 28,
-    mrp: 35,
-    emoji: "💊",
-    stockUnits: 120, // >40 units -> 1-2 days
-    stock: "in-stock",
-    requiresPrescription: false,
-    isRx: false,
-    category: "Tablet",
-    highlight: "#e8f5e9",
-    accentColor: "#2e7d32",
-  },
-  {
-    id: 2,
-    name: "Amoxicillin 500mg",
-    brand: "Novamox",
-    price: 145,
-    mrp: 185,
-    emoji: "💉",
-    stockUnits: 55, // >40 units -> 1-2 days
-    stock: "in-stock",
-    requiresPrescription: true,
-    isRx: true,
-    category: "Capsule",
-    highlight: "#e3f2fd",
-    accentColor: "#1565c0",
-  },
-  {
-    id: 3,
-    name: "Vitamin C 1000mg",
-    brand: "Limcee",
-    price: 62,
-    mrp: 80,
-    emoji: "🍊",
-    stockUnits: 8, // <10 units -> 3-5 days
-    stock: "low-stock",
-    requiresPrescription: false,
-    isRx: false,
-    category: "Supplement",
-    highlight: "#fff8e1",
-    accentColor: "#e65100",
-  },
-  {
-    id: 4,
-    name: "Azithromycin 500mg",
-    brand: "Zithromax",
-    price: 210,
-    mrp: 265,
-    emoji: "🔬",
-    stockUnits: 25, // 10-40 units -> 2-3 days
-    stock: "in-stock",
-    requiresPrescription: true,
-    isRx: true,
-    category: "Tablet",
-    highlight: "#f3e5f5",
-    accentColor: "#6a1b9a",
-  },
-  {
-    id: 5,
-    name: "Omeprazole 20mg",
-    brand: "Omez",
-    price: 55,
-    mrp: 68,
-    emoji: "🌿",
-    stockUnits: 5, // <10 units -> 3-5 days
-    stock: "low-stock",
-    requiresPrescription: false,
-    isRx: false,
-    category: "Capsule",
-    highlight: "#e8f5e9",
-    accentColor: "#2e7d32",
-  },
-  {
-    id: 6,
-    name: "Cetirizine 10mg",
-    brand: "Zyrtec",
-    price: 38,
-    mrp: 50,
-    emoji: "🌸",
-    stockUnits: 0, // 0 units -> Out of Stock
-    stock: "out-of-stock",
-    requiresPrescription: false,
-    isRx: false,
-    category: "Tablet",
-    highlight: "#fce4ec",
-    accentColor: "#880e4f",
-  },
-  {
-    id: 7,
-    name: "Metformin 500mg",
-    brand: "Glycomet",
-    price: 35,
-    mrp: 45,
-    emoji: "⚡",
-    stockUnits: 80, // >40 units -> 1-2 days
-    stock: "in-stock",
-    requiresPrescription: true,
-    isRx: true,
-    category: "Tablet",
-    highlight: "#e3f2fd",
-    accentColor: "#0d47a1",
-  },
-  {
-    id: 8,
-    name: "D3 Vitamin 60K",
-    brand: "Calcirol",
-    price: 90,
-    mrp: 120,
-    emoji: "☀️",
-    stockUnits: 60, // >40 units -> 1-2 days
-    stock: "in-stock",
-    requiresPrescription: false,
-    isRx: false,
-    category: "Supplement",
-    highlight: "#fffde7",
-    accentColor: "#f57f17",
-  },
-];
+const CATEGORY_EMOJIS = {
+  Tablet: "💊",
+  Capsule: "💉",
+  Supplement: "🍊",
+  Syrup: "🧪",
+  Injection: "💉",
+  Ointment: "🩹",
+};
 
 /* ─── Utility ───────────────────────────────────────────────────── */
-const discountPct = (price, mrp) => Math.round(((mrp - price) / mrp) * 100);
+const discountPct = (price, mrp) => {
+  if (!mrp || mrp <= price) return 0;
+  return Math.round(((mrp - price) / mrp) * 100);
+};
 
 /* ─── Single Medicine Card ───────────────────────────────────────── */
 function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
@@ -137,17 +27,30 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
-  const stockInfo = getStockAndDeliveryInfo(med.stockUnits ?? med.stock);
+  const stockInfo = getStockAndDeliveryInfo(med.stock, med.isAvailable);
   const outOfStock = !stockInfo.canOrder;
+  const isStockMissing = stockInfo.status === "unavailable";
+  const availableStock = stockInfo.availableStock;
 
   // Evaluate Automatic Product Offer
   const pricing = getEffectiveMedicinePrice(med);
-  const effectivePrice = pricing.finalPrice;
-  const originalPrice = pricing.originalPrice;
-  const mrp = pricing.mrp;
+  const effectivePrice = pricing.finalPrice ?? med.price ?? 0;
+  const originalPrice = pricing.originalPrice ?? med.price ?? 0;
+  const mrp = pricing.mrp || Math.round(originalPrice * 1.25);
   const discount = discountPct(effectivePrice, mrp);
 
-  const handleAddToCart = () => {
+  const handleDecreaseQty = () => {
+    setQty((q) => Math.max(1, q - 1));
+  };
+
+  const handleIncreaseQty = () => {
+    if (availableStock > 0 && qty >= availableStock) {
+      return;
+    }
+    setQty((q) => q + 1);
+  };
+
+  const handleAddToCart = async () => {
     if (outOfStock) return;
     if ((med.requiresPrescription || med.isRx) && !hasPrescription) {
       if (onPrescriptionRequired) {
@@ -155,8 +58,39 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
       }
       return;
     }
-    setAdded(true);
-    setTimeout(() => setAdded(false), 2200);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login/patient");
+        return;
+      }
+      const res = await fetch(`${API_BASE_URL}/cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          medicineId: med.rawId || med.id,
+          quantity: qty,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent("cartUpdated"));
+        setAdded(true);
+        toast.success(`${med.name} (${qty}) added to cart!`);
+        setTimeout(() => setAdded(false), 2200);
+      } else {
+        if (data.message && data.message.includes("All available stock is already added")) {
+          toast.info("All available stock is already added to your cart.");
+        } else {
+          toast.error(data.message || "Failed to add to cart.");
+        }
+      }
+    } catch (err) {
+      console.error("Add to cart error:", err);
+    }
   };
 
   return (
@@ -195,10 +129,27 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
         >
           {med.category}
         </span>
-        {(stockInfo.status === "low-stock" || stockInfo.status === "out-of-stock") && (
+        {stockInfo.status === "low-stock" && (
           <div className="featured-stock-badge-wrap">
-            <span className={`featured-stock-badge ${stockInfo.status === "low-stock" ? "featured-stock--low" : "featured-stock--out"}`}>
-              {stockInfo.status === "low-stock" ? `Low Stock (${stockInfo.stockText})` : "Out of Stock"}
+            <span className="featured-stock-badge featured-stock--low">
+              Low Stock ({stockInfo.stockText})
+            </span>
+          </div>
+        )}
+        {stockInfo.status === "out-of-stock" && (
+          <div className="featured-stock-badge-wrap">
+            <span className="featured-stock-badge featured-stock--out">
+              Out of Stock
+            </span>
+          </div>
+        )}
+        {stockInfo.status === "unavailable" && (
+          <div className="featured-stock-badge-wrap">
+            <span
+              className="featured-stock-badge featured-stock--out"
+              style={{ background: "#fef2f2", color: "#dc2626", borderColor: "#fecaca" }}
+            >
+              Stock unavailable
             </span>
           </div>
         )}
@@ -237,7 +188,6 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           )}
           <span className="featured-mrp">MRP ₹{mrp}</span>
         </div>
-
       </div>
 
       {/* ── Quantity selector ─────────────────────────────────── */}
@@ -245,24 +195,24 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
         <div className="featured-qty-ctrl">
           <button
             className="featured-qty-btn"
-            onClick={() => setQty((q) => Math.max(1, q - 1))}
+            onClick={handleDecreaseQty}
             disabled={outOfStock || qty <= 1}
             aria-label="Decrease quantity"
           >
             −
           </button>
-          <span className="featured-qty-val">{qty}</span>
+          <span className="featured-qty-val">{outOfStock ? 0 : qty}</span>
           <button
             className="featured-qty-btn"
-            onClick={() => setQty((q) => Math.min(99, q + 1))}
-            disabled={outOfStock}
+            onClick={handleIncreaseQty}
+            disabled={outOfStock || (availableStock > 0 && qty >= availableStock)}
             aria-label="Increase quantity"
           >
             +
           </button>
         </div>
         <span className="featured-qty-total">
-          ₹{(effectivePrice * qty).toFixed(2)}
+          ₹{(effectivePrice * (outOfStock ? 0 : qty)).toFixed(2)}
         </span>
       </div>
 
@@ -275,7 +225,13 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
           id={`add-cart-${med.id}`}
           aria-label={`Add ${med.name} to cart`}
         >
-          {outOfStock ? "Unavailable" : added ? "✓ Added!" : "🛒 Add to Cart"}
+          {outOfStock
+            ? isStockMissing
+              ? "Unavailable"
+              : "Out of Stock"
+            : added
+            ? "✓ Added!"
+            : "🛒 Add to Cart"}
         </button>
         <button
           className="featured-detail-btn"
@@ -289,10 +245,54 @@ function MedicineCard({ med, hasPrescription, onPrescriptionRequired }) {
     </div>
   );
 }
+
 /* ─── Featured Medicines Section (export) ───────────────────────── */
 export default function FeaturedMedicines({ hasPrescription, onPrescriptionRequired }) {
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
   const filterOptions = ["All", "Tablet", "Capsule", "Supplement"];
+
+  useEffect(() => {
+    const fetchMedicines = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${API_BASE_URL}/medicines`);
+        const data = await res.json();
+        if (res.ok && data.data && Array.isArray(data.data)) {
+          const mapped = data.data.map((m) => {
+            const numStock = typeof m.stock === "number" ? m.stock : (m.stock !== null && m.stock !== undefined ? Number(m.stock) : null);
+            return {
+              id: m._id,
+              rawId: m._id,
+              name: m.name,
+              brand: m.manufacturer || "Generic",
+              price: m.finalPrice ?? m.price ?? 50,
+              mrp: m.mrp || Math.round((m.price || 50) * 1.25),
+              emoji: CATEGORY_EMOJIS[m.category] || "💊",
+              stock: numStock,
+              stockStatus: m.stockStatus,
+              isAvailable: m.isAvailable !== false,
+              requiresPrescription: Boolean(m.requiresPrescription),
+              isRx: Boolean(m.requiresPrescription),
+              category: m.category || "Tablet",
+              highlight: "#e8f5e9",
+              accentColor: "#2e7d32",
+            };
+          });
+          setMedicines(mapped);
+        } else {
+          setMedicines([]);
+        }
+      } catch (err) {
+        setMedicines([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMedicines();
+  }, []);
 
   const filtered =
     filter === "All" ? medicines : medicines.filter((m) => m.category === filter);
@@ -334,7 +334,7 @@ export default function FeaturedMedicines({ hasPrescription, onPrescriptionRequi
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {filtered.length === 0 && !loading && (
         <div className="featured-empty">
           <span>🔍</span>
           <p>No medicines found in this category.</p>

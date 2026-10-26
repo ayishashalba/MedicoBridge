@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaEye, FaEyeSlash, FaUserPlus } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./PatientRegister.css";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-", "Not Provided"];
@@ -98,18 +99,58 @@ function PatientRegister() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      const payload = {
-        ...form,
-        bloodGroup: form.bloodGroup || "Not Provided",
-      };
-      console.log("Patient registration submitted:", payload);
-      navigate("/verify-email");
+
+    if (!validate()) return;
+
+    const payload = {
+      name: form.fullName,
+      email: form.email,
+      password: form.password,
+      role: "Patient",
+      phone: form.phone,
+      dob: form.dob,
+      gender: form.gender,
+      bloodGroup: form.bloodGroup || "Not Provided",
+      city: form.city,
+      address: form.address,
+      isDonorAvailable: form.isDonorAvailable,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      console.log("REGISTER STATUS:", response.status);
+      console.log("REGISTER RESPONSE:", data);
+
+      if (!response.ok) {
+        console.error("REGISTER FAILED:", data);
+        toast.error(data.message || "Registration failed. Please try again.");
+        return;
+      }
+
+      toast.success("Registration successful! An OTP has been sent to your email.");
+      localStorage.setItem("registrationEmail", form.email);
+
+      navigate("/verify-email", {
+        state: {
+          email: form.email,
+        },
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Unable to connect to the server. Please try again.");
     }
   };
-
   return (
     <div className="pat-reg-page-wrapper">
       <div className="pat-reg-card-container">
@@ -214,10 +255,10 @@ function PatientRegister() {
                   onChange={handleChange}
                 >
                   <option value="">Select gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                  <option value="prefer-not">Prefer not to say</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
                 </select>
                 {errors.gender && (
                   <span className="pat-reg-error-msg">{errors.gender}</span>

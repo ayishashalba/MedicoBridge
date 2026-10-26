@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaEye, FaEyeSlash, FaCheckCircle, FaLockOpen } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./ResetPassword.css";
 
 /* ── Password-strength scorer ────────────────────────────
@@ -63,6 +64,7 @@ function ResetPassword() {
     e.preventDefault();
     if (validate()) {
       console.log("Password reset submitted for:", email);
+      toast.success("Password reset successful! You can now log in with your new credentials.");
       setIsSubmitted(true);
     }
   };

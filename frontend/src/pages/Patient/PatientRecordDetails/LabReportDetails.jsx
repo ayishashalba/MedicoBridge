@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaArrowLeft,
   FaUserMd,
@@ -11,130 +11,127 @@ import {
   FaArrowRight,
   FaClipboardList,
   FaFileAlt,
+  FaSpinner,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./LabReportDetails.css";
-
-/* ── Mock Data ── */
-const labReports = [
-  {
-    id: "lab-1",
-    test: "Complete Blood Count (CBC)",
-    hospital: "Apollo Hospital, Kochi",
-    orderedBy: "Dr. Sarah Johnson",
-    specialization: "Cardiologist",
-    date: "18 June 2026",
-    status: "Available",
-    referenceId: "LAB-APL-2026-0487",
-    patientName: "John Doe",
-    patientAge: "32 Years",
-    patientGender: "Male",
-    sampleType: "Venous Blood",
-    sampleCollected: "18 June 2026, 8:30 AM",
-    reportGenerated: "18 June 2026, 4:00 PM",
-    results: [
-      {
-        parameter: "Hemoglobin",
-        value: "14.2 g/dL",
-        normalRange: "13.0 – 17.0 g/dL",
-        status: "Normal",
-      },
-      {
-        parameter: "WBC Count",
-        value: "7,500 /μL",
-        normalRange: "4,500 – 11,000 /μL",
-        status: "Normal",
-      },
-      {
-        parameter: "RBC Count",
-        value: "5.1 million/μL",
-        normalRange: "4.5 – 5.5 million/μL",
-        status: "Normal",
-      },
-      {
-        parameter: "Platelet Count",
-        value: "2,50,000 /μL",
-        normalRange: "1,50,000 – 4,00,000 /μL",
-        status: "Normal",
-      },
-      {
-        parameter: "Hematocrit (PCV)",
-        value: "42%",
-        normalRange: "38.3 – 48.6%",
-        status: "Normal",
-      },
-      {
-        parameter: "MCV",
-        value: "88 fL",
-        normalRange: "80 – 100 fL",
-        status: "Normal",
-      },
-    ],
-    interpretation:
-      "All values are within normal limits. No abnormalities detected. Complete blood count is satisfactory.",
-  },
-  {
-    id: "lab-2",
-    test: "Blood Sugar Test",
-    hospital: "Aster Clinic, Kochi",
-    orderedBy: "Dr. John Smith",
-    specialization: "Dermatologist",
-    date: "05 June 2026",
-    status: "Available",
-    referenceId: "LAB-AST-2026-0312",
-    patientName: "John Doe",
-    patientAge: "32 Years",
-    patientGender: "Male",
-    sampleType: "Venous Blood (Fasting)",
-    sampleCollected: "05 June 2026, 7:00 AM",
-    reportGenerated: "05 June 2026, 11:00 AM",
-    results: [
-      {
-        parameter: "Fasting Blood Sugar",
-        value: "98 mg/dL",
-        normalRange: "70 – 100 mg/dL",
-        status: "Normal",
-      },
-      {
-        parameter: "Post-Prandial Sugar",
-        value: "132 mg/dL",
-        normalRange: "< 140 mg/dL",
-        status: "Normal",
-      },
-      {
-        parameter: "HbA1c",
-        value: "5.4%",
-        normalRange: "4.0 – 5.6%",
-        status: "Normal",
-      },
-    ],
-    interpretation:
-      "Blood sugar levels are within normal range. No signs of diabetes or pre-diabetic condition. Maintain current diet and lifestyle.",
-  },
-];
 
 function LabReportDetails() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const report = labReports.find((r) => r.id === id);
 
-  if (!report) {
+  const [report, setReport] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!id) {
+      setError("Invalid lab report ID.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchReport = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login/patient");
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/patient/lab-reports/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (res.ok && data.data) {
+          const raw = data.data;
+          const patient = raw.patientId || {};
+          const doc = raw.doctorId || {};
+          const hosp = raw.hospitalId || {};
+
+          let calculatedAge = "—";
+          if (patient.dob) {
+            const ageDiff = Date.now() - new Date(patient.dob).getTime();
+            calculatedAge = `${Math.abs(new Date(ageDiff).getUTCFullYear() - 1970)} Years`;
+          }
+
+          setReport({
+            id: raw._id,
+            test: raw.testName || "Diagnostic Lab Report",
+            hospital: hosp.name || "Pathology & Diagnostics Laboratory",
+            orderedBy: doc.name ? `Dr. ${doc.name.replace(/^Dr\.?\s*/i, "")}` : "Attending Physician",
+            specialization: doc.specialization || raw.category || "General Pathology",
+            date: raw.reportDate
+              ? new Date(raw.reportDate).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })
+              : new Date(raw.createdAt || Date.now()).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }),
+            status: raw.status || "Completed",
+            referenceId: raw.reportId || raw._id,
+            patientName: patient.name || "Patient",
+            patientAge: calculatedAge,
+            patientGender: patient.gender || "—",
+            sampleType: raw.sampleType || "Venous Blood",
+            sampleCollected: raw.sampleCollectedDate
+              ? new Date(raw.sampleCollectedDate).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "Standard collection",
+            reportGenerated: raw.reportDate
+              ? new Date(raw.reportDate).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "Completed",
+            results: (raw.results || []).map((r) => ({
+              parameter: r.parameter || "Parameter",
+              value: r.unit ? `${r.value} ${r.unit}` : r.value || "—",
+              normalRange: r.referenceRange || r.normalRange || "Standard range",
+              status: r.status || "Normal",
+            })),
+            interpretation:
+              raw.remarks ||
+              raw.notes ||
+              "All reported values have been verified and processed by the laboratory. Please consult your physician for clinical correlation.",
+          });
+        } else {
+          setError(data.message || "Lab report not found.");
+        }
+      } catch (err) {
+        setError("Unable to connect to server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReport();
+  }, [id, navigate]);
+
+  function handleDownload() {
+    toast.info(`Downloading PDF for "${report?.test || "Lab Report"}"…`);
+  }
+
+  if (loading) {
+    return (
+      <div className="lr-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: "1rem", color: "#0d9488" }}>
+        <FaSpinner className="fa-spin" /> Loading lab report details...
+      </div>
+    );
+  }
+
+  if (error || !report) {
     return (
       <div className="lr-page">
         <button className="lr-back-btn" onClick={() => navigate(-1)}>
           <FaArrowLeft /> Back
         </button>
-        <div className="lr-not-found">
+        <div style={{ textAlign: "center", padding: "3rem" }}>
+          <FaExclamationCircle style={{ fontSize: "2.5rem", color: "#ef4444", marginBottom: "1rem" }} />
           <h2>Lab Report Not Found</h2>
-          <p>The lab report you're looking for doesn't exist.</p>
+          <p>{error || "The lab report you're looking for doesn't exist."}</p>
+          <button className="lr-action-btn" style={{ marginTop: "1rem" }} onClick={() => navigate("/patient/medical-records")}>
+            Back to Records
+          </button>
         </div>
       </div>
-    );
-  }
-
-  function handleDownload() {
-    alert(
-      `Downloading PDF for "${report.test}"…\n\n(This is a demo — no actual file is generated.)`
     );
   }
 

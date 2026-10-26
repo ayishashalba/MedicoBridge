@@ -154,37 +154,17 @@ function PatientBookingSuccess() {
   const navigate = useNavigate();
   const [previewingReport, setPreviewingReport] = React.useState(null);
 
-  // Robust fallback for direct access
-  const { booking, doctor } = location.state || {
-    booking: {
-      appointmentId: "MB-W1E-92K81",
-      date: "Monday, 20 July 2026",
-      slot: "10:00 AM",
-      consultationType: "in-person",
-      paymentMethod: "hospital",
-      bookingFor: "self",
-      reason: "General Consultation",
-      notes: "Routine checkup",
-      uploadedFiles: [],
-    },
-    doctor: {
-      id: 1,
-      name: "Dr. Aisha Khan",
-      specialization: "Cardiologist",
-      qualification: "MBBS, MD (Cardiology), DM (Cardiology)",
-      experience: 14,
-      hospital: "Apollo Hospitals",
-      city: "Mumbai",
-      address: "Plot No. 13, Sector 6, Vikhroli West, Mumbai, Maharashtra – 400083",
-      type: "hospital",
-      fee: 800,
-      rating: 4.9,
-      reviews: 312,
-      available: true,
-      initials: "AK",
-      color: "#7c3aed",
-    },
-  };
+  // If accessed directly without booking state, redirect to appointments
+  const { booking, doctor } = location.state || {};
+
+  React.useEffect(() => {
+    if (!booking || !doctor) {
+      navigate("/patient/appointments", { replace: true });
+    }
+  }, [booking, doctor, navigate]);
+
+  // Render nothing while redirecting
+  if (!booking || !doctor) return null;
 
   const isHospital = doctor.type === "hospital";
   const estConfirmation = isHospital ? "1–2 Hours" : "Under 30 Minutes";

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FaBuilding,
   FaSearch,
@@ -14,249 +14,293 @@ import {
   FaToggleOff,
   FaSave,
   FaTimes,
-  FaHeartbeat
+  FaHeartbeat,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./HospitalDepartments.css";
 
-const initialDepartments = [
-  {
-    id: "DEP-101",
-    name: "Cardiology",
-    head: "Dr. Ayisha Shalba",
-    doctorsCount: 8,
-    staffCount: 14,
-    totalBeds: 30,
-    bedsCount: 28,
-    patientsCount: 64,
-    phone: "+91 44 2234 5681",
-    status: "Active",
-    description: "Advanced cardiac care, ECG, echo, catheterization lab, and post-op CCU."
-  },
-  {
-    id: "DEP-102",
-    name: "Pediatrics & Neonatology",
-    head: "Dr. Neha Gokhale",
-    doctorsCount: 6,
-    staffCount: 10,
-    totalBeds: 22,
-    bedsCount: 20,
-    patientsCount: 42,
-    phone: "+91 44 2234 5682",
-    status: "Active",
-    description: "Child health, immunization, NICU, pediatric emergency, and adolescent clinic."
-  },
-  {
-    id: "DEP-103",
-    name: "Orthopedics & Joint Care",
-    head: "Dr. Vikram Batra",
-    doctorsCount: 5,
-    staffCount: 9,
-    totalBeds: 26,
-    bedsCount: 24,
-    patientsCount: 38,
-    phone: "+91 44 2234 5683",
-    status: "Active",
-    description: "Joint replacement, fracture treatment, arthroscopy, and physiotherapy rehab."
-  },
-  {
-    id: "DEP-104",
-    name: "General Medicine & Internal Care",
-    head: "Dr. Sara Thomas",
-    doctorsCount: 10,
-    staffCount: 18,
-    totalBeds: 38,
-    bedsCount: 35,
-    patientsCount: 92,
-    phone: "+91 44 2234 5684",
-    status: "Active",
-    description: "Comprehensive adult medical diagnosis, chronic illness management, and fever clinic."
-  },
-  {
-    id: "DEP-105",
-    name: "Emergency & Critical Care (ICU)",
-    head: "Dr. Sandeep Reddy",
-    doctorsCount: 7,
-    staffCount: 20,
-    totalBeds: 18,
-    bedsCount: 16,
-    patientsCount: 14,
-    phone: "+91 44 2234 5685",
-    status: "Active",
-    description: "24/7 Level-1 trauma care, ventilator support, resuscitation, and emergency triage."
-  },
-  {
-    id: "DEP-106",
-    name: "Oncology",
-    head: "Dr. K. Ramanathan",
-    doctorsCount: 4,
-    staffCount: 8,
-    totalBeds: 20,
-    bedsCount: 18,
-    patientsCount: 29,
-    phone: "+91 44 2234 5686",
-    status: "Active",
-    description: "Medical and surgical oncology, day-care chemotherapy unit, and palliative care."
-  }
-];
-
-/* ─── Manage Modal ─────────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   Manage Department Modal
+───────────────────────────────────────────── */
 function ManageModal({ dept, onClose, onSave }) {
   const [form, setForm] = useState({
-    name: dept.name,
-    description: dept.description,
-    head: dept.head,
-    doctorsCount: dept.doctorsCount,
-    staffCount: dept.staffCount ?? 0,
-    totalBeds: dept.totalBeds ?? dept.bedsCount,
-    bedsCount: dept.bedsCount,
-    phone: dept.phone,
-    status: dept.status
+    name: dept.name || "",
+    description: dept.description || "",
+    headOfDepartment: dept.headOfDepartment || "",
+    isActive: dept.isActive !== false,
   });
 
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const set = (key, val) => setForm((f) => ({ ...f, [key]: val }));
-
-  const handleSave = () => {
-    if (!form.name.trim()) return;
-    if (Number(form.bedsCount) > Number(form.totalBeds)) {
-      alert("Available beds cannot exceed total beds.");
-      return;
-    }
-    onSave({
-      ...dept,
-      ...form,
-      doctorsCount: Number(form.doctorsCount),
-      staffCount: Number(form.staffCount),
-      totalBeds: Number(form.totalBeds),
-      bedsCount: Number(form.bedsCount)
-    });
-    setSaved(true);
-    setTimeout(() => {
-      setSaved(false);
-      onClose();
-    }, 900);
+  const set = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
-  const isInactive = form.status === "Inactive";
+  const handleSave = async () => {
+    if (!form.name.trim()) {
+      toast.warning("Department name is required.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        `http://localhost:5000/api/hospital/departments/${dept._id}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: form.name.trim(),
+            description: form.description.trim(),
+            headOfDepartment:
+              form.headOfDepartment.trim(),
+            isActive: form.isActive,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+          "Failed to update department."
+        );
+      }
+
+      const updatedDepartment = result?.data;
+
+      setSaved(true);
+
+      onSave(updatedDepartment);
+
+      setTimeout(() => {
+        setSaved(false);
+        onClose();
+      }, 700);
+    } catch (error) {
+      console.error(
+        "Update department error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to update department."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const isInactive = !form.isActive;
 
   return (
-    <div className="hosp-dept-modal-backdrop" onClick={onClose}>
-      <div className="hosp-dept-manage-modal" onClick={(e) => e.stopPropagation()}>
-
-        {/* ── Header ─── */}
+    <div
+      className="hosp-dept-modal-backdrop"
+      onClick={onClose}
+    >
+      <div
+        className="hosp-dept-manage-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
         <div className="hdmm-header">
           <div className="hdmm-header-left">
-            <span className="hdmm-dept-id">{dept.id}</span>
+            <span className="hdmm-dept-id">
+              {dept._id}
+            </span>
+
             <h3 className="hdmm-title">
-              <FaEdit style={{ fontSize: "1rem", color: "#4f46e5" }} />
+              <FaEdit
+                style={{
+                  fontSize: "1rem",
+                  color: "#4f46e5",
+                }}
+              />
               Manage Department
             </h3>
           </div>
-          <button className="hdmm-close-btn" onClick={onClose}><FaTimes /></button>
+
+          <button
+            className="hdmm-close-btn"
+            onClick={onClose}
+            disabled={saving}
+          >
+            <FaTimes />
+          </button>
         </div>
 
-        {/* ── Body ─── */}
+        {/* Body */}
         <div className="hdmm-body">
-
-          {/* Status toggle banner */}
-          <div className={`hdmm-status-banner ${isInactive ? "hdmm-status-inactive" : "hdmm-status-active"}`}>
+          {/* Status */}
+          <div
+            className={`hdmm-status-banner ${isInactive
+                ? "hdmm-status-inactive"
+                : "hdmm-status-active"
+              }`}
+          >
             <div className="hdmm-status-left">
-              {isInactive
-                ? <FaToggleOff className="hdmm-toggle-icon" />
-                : <FaToggleOn className="hdmm-toggle-icon" />}
+              {isInactive ? (
+                <FaToggleOff className="hdmm-toggle-icon" />
+              ) : (
+                <FaToggleOn className="hdmm-toggle-icon" />
+              )}
+
               <div>
-                <span className="hdmm-status-label">Department Status</span>
-                <strong className="hdmm-status-value">{form.status}</strong>
+                <span className="hdmm-status-label">
+                  Department Status
+                </span>
+
+                <strong className="hdmm-status-value">
+                  {isInactive
+                    ? "Inactive"
+                    : "Active"}
+                </strong>
               </div>
             </div>
+
             <button
-              className={`hdmm-status-btn ${isInactive ? "hdmm-status-btn-off" : "hdmm-status-btn-on"}`}
-              onClick={() => set("status", isInactive ? "Active" : "Inactive")}
+              className={`hdmm-status-btn ${isInactive
+                  ? "hdmm-status-btn-off"
+                  : "hdmm-status-btn-on"
+                }`}
+              onClick={() =>
+                set(
+                  "isActive",
+                  !form.isActive
+                )
+              }
+              disabled={saving}
             >
-              Set {isInactive ? "Active" : "Inactive"}
+              Set{" "}
+              {isInactive
+                ? "Active"
+                : "Inactive"}
             </button>
           </div>
 
-          {/* Active patient read-only chip */}
+          {/* Existing statistics */}
           <div className="hdmm-patient-chip">
             <FaHeartbeat className="hdmm-patient-icon" />
-            <span>Active Inpatients (read-only)</span>
-            <strong>{dept.patientsCount}</strong>
+
+            <span>
+              Active Inpatients (read-only)
+            </span>
+
+            <strong>
+              {dept.patientsCount ?? 0}
+            </strong>
           </div>
 
-          {/* Section: Basic Info */}
+          {/* Basic Info */}
           <div className="hdmm-section-title">
             <FaHospitalAlt /> Basic Information
           </div>
 
           <div className="hosp-dept-form-group">
             <label>Department Name *</label>
+
             <input
               type="text"
               value={form.name}
-              onChange={(e) => set("name", e.target.value)}
+              onChange={(e) =>
+                set("name", e.target.value)
+              }
               placeholder="e.g. Cardiology"
+              disabled={saving}
             />
           </div>
 
           <div className="hosp-dept-form-group">
-            <label>Description / Specialization Scope</label>
+            <label>
+              Description / Specialization Scope
+            </label>
+
             <textarea
               rows="3"
               value={form.description}
-              onChange={(e) => set("description", e.target.value)}
+              onChange={(e) =>
+                set(
+                  "description",
+                  e.target.value
+                )
+              }
               placeholder="Clinical care scope, diagnostic facilities..."
+              disabled={saving}
             />
           </div>
 
           <div className="hosp-dept-form-group">
-            <label>Direct Extension / Contact</label>
+            <label>
+              Direct Extension / Contact
+            </label>
+
             <input
               type="text"
-              value={form.phone}
-              onChange={(e) => set("phone", e.target.value)}
-              placeholder="+91 44 2234 XXXX"
+              value={dept.phone || ""}
+              readOnly
+              placeholder="Not provided"
             />
           </div>
 
-          {/* Section: Staff */}
+          {/* Staff */}
           <div className="hdmm-section-title">
             <FaUserMd /> Staff Management
           </div>
 
           <div className="hosp-dept-form-group">
-            <label>Head of Department (Lead Physician)</label>
+            <label>
+              Head of Department (Lead Physician)
+            </label>
+
             <input
               type="text"
-              value={form.head}
-              onChange={(e) => set("head", e.target.value)}
+              value={form.headOfDepartment}
+              onChange={(e) =>
+                set(
+                  "headOfDepartment",
+                  e.target.value
+                )
+              }
               placeholder="e.g. Dr. Rajesh Khanna"
+              disabled={saving}
             />
           </div>
 
           <div className="hdmm-grid-2">
             <div className="hosp-dept-form-group">
               <label>Allocated Doctors</label>
+
               <input
                 type="number"
-                min="0"
-                value={form.doctorsCount}
-                onChange={(e) => set("doctorsCount", e.target.value)}
+                value={dept.doctorsCount ?? 0}
+                readOnly
               />
             </div>
+
             <div className="hosp-dept-form-group">
               <label>Support Staff</label>
+
               <input
                 type="number"
-                min="0"
-                value={form.staffCount}
-                onChange={(e) => set("staffCount", e.target.value)}
+                value={dept.staffCount ?? 0}
+                readOnly
               />
             </div>
           </div>
 
-          {/* Section: Beds */}
+          {/* Beds */}
           <div className="hdmm-section-title">
             <FaBed /> Bed Capacity
           </div>
@@ -264,53 +308,87 @@ function ManageModal({ dept, onClose, onSave }) {
           <div className="hdmm-grid-2">
             <div className="hosp-dept-form-group">
               <label>Total Beds</label>
+
               <input
                 type="number"
-                min="0"
-                value={form.totalBeds}
-                onChange={(e) => set("totalBeds", e.target.value)}
+                value={dept.totalBeds ?? 0}
+                readOnly
               />
             </div>
+
             <div className="hosp-dept-form-group">
               <label>Available Beds</label>
+
               <input
                 type="number"
-                min="0"
-                max={form.totalBeds}
-                value={form.bedsCount}
-                onChange={(e) => set("bedsCount", e.target.value)}
+                value={dept.bedsCount ?? 0}
+                readOnly
               />
             </div>
           </div>
 
-          {/* Bed occupancy mini-bar */}
-          {Number(form.totalBeds) > 0 && (
+          {Number(dept.totalBeds) > 0 && (
             <div className="hdmm-bed-bar-wrap">
               <div className="hdmm-bed-bar-track">
                 <div
                   className="hdmm-bed-bar-fill"
                   style={{
-                    width: `${Math.min(100, ((Number(form.totalBeds) - Number(form.bedsCount)) / Number(form.totalBeds)) * 100).toFixed(1)}%`
+                    width: `${Math.min(
+                      100,
+                      ((Number(
+                        dept.totalBeds
+                      ) -
+                        Number(
+                          dept.bedsCount || 0
+                        )) /
+                        Number(
+                          dept.totalBeds
+                        )) *
+                      100
+                    ).toFixed(1)}%`,
                   }}
                 />
               </div>
+
               <span className="hdmm-bed-bar-label">
-                {Number(form.totalBeds) - Number(form.bedsCount)} / {form.totalBeds} beds occupied
+                {Number(dept.totalBeds) -
+                  Number(
+                    dept.bedsCount || 0
+                  )}{" "}
+                / {dept.totalBeds} beds
+                occupied
               </span>
             </div>
           )}
         </div>
 
-        {/* ── Footer ─── */}
+        {/* Footer */}
         <div className="hdmm-footer">
-          <button className="hosp-dept-cancel-btn" onClick={onClose}>
+          <button
+            className="hosp-dept-cancel-btn"
+            onClick={onClose}
+            disabled={saving}
+          >
             <FaTimes /> Cancel
           </button>
+
           <button
-            className={`hdmm-save-btn ${saved ? "hdmm-save-btn--saved" : ""}`}
+            className={`hdmm-save-btn ${saved
+                ? "hdmm-save-btn--saved"
+                : ""
+              }`}
             onClick={handleSave}
+            disabled={saving}
           >
-            {saved ? "✓ Saved!" : <><FaSave /> Save Changes</>}
+            {saving ? (
+              "Saving..."
+            ) : saved ? (
+              "✓ Saved!"
+            ) : (
+              <>
+                <FaSave /> Save Changes
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -318,145 +396,535 @@ function ManageModal({ dept, onClose, onSave }) {
   );
 }
 
-/* ─── Main Component ───────────────────────────────────── */
+/* ─────────────────────────────────────────────
+   Main Component
+───────────────────────────────────────────── */
 export default function HospitalDepartments() {
-  const [departments, setDepartments] = useState(initialDepartments);
+  const [departments, setDepartments] =
+    useState([]);
+
   const [search, setSearch] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [manageDept, setManageDept] = useState(null);
+
+  const [showAddModal, setShowAddModal] =
+    useState(false);
+
+  const [manageDept, setManageDept] =
+    useState(null);
+
+  const [loading, setLoading] =
+    useState(true);
+
   const [newDept, setNewDept] = useState({
     name: "",
     head: "",
-    doctorsCount: "",
-    staffCount: "",
-    totalBeds: "",
-    bedsCount: "",
     phone: "",
-    description: ""
+    description: "",
   });
 
-  const filtered = departments.filter((d) =>
-    d.name.toLowerCase().includes(search.toLowerCase()) ||
-    d.head.toLowerCase().includes(search.toLowerCase()) ||
-    d.id.toLowerCase().includes(search.toLowerCase())
-  );
+  const token = localStorage.getItem("token");
 
-  const handleAddSubmit = (e) => {
-    e.preventDefault();
-    if (!newDept.name) return;
+  /* ─────────────────────────────────────────
+     Fetch Departments
+  ───────────────────────────────────────── */
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
 
-    const created = {
-      id: `DEP-${Math.floor(100 + Math.random() * 900)}`,
-      name: newDept.name,
-      head: newDept.head || "To be assigned",
-      doctorsCount: Number(newDept.doctorsCount) || 1,
-      staffCount: Number(newDept.staffCount) || 0,
-      totalBeds: Number(newDept.totalBeds) || Number(newDept.bedsCount) || 10,
-      bedsCount: Number(newDept.bedsCount) || 10,
-      patientsCount: 0,
-      phone: newDept.phone || "+91 44 2234 5600",
-      status: "Active",
-      description: newDept.description || "General hospital medical division."
-    };
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/departments",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-    setDepartments([created, ...departments]);
-    setShowAddModal(false);
-    setNewDept({ name: "", head: "", doctorsCount: "", staffCount: "", totalBeds: "", bedsCount: "", phone: "", description: "" });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+          "Failed to fetch departments."
+        );
+      }
+
+      const data = result?.data || [];
+
+      /*
+       * Use only real backend department data.
+       * No hardcoded department records.
+       */
+      const normalizedDepartments =
+        data.map((dept) => ({
+          ...dept,
+
+          id: dept._id,
+
+          head:
+            dept.headOfDepartment ||
+            "To be assigned",
+
+          status:
+            dept.isActive === false
+              ? "Inactive"
+              : "Active",
+
+          description:
+            dept.description || "",
+
+          phone:
+            dept.phone || "",
+
+          doctorsCount:
+            dept.doctorsCount ?? 0,
+
+          staffCount:
+            dept.staffCount ?? 0,
+
+          totalBeds:
+            dept.totalBeds ?? 0,
+
+          bedsCount:
+            dept.bedsCount ?? 0,
+
+          patientsCount:
+            dept.patientsCount ?? 0,
+        }));
+
+      setDepartments(
+        normalizedDepartments
+      );
+    } catch (error) {
+      console.error(
+        "Fetch departments error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to load departments."
+      );
+
+      setDepartments([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+
+      toast.error(
+        "Authentication token not found."
+      );
+
+      return;
+    }
+
+    fetchDepartments();
+  }, []);
+
+  /* ─────────────────────────────────────────
+     Search
+  ───────────────────────────────────────── */
+  const filtered = useMemo(() => {
+    const value = search
+      .trim()
+      .toLowerCase();
+
+    if (!value) {
+      return departments;
+    }
+
+    return departments.filter(
+      (dept) =>
+        String(dept.name || "")
+          .toLowerCase()
+          .includes(value) ||
+        String(
+          dept.headOfDepartment ||
+          dept.head ||
+          ""
+        )
+          .toLowerCase()
+          .includes(value) ||
+        String(dept._id || "")
+          .toLowerCase()
+          .includes(value)
+    );
+  }, [departments, search]);
+
+  /* ─────────────────────────────────────────
+     Add Department
+  ───────────────────────────────────────── */
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!newDept.name.trim()) {
+      toast.warning(
+        "Department name is required."
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/hospital/departments",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newDept.name.trim(),
+
+            description:
+              newDept.description.trim(),
+
+            headOfDepartment:
+              newDept.head.trim(),
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+          "Failed to create department."
+        );
+      }
+
+      toast.success(
+        "Department created successfully."
+      );
+
+      setShowAddModal(false);
+
+      setNewDept({
+        name: "",
+        head: "",
+        phone: "",
+        description: "",
+      });
+
+      await fetchDepartments();
+    } catch (error) {
+      console.error(
+        "Create department error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to create department."
+      );
+    }
+  };
+
+  /* ─────────────────────────────────────────
+     Save Department
+  ───────────────────────────────────────── */
   const handleSaveDept = (updated) => {
-    setDepartments((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
-    setManageDept(null);
+    if (!updated) return;
+
+    setDepartments((prev) =>
+      prev.map((dept) =>
+        dept._id === updated._id
+          ? {
+            ...dept,
+            ...updated,
+
+            id: updated._id,
+
+            head:
+              updated.headOfDepartment ||
+              "To be assigned",
+
+            status:
+              updated.isActive === false
+                ? "Inactive"
+                : "Active",
+
+            description:
+              updated.description || "",
+
+            phone:
+              updated.phone || "",
+          }
+          : dept
+      )
+    );
+  };
+
+  /* ─────────────────────────────────────────
+     Delete Department
+  ───────────────────────────────────────── */
+  const handleDeleteDepartment = async (
+    department
+  ) => {
+    const confirmed = window.confirm(
+      `Delete "${department.name}" department?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/hospital/departments/${department._id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+          "Failed to delete department."
+        );
+      }
+
+      setDepartments((prev) =>
+        prev.filter(
+          (dept) =>
+            dept._id !== department._id
+        )
+      );
+
+      toast.success(
+        "Department deleted successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Delete department error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Failed to delete department."
+      );
+    }
   };
 
   return (
     <div className="hosp-dept-page">
+      {/* Header */}
       <div className="hosp-dept-header">
         <div>
           <h2 className="hosp-dept-title">
-            <FaBuilding style={{ color: "var(--primary-color, #4f46e5)" }} /> Hospital Departments
+            <FaBuilding
+              style={{
+                color:
+                  "var(--primary-color, #4f46e5)",
+              }}
+            />{" "}
+            Hospital Departments
           </h2>
+
           <p className="hosp-dept-subtitle">
-            Manage medical divisions, department heads, staffing allocation, and bed capacity
+            Manage medical divisions,
+            department heads, staffing
+            allocation, and bed capacity
           </p>
         </div>
-        <button className="hosp-dept-add-btn" onClick={() => setShowAddModal(true)}>
+
+        <button
+          className="hosp-dept-add-btn"
+          onClick={() =>
+            setShowAddModal(true)
+          }
+        >
           <FaPlus /> Add Department
         </button>
       </div>
 
-      {/* Search Bar */}
+      {/* Search */}
       <div className="hosp-dept-controls">
         <div className="hosp-dept-search">
           <FaSearch className="hosp-dept-search-icon" />
+
           <input
             type="text"
             placeholder="Search departments by name, head of department, or ID..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
           />
         </div>
       </div>
 
-      {/* Department Cards Grid */}
+      {/* Department Cards */}
       <div className="hosp-dept-grid">
-        {filtered.length === 0 ? (
+        {loading ? (
           <div className="hosp-dept-empty">
-            <FaBuilding style={{ fontSize: "2.5rem", color: "#cbd5e1", marginBottom: "0.75rem" }} />
-            <h3>No departments found</h3>
-            <p>Try searching with another keyword.</p>
+            <h3>
+              Loading departments...
+            </h3>
+
+            <p>
+              Fetching hospital departments.
+            </p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="hosp-dept-empty">
+            <FaBuilding
+              style={{
+                fontSize: "2.5rem",
+                color: "#cbd5e1",
+                marginBottom: "0.75rem",
+              }}
+            />
+
+            <h3>
+              No departments found
+            </h3>
+
+            <p>
+              Try searching with another
+              keyword.
+            </p>
           </div>
         ) : (
           filtered.map((dept) => (
-            <div key={dept.id} className="hosp-dept-card">
+            <div
+              key={dept._id}
+              className="hosp-dept-card"
+            >
+              {/* Top */}
               <div className="hosp-dept-card-top">
                 <div>
-                  <span className="hosp-dept-id">{dept.id}</span>
-                  <h3 className="hosp-dept-card-name">{dept.name}</h3>
+                  <span className="hosp-dept-id">
+                    {dept._id}
+                  </span>
+
+                  <h3 className="hosp-dept-card-name">
+                    {dept.name}
+                  </h3>
                 </div>
+
                 <span
                   className="hosp-dept-status-badge"
-                  style={dept.status === "Inactive" ? { background: "#fee2e2", color: "#dc2626" } : {}}
+                  style={
+                    dept.status ===
+                      "Inactive"
+                      ? {
+                        background:
+                          "#fee2e2",
+                        color:
+                          "#dc2626",
+                      }
+                      : {}
+                  }
                 >
                   {dept.status}
                 </span>
               </div>
 
-              <p className="hosp-dept-desc">{dept.description}</p>
+              {/* Description */}
+              <p className="hosp-dept-desc">
+                {dept.description ||
+                  "No department description provided."}
+              </p>
 
+              {/* Head */}
               <div className="hosp-dept-head-info">
                 <FaStethoscope className="hosp-dept-head-icon" />
+
                 <div>
-                  <span className="hosp-dept-head-lbl">Head of Department:</span>
-                  <strong>{dept.head}</strong>
+                  <span className="hosp-dept-head-lbl">
+                    Head of Department:
+                  </span>
+
+                  <strong>
+                    {dept.head ||
+                      "To be assigned"}
+                  </strong>
                 </div>
               </div>
 
+              {/* Stats */}
               <div className="hosp-dept-stats">
                 <div className="hosp-dept-stat">
                   <FaUserMd />
-                  <span><strong>{dept.doctorsCount}</strong> Doctors</span>
+
+                  <span>
+                    <strong>
+                      {dept.doctorsCount ??
+                        0}
+                    </strong>{" "}
+                    Doctors
+                  </span>
                 </div>
+
                 <div className="hosp-dept-stat">
                   <FaBed />
-                  <span><strong>{dept.bedsCount}</strong> Beds</span>
+
+                  <span>
+                    <strong>
+                      {dept.bedsCount ??
+                        0}
+                    </strong>{" "}
+                    Beds
+                  </span>
                 </div>
+
                 <div className="hosp-dept-stat">
                   <FaUsers />
-                  <span><strong>{dept.patientsCount}</strong> Active Inpatients</span>
+
+                  <span>
+                    <strong>
+                      {dept.patientsCount ??
+                        0}
+                    </strong>{" "}
+                    Active Inpatients
+                  </span>
                 </div>
               </div>
 
+              {/* Footer */}
               <div className="hosp-dept-card-footer">
                 <span className="hosp-dept-phone">
-                  <FaPhoneAlt /> {dept.phone}
+                  <FaPhoneAlt />{" "}
+                  {dept.phone ||
+                    "Not provided"}
                 </span>
-                <button
-                  className="hosp-dept-action-btn"
-                  onClick={() => setManageDept(dept)}
-                >
-                  Manage
-                </button>
+
+                <div>
+                  <button
+                    className="hosp-dept-action-btn"
+                    onClick={() =>
+                      setManageDept(dept)
+                    }
+                  >
+                    Manage
+                  </button>
+
+                  <button
+                    className="hosp-dept-action-btn"
+                    onClick={() =>
+                      handleDeleteDepartment(
+                        dept
+                      )
+                    }
+                    style={{
+                      marginLeft: "8px",
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -465,95 +933,131 @@ export default function HospitalDepartments() {
 
       {/* Add Department Modal */}
       {showAddModal && (
-        <div className="hosp-dept-modal-backdrop" onClick={() => setShowAddModal(false)}>
-          <div className="hosp-dept-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="hosp-dept-modal-backdrop"
+          onClick={() =>
+            setShowAddModal(false)
+          }
+        >
+          <div
+            className="hosp-dept-modal"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
             <div className="hosp-dept-modal-header">
-              <h3>Add New Hospital Department</h3>
-              <button className="hosp-dept-modal-close" onClick={() => setShowAddModal(false)}>×</button>
+              <h3>
+                Add New Hospital Department
+              </h3>
+
+              <button
+                className="hosp-dept-modal-close"
+                onClick={() =>
+                  setShowAddModal(false)
+                }
+              >
+                ×
+              </button>
             </div>
-            <form onSubmit={handleAddSubmit}>
+
+            <form
+              onSubmit={handleAddSubmit}
+            >
               <div className="hosp-dept-modal-body">
                 <div className="hosp-dept-form-group">
-                  <label>Department Name *</label>
+                  <label>
+                    Department Name *
+                  </label>
+
                   <input
                     type="text"
                     required
                     placeholder="e.g. Dermatology & Cosmetology"
                     value={newDept.name}
-                    onChange={(e) => setNewDept({ ...newDept, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewDept({
+                        ...newDept,
+                        name: e.target.value,
+                      })
+                    }
                   />
                 </div>
+
                 <div className="hosp-dept-form-group">
-                  <label>Head of Department (Lead Physician)</label>
+                  <label>
+                    Head of Department
+                  </label>
+
                   <input
                     type="text"
                     placeholder="e.g. Dr. Rajesh Khanna"
                     value={newDept.head}
-                    onChange={(e) => setNewDept({ ...newDept, head: e.target.value })}
+                    onChange={(e) =>
+                      setNewDept({
+                        ...newDept,
+                        head: e.target.value,
+                      })
+                    }
                   />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div className="hosp-dept-form-group">
-                    <label>Allocated Doctors</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 5"
-                      value={newDept.doctorsCount}
-                      onChange={(e) => setNewDept({ ...newDept, doctorsCount: e.target.value })}
-                    />
-                  </div>
-                  <div className="hosp-dept-form-group">
-                    <label>Support Staff</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 8"
-                      value={newDept.staffCount}
-                      onChange={(e) => setNewDept({ ...newDept, staffCount: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                  <div className="hosp-dept-form-group">
-                    <label>Total Beds</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 25"
-                      value={newDept.totalBeds}
-                      onChange={(e) => setNewDept({ ...newDept, totalBeds: e.target.value })}
-                    />
-                  </div>
-                  <div className="hosp-dept-form-group">
-                    <label>Available Beds</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 20"
-                      value={newDept.bedsCount}
-                      onChange={(e) => setNewDept({ ...newDept, bedsCount: e.target.value })}
-                    />
-                  </div>
-                </div>
+
                 <div className="hosp-dept-form-group">
-                  <label>Direct Extension / Contact</label>
+                  <label>
+                    Direct Extension / Contact
+                  </label>
+
                   <input
                     type="text"
                     placeholder="e.g. +91 44 2234 5689"
                     value={newDept.phone}
-                    onChange={(e) => setNewDept({ ...newDept, phone: e.target.value })}
+                    onChange={(e) =>
+                      setNewDept({
+                        ...newDept,
+                        phone: e.target.value,
+                      })
+                    }
                   />
                 </div>
+
                 <div className="hosp-dept-form-group">
-                  <label>Description / Specialization Scope</label>
+                  <label>
+                    Description / Specialization Scope
+                  </label>
+
                   <textarea
                     rows="3"
                     placeholder="Scope of clinical care and diagnostic facilities provided..."
-                    value={newDept.description}
-                    onChange={(e) => setNewDept({ ...newDept, description: e.target.value })}
+                    value={
+                      newDept.description
+                    }
+                    onChange={(e) =>
+                      setNewDept({
+                        ...newDept,
+                        description:
+                          e.target.value,
+                      })
+                    }
                   />
                 </div>
               </div>
+
               <div className="hosp-dept-modal-footer">
-                <button type="submit" className="hosp-dept-submit-btn">Create Department</button>
-                <button type="button" className="hosp-dept-cancel-btn" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button
+                  type="submit"
+                  className="hosp-dept-submit-btn"
+                >
+                  Create Department
+                </button>
+
+                <button
+                  type="button"
+                  className="hosp-dept-cancel-btn"
+                  onClick={() =>
+                    setShowAddModal(false)
+                  }
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -564,7 +1068,9 @@ export default function HospitalDepartments() {
       {manageDept && (
         <ManageModal
           dept={manageDept}
-          onClose={() => setManageDept(null)}
+          onClose={() =>
+            setManageDept(null)
+          }
           onSave={handleSaveDept}
         />
       )}

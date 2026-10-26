@@ -1,4 +1,4 @@
-import React, { useState, useId } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -30,241 +30,19 @@ import {
   FaSearchMinus,
   FaTimes,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import "./PatientBookAppointment.css";
 
-/* ─── Shared Doctor Data ─────────────────────────────────────────── */
-const doctorsData = [
-  {
-    id: 1,
-    name: "Dr. Aisha Khan",
-    specialization: "Cardiologist",
-    qualification: "MBBS, MD (Cardiology), DM (Cardiology)",
-    experience: 14,
-    hospital: "Apollo Hospitals",
-    city: "Mumbai",
-    address: "Plot No. 13, Sector 6, Vikhroli West, Mumbai, Maharashtra – 400083",
-    type: "hospital",
-    fee: 800,
-    rating: 4.9,
-    reviews: 312,
-    available: true,
-    initials: "AK",
-    color: "#7c3aed",
-    availableDays: ["Monday", "Wednesday", "Friday", "Saturday"],
-    slots: ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"],
-  },
-  {
-    id: 2,
-    name: "Dr. Rahul Verma",
-    specialization: "Orthopedic Surgeon",
-    qualification: "MBBS, MS (Orthopaedics), Fellowship in Joint Replacement",
-    experience: 10,
-    hospital: "Fortis Healthcare",
-    city: "Delhi",
-    address: "B-22, Vasant Kunj, New Delhi – 110070",
-    type: "hospital",
-    fee: 700,
-    rating: 4.7,
-    reviews: 245,
-    available: true,
-    initials: "RV",
-    color: "#0284c7",
-    availableDays: ["Tuesday", "Thursday", "Saturday"],
-    slots: ["10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  },
-  {
-    id: 3,
-    name: "Dr. Priya Sharma",
-    specialization: "Dermatologist",
-    qualification: "MBBS, MD (Dermatology)",
-    experience: 8,
-    hospital: "Skin Care Clinic",
-    city: "Bangalore",
-    address: "No. 45, 2nd Floor, Residency Road, Bangalore – 560025",
-    type: "clinic",
-    fee: 500,
-    rating: 4.8,
-    reviews: 198,
-    available: false,
-    initials: "PS",
-    color: "#0d9488",
-    availableDays: ["Monday", "Tuesday", "Thursday", "Friday"],
-    slots: ["10:00 AM", "11:00 AM", "12:00 PM", "02:30 PM", "04:00 PM", "05:00 PM"],
-  },
-  {
-    id: 4,
-    name: "Dr. Suresh Nair",
-    specialization: "Neurologist",
-    qualification: "MBBS, MD (Neurology), DM (Neurology)",
-    experience: 18,
-    hospital: "AIIMS",
-    city: "Chennai",
-    address: "Greams Rd, Thousand Lights, Chennai, Tamil Nadu – 600006",
-    type: "hospital",
-    fee: 1200,
-    rating: 4.9,
-    reviews: 512,
-    available: true,
-    initials: "SN",
-    color: "#f59e0b",
-    availableDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-    slots: ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-  },
-  {
-    id: 5,
-    name: "Dr. Meera Patel",
-    specialization: "Gynecologist",
-    qualification: "MBBS, MS (Obstetrics & Gynaecology)",
-    experience: 12,
-    hospital: "Wockhardt Hospital",
-    city: "Pune",
-    address: "1877, Wockhardt Hospital, Sanjay Park, Pune – 411001",
-    type: "hospital",
-    fee: 600,
-    rating: 4.6,
-    reviews: 178,
-    available: true,
-    initials: "MP",
-    color: "#ec4899",
-    availableDays: ["Monday", "Wednesday", "Friday"],
-    slots: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
-  },
-  {
-    id: 6,
-    name: "Dr. Arjun Mehta",
-    specialization: "Pediatrician",
-    qualification: "MBBS, MD (Paediatrics)",
-    experience: 7,
-    hospital: "Child Care Clinic",
-    city: "Hyderabad",
-    address: "Flat 2B, Sunshine Complex, Banjara Hills, Hyderabad – 500034",
-    type: "clinic",
-    fee: 450,
-    rating: 4.5,
-    reviews: 133,
-    available: false,
-    initials: "AM",
-    color: "#10b981",
-    availableDays: ["Tuesday", "Thursday", "Saturday"],
-    slots: ["09:00 AM", "10:00 AM", "11:00 AM", "04:00 PM", "05:00 PM"],
-  },
-  {
-    id: 7,
-    name: "Dr. Kavitha Reddy",
-    specialization: "Ophthalmologist",
-    qualification: "MBBS, MS (Ophthalmology)",
-    experience: 9,
-    hospital: "Vision Eye Hospital",
-    city: "Kochi",
-    address: "NH Bypass, Thrikkakara, Kochi, Kerala – 682021",
-    type: "hospital",
-    fee: 550,
-    rating: 4.7,
-    reviews: 162,
-    available: true,
-    initials: "KR",
-    color: "#6366f1",
-    availableDays: ["Monday", "Wednesday", "Friday"],
-    slots: ["09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
-  },
-  {
-    id: 8,
-    name: "Dr. Vikram Singh",
-    specialization: "Psychiatrist",
-    qualification: "MBBS, MD (Psychiatry)",
-    experience: 11,
-    hospital: "MindCare Clinic",
-    city: "Jaipur",
-    address: "B-45, Tilak Nagar, Jaipur, Rajasthan – 302004",
-    type: "clinic",
-    fee: 700,
-    rating: 4.8,
-    reviews: 89,
-    available: true,
-    initials: "VS",
-    color: "#8b5cf6",
-    availableDays: ["Monday", "Tuesday", "Thursday", "Friday"],
-    slots: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  },
-  {
-    id: 9,
-    name: "Dr. Ananya Das",
-    specialization: "Endocrinologist",
-    qualification: "MBBS, MD (Endocrinology)",
-    experience: 13,
-    hospital: "Max Healthcare",
-    city: "Kolkata",
-    address: "1, Manohar Pukur Rd, Kalighat, Kolkata – 700026",
-    type: "hospital",
-    fee: 900,
-    rating: 4.6,
-    reviews: 204,
-    available: false,
-    initials: "AD",
-    color: "#ef4444",
-    availableDays: ["Wednesday", "Thursday", "Saturday"],
-    slots: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-  },
-  {
-    id: 10,
-    name: "Dr. Rohit Gupta",
-    specialization: "General Physician",
-    qualification: "MBBS, DNB (General Medicine)",
-    experience: 5,
-    hospital: "HealthFirst Clinic",
-    city: "Lucknow",
-    address: "16, Ashok Marg, Hazratganj, Lucknow, UP – 226001",
-    type: "clinic",
-    fee: 300,
-    rating: 4.4,
-    reviews: 76,
-    available: true,
-    initials: "RG",
-    color: "#f97316",
-    availableDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-    slots: ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "04:00 PM", "05:00 PM"],
-  },
-  {
-    id: 11,
-    name: "Dr. Sunita Joshi",
-    specialization: "Rheumatologist",
-    qualification: "MBBS, MD (Rheumatology)",
-    experience: 16,
-    hospital: "Medanta Hospital",
-    city: "Gurugram",
-    address: "CH Baktawar Singh Rd, Sector 38, Gurugram, Haryana – 122001",
-    type: "hospital",
-    fee: 1000,
-    rating: 4.9,
-    reviews: 298,
-    available: true,
-    initials: "SJ",
-    color: "#14b8a6",
-    availableDays: ["Monday", "Wednesday", "Friday"],
-    slots: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  },
-  {
-    id: 12,
-    name: "Dr. Kiran Kumar",
-    specialization: "Urologist",
-    qualification: "MBBS, MS (Urology)",
-    experience: 15,
-    hospital: "Urology Specialty Clinic",
-    city: "Ahmedabad",
-    address: "304 Sterling Centre, Navarangpura, Ahmedabad, Gujarat – 380009",
-    type: "clinic",
-    fee: 750,
-    rating: 4.5,
-    reviews: 141,
-    available: false,
-    initials: "KK",
-    color: "#64748b",
-    availableDays: ["Tuesday", "Thursday", "Saturday"],
-    slots: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-  },
+const DAYS_ORDER = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ];
-
-const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 const REASON_OPTIONS = [
   "General Consultation",
@@ -280,34 +58,279 @@ const REASON_OPTIONS = [
   "Other",
 ];
 
-/* ─── Report Preview Modal ────────────────────────────────────────── */
+function getStoredUser() {
+  try {
+    const raw =
+      localStorage.getItem("user") ||
+      localStorage.getItem("patient") ||
+      localStorage.getItem("currentUser");
+
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getToken() {
+  const user = getStoredUser();
+
+  return (
+    localStorage.getItem("token") ||
+    localStorage.getItem("authToken") ||
+    localStorage.getItem("accessToken") ||
+    user?.token ||
+    ""
+  );
+}
+
+function getPatientName() {
+  const user = getStoredUser();
+
+  return (
+    user?.name ||
+    user?.fullName ||
+    user?.patient?.name ||
+    user?.patient?.fullName ||
+    "Patient"
+  );
+}
+
+function getPatientId() {
+  const user = getStoredUser();
+
+  return (
+    user?.patientId ||
+    user?.patient?.patientId ||
+    user?.patient?.id ||
+    user?.patient?._id ||
+    user?.id ||
+    user?._id ||
+    ""
+  );
+}
+
+function timeToMinutes(timeStr) {
+  if (!timeStr) return 0;
+
+  const parts = timeStr.trim().split(" ");
+
+  if (parts.length !== 2) return 0;
+
+  const [time, modifier] = parts;
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) {
+    return 0;
+  }
+
+  if (hours === 12) {
+    hours = modifier === "AM" ? 0 : 12;
+  } else if (modifier === "PM") {
+    hours += 12;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function getNextDateForDay(dayName) {
+  const todayDate = new Date();
+
+  const targetIndex = DAYS_ORDER.indexOf(dayName);
+
+  if (targetIndex === -1) {
+    return todayDate.toISOString().split("T")[0];
+  }
+
+  const jsTargetDay = targetIndex === 6 ? 0 : targetIndex + 1;
+  const currentDay = todayDate.getDay();
+
+  let daysToAdd = (jsTargetDay - currentDay + 7) % 7;
+
+  const targetDate = new Date();
+
+  targetDate.setDate(todayDate.getDate() + daysToAdd);
+
+  return targetDate.toISOString().split("T")[0];
+}
+
+function normalizeDoctor(rawDoctor) {
+  if (!rawDoctor) return null;
+
+  const doctor = rawDoctor.doctor || rawDoctor.data || rawDoctor;
+
+  const firstName = doctor.firstName || "";
+  const lastName = doctor.lastName || "";
+
+  const fullName =
+    doctor.name ||
+    doctor.fullName ||
+    `${firstName} ${lastName}`.trim();
+
+  const specialization =
+    doctor.specialization ||
+    doctor.specialisation ||
+    doctor.specialty ||
+    doctor.department ||
+    "";
+
+  const hospital =
+    doctor.hospital?.name ||
+    doctor.hospitalName ||
+    doctor.hospital ||
+    doctor.clinic?.name ||
+    doctor.clinicName ||
+    "";
+
+  const city =
+    doctor.city ||
+    doctor.location?.city ||
+    doctor.hospital?.city ||
+    doctor.clinic?.city ||
+    "";
+
+  const address =
+    doctor.address ||
+    doctor.location?.address ||
+    doctor.hospital?.address ||
+    doctor.clinic?.address ||
+    "";
+
+  const fee =
+    doctor.fee ??
+    doctor.consultationFee ??
+    doctor.consultFee ??
+    0;
+
+  const availableDays =
+    doctor.availableDays ||
+    doctor.availability?.days ||
+    doctor.schedule?.availableDays ||
+    [];
+
+  const slots =
+    doctor.slots ||
+    doctor.timeSlots ||
+    doctor.availableSlots ||
+    doctor.availability?.slots ||
+    doctor.schedule?.slots ||
+    [];
+
+  const rating =
+    doctor.rating ??
+    doctor.averageRating ??
+    0;
+
+  const reviews =
+    doctor.reviews ??
+    doctor.reviewCount ??
+    0;
+
+  const experience =
+    doctor.experience ??
+    doctor.experienceYears ??
+    0;
+
+  const qualification =
+    doctor.qualification ||
+    doctor.qualifications ||
+    "";
+
+  const id =
+    doctor._id ||
+    doctor.id ||
+    doctor.doctorId;
+
+  return {
+    ...doctor,
+    id,
+    mongoId: doctor._id || id,
+    name: fullName,
+    specialization,
+    qualification,
+    experience,
+    hospital,
+    city,
+    address,
+    type:
+      doctor.type ||
+      (hospital ? "hospital" : "clinic"),
+    fee,
+    rating,
+    reviews,
+    availableDays: Array.isArray(availableDays)
+      ? availableDays
+      : [],
+    slots: Array.isArray(slots)
+      ? slots
+      : [],
+    availableSlots: Array.isArray(doctor.availableSlots)
+      ? doctor.availableSlots
+      : Array.isArray(slots)
+        ? slots
+        : [],
+    initials:
+      doctor.initials ||
+      fullName
+        .split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((word) => word[0])
+        .join("")
+        .toUpperCase(),
+    color: doctor.color || "#7c3aed",
+  };
+}
+
 function ReportPreviewModal({ report, onClose }) {
   const [zoom, setZoom] = useState(1);
 
   if (!report) return null;
 
-  const isPdf = report.type === "pdf" || (report.name && report.name.toLowerCase().endsWith(".pdf"));
-
-  const handleZoomIn = () => setZoom((prev) => Math.min(prev + 0.25, 2.5));
-  const handleZoomOut = () => setZoom((prev) => Math.max(prev - 0.25, 0.5));
-  const handleResetZoom = () => setZoom(1);
+  const isPdf =
+    report.type === "pdf" ||
+    (report.name &&
+      report.name.toLowerCase().endsWith(".pdf"));
 
   return (
-    <div className="rpm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="rpm-file-title">
+    <div
+      className="rpm-modal-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rpm-file-title"
+    >
       <div className="rpm-modal-card">
-        {/* Modal Header */}
         <div className="rpm-modal-header">
           <div className="rpm-header-title">
-            <div className={`rpm-type-icon rpm-type-icon--${isPdf ? "pdf" : "image"}`}>
+            <div
+              className={`rpm-type-icon rpm-type-icon--${isPdf ? "pdf" : "image"
+                }`}
+            >
               {isPdf ? <FaFilePdf /> : <FaFileImage />}
             </div>
+
             <div className="rpm-header-info">
-              <h3 id="rpm-file-title" className="rpm-file-name" title={report.name}>{report.name}</h3>
+              <h3
+                id="rpm-file-title"
+                className="rpm-file-name"
+                title={report.name}
+              >
+                {report.name}
+              </h3>
+
               <p className="rpm-file-meta">
-                <span className={`rpm-badge rpm-badge--${isPdf ? "pdf" : "image"}`}>
-                  {report.fileTypeBadge || (isPdf ? "PDF Document" : "Medical Image")}
+                <span
+                  className={`rpm-badge rpm-badge--${isPdf ? "pdf" : "image"
+                    }`}
+                >
+                  {report.fileTypeBadge ||
+                    (isPdf
+                      ? "PDF Document"
+                      : "Medical Image")}
                 </span>
-                <span className="rpm-size">{report.size}</span>
+
+                <span className="rpm-size">
+                  {report.size}
+                </span>
               </p>
             </div>
           </div>
@@ -315,14 +338,41 @@ function ReportPreviewModal({ report, onClose }) {
           <div className="rpm-header-actions">
             {!isPdf && (
               <div className="rpm-zoom-controls">
-                <button type="button" className="rpm-btn-icon" onClick={handleZoomOut} title="Zoom Out (-)">
+                <button
+                  type="button"
+                  className="rpm-btn-icon"
+                  onClick={() =>
+                    setZoom((prev) =>
+                      Math.max(prev - 0.25, 0.5)
+                    )
+                  }
+                  title="Zoom Out"
+                >
                   <FaSearchMinus />
                 </button>
-                <span className="rpm-zoom-text">{Math.round(zoom * 100)}%</span>
-                <button type="button" className="rpm-btn-icon" onClick={handleZoomIn} title="Zoom In (+)">
+
+                <span className="rpm-zoom-text">
+                  {Math.round(zoom * 100)}%
+                </span>
+
+                <button
+                  type="button"
+                  className="rpm-btn-icon"
+                  onClick={() =>
+                    setZoom((prev) =>
+                      Math.min(prev + 0.25, 2.5)
+                    )
+                  }
+                  title="Zoom In"
+                >
                   <FaSearchPlus />
                 </button>
-                <button type="button" className="rpm-btn-text" onClick={handleResetZoom} title="Fit to Screen">
+
+                <button
+                  type="button"
+                  className="rpm-btn-text"
+                  onClick={() => setZoom(1)}
+                >
                   Fit
                 </button>
               </div>
@@ -333,20 +383,23 @@ function ReportPreviewModal({ report, onClose }) {
                 href={report.previewUrl}
                 download={report.name}
                 className="rpm-download-btn"
-                title="Download Report File"
               >
                 <FaDownload />
                 <span>Download</span>
               </a>
             )}
 
-            <button type="button" className="rpm-close-btn" onClick={onClose} aria-label="Close Preview" title="Close Preview">
+            <button
+              type="button"
+              className="rpm-close-btn"
+              onClick={onClose}
+              aria-label="Close Preview"
+            >
               <FaTimes />
             </button>
           </div>
         </div>
 
-        {/* Modal Content Viewer */}
         <div className="rpm-modal-body">
           {isPdf ? (
             <div className="rpm-pdf-container">
@@ -364,9 +417,17 @@ function ReportPreviewModal({ report, onClose }) {
                   height="540px"
                   style={{ border: "none" }}
                 />
+
                 <div className="rpm-pdf-fallback">
-                  <p>Your browser cannot embed the PDF directly.</p>
-                  <a href={report.previewUrl} download={report.name} className="rpm-download-fallback">
+                  <p>
+                    Your browser cannot embed the PDF directly.
+                  </p>
+
+                  <a
+                    href={report.previewUrl}
+                    download={report.name}
+                    className="rpm-download-fallback"
+                  >
                     <FaDownload /> Download {report.name}
                   </a>
                 </div>
@@ -381,7 +442,8 @@ function ReportPreviewModal({ report, onClose }) {
                   className="rpm-image-preview"
                   style={{
                     transform: `scale(${zoom})`,
-                    transition: "transform 0.2s ease-out",
+                    transition:
+                      "transform 0.2s ease-out",
                   }}
                 />
               </div>
@@ -389,12 +451,17 @@ function ReportPreviewModal({ report, onClose }) {
           )}
         </div>
 
-        {/* Modal Footer */}
         <div className="rpm-modal-footer">
           <span className="rpm-security-note">
-            🔒 Confidential Medical Document — Authorized Access Only
+            🔒 Confidential Medical Document — Authorized
+            Access Only
           </span>
-          <button type="button" className="rpm-btn-secondary" onClick={onClose}>
+
+          <button
+            type="button"
+            className="rpm-btn-secondary"
+            onClick={onClose}
+          >
             Close Preview
           </button>
         </div>
@@ -403,120 +470,184 @@ function ReportPreviewModal({ report, onClose }) {
   );
 }
 
-/* ─── Generate Appointment ID ────────────────────────────────────── */
-function generateAppointmentId() {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  const seg1 = Array.from({ length: 3 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  const seg2 = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * 36)].replace(/[A-Z]/, (c) => c)).join("").toUpperCase();
-  return `MB-${seg1}-${seg2}`;
-}
-
-/* ─── Booking Success Card ───────────────────────────────────────── */
-function BookingSuccessCard({ booking, doctor, onGoHome, onGoAppointments }) {
+function BookingSuccessCard({
+  booking,
+  doctor,
+  onGoHome,
+  onGoAppointments,
+  onPreviewReport,
+}) {
   return (
-    <div className="bk-success-overlay" role="dialog" aria-labelledby="bk-success-title" aria-modal="true">
+    <div
+      className="bk-success-overlay"
+      role="dialog"
+      aria-labelledby="bk-success-title"
+      aria-modal="true"
+    >
       <div className="bk-success-card">
-        {/* Animated checkmark */}
         <div className="bk-success-icon-wrapper">
           <div className="bk-success-icon">
             <FaCheckCircle />
           </div>
+
           <div className="bk-success-ring" />
         </div>
 
-        <h2 id="bk-success-title" className="bk-success-title">
+        <h2
+          id="bk-success-title"
+          className="bk-success-title"
+        >
           Appointment Booked!
         </h2>
+
         <p className="bk-success-subtitle">
-          Your appointment request has been submitted successfully.
+          Your appointment request has been submitted
+          successfully.
         </p>
 
-        {/* Appointment Summary Card */}
         <div className="bk-confirm-summary">
           <div className="bk-confirm-header">
             <div
               className="bk-confirm-avatar"
-              style={{ background: `linear-gradient(135deg, ${doctor.color}cc, ${doctor.color}66)` }}
+              style={{
+                background: `linear-gradient(135deg, ${doctor.color
+                  }cc, ${doctor.color}66)`,
+              }}
             >
               {doctor.initials}
             </div>
+
             <div>
-              <p className="bk-confirm-doctor">{doctor.name}</p>
-              <p className="bk-confirm-spec">{doctor.specialization}</p>
+              <p className="bk-confirm-doctor">
+                {doctor.name}
+              </p>
+
+              <p className="bk-confirm-spec">
+                {doctor.specialization}
+              </p>
             </div>
           </div>
 
           <dl className="bk-confirm-details">
             <div className="bk-confirm-row">
-              <dt><FaIdCard className="bk-confirm-icon" /> Appointment ID</dt>
-              <dd className="bk-appt-id">{booking.appointmentId}</dd>
+              <dt>
+                <FaIdCard className="bk-confirm-icon" />
+                Appointment ID
+              </dt>
+
+              <dd className="bk-appt-id">
+                {booking.appointmentId}
+              </dd>
             </div>
-            <div className="bk-confirm-row">
-              <dt><FaCalendarCheck className="bk-confirm-icon" /> Date</dt>
-              <dd>{booking.date}</dd>
-            </div>
-            <div className="bk-confirm-row">
-              <dt><FaClock className="bk-confirm-icon" /> Time</dt>
-              <dd>{booking.slot}</dd>
-            </div>
+
             <div className="bk-confirm-row">
               <dt>
-                {booking.consultationType === "video"
-                  ? <FaVideo className="bk-confirm-icon" />
-                  : <FaHospital className="bk-confirm-icon" />
-                }
+                <FaCalendarCheck className="bk-confirm-icon" />
+                Date
+              </dt>
+
+              <dd>{booking.date}</dd>
+            </div>
+
+            <div className="bk-confirm-row">
+              <dt>
+                <FaClock className="bk-confirm-icon" />
+                Time
+              </dt>
+
+              <dd>{booking.slot}</dd>
+            </div>
+
+            <div className="bk-confirm-row">
+              <dt>
+                {booking.consultationType === "video" ? (
+                  <FaVideo className="bk-confirm-icon" />
+                ) : (
+                  <FaHospital className="bk-confirm-icon" />
+                )}
                 Consultation
               </dt>
-              <dd>{booking.consultationType === "video" ? "Video Consultation" : "In-Person Visit"}</dd>
+
+              <dd>
+                {booking.consultationType === "video"
+                  ? "Video Consultation"
+                  : "In-Person Visit"}
+              </dd>
             </div>
+
             <div className="bk-confirm-row">
-              <dt><FaMapMarkerAlt className="bk-confirm-icon" /> Location</dt>
-              <dd>{doctor.hospital}, {doctor.city}</dd>
+              <dt>
+                <FaMapMarkerAlt className="bk-confirm-icon" />
+                Location
+              </dt>
+
+              <dd>
+                {doctor.hospital}
+                {doctor.city ? `, ${doctor.city}` : ""}
+              </dd>
             </div>
+
             <div className="bk-confirm-row bk-confirm-row--status">
               <dt>Status</dt>
+
               <dd>
                 <span className="bk-status-badge">
                   <span className="bk-status-dot" />
-                  Pending Confirmation
+                  {booking.status}
                 </span>
               </dd>
             </div>
-            {booking.uploadedFiles && booking.uploadedFiles.length > 0 && (
+
+            {booking.uploadedFiles?.length > 0 && (
               <div className="bk-confirm-row bk-confirm-row--reports">
-                <dt><FaFileAlt className="bk-confirm-icon" /> Attached Reports</dt>
+                <dt>
+                  <FaFileAlt className="bk-confirm-icon" />
+                  Attached Reports
+                </dt>
+
                 <dd className="bk-reports-chips-wrap">
-                  {booking.uploadedFiles.map((file, idx) => (
-                    <div key={file.id || idx} className="bk-report-mini-chip">
-                      <span className="bk-chip-name">{file.name}</span>
-                      <button
-                        type="button"
-                        className="bk-chip-act-btn"
-                        onClick={() => onPreviewReport && onPreviewReport(file)}
-                        title="Preview Report"
+                  {booking.uploadedFiles.map(
+                    (file, idx) => (
+                      <div
+                        key={file.id || idx}
+                        className="bk-report-mini-chip"
                       >
-                        <FaEye /> Preview
-                      </button>
-                      {file.previewUrl && (
-                        <a
-                          href={file.previewUrl}
-                          download={file.name}
+                        <span className="bk-chip-name">
+                          {file.name}
+                        </span>
+
+                        <button
+                          type="button"
                           className="bk-chip-act-btn"
-                          title="Download Report"
+                          onClick={() =>
+                            onPreviewReport?.(file)
+                          }
                         >
-                          <FaDownload />
-                        </a>
-                      )}
-                    </div>
-                  ))}
+                          <FaEye /> Preview
+                        </button>
+
+                        {file.previewUrl && (
+                          <a
+                            href={file.previewUrl}
+                            download={file.name}
+                            className="bk-chip-act-btn"
+                          >
+                            <FaDownload />
+                          </a>
+                        )}
+                      </div>
+                    )
+                  )}
                 </dd>
               </div>
             )}
           </dl>
 
-          {/* Booking notice */}
-          <div className={`bk-confirm-notice bk-confirm-notice--${doctor.type}`}>
+          <div
+            className={`bk-confirm-notice bk-confirm-notice--${doctor.type}`}
+          >
             <FaExclamationCircle />
+
             <span>
               {doctor.type === "hospital"
                 ? "This appointment request will be sent to the hospital for confirmation."
@@ -525,17 +656,26 @@ function BookingSuccessCard({ booking, doctor, onGoHome, onGoAppointments }) {
           </div>
         </div>
 
-        {/* Actions */}
         <div className="bk-success-actions">
-          <button className="bk-btn bk-btn--outline" onClick={onGoHome} aria-label="Go to dashboard">
+          <button
+            className="bk-btn bk-btn--outline"
+            onClick={onGoHome}
+          >
             <FaHome /> Go to Dashboard
           </button>
-          <button className="bk-btn bk-btn--primary" onClick={onGoAppointments} aria-label="View my appointments">
+
+          <button
+            className="bk-btn bk-btn--primary"
+            onClick={onGoAppointments}
+          >
             <FaCalendarCheck /> My Appointments
           </button>
         </div>
 
-        <button className="bk-print-btn" onClick={() => window.print()} aria-label="Print appointment details">
+        <button
+          className="bk-print-btn"
+          onClick={() => window.print()}
+        >
           <FaPrint /> Print Details
         </button>
       </div>
@@ -543,148 +683,410 @@ function BookingSuccessCard({ booking, doctor, onGoHome, onGoAppointments }) {
   );
 }
 
-/* ─── Main Booking Component ─────────────────────────────────────── */
-function timeToMinutes(timeStr) {
-  if (!timeStr) return 0;
-  const [time, modifier] = timeStr.split(" ");
-  if (!time || !modifier) return 0;
-  let [hours, minutes] = time.split(":");
-  hours = parseInt(hours, 10);
-  minutes = parseInt(minutes, 10);
-  if (hours === 12) {
-    hours = modifier === "AM" ? 0 : 12;
-  } else if (modifier === "PM") {
-    hours += 12;
-  }
-  return hours * 60 + minutes;
-}
-
 function PatientBookAppointment() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* Pre-filled from DoctorProfile navigation state */
   const preState = location.state || {};
 
-  const doctor = doctorsData.find((d) => String(d.id) === String(id)) || doctorsData[0];
-  const isHospital = doctor.type === "hospital";
+  const [doctor, setDoctor] = useState(null);
+  const [doctorLoading, setDoctorLoading] = useState(true);
+  const [doctorError, setDoctorError] = useState("");
 
-  /* ── Form State ─────────────────────────────────────────────── */
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date()
+    .toISOString()
+    .split("T")[0];
 
-  // Helper: Find next date for weekday
-  const getNextDateForDay = (dayName) => {
-    const todayDate = new Date();
-    const targetDayIndex = DAYS_ORDER.indexOf(dayName);
-    const jsTargetDay = targetDayIndex === 6 ? 0 : targetDayIndex + 1; // 0=Sunday, 1=Monday...
-    const currentDay = todayDate.getDay();
-    let daysToAdd = (jsTargetDay - currentDay + 7) % 7;
-    
-    const targetDate = new Date();
-    targetDate.setDate(todayDate.getDate() + daysToAdd);
-    return targetDate.toISOString().split("T")[0];
-  };
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState(
+    preState.slot || ""
+  );
+  const [consultationType, setConsultationType] =
+    useState("in-person");
+  const [appointmentDate, setAppointmentDate] =
+    useState(preState.date || "");
 
-  const initialDay = preState.day || doctor.availableDays[0];
-  const initialDate = preState.date || getNextDateForDay(initialDay);
-
-  const [selectedDay, setSelectedDay] = useState(initialDay);
-  const [selectedSlot, setSelectedSlot] = useState(preState.slot || "");
-  const [consultationType, setConsultationType] = useState("in-person");
-  const [appointmentDate, setAppointmentDate] = useState(initialDate);
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const [errors, setErrors] = useState({});
 
-  // New States
-  const [bookingFor, setBookingFor] = useState("self");
-  const [familyMemberName, setFamilyMemberName] = useState("");
-  const [familyRelation, setFamilyRelation] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("hospital");
-  const [agreePolicy, setAgreePolicy] = useState(false);
+  const [bookingFor, setBookingFor] =
+    useState("self");
+  const [familyMemberName, setFamilyMemberName] =
+    useState("");
+  const [familyRelation, setFamilyRelation] =
+    useState("");
 
-  // File Upload states
-  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [paymentMethod, setPaymentMethod] =
+    useState("hospital");
+  const [agreePolicy, setAgreePolicy] =
+    useState(false);
+
+  const [uploadedFiles, setUploadedFiles] =
+    useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const [previewingReport, setPreviewingReport] = useState(null);
+  const [previewingReport, setPreviewingReport] =
+    useState(null);
+  const [bookingLoading, setBookingLoading] =
+    useState(false);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [loadingBookedSlots, setLoadingBookedSlots] = useState(false);
 
-  // Helper for slots left
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchDoctor = async () => {
+      if (!id) {
+        setDoctorError("Doctor ID is missing.");
+        setDoctorLoading(false);
+        return;
+      }
+
+      try {
+        setDoctorLoading(true);
+        setDoctorError("");
+
+        const token = getToken();
+
+        const response = await fetch(
+          `${API_BASE_URL}/patient/doctors/${id}`,
+          {
+            credentials: "include",
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const data = await response
+          .json()
+          .catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+            data?.error ||
+            "Failed to load doctor information."
+          );
+        }
+
+        const loadedDoctor = normalizeDoctor(data);
+
+        if (!loadedDoctor?.mongoId) {
+          throw new Error(
+            "Doctor information received from database is invalid."
+          );
+        }
+
+        if (cancelled) return;
+
+        setDoctor(loadedDoctor);
+
+        const firstAvailableDay =
+          preState.day ||
+          loadedDoctor.availableDays?.[0] ||
+          "";
+
+        const firstAvailableDate =
+          preState.date ||
+          (firstAvailableDay
+            ? getNextDateForDay(firstAvailableDay)
+            : "");
+
+        setSelectedDay(firstAvailableDay);
+        setAppointmentDate(firstAvailableDate);
+      } catch (error) {
+        if (cancelled) return;
+
+        console.error(
+          "Fetch doctor error:",
+          error
+        );
+
+        setDoctorError(
+          error.message ||
+          "Unable to load doctor information."
+        );
+      } finally {
+        if (!cancelled) {
+          setDoctorLoading(false);
+        }
+      }
+    };
+
+    fetchDoctor();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  // Fetch booked slots for the chosen doctor and date
+  useEffect(() => {
+    let cancelled = false;
+    const fetchBookedSlots = async () => {
+      const doctorId = doctor?.mongoId || doctor?._id || id;
+      if (!doctorId || !appointmentDate) {
+        setBookedSlots([]);
+        return;
+      }
+      try {
+        setLoadingBookedSlots(true);
+        const token = getToken();
+        const response = await fetch(
+          `${API_BASE_URL}/patient/doctors/${doctorId}/booked-slots?date=${appointmentDate}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        const data = await response.json().catch(() => ({}));
+        if (!cancelled && response.ok && data.success && data.data?.bookedSlots) {
+          setBookedSlots(data.data.bookedSlots);
+        } else if (!cancelled) {
+          setBookedSlots([]);
+        }
+      } catch (err) {
+        if (!cancelled) setBookedSlots([]);
+      } finally {
+        if (!cancelled) setLoadingBookedSlots(false);
+      }
+    };
+    fetchBookedSlots();
+    return () => {
+      cancelled = true;
+    };
+  }, [doctor?.mongoId, doctor?._id, id, appointmentDate]);
+
+  if (doctorLoading) {
+    return (
+      <div className="bk-page">
+        <div
+          style={{
+            minHeight: "60vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1rem",
+            fontWeight: "600",
+          }}
+        >
+          Loading doctor information...
+        </div>
+      </div>
+    );
+  }
+
+  if (doctorError || !doctor) {
+    return (
+      <div className="bk-page">
+        <button
+          className="bk-back-btn"
+          onClick={() => navigate(-1)}
+        >
+          <FaArrowLeft />
+          <span>Go Back</span>
+        </button>
+
+        <div
+          style={{
+            minHeight: "50vh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "1rem",
+          }}
+        >
+          <FaTimesCircle
+            style={{
+              fontSize: "3rem",
+              color: "#dc2626",
+            }}
+          />
+
+          <h2>Unable to Load Doctor</h2>
+
+          <p>{doctorError}</p>
+
+          <button
+            className="bk-btn bk-btn--primary"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isHospital =
+    doctor.type === "hospital";
+
+  const availableDays =
+    doctor.availableDays || [];
+
+  // doctor.slots is set by normalizeDoctor from doctor.availableSlots (array of {day,startTime})
+  // Build a per-day slot map from the raw availableSlots
+  const rawAvailableSlots =
+    Array.isArray(doctor.availableSlots) && doctor.availableSlots.length > 0
+      ? doctor.availableSlots
+      : Array.isArray(doctor.slots) && doctor.slots.length > 0
+        ? doctor.slots
+        : [];
+
+  // Determine slots for the currently selected day
+  const slotsForSelectedDay = (() => {
+    if (!selectedDay || !rawAvailableSlots.length) return [];
+
+    const firstItem = rawAvailableSlots[0];
+    // Structured slots: array of { day, startTime, endTime, isAvailable }
+    if (typeof firstItem === "object" && firstItem !== null) {
+      return rawAvailableSlots
+        .filter((s) => s && s.day === selectedDay && s.isAvailable !== false)
+        .map((s) => s.startTime || s.endTime || s.time || "")
+        .filter(Boolean);
+    }
+
+    // Flat string array (legacy): ["09:00 AM", "10:00 AM", ...]
+    if (typeof firstItem === "string") {
+      return rawAvailableSlots.filter(Boolean);
+    }
+
+    return [];
+  })();
+
+  const slots = slotsForSelectedDay;
+
   const getRemainingSlotsCount = () => {
     if (!appointmentDate) return null;
-    const daySeed = new Date(appointmentDate).getDate() || 1;
-    return (daySeed % 4) + 2; // Returns 2, 3, 4 or 5
+    if (!slots.length) return 0;
+    return slots.filter(
+      (slot) => !isSlotDisabled(slot)
+    ).length;
   };
 
   const isSlotDisabled = (slotTime) => {
-    if (appointmentDate === today) {
-      const now = new Date();
-      const currentMinutes = now.getHours() * 60 + now.getMinutes();
-      const slotMinutes = timeToMinutes(slotTime);
-      if (slotMinutes <= currentMinutes) {
-        return true;
-      }
+    if (bookedSlots.includes(slotTime)) {
+      return true;
     }
-    return false;
+
+    if (appointmentDate !== today) {
+      return false;
+    }
+
+    const now = new Date();
+
+    const currentMinutes =
+      now.getHours() * 60 +
+      now.getMinutes();
+
+    const slotMinutes =
+      timeToMinutes(slotTime);
+
+    return slotMinutes <= currentMinutes;
   };
 
   const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+    const files = Array.from(
+      e.target.files || []
+    );
+
+    if (!files.length) return;
+
     setUploadError("");
 
     const validFiles = [];
     let errorMsg = "";
 
-    files.forEach((f) => {
-      const ext = f.name.slice(((f.name.lastIndexOf(".") - 1) >>> 0) + 2).toLowerCase();
+    files.forEach((file) => {
+      const ext = file.name
+        .split(".")
+        .pop()
+        ?.toLowerCase();
+
       const isValidType =
-        f.type === "application/pdf" ||
-        f.type === "image/jpeg" ||
-        f.type === "image/png" ||
-        ["pdf", "jpg", "jpeg", "png"].includes(ext);
+        file.type === "application/pdf" ||
+        file.type === "image/jpeg" ||
+        file.type === "image/png" ||
+        ["pdf", "jpg", "jpeg", "png"].includes(
+          ext
+        );
 
       if (!isValidType) {
-        errorMsg = `Invalid format for "${f.name}". Only PDF, JPEG, or PNG files are supported.`;
+        errorMsg = `Invalid format for "${file.name}". Only PDF, JPEG, or PNG files are supported.`;
         return;
       }
 
-      if (f.size > 10 * 1024 * 1024) {
-        errorMsg = `File "${f.name}" exceeds the 10MB limit.`;
+      if (file.size > 10 * 1024 * 1024) {
+        errorMsg = `File "${file.name}" exceeds the 10MB limit.`;
         return;
       }
 
-      const isPdf = f.type.includes("pdf") || ext === "pdf";
-      const isPng = f.type.includes("png") || ext === "png";
-      const fileTypeBadge = isPdf ? "PDF" : isPng ? "PNG" : "JPEG";
-      const reportType = isPdf ? "pdf" : "image";
+      const isPdf =
+        file.type === "application/pdf" ||
+        ext === "pdf";
+
+      const isPng =
+        file.type === "image/png" ||
+        ext === "png";
+
+      const fileTypeBadge = isPdf
+        ? "PDF"
+        : isPng
+          ? "PNG"
+          : "JPEG";
+
+      const reportType = isPdf
+        ? "pdf"
+        : "image";
+
       const formattedSize =
-        f.size >= 1024 * 1024
-          ? (f.size / (1024 * 1024)).toFixed(2) + " MB"
-          : (f.size / 1024).toFixed(0) + " KB";
+        file.size >= 1024 * 1024
+          ? `${(
+            file.size /
+            (1024 * 1024)
+          ).toFixed(2)} MB`
+          : `${(
+            file.size / 1024
+          ).toFixed(0)} KB`;
 
       validFiles.push({
-        id: `rep_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-        name: f.name,
+        id: `rep_${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2, 8)}`,
+        name: file.name,
         size: formattedSize,
         type: reportType,
         fileTypeBadge,
-        previewUrl: URL.createObjectURL(f),
+        previewUrl:
+          URL.createObjectURL(file),
+        file,
       });
     });
 
     if (errorMsg) {
       setUploadError(errorMsg);
-      setTimeout(() => setUploadError(""), 5000);
+
+      setTimeout(
+        () => setUploadError(""),
+        5000
+      );
     }
 
-    if (validFiles.length > 0) {
+    if (validFiles.length) {
       setUploading(true);
+
       setTimeout(() => {
-        setUploadedFiles((prev) => [...prev, ...validFiles]);
+        setUploadedFiles((prev) => [
+          ...prev,
+          ...validFiles,
+        ]);
+
         setUploading(false);
-      }, 500);
+      }, 300);
     }
 
     e.target.value = "";
@@ -693,142 +1095,358 @@ function PatientBookAppointment() {
   const handleRemoveFile = (index) => {
     setUploadedFiles((prev) => {
       const target = prev[index];
-      if (target && target.previewUrl) {
-        try {
-          URL.revokeObjectURL(target.previewUrl);
-        } catch (err) {}
+
+      if (target?.previewUrl) {
+        URL.revokeObjectURL(
+          target.previewUrl
+        );
       }
-      return prev.filter((_, i) => i !== index);
+
+      return prev.filter(
+        (_, i) => i !== index
+      );
     });
   };
 
-  const handleDateChange = (val) => {
-    setAppointmentDate(val);
-    if (!val) {
-      setErrors((prev) => ({ ...prev, date: "Please select an appointment date." }));
+  const handleDateChange = (value) => {
+    setAppointmentDate(value);
+    setSelectedSlot("");
+
+    if (!value) {
+      setErrors((prev) => ({
+        ...prev,
+        date: "Please select an appointment date.",
+      }));
       return;
     }
 
-    const dateObj = new Date(val);
-    const dayOfWeekIndex = dateObj.getDay();
-    const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const dayName = dayNames[dayOfWeekIndex];
-
-    if (val < today) {
-      setErrors((prev) => ({ ...prev, date: "Past dates are not allowed." }));
-    } else if (!doctor.availableDays.includes(dayName)) {
+    if (value < today) {
       setErrors((prev) => ({
         ...prev,
-        date: `Dr. ${doctor.name} is not available on ${dayName}s. Available days: ${doctor.availableDays.join(", ")}`,
+        date: "Past dates are not allowed.",
       }));
-    } else {
-      setErrors((prev) => ({ ...prev, date: "" }));
-      setSelectedDay(dayName);
+      return;
     }
+
+    const dateObj = new Date(
+      `${value}T00:00:00`
+    );
+
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
+    const dayName =
+      dayNames[dateObj.getDay()];
+
+    if (
+      !availableDays.includes(dayName)
+    ) {
+      setErrors((prev) => ({
+        ...prev,
+        date: `Doctor is not available on ${dayName}s.`,
+      }));
+      return;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      date: "",
+    }));
+
+    setSelectedDay(dayName);
   };
 
-  /* ── Validation ─────────────────────────────────────────────── */
   const validate = () => {
     const errs = {};
+
     if (!appointmentDate) {
-      errs.date = "Please select an appointment date.";
+      errs.date =
+        "Please select an appointment date.";
     } else {
-      const dateObj = new Date(appointmentDate);
-      const dayOfWeekIndex = dateObj.getDay();
-      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-      const dayName = dayNames[dayOfWeekIndex];
+      const dateObj = new Date(
+        `${appointmentDate}T00:00:00`
+      );
+
+      const dayNames = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+
+      const dayName =
+        dayNames[dateObj.getDay()];
+
       if (appointmentDate < today) {
-        errs.date = "Past dates are not allowed.";
-      } else if (!doctor.availableDays.includes(dayName)) {
-        errs.date = `Doctor is not available on ${dayName}s.`;
+        errs.date =
+          "Past dates are not allowed.";
+      } else if (
+        !availableDays.includes(dayName)
+      ) {
+        errs.date =
+          `Doctor is not available on ${dayName}s.`;
       }
     }
-    if (!selectedSlot) errs.slot = "Please choose an available time slot.";
-    if (!reason) errs.reason = "Please select a reason for your visit.";
-    if (bookingFor === "family") {
-      if (!familyMemberName.trim()) errs.familyMemberName = "Please enter the family member's name.";
-      if (!familyRelation) errs.familyRelation = "Please select a relationship.";
+
+    if (!selectedSlot) {
+      errs.slot =
+        "Please choose an available time slot.";
+    } else if (
+      isSlotDisabled(selectedSlot)
+    ) {
+      errs.slot =
+        "This time slot is no longer available.";
     }
-    if (!agreePolicy) errs.agreePolicy = "You must agree to the appointment & cancellation policy.";
+
+    if (!reason) {
+      errs.reason =
+        "Please select a reason for your visit.";
+    }
+
+    if (bookingFor === "family") {
+      if (!familyMemberName.trim()) {
+        errs.familyMemberName =
+          "Please enter the family member's name.";
+      }
+
+      if (!familyRelation) {
+        errs.familyRelation =
+          "Please select a relationship.";
+      }
+    }
+
+    if (!agreePolicy) {
+      errs.agreePolicy =
+        "You must agree to the appointment & cancellation policy.";
+    }
+
     return errs;
   };
 
-  /* ── Submit ─────────────────────────────────────────────────── */
-  const handleConfirm = () => {
-    const errs = validate();
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+  const handleConfirm = async () => {
+    if (bookingLoading) return;
+
+    const validationErrors = validate();
+
+    if (
+      Object.keys(validationErrors).length
+    ) {
+      setErrors(validationErrors);
+
       setTimeout(() => {
-        const firstErrorEl = document.querySelector(".bk-field-error");
-        if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: "smooth", block: "center" });
+        const firstErrorEl =
+          document.querySelector(
+            ".bk-field-error"
+          );
+
+        firstErrorEl?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }, 50);
+
       return;
     }
+
+    const token = getToken();
+
+    if (!token) {
+      toast.error(
+        "Please login before booking an appointment."
+      );
+      return;
+    }
+
+    if (!doctor.mongoId) {
+      toast.error(
+        "Doctor information is missing."
+      );
+      return;
+    }
+
     setErrors({});
+    setBookingLoading(true);
 
-    const formatted = new Date(appointmentDate).toLocaleDateString("en-IN", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+    try {
+      const appointmentType =
+        consultationType === "video"
+          ? "Online Consultation"
+          : "In-Person";
 
-    // Redirect to success page
-    navigate("/patient/booking-success", {
-      state: {
-        booking: {
-          appointmentId: generateAppointmentId(),
-          date: formatted,
-          slot: selectedSlot,
-          consultationType,
-          paymentMethod,
-          bookingFor,
-          familyMemberName,
-          familyRelation,
-          uploadedFiles,
-          reason,
-          notes,
-        },
-        doctor,
-      },
-    });
+      const payload = {
+        doctorId: doctor.mongoId,
+        date: appointmentDate,
+        timeSlot: selectedSlot,
+        type: appointmentType,
+        reason,
+        notes:
+          bookingFor === "family"
+            ? `${notes}${notes ? "\n" : ""
+            }Booking for: ${familyMemberName} (${familyRelation})`
+            : notes,
+        fee: doctor.fee,
+      };
+
+      const response = await fetch(
+        `${API_BASE_URL}/appointments/book`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response
+        .json()
+        .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          (Array.isArray(data?.errors) ? data.errors[0] : null) ||
+          data?.message ||
+          data?.error ||
+          "Failed to book appointment."
+        );
+      }
+
+      const createdAppointment =
+        data?.appointment ||
+        data?.data ||
+        data?.result ||
+        data;
+
+      const formattedDate = new Date(
+        `${appointmentDate}T00:00:00`
+      ).toLocaleDateString("en-IN", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+
+      navigate(
+        "/patient/booking-success",
+        {
+          state: {
+            booking: {
+              appointmentId:
+                createdAppointment?.appointmentId ||
+                createdAppointment?._id,
+
+              date: formattedDate,
+
+              slot:
+                createdAppointment?.timeSlot ||
+                selectedSlot,
+
+              consultationType,
+              paymentMethod,
+              bookingFor,
+              familyMemberName,
+              familyRelation,
+              uploadedFiles,
+              reason,
+              notes,
+
+              status:
+                createdAppointment?.status ||
+                "Pending",
+            },
+
+            doctor,
+          },
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Book appointment error:",
+        error
+      );
+
+      toast.error(
+        error.message ||
+        "Unable to book appointment."
+      );
+
+      setErrors((prev) => ({
+        ...prev,
+        submit:
+          error.message ||
+          "Unable to book appointment.",
+      }));
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   return (
     <div className="bk-page">
-      {/* ── Back Button ─────────────────────────────────────────── */}
       <button
         className="bk-back-btn"
-        onClick={() => navigate(`/patient/doctor-profile/${doctor.id}`)}
-        aria-label="Back to Doctor Profile"
+        onClick={() =>
+          navigate(
+            `/patient/doctor-profile/${doctor.mongoId}`
+          )
+        }
       >
         <FaArrowLeft />
         <span>Back to Doctor Profile</span>
       </button>
 
-      {/* ── Page Title ──────────────────────────────────────────── */}
       <header className="bk-page-header">
         <div>
-          <h1 className="bk-page-title">Book Appointment</h1>
+          <h1 className="bk-page-title">
+            Book Appointment
+          </h1>
+
           <p className="bk-page-subtitle">
-            Fill in the details below to request your appointment.
+            Fill in the details below to request your
+            appointment.
           </p>
         </div>
-        <div className={`bk-booking-type-badge bk-booking-type-badge--${doctor.type}`}>
-          {isHospital ? <FaHospital /> : <FaClinicMedical />}
-          {isHospital ? "Hospital Booking" : "Direct Booking"}
+
+        <div
+          className={`bk-booking-type-badge bk-booking-type-badge--${doctor.type}`}
+        >
+          {isHospital ? (
+            <FaHospital />
+          ) : (
+            <FaClinicMedical />
+          )}
+
+          {isHospital
+            ? "Hospital Booking"
+            : "Direct Booking"}
         </div>
       </header>
 
-      {/* ── Main Grid ───────────────────────────────────────────── */}
       <div className="bk-grid">
-
-        {/* ── LEFT: Booking Form ──────────────────────────── */}
         <div className="bk-col bk-col--form">
+          <div
+            className={`bk-notice bk-notice--${doctor.type}`}
+            role="note"
+          >
+            {isHospital ? (
+              <FaHospital className="bk-notice-icon" />
+            ) : (
+              <FaClinicMedical className="bk-notice-icon" />
+            )}
 
-          {/* Booking Logic Notice */}
-          <div className={`bk-notice bk-notice--${doctor.type}`} role="note">
-            {isHospital ? <FaHospital className="bk-notice-icon" /> : <FaClinicMedical className="bk-notice-icon" />}
             <p className="bk-notice-text">
               {isHospital
                 ? "This appointment request will be sent to the hospital for confirmation."
@@ -836,27 +1454,40 @@ function PatientBookAppointment() {
             </p>
           </div>
 
-          {/* ── Section: Patient Info ────────────────────── */}
-          <section className="bk-form-section" aria-labelledby="bk-patient-heading">
-            <h2 id="bk-patient-heading" className="bk-section-title">
+          <section className="bk-form-section">
+            <h2 className="bk-section-title">
               <FaUser className="bk-section-icon" />
               Patient Information
             </h2>
 
             <div className="bk-field">
-              <label className="bk-label">Booking For</label>
+              <label className="bk-label">
+                Booking For
+              </label>
+
               <div className="bk-booking-for-group">
                 <button
                   type="button"
-                  className={`bk-booking-for-btn ${bookingFor === "self" ? "active" : ""}`}
-                  onClick={() => setBookingFor("self")}
+                  className={`bk-booking-for-btn ${bookingFor === "self"
+                    ? "active"
+                    : ""
+                    }`}
+                  onClick={() =>
+                    setBookingFor("self")
+                  }
                 >
                   Self
                 </button>
+
                 <button
                   type="button"
-                  className={`bk-booking-for-btn ${bookingFor === "family" ? "active" : ""}`}
-                  onClick={() => setBookingFor("family")}
+                  className={`bk-booking-for-btn ${bookingFor === "family"
+                    ? "active"
+                    : ""
+                    }`}
+                  onClick={() =>
+                    setBookingFor("family")
+                  }
                 >
                   Family Member
                 </button>
@@ -866,78 +1497,151 @@ function PatientBookAppointment() {
             {bookingFor === "self" ? (
               <div className="bk-form-grid bk-form-grid--2">
                 <div className="bk-field">
-                  <label className="bk-label" htmlFor="bk-patient-name">
+                  <label className="bk-label">
                     Patient Name
                   </label>
-                  <div className="bk-readonly-field" id="bk-patient-name" aria-readonly="true">
+
+                  <div className="bk-readonly-field">
                     <FaUser className="bk-field-prefix-icon" />
-                    <span>John Doe</span>
-                    <span className="bk-readonly-badge">Auto-filled</span>
+
+                    <span>
+                      {getPatientName()}
+                    </span>
+
+                    <span className="bk-readonly-badge">
+                      Auto-filled
+                    </span>
                   </div>
                 </div>
+
                 <div className="bk-field">
-                  <label className="bk-label" htmlFor="bk-patient-id">
+                  <label className="bk-label">
                     Patient ID
                   </label>
-                  <div className="bk-readonly-field" id="bk-patient-id" aria-readonly="true">
+
+                  <div className="bk-readonly-field">
                     <FaIdCard className="bk-field-prefix-icon" />
-                    <span>#PT-20041</span>
-                    <span className="bk-readonly-badge">Auto-filled</span>
+
+                    <span>
+                      {getPatientId()
+                        ? `#${getPatientId()}`
+                        : "Auto-filled"}
+                    </span>
+
+                    <span className="bk-readonly-badge">
+                      Auto-filled
+                    </span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bk-form-grid bk-form-grid--2 bk-fade-in">
+              <div className="bk-form-grid bk-form-grid--2">
                 <div className="bk-field">
-                  <label className="bk-label" htmlFor="bk-family-name">
-                    Family Member Name <span className="bk-required">*</span>
+                  <label className="bk-label">
+                    Family Member Name{" "}
+                    <span className="bk-required">
+                      *
+                    </span>
                   </label>
-                  <div className={`bk-input-wrapper ${errors.familyMemberName ? "bk-input--error" : ""}`}>
+
+                  <div
+                    className={`bk-input-wrapper ${errors.familyMemberName
+                      ? "bk-input--error"
+                      : ""
+                      }`}
+                  >
                     <FaUser className="bk-input-icon" />
+
                     <input
                       type="text"
-                      id="bk-family-name"
                       className="bk-input"
                       placeholder="Enter full name"
-                      value={familyMemberName}
+                      value={
+                        familyMemberName
+                      }
                       onChange={(e) => {
-                        setFamilyMemberName(e.target.value);
-                        if (errors.familyMemberName) setErrors((prev) => ({ ...prev, familyMemberName: "" }));
+                        setFamilyMemberName(
+                          e.target.value
+                        );
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          familyMemberName:
+                            "",
+                        }));
                       }}
                     />
                   </div>
+
                   {errors.familyMemberName && (
-                    <p className="bk-field-error" role="alert">
-                      <FaTimesCircle /> {errors.familyMemberName}
+                    <p className="bk-field-error">
+                      <FaTimesCircle />
+                      {errors.familyMemberName}
                     </p>
                   )}
                 </div>
+
                 <div className="bk-field">
-                  <label className="bk-label" htmlFor="bk-family-relation">
-                    Relationship <span className="bk-required">*</span>
+                  <label className="bk-label">
+                    Relationship{" "}
+                    <span className="bk-required">
+                      *
+                    </span>
                   </label>
-                  <div className={`bk-input-wrapper ${errors.familyRelation ? "bk-input--error" : ""}`}>
+
+                  <div
+                    className={`bk-input-wrapper ${errors.familyRelation
+                      ? "bk-input--error"
+                      : ""
+                      }`}
+                  >
                     <FaUser className="bk-input-icon" />
+
                     <select
-                      id="bk-family-relation"
                       className="bk-select"
                       value={familyRelation}
                       onChange={(e) => {
-                        setFamilyRelation(e.target.value);
-                        if (errors.familyRelation) setErrors((prev) => ({ ...prev, familyRelation: "" }));
+                        setFamilyRelation(
+                          e.target.value
+                        );
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          familyRelation:
+                            "",
+                        }));
                       }}
                     >
-                      <option value="">Select Relationship...</option>
-                      <option value="Spouse">Spouse</option>
-                      <option value="Child">Child</option>
-                      <option value="Parent">Parent</option>
-                      <option value="Sibling">Sibling</option>
-                      <option value="Other">Other</option>
+                      <option value="">
+                        Select Relationship...
+                      </option>
+
+                      <option value="Spouse">
+                        Spouse
+                      </option>
+
+                      <option value="Child">
+                        Child
+                      </option>
+
+                      <option value="Parent">
+                        Parent
+                      </option>
+
+                      <option value="Sibling">
+                        Sibling
+                      </option>
+
+                      <option value="Other">
+                        Other
+                      </option>
                     </select>
                   </div>
+
                   {errors.familyRelation && (
-                    <p className="bk-field-error" role="alert">
-                      <FaTimesCircle /> {errors.familyRelation}
+                    <p className="bk-field-error">
+                      <FaTimesCircle />
+                      {errors.familyRelation}
                     </p>
                   )}
                 </div>
@@ -945,162 +1649,292 @@ function PatientBookAppointment() {
             )}
           </section>
 
-          {/* ── Section: Date & Time ─────────────────────── */}
-          <section className="bk-form-section" aria-labelledby="bk-datetime-heading">
-            <h2 id="bk-datetime-heading" className="bk-section-title">
+          <section className="bk-form-section">
+            <h2 className="bk-section-title">
               <FaCalendarCheck className="bk-section-icon" />
               Date &amp; Time
             </h2>
 
-            {/* Date Picker */}
             <div className="bk-field">
-              <label className="bk-label" htmlFor="bk-date">
-                Appointment Date <span className="bk-required">*</span>
+              <label className="bk-label">
+                Appointment Date{" "}
+                <span className="bk-required">
+                  *
+                </span>
               </label>
-              <div className={`bk-input-wrapper ${errors.date ? "bk-input--error" : ""}`}>
+
+              <div
+                className={`bk-input-wrapper ${errors.date
+                  ? "bk-input--error"
+                  : ""
+                  }`}
+              >
                 <FaCalendarCheck className="bk-input-icon" />
+
                 <input
-                  id="bk-date"
                   type="date"
                   className="bk-input"
                   min={today}
                   value={appointmentDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  aria-describedby={errors.date ? "bk-date-error" : undefined}
-                  aria-invalid={!!errors.date}
+                  onChange={(e) =>
+                    handleDateChange(
+                      e.target.value
+                    )
+                  }
                 />
               </div>
+
               {errors.date && (
-                <p id="bk-date-error" className="bk-field-error" role="alert">
-                  <FaTimesCircle /> {errors.date}
+                <p className="bk-field-error">
+                  <FaTimesCircle />
+                  {errors.date}
                 </p>
               )}
             </div>
 
-            {/* Available Days */}
             <div className="bk-field">
-              <label className="bk-label">Available Days</label>
-              <div className="bk-day-chips" role="group" aria-label="Select day">
-                {DAYS_ORDER.filter((d) => doctor.availableDays.includes(d)).map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    className={`bk-day-chip ${selectedDay === day ? "bk-day-chip--active" : ""}`}
-                    onClick={() => {
-                      setSelectedDay(day);
-                      setSelectedSlot("");
-                      const nextDate = getNextDateForDay(day);
-                      setAppointmentDate(nextDate);
-                      setErrors((prev) => ({ ...prev, date: "" }));
-                    }}
-                    aria-pressed={selectedDay === day}
-                  >
-                    {day.slice(0, 3)}
-                  </button>
-                ))}
+              <label className="bk-label">
+                Available Days
+              </label>
+
+              <div className="bk-day-chips">
+                {DAYS_ORDER.filter((day) =>
+                  availableDays.includes(day)
+                ).length === 0 ? (
+                  <p style={{ color: "#ef4444", fontSize: "0.87rem", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <FaTimesCircle style={{ flexShrink: 0 }} />
+                    This doctor has not configured any available days yet.
+                  </p>
+                ) : (
+                  DAYS_ORDER.filter((day) =>
+                    availableDays.includes(day)
+                  ).map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      className={`bk-day-chip ${selectedDay === day
+                        ? "bk-day-chip--active"
+                        : ""
+                        }`}
+                      onClick={() => {
+                        setSelectedDay(day);
+                        setSelectedSlot("");
+
+                        const nextDate =
+                          getNextDateForDay(
+                            day
+                          );
+
+                        setAppointmentDate(
+                          nextDate
+                        );
+
+                        setErrors((prev) => ({
+                          ...prev,
+                          date: "",
+                          slot: "",
+                        }));
+                      }}
+                    >
+                      {day.slice(0, 3)}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 
-            {/* Time Slots */}
             <div className="bk-field">
-              <label className="bk-label" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.5rem" }}>
-                <span>
-                  Time Slot — {selectedDay} <span className="bk-required">*</span>
-                </span>
-                {appointmentDate && !errors.date && (
-                  <span className="bk-slots-remaining" style={{ color: "#16a34a", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.8rem" }}>
-                    🟢 {getRemainingSlotsCount()} slots left {appointmentDate === today ? "today" : "for this day"}
-                  </span>
-                )}
-              </label>
-              <div
-                className={`bk-slot-grid ${errors.slot ? "bk-slot-grid--error" : ""}`}
-                role="group"
-                aria-label="Select time slot"
-                aria-describedby={errors.slot ? "bk-slot-error" : undefined}
+              <label
+                className="bk-label"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent:
+                    "space-between",
+                  gap: "0.5rem",
+                }}
               >
-                {doctor.slots.map((slot) => {
-                  const disabled = isSlotDisabled(slot);
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      className={`bk-slot-btn ${selectedSlot === slot ? "bk-slot-btn--active" : ""} ${disabled ? "bk-slot-btn--disabled" : ""}`}
-                      onClick={() => {
-                        if (disabled) return;
-                        setSelectedSlot(slot);
-                        if (errors.slot) setErrors((prev) => ({ ...prev, slot: "" }));
-                      }}
-                      disabled={disabled}
-                      aria-pressed={selectedSlot === slot}
-                    >
-                      <FaClock className="bk-slot-icon" />
-                      {disabled ? <del>{slot}</del> : slot}
-                      {disabled && <span title="Slot unavailable"> 🔒</span>}
-                    </button>
-                  );
-                })}
+                <span>
+                  Time Slot — {selectedDay}{" "}
+                  <span className="bk-required">
+                    *
+                  </span>
+                </span>
+
+                {appointmentDate &&
+                  !errors.date && (
+                    <span className="bk-slots-remaining">
+                      🟢{" "}
+                      {getRemainingSlotsCount()}{" "}
+                      slots left
+                    </span>
+                  )}
+              </label>
+
+              <div
+                className={`bk-slot-grid ${errors.slot
+                  ? "bk-slot-grid--error"
+                  : ""
+                  }`}
+              >
+                {!selectedDay ? (
+                  <p style={{ color: "#94a3b8", fontSize: "0.88rem", fontStyle: "italic" }}>
+                    Select an available day above to see time slots.
+                  </p>
+                ) : slots.length === 0 ? (
+                  <p style={{
+                    color: "#ef4444",
+                    fontSize: "0.88rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                  }}>
+                    <FaTimesCircle style={{ flexShrink: 0 }} />
+                    No time slots have been configured for {selectedDay}s. Please select a different day or contact the doctor.
+                  </p>
+                ) : (
+                  slots.map((slot) => {
+                    const disabled =
+                      isSlotDisabled(slot);
+
+                    return (
+                      <button
+                        key={slot}
+                        type="button"
+                        className={`bk-slot-btn ${selectedSlot === slot
+                          ? "bk-slot-btn--active"
+                          : ""
+                          } ${disabled
+                            ? "bk-slot-btn--disabled"
+                            : ""
+                          }`}
+                        onClick={() => {
+                          if (disabled) return;
+
+                          setSelectedSlot(
+                            slot
+                          );
+
+                          setErrors((prev) => ({
+                            ...prev,
+                            slot: "",
+                          }));
+                        }}
+                        disabled={disabled}
+                        title={bookedSlots.includes(slot) ? "This time slot is already booked" : disabled ? "This time slot has passed" : "Click to select slot"}
+                      >
+                        <FaClock className="bk-slot-icon" />
+
+                        {disabled ? (
+                          <del>{slot}</del>
+                        ) : (
+                          slot
+                        )}
+
+                        {disabled && (
+                          <span>{bookedSlots.includes(slot) ? "🔒 Booked" : "🔒"}</span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
               </div>
+
               {errors.slot && (
-                <p id="bk-slot-error" className="bk-field-error" role="alert">
-                  <FaTimesCircle /> {errors.slot}
+                <p className="bk-field-error">
+                  <FaTimesCircle />
+                  {errors.slot}
                 </p>
               )}
             </div>
           </section>
 
-          {/* ── Section: Consultation Type ───────────────── */}
-          <section className="bk-form-section" aria-labelledby="bk-type-heading">
-            <h2 id="bk-type-heading" className="bk-section-title">
+          <section className="bk-form-section">
+            <h2 className="bk-section-title">
               <FaVideo className="bk-section-icon" />
               Consultation Type
             </h2>
-            <div className="bk-consult-options" role="radiogroup" aria-label="Choose consultation type">
+
+            <div className="bk-consult-options">
               <label
-                className={`bk-consult-card ${consultationType === "in-person" ? "bk-consult-card--active" : ""}`}
-                htmlFor="bk-type-inperson"
+                className={`bk-consult-card ${consultationType ===
+                  "in-person"
+                  ? "bk-consult-card--active"
+                  : ""
+                  }`}
               >
                 <input
                   type="radio"
-                  id="bk-type-inperson"
                   name="consultationType"
-                  value="in-person"
                   className="bk-radio-hidden"
-                  checked={consultationType === "in-person"}
-                  onChange={() => setConsultationType("in-person")}
+                  checked={
+                    consultationType ===
+                    "in-person"
+                  }
+                  onChange={() =>
+                    setConsultationType(
+                      "in-person"
+                    )
+                  }
                 />
+
                 <div className="bk-consult-icon bk-consult-icon--visit">
                   <FaHospital />
                 </div>
+
                 <div className="bk-consult-info">
-                  <p className="bk-consult-title">In-Person Visit</p>
-                  <p className="bk-consult-desc">Visit the doctor at the clinic / hospital (⏱ 20–30 mins)</p>
+                  <p className="bk-consult-title">
+                    In-Person Visit
+                  </p>
+
+                  <p className="bk-consult-desc">
+                    Visit the doctor at the
+                    clinic / hospital
+                  </p>
                 </div>
+
                 <div className="bk-consult-check">
                   <FaCheckCircle />
                 </div>
               </label>
 
               <label
-                className={`bk-consult-card ${consultationType === "video" ? "bk-consult-card--active" : ""}`}
-                htmlFor="bk-type-video"
+                className={`bk-consult-card ${consultationType ===
+                  "video"
+                  ? "bk-consult-card--active"
+                  : ""
+                  }`}
               >
                 <input
                   type="radio"
-                  id="bk-type-video"
                   name="consultationType"
-                  value="video"
                   className="bk-radio-hidden"
-                  checked={consultationType === "video"}
-                  onChange={() => setConsultationType("video")}
+                  checked={
+                    consultationType ===
+                    "video"
+                  }
+                  onChange={() =>
+                    setConsultationType(
+                      "video"
+                    )
+                  }
                 />
+
                 <div className="bk-consult-icon bk-consult-icon--video">
                   <FaVideo />
                 </div>
+
                 <div className="bk-consult-info">
-                  <p className="bk-consult-title">Video Consultation</p>
-                  <p className="bk-consult-desc">Consult online via video call from home (⏱ 20–30 mins)</p>
+                  <p className="bk-consult-title">
+                    Video Consultation
+                  </p>
+
+                  <p className="bk-consult-desc">
+                    Consult online via video
+                    call from home
+                  </p>
                 </div>
+
                 <div className="bk-consult-check">
                   <FaCheckCircle />
                 </div>
@@ -1108,58 +1942,90 @@ function PatientBookAppointment() {
             </div>
           </section>
 
-          {/* ── Section: Payment Option ─────────────────── */}
-          <section className="bk-form-section" aria-labelledby="bk-payment-heading">
-            <h2 id="bk-payment-heading" className="bk-section-title">
+          <section className="bk-form-section">
+            <h2 className="bk-section-title">
               <FaMoneyBillWave className="bk-section-icon" />
               Payment Option
             </h2>
-            <div className="bk-payment-options" role="radiogroup" aria-label="Choose payment option">
+
+            <div className="bk-payment-options">
               <label
-                className={`bk-payment-card ${paymentMethod === "hospital" ? "bk-payment-card--active" : ""}`}
-                htmlFor="bk-pay-hospital"
+                className={`bk-payment-card ${paymentMethod ===
+                  "hospital"
+                  ? "bk-payment-card--active"
+                  : ""
+                  }`}
               >
                 <input
                   type="radio"
-                  id="bk-pay-hospital"
                   name="paymentMethod"
-                  value="hospital"
                   className="bk-radio-hidden"
-                  checked={paymentMethod === "hospital"}
-                  onChange={() => setPaymentMethod("hospital")}
+                  checked={
+                    paymentMethod ===
+                    "hospital"
+                  }
+                  onChange={() =>
+                    setPaymentMethod(
+                      "hospital"
+                    )
+                  }
                 />
+
                 <div className="bk-payment-icon bk-payment-icon--hospital">
                   <FaHospital />
                 </div>
+
                 <div className="bk-payment-info">
-                  <p className="bk-payment-title">Pay at Hospital</p>
-                  <p className="bk-payment-desc">Pay at reception desk during your visit</p>
+                  <p className="bk-payment-title">
+                    Pay at Hospital
+                  </p>
+
+                  <p className="bk-payment-desc">
+                    Pay at reception during
+                    your visit
+                  </p>
                 </div>
+
                 <div className="bk-payment-check">
                   <FaCheckCircle />
                 </div>
               </label>
 
               <label
-                className={`bk-payment-card ${paymentMethod === "online" ? "bk-payment-card--active" : ""}`}
-                htmlFor="bk-pay-online"
+                className={`bk-payment-card ${paymentMethod === "online"
+                  ? "bk-payment-card--active"
+                  : ""
+                  }`}
               >
                 <input
                   type="radio"
-                  id="bk-pay-online"
                   name="paymentMethod"
-                  value="online"
                   className="bk-radio-hidden"
-                  checked={paymentMethod === "online"}
-                  onChange={() => setPaymentMethod("online")}
+                  checked={
+                    paymentMethod === "online"
+                  }
+                  onChange={() =>
+                    setPaymentMethod(
+                      "online"
+                    )
+                  }
                 />
+
                 <div className="bk-payment-icon bk-payment-icon--online">
                   <FaMoneyBillWave />
                 </div>
+
                 <div className="bk-payment-info">
-                  <p className="bk-payment-title">Pay Online</p>
-                  <p className="bk-payment-desc">Pay securely online using card/UPI</p>
+                  <p className="bk-payment-title">
+                    Pay Online
+                  </p>
+
+                  <p className="bk-payment-desc">
+                    Pay securely using
+                    card/UPI
+                  </p>
                 </div>
+
                 <div className="bk-payment-check">
                   <FaCheckCircle />
                 </div>
@@ -1167,155 +2033,243 @@ function PatientBookAppointment() {
             </div>
           </section>
 
-          {/* ── Section: Visit Details ───────────────────── */}
-          <section className="bk-form-section" aria-labelledby="bk-visit-heading">
-            <h2 id="bk-visit-heading" className="bk-section-title">
+          <section className="bk-form-section">
+            <h2 className="bk-section-title">
               <FaFileAlt className="bk-section-icon" />
               Visit Details
             </h2>
 
-            {/* Reason for Visit */}
             <div className="bk-field">
-              <label className="bk-label" htmlFor="bk-reason">
-                Reason for Visit <span className="bk-required">*</span>
+              <label className="bk-label">
+                Reason for Visit{" "}
+                <span className="bk-required">
+                  *
+                </span>
               </label>
-              <div className={`bk-input-wrapper ${errors.reason ? "bk-input--error" : ""}`}>
+
+              <div
+                className={`bk-input-wrapper ${errors.reason
+                  ? "bk-input--error"
+                  : ""
+                  }`}
+              >
                 <FaFileAlt className="bk-input-icon" />
+
                 <select
-                  id="bk-reason"
                   className="bk-select"
                   value={reason}
                   onChange={(e) => {
-                    setReason(e.target.value);
-                    if (errors.reason) setErrors((prev) => ({ ...prev, reason: "" }));
+                    setReason(
+                      e.target.value
+                    );
+
+                    setErrors((prev) => ({
+                      ...prev,
+                      reason: "",
+                    }));
                   }}
-                  aria-describedby={errors.reason ? "bk-reason-error" : undefined}
-                  aria-invalid={!!errors.reason}
                 >
-                  <option value="">Select reason…</option>
-                  {REASON_OPTIONS.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
+                  <option value="">
+                    Select reason…
+                  </option>
+
+                  {REASON_OPTIONS.map(
+                    (item) => (
+                      <option
+                        key={item}
+                        value={item}
+                      >
+                        {item}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
+
               {errors.reason && (
-                <p id="bk-reason-error" className="bk-field-error" role="alert">
-                  <FaTimesCircle /> {errors.reason}
+                <p className="bk-field-error">
+                  <FaTimesCircle />
+                  {errors.reason}
                 </p>
               )}
             </div>
 
-            {/* Additional Notes */}
             <div className="bk-field">
-              <label className="bk-label" htmlFor="bk-notes">
+              <label className="bk-label">
                 Additional Notes{" "}
-                <span className="bk-optional">(optional)</span>
+                <span className="bk-optional">
+                  (optional)
+                </span>
               </label>
+
               <div className="bk-textarea-wrapper">
                 <FaStickyNote className="bk-textarea-icon" />
+
                 <textarea
-                  id="bk-notes"
                   className="bk-textarea"
-                  placeholder="Describe your symptoms, share previous reports, or add any special instructions for the doctor…"
+                  placeholder="Describe your symptoms or add any special instructions..."
                   rows={4}
                   maxLength={500}
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={(e) =>
+                    setNotes(
+                      e.target.value
+                    )
+                  }
                 />
               </div>
-              <p className="bk-char-count">{notes.length}/500 characters</p>
+
+              <p className="bk-char-count">
+                {notes.length}/500 characters
+              </p>
             </div>
 
-            {/* Upload Previous Reports */}
-            <div className="bk-field" style={{ marginTop: "0.5rem" }}>
-              <label className="bk-label">📄 Upload Previous Reports <span className="bk-optional">(optional)</span></label>
+            <div className="bk-field">
+              <label className="bk-label">
+                📄 Upload Previous Reports{" "}
+                <span className="bk-optional">
+                  (optional)
+                </span>
+              </label>
+
               <div className="bk-upload-container">
-                <label htmlFor="bk-file-upload" className="bk-upload-dropzone">
+                <label
+                  htmlFor="bk-file-upload"
+                  className="bk-upload-dropzone"
+                >
                   <FaFileAlt className="bk-upload-icon" />
-                  <span>Click to upload or drag medical reports here</span>
-                  <span className="bk-upload-subtext">PDF, JPEG, or PNG up to 10MB</span>
+
+                  <span>
+                    Click to upload or drag medical
+                    reports here
+                  </span>
+
+                  <span className="bk-upload-subtext">
+                    PDF, JPEG, or PNG up to 10MB
+                  </span>
+
                   <input
                     type="file"
                     id="bk-file-upload"
                     className="bk-file-input"
                     multiple
                     accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                    onChange={handleFileUpload}
+                    onChange={
+                      handleFileUpload
+                    }
                     disabled={uploading}
                   />
                 </label>
 
                 {uploadError && (
-                  <div className="bk-upload-error-banner" role="alert">
-                    <FaTimesCircle /> {uploadError}
+                  <div className="bk-upload-error-banner">
+                    <FaTimesCircle />
+                    {uploadError}
                   </div>
                 )}
 
                 {uploading && (
                   <div className="bk-upload-progress">
                     <div className="bk-upload-spinner" />
-                    <span>Processing file(s)...</span>
+                    <span>
+                      Processing file(s)...
+                    </span>
                   </div>
                 )}
 
                 {uploadedFiles.length > 0 && (
                   <div className="bk-uploaded-cards-wrap">
                     <h4 className="bk-uploaded-title">
-                      Uploaded Medical Reports ({uploadedFiles.length})
+                      Uploaded Medical Reports (
+                      {uploadedFiles.length})
                     </h4>
-                    <ul className="bk-uploaded-card-list">
-                      {uploadedFiles.map((file, index) => (
-                        <li key={file.id || index} className="bk-uploaded-card">
-                          <div className={`bk-report-type-badge bk-report-type-badge--${file.type}`}>
-                            {file.type === "pdf" ? <FaFilePdf /> : <FaFileImage />}
-                          </div>
 
-                          <div className="bk-report-card-info">
-                            <div className="bk-report-card-header">
-                              <span className="bk-report-card-name" title={file.name}>
-                                {file.name}
-                              </span>
-                              <span className={`bk-file-badge bk-file-badge--${file.type}`}>
-                                {file.fileTypeBadge || (file.type === "pdf" ? "PDF" : "IMAGE")}
+                    <ul className="bk-uploaded-card-list">
+                      {uploadedFiles.map(
+                        (file, index) => (
+                          <li
+                            key={
+                              file.id ||
+                              index
+                            }
+                            className="bk-uploaded-card"
+                          >
+                            <div
+                              className={`bk-report-type-badge bk-report-type-badge--${file.type}`}
+                            >
+                              {file.type ===
+                                "pdf" ? (
+                                <FaFilePdf />
+                              ) : (
+                                <FaFileImage />
+                              )}
+                            </div>
+
+                            <div className="bk-report-card-info">
+                              <div className="bk-report-card-header">
+                                <span className="bk-report-card-name">
+                                  {file.name}
+                                </span>
+
+                                <span
+                                  className={`bk-file-badge bk-file-badge--${file.type}`}
+                                >
+                                  {
+                                    file.fileTypeBadge
+                                  }
+                                </span>
+                              </div>
+
+                              <span className="bk-report-card-size">
+                                {file.size}
                               </span>
                             </div>
-                            <span className="bk-report-card-size">{file.size}</span>
-                          </div>
 
-                          <div className="bk-report-card-actions">
-                            <button
-                              type="button"
-                              className="bk-report-btn bk-report-btn--view"
-                              onClick={() => setPreviewingReport(file)}
-                              title="View / Preview Report"
-                            >
-                              <FaEye />
-                              <span>Preview</span>
-                            </button>
-
-                            {file.previewUrl && (
-                              <a
-                                href={file.previewUrl}
-                                download={file.name}
-                                className="bk-report-btn bk-report-btn--download"
-                                title="Download Report File"
+                            <div className="bk-report-card-actions">
+                              <button
+                                type="button"
+                                className="bk-report-btn bk-report-btn--view"
+                                onClick={() =>
+                                  setPreviewingReport(
+                                    file
+                                  )
+                                }
                               >
-                                <FaDownload />
-                              </a>
-                            )}
+                                <FaEye />
+                                <span>
+                                  Preview
+                                </span>
+                              </button>
 
-                            <button
-                              type="button"
-                              className="bk-report-btn bk-report-btn--remove"
-                              onClick={() => handleRemoveFile(index)}
-                              title="Remove Report"
-                              aria-label={`Remove ${file.name}`}
-                            >
-                              <FaTrashAlt />
-                            </button>
-                          </div>
-                        </li>
-                      ))}
+                              {file.previewUrl && (
+                                <a
+                                  href={
+                                    file.previewUrl
+                                  }
+                                  download={
+                                    file.name
+                                  }
+                                  className="bk-report-btn bk-report-btn--download"
+                                >
+                                  <FaDownload />
+                                </a>
+                              )}
+
+                              <button
+                                type="button"
+                                className="bk-report-btn bk-report-btn--remove"
+                                onClick={() =>
+                                  handleRemoveFile(
+                                    index
+                                  )
+                                }
+                              >
+                                <FaTrashAlt />
+                              </button>
+                            </div>
+                          </li>
+                        )
+                      )}
                     </ul>
                   </div>
                 )}
@@ -1323,185 +2277,295 @@ function PatientBookAppointment() {
             </div>
           </section>
 
-          {/* Policy Checkbox */}
-          <div className="bk-field bk-policy-wrapper" style={{ marginTop: "0.5rem" }}>
-            <label className="bk-checkbox-label" style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", cursor: "pointer" }}>
+          <div
+            className="bk-field bk-policy-wrapper"
+            style={{
+              marginTop: "0.5rem",
+            }}
+          >
+            <label
+              className="bk-checkbox-label"
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.5rem",
+                cursor: "pointer",
+              }}
+            >
               <input
                 type="checkbox"
                 className="bk-checkbox"
-                style={{ marginTop: "0.2rem" }}
                 checked={agreePolicy}
                 onChange={(e) => {
-                  setAgreePolicy(e.target.checked);
-                  if (errors.agreePolicy) setErrors((prev) => ({ ...prev, agreePolicy: "" }));
+                  setAgreePolicy(
+                    e.target.checked
+                  );
+
+                  setErrors((prev) => ({
+                    ...prev,
+                    agreePolicy: "",
+                  }));
                 }}
               />
-              <span className="bk-checkbox-text" style={{ fontSize: "0.85rem", color: "var(--text-secondary)", lineHeight: "1.4" }}>
+
+              <span className="bk-checkbox-text">
                 I agree to the{" "}
                 <a
                   href="#policy"
                   onClick={(e) => {
                     e.preventDefault();
-                    alert(
-                      "Appointment & Cancellation Policy:\n\n1. Cancellations or rescheduling requests can be made up to 24 hours prior to the appointment time.\n2. In case of Pay Online, refunds will be credited to the original payment method within 5-7 working days.\n3. Late arrivals (more than 15 minutes) may result in automatic cancellation of the slot."
+
+                    toast.info(
+                      "Appointment & Cancellation Policy: Cancellations or rescheduling should be done according to the hospital/doctor policy."
                     );
                   }}
-                  style={{ color: "var(--primary-color)", fontWeight: "600", textDecoration: "underline" }}
+                  style={{
+                    color:
+                      "var(--primary-color)",
+                    fontWeight: "600",
+                    textDecoration:
+                      "underline",
+                  }}
                 >
-                  appointment &amp; cancellation policy
+                  appointment &amp;
+                  cancellation policy
                 </a>
-                <span className="bk-required">*</span>
+
+                <span className="bk-required">
+                  *
+                </span>
               </span>
             </label>
+
             {errors.agreePolicy && (
-              <p className="bk-field-error" role="alert" style={{ marginTop: "0.25rem" }}>
-                <FaTimesCircle /> {errors.agreePolicy}
+              <p className="bk-field-error">
+                <FaTimesCircle />
+                {errors.agreePolicy}
+              </p>
+            )}
+
+            {errors.submit && (
+              <p className="bk-field-error">
+                <FaTimesCircle />
+                {errors.submit}
               </p>
             )}
           </div>
 
-          {/* ── Action Buttons ───────────────────────────── */}
-          <div className="bk-form-actions" style={{ marginTop: "1rem" }}>
+          <div
+            className="bk-form-actions"
+            style={{
+              marginTop: "1rem",
+            }}
+          >
             <button
               type="button"
               className="bk-btn bk-btn--cancel"
-              onClick={() => navigate(`/patient/doctor-profile/${doctor.id}`)}
-              aria-label="Cancel and go back"
+              onClick={() =>
+                navigate(
+                  `/patient/doctor-profile/${doctor.mongoId}`
+                )
+              }
+              disabled={bookingLoading}
             >
               <FaTimesCircle />
               Cancel
             </button>
+
             <button
               type="button"
               className="bk-btn bk-btn--primary"
               onClick={handleConfirm}
-              aria-label="Confirm appointment"
+              disabled={bookingLoading}
             >
               <FaCalendarCheck />
-              Confirm Appointment
+
+              {bookingLoading
+                ? "Booking..."
+                : "Confirm Appointment"}
             </button>
           </div>
         </div>
 
-        {/* ── RIGHT: Appointment Summary ──────────────── */}
-        <aside className="bk-col bk-col--summary" aria-label="Appointment summary">
-
-          {/* Doctor Card */}
+        <aside
+          className="bk-col bk-col--summary"
+          aria-label="Appointment summary"
+        >
           <div className="bk-summary-card">
-            <h3 className="bk-summary-heading">Appointment Summary</h3>
+            <h3 className="bk-summary-heading">
+              Appointment Summary
+            </h3>
 
-            {/* Doctor info */}
             <div className="bk-summary-doctor">
               <div
                 className="bk-summary-avatar"
-                style={{ background: `linear-gradient(135deg, ${doctor.color}cc, ${doctor.color}66)` }}
-                aria-label={`Photo of ${doctor.name}`}
+                style={{
+                  background: `linear-gradient(135deg, ${doctor.color}cc, ${doctor.color}66)`,
+                }}
               >
-                <span className="bk-summary-initials">{doctor.initials}</span>
+                <span className="bk-summary-initials">
+                  {doctor.initials}
+                </span>
               </div>
+
               <div className="bk-summary-doc-info">
-                <p className="bk-summary-doc-name">{doctor.name}</p>
+                <p className="bk-summary-doc-name">
+                  {doctor.name}
+                </p>
+
                 <p className="bk-summary-doc-spec">
                   <FaStethoscope className="bk-si" />
                   {doctor.specialization}
                 </p>
+
                 <div className="bk-summary-rating">
                   <FaStar className="bk-star" />
-                  <span>{doctor.rating}</span>
-                  <span className="bk-rev">({doctor.reviews})</span>
+                  <span>
+                    {doctor.rating}
+                  </span>
+
+                  <span className="bk-rev">
+                    ({doctor.reviews})
+                  </span>
                 </div>
               </div>
             </div>
 
             <hr className="bk-divider" />
 
-            {/* Summary rows */}
             <dl className="bk-summary-rows">
               <div className="bk-summary-row">
                 <dt>
+                  {isHospital ? (
+                    <FaHospital className="bk-si bk-si--hospital" />
+                  ) : (
+                    <FaClinicMedical className="bk-si bk-si--clinic" />
+                  )}
+
                   {isHospital
-                    ? <FaHospital className="bk-si bk-si--hospital" />
-                    : <FaClinicMedical className="bk-si bk-si--clinic" />
-                  }
-                  {isHospital ? "Hospital" : "Clinic"}
+                    ? "Hospital"
+                    : "Clinic"}
                 </dt>
-                <dd>{doctor.hospital}</dd>
-              </div>
-              <div className="bk-summary-row">
-                <dt><FaMapMarkerAlt className="bk-si bk-si--loc" /> Location</dt>
-                <dd>{doctor.city}</dd>
-              </div>
-              <div className="bk-summary-row">
-                <dt><FaMoneyBillWave className="bk-si bk-si--fee" /> Consult Fee</dt>
-                <dd className="bk-fee-val">₹{doctor.fee}</dd>
-              </div>
-              <div className="bk-summary-row">
-                <dt>
-                  {consultationType === "video"
-                    ? <FaVideo className="bk-si bk-si--video" />
-                    : <FaUserMd className="bk-si bk-si--person" />
-                  }
-                  Type
-                </dt>
-                <dd>{consultationType === "video" ? "Video Call" : "In-Person"}</dd>
-              </div>
-              <div className="bk-summary-row">
-                <dt><FaClock className="bk-si" /> Est. Duration</dt>
-                <dd>⏱ 20–30 mins</dd>
-              </div>
-              <div className="bk-summary-row">
-                <dt><FaClock className="bk-si" /> Est. Confirmation</dt>
-                <dd style={{ color: "var(--primary-color)", fontWeight: "700" }}>
-                  {isHospital ? "1–2 Hours" : "Under 30 mins"}
+
+                <dd>
+                  {doctor.hospital ||
+                    "—"}
                 </dd>
               </div>
+
+              <div className="bk-summary-row">
+                <dt>
+                  <FaMapMarkerAlt className="bk-si bk-si--loc" />
+                  Location
+                </dt>
+
+                <dd>
+                  {doctor.city || "—"}
+                </dd>
+              </div>
+
+              <div className="bk-summary-row">
+                <dt>
+                  <FaMoneyBillWave className="bk-si bk-si--fee" />
+                  Consult Fee
+                </dt>
+
+                <dd className="bk-fee-val">
+                  ₹{doctor.fee}
+                </dd>
+              </div>
+
+              <div className="bk-summary-row">
+                <dt>
+                  {consultationType ===
+                    "video" ? (
+                    <FaVideo className="bk-si bk-si--video" />
+                  ) : (
+                    <FaUserMd className="bk-si bk-si--person" />
+                  )}
+
+                  Type
+                </dt>
+
+                <dd>
+                  {consultationType ===
+                    "video"
+                    ? "Video Call"
+                    : "In-Person"}
+                </dd>
+              </div>
+
               {selectedSlot && (
                 <div className="bk-summary-row">
-                  <dt><FaClock className="bk-si" /> Time Slot</dt>
-                  <dd className="bk-slot-val">{selectedSlot}</dd>
+                  <dt>
+                    <FaClock className="bk-si" />
+                    Time Slot
+                  </dt>
+
+                  <dd className="bk-slot-val">
+                    {selectedSlot}
+                  </dd>
                 </div>
               )}
+
               {appointmentDate && (
                 <div className="bk-summary-row">
-                  <dt><FaCalendarCheck className="bk-si" /> Date</dt>
-                  <dd>{new Date(appointmentDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</dd>
+                  <dt>
+                    <FaCalendarCheck className="bk-si" />
+                    Date
+                  </dt>
+
+                  <dd>
+                    {new Date(
+                      `${appointmentDate}T00:00:00`
+                    ).toLocaleDateString(
+                      "en-IN",
+                      {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      }
+                    )}
+                  </dd>
                 </div>
               )}
             </dl>
 
             <hr className="bk-divider" />
 
-            {/* Address */}
             <div className="bk-summary-address">
               <p className="bk-summary-address-label">
-                <FaMapMarkerAlt className="bk-si bk-si--loc" /> Full Address
+                <FaMapMarkerAlt className="bk-si bk-si--loc" />
+                Full Address
               </p>
-              <p className="bk-summary-address-text">{doctor.address}</p>
-              <a
-                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                  doctor.name + ", " + doctor.hospital + ", " + doctor.address
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bk-maps-link"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  fontSize: "0.75rem",
-                  fontWeight: "700",
-                  color: "var(--primary-color)",
-                  marginTop: "0.4rem",
-                  textDecoration: "underline",
-                }}
-              >
-                📍 View on Google Maps
-              </a>
+
+              <p className="bk-summary-address-text">
+                {doctor.address || "—"}
+              </p>
+
+              {doctor.address && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    `${doctor.name}, ${doctor.hospital}, ${doctor.address}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bk-maps-link"
+                >
+                  📍 View on Google Maps
+                </a>
+              )}
             </div>
 
-            {/* Booking type notice (right column) */}
-            <div className={`bk-summary-notice bk-summary-notice--${doctor.type}`}>
-              {isHospital ? <FaHospital /> : <FaClinicMedical />}
+            <div
+              className={`bk-summary-notice bk-summary-notice--${doctor.type}`}
+            >
+              {isHospital ? (
+                <FaHospital />
+              ) : (
+                <FaClinicMedical />
+              )}
+
               <span>
                 {isHospital
                   ? "Booked through the hospital"
@@ -1510,22 +2574,25 @@ function PatientBookAppointment() {
             </div>
           </div>
 
-          {/* Help card */}
           <div className="bk-help-card">
-            <p className="bk-help-title">Need Help?</p>
-            <p className="bk-help-desc">
-              For assistance with your appointment, contact our support team.
+            <p className="bk-help-title">
+              Need Help?
             </p>
-            <p className="bk-help-contact">📞 1800-123-4567 <span>(Toll Free)</span></p>
-            <p className="bk-help-contact">✉ support@medicobridge.in</p>
+
+            <p className="bk-help-desc">
+              For assistance with your appointment,
+              contact our support team.
+            </p>
           </div>
         </aside>
       </div>
-      {/* Report Preview Modal */}
+
       {previewingReport && (
         <ReportPreviewModal
           report={previewingReport}
-          onClose={() => setPreviewingReport(null)}
+          onClose={() =>
+            setPreviewingReport(null)
+          }
         />
       )}
     </div>

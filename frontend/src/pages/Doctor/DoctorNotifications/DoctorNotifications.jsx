@@ -1,4 +1,5 @@
-﻿import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     FaBell,
     FaSearch,
@@ -14,8 +15,12 @@ import {
     FaClock,
     FaTrashAlt,
     FaCheck,
+    FaSyncAlt,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorNotifications.css";
+
+const API_BASE = "http://localhost:5000";
 
 /* ─── Notification Types ─────────────────────────────────────── */
 const TYPE_CONFIG = {
@@ -27,105 +32,119 @@ const TYPE_CONFIG = {
     "system-update":         { label: "System Update",          icon: FaCog,           color: "#64748b", bg: "#f1f5f9" },
 };
 
-/* ─── Static Dummy Data ─────────────────────────────────────── */
-const initialNotifications = [
-    {
-        id: 1,
-        type: "appointment-booked",
-        title: "New Appointment Booked",
-        message: "Rahul Nair has booked a video consultation for July 15, 2026 at 10:30 AM. Chief complaint: Quarterly Diabetes Review.",
-        time: "10 minutes ago",
-        date: "Today",
-        read: false,
-    },
-    {
-        id: 2,
-        type: "consultation-reminder",
-        title: "Upcoming Consultation in 30 min",
-        message: "Reminder: Video consultation with Anjali Thomas starts at 09:45 AM. Complaint: Chest Pain Review.",
-        time: "25 minutes ago",
-        date: "Today",
-        read: false,
-    },
-    {
-        id: 3,
-        type: "appointment-cancelled",
-        title: "Appointment Cancelled",
-        message: "Meera Pillai has cancelled the in-person appointment originally scheduled for July 14, 2026 at 02:00 PM.",
-        time: "1 hour ago",
-        date: "Today",
-        read: false,
-    },
-    {
-        id: 4,
-        type: "prescription-sent",
-        title: "Prescription Delivered",
-        message: "Prescription RX-4521 for Rahul Nair has been successfully sent to the patient and their registered pharmacy.",
-        time: "2 hours ago",
-        date: "Today",
-        read: true,
-    },
-    {
-        id: 5,
-        type: "new-patient",
-        title: "New Patient Registered",
-        message: "David Okonkwo (PT-1071) has registered and selected you as their primary physician. Profile is ready for review.",
-        time: "3 hours ago",
-        date: "Today",
-        read: true,
-    },
-    {
-        id: 6,
-        type: "system-update",
-        title: "Platform Maintenance Scheduled",
-        message: "MedicoBridge will undergo scheduled maintenance on July 13, 2026 from 02:00 AM to 04:00 AM IST. Save your work.",
-        time: "5 hours ago",
-        date: "Today",
-        read: true,
-    },
-    {
-        id: 7,
-        type: "consultation-reminder",
-        title: "Missed Consultation",
-        message: "You missed the scheduled video consultation with Lakshmi Nair at 02:00 PM. Please reschedule at the earliest.",
-        time: "Yesterday, 02:15 PM",
-        date: "Yesterday",
-        read: true,
-    },
-    {
-        id: 8,
-        type: "appointment-booked",
-        title: "Follow-up Appointment Confirmed",
-        message: "Suresh Babu has confirmed his follow-up appointment for July 20, 2026 at 11:00 AM — Post-Surgery Review.",
-        time: "Yesterday, 10:30 AM",
-        date: "Yesterday",
-        read: true,
-    },
-    {
-        id: 9,
-        type: "prescription-sent",
-        title: "Prescription Viewed by Patient",
-        message: "Arun Kumar has viewed and acknowledged prescription RX-2975 sent on June 15, 2026.",
-        time: "July 10, 2026",
-        date: "July 10",
-        read: true,
-    },
-    {
-        id: 10,
-        type: "system-update",
-        title: "New Feature: E-Prescriptions",
-        message: "You can now digitally sign and send e-prescriptions directly to participating pharmacies across India.",
-        time: "July 8, 2026",
-        date: "July 8",
-        read: true,
-    },
-];
+function formatRelativeTime(dateInput) {
+    if (!dateInput) return "Just now";
+    const date = new Date(dateInput);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHrs = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+
+    if (diffSec < 60) return "Just now";
+    if (diffMin < 60) return `${diffMin} ${diffMin === 1 ? "minute" : "minutes"} ago`;
+    if (diffHrs < 24) return `${diffHrs} ${diffHrs === 1 ? "hour" : "hours"} ago`;
+    if (diffDays === 1) return `Yesterday, ${date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatDateGroup(dateInput) {
+    if (!dateInput) return "Recent";
+    const date = new Date(dateInput);
+    const now = new Date();
+
+    const isToday =
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+
+    if (isToday) return "Today";
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday =
+        date.getDate() === yesterday.getDate() &&
+        date.getMonth() === yesterday.getMonth() &&
+        date.getFullYear() === yesterday.getFullYear();
+
+    if (isYesterday) return "Yesterday";
+
+    return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+
+function mapNotificationType(rawType = "", rawTitle = "", rawMessage = "") {
+    const text = `${rawType} ${rawTitle} ${rawMessage}`.toLowerCase();
+    if (text.includes("cancelled") || text.includes("canceled")) return "appointment-cancelled";
+    if (text.includes("appointment") || text.includes("booking") || text.includes("booked")) return "appointment-booked";
+    if (text.includes("consultation") || text.includes("meeting") || text.includes("video") || text.includes("call")) return "consultation-reminder";
+    if (text.includes("patient") || text.includes("registered")) return "new-patient";
+    if (text.includes("prescription") || text.includes("medicine") || text.includes("pharmacy")) return "prescription-sent";
+    return "system-update";
+}
 
 /* ─── Main Component ─────────────────────────────────────────── */
 function DoctorNotifications() {
-    const [notifications, setNotifications] = useState(initialNotifications);
+    const navigate = useNavigate();
+    const [notifications, setNotifications] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("all");
+
+    const fetchNotifications = useCallback(async () => {
+        setLoading(true);
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                toast.error("Please login to view notifications.");
+                navigate("/login");
+                return;
+            }
+
+            const res = await fetch(`${API_BASE}/api/notifications`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                navigate("/login");
+                return;
+            }
+
+            const data = await res.json();
+            if (data.success && Array.isArray(data.data)) {
+                const mapped = data.data.map((n) => {
+                    const mappedType = mapNotificationType(n.type, n.title, n.message);
+                    return {
+                        id: n._id,
+                        type: mappedType,
+                        title: n.title || "Notification",
+                        message: n.message || "",
+                        time: formatRelativeTime(n.createdAt),
+                        date: formatDateGroup(n.createdAt),
+                        read: Boolean(n.isRead),
+                        rawCreatedAt: n.createdAt,
+                    };
+                });
+                setNotifications(mapped);
+            } else {
+                setNotifications([]);
+            }
+        } catch (err) {
+            console.error("Error fetching doctor notifications:", err);
+            toast.error("Failed to load notifications.");
+            setNotifications([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        fetchNotifications();
+    }, [fetchNotifications]);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -143,18 +162,71 @@ function DoctorNotifications() {
         });
     }, [notifications, search, filter]);
 
-    const markAllRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const markAllRead = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/notifications/read-all`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                toast.success("All notifications marked as read.");
+            } else {
+                toast.error("Failed to mark notifications as read.");
+            }
+        } catch (err) {
+            console.error("Mark all read error:", err);
+            toast.error("An error occurred while updating notifications.");
+        }
     };
 
-    const markOneRead = (id) => {
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, read: true } : n)
-        );
+    const markOneRead = async (id) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/notifications/${id}/read`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                setNotifications(prev =>
+                    prev.map(n => n.id === id ? { ...n, read: true } : n)
+                );
+            } else {
+                toast.error("Failed to mark notification as read.");
+            }
+        } catch (err) {
+            console.error("Mark one read error:", err);
+            toast.error("An error occurred while updating notification.");
+        }
     };
 
-    const deleteOne = (id) => {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+    const deleteOne = async (id) => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (res.ok) {
+                setNotifications(prev => prev.filter(n => n.id !== id));
+                toast.success("Notification deleted.");
+            } else {
+                toast.error("Failed to delete notification.");
+            }
+        } catch (err) {
+            console.error("Delete notification error:", err);
+            toast.error("An error occurred while deleting notification.");
+        }
     };
 
     /* Group by date label */
@@ -187,12 +259,23 @@ function DoctorNotifications() {
                     </p>
                 </div>
 
-                {unreadCount > 0 && (
-                    <button className="dn-mark-all-btn" onClick={markAllRead}>
-                        <FaCheckDouble />
-                        Mark All as Read
+                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <button
+                        className="dn-item-btn"
+                        onClick={fetchNotifications}
+                        title="Refresh Notifications"
+                        style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "8px 14px", borderRadius: "8px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", fontWeight: "600", color: "#475569" }}
+                        disabled={loading}
+                    >
+                        <FaSyncAlt className={loading ? "mr-spin" : ""} /> Refresh
                     </button>
-                )}
+                    {unreadCount > 0 && (
+                        <button className="dn-mark-all-btn" onClick={markAllRead}>
+                            <FaCheckDouble />
+                            Mark All as Read
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* ── Controls ────────────────────────────────── */}
@@ -249,7 +332,13 @@ function DoctorNotifications() {
             </div>
 
             {/* ── Notification List ────────────────────────── */}
-            {filtered.length === 0 ? (
+            {loading ? (
+                <div className="dn-empty">
+                    <FaBell className="dn-empty-icon" />
+                    <h3>Loading notifications...</h3>
+                    <p>Fetching your notifications from database.</p>
+                </div>
+            ) : filtered.length === 0 ? (
                 <div className="dn-empty">
                     <FaBell className="dn-empty-icon" />
                     <h3>No notifications</h3>
@@ -261,7 +350,7 @@ function DoctorNotifications() {
                         <div key={dateLabel} className="dn-group">
                             <div className="dn-group-label">{dateLabel}</div>
                             {items.map(n => {
-                                const cfg = TYPE_CONFIG[n.type];
+                                const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG["system-update"];
                                 const Icon = cfg.icon;
                                 return (
                                     <div

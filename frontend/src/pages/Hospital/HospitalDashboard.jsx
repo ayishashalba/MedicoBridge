@@ -1,149 +1,295 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   FaUserMd,
   FaUsers,
   FaBed,
   FaFlask,
-  FaFileInvoiceDollar,
   FaCalendarCheck,
-  FaCheckCircle,
   FaSpinner,
-  FaClock,
 } from "react-icons/fa";
 import "./HospitalDashboard.css";
 
-const kpis = [
-  {
-    title: "Total Staff Doctors",
-    value: "28",
-    subtitle: "4 specialists on-duty",
-    icon: <FaUserMd />,
-    color: "blue",
-  },
-  {
-    title: "Admitted Patients",
-    value: "118",
-    subtitle: "+12 admissions today",
-    icon: <FaUsers />,
-    color: "teal",
-  },
-  {
-    title: "Bed Occupancy Status",
-    value: "84%",
-    subtitle: "109 / 130 beds occupied",
-    icon: <FaBed />,
-    color: "purple",
-  },
-  {
-    title: "Pending Lab Reports",
-    value: "14",
-    subtitle: "8 critical test panels",
-    icon: <FaFlask />,
-    color: "amber",
-  },
-];
-
-const recentAdmissions = [
-  {
-    id: "PAT-4091",
-    name: "Ramesh Kumar",
-    age: "52",
-    gender: "Male",
-    ward: "ICU - Bed A4",
-    status: "Critical",
-    date: "July 12, 10:15 AM",
-  },
-  {
-    id: "PAT-4092",
-    name: "Sonia Sebastian",
-    age: "29",
-    gender: "Female",
-    ward: "General Ward B - Bed 12",
-    status: "Stable",
-    date: "July 12, 11:30 AM",
-  },
-  {
-    id: "PAT-4093",
-    name: "Mohan Lal",
-    age: "64",
-    gender: "Male",
-    ward: "Special Cabin C2",
-    status: "Stable",
-    date: "July 12, 01:05 PM",
-  },
-  {
-    id: "PAT-4094",
-    name: "Aparna Nair",
-    age: "41",
-    gender: "Female",
-    ward: "Maternity Ward - Bed 3",
-    status: "Observation",
-    date: "July 12, 02:40 PM",
-  },
-];
-
-const pendingLabTests = [
-  {
-    patient: "Devanand S.",
-    testName: "Cardiac Troponin Panel",
-    dept: "Pathology",
-    urgency: "High",
-    status: "Processing",
-  },
-  {
-    patient: "Leela Mathews",
-    testName: "Chest X-Ray / CT scan",
-    dept: "Radiology",
-    urgency: "Medium",
-    status: "Awaiting Scan",
-  },
-  {
-    patient: "John Wesley",
-    testName: "HbA1c & Fasting Glucose",
-    dept: "Biochemistry",
-    urgency: "Routine",
-    status: "Sample Collected",
-  },
-];
-
 function HospitalDashboard() {
+  const [metrics, setMetrics] = useState({
+    totalDoctors: 0,
+    totalDepartments: 0,
+    totalAppointments: 0,
+    totalBeds: 0,
+    availableBeds: 0,
+    occupiedBeds: 0,
+    reservedBeds: 0,
+    totalPharmacyMedicines: 0,
+  });
+
+  const [recentAppointments, setRecentAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(
+          "http://localhost:5000/api/hospital/dashboard",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result?.message || "Failed to load hospital dashboard."
+          );
+        }
+
+        const data = result?.data || {};
+
+        setMetrics({
+          totalDoctors: data?.metrics?.totalDoctors || 0,
+          totalDepartments: data?.metrics?.totalDepartments || 0,
+          totalAppointments: data?.metrics?.totalAppointments || 0,
+          totalBeds: data?.metrics?.totalBeds || 0,
+          availableBeds: data?.metrics?.availableBeds || 0,
+          occupiedBeds: data?.metrics?.occupiedBeds || 0,
+          reservedBeds: data?.metrics?.reservedBeds || 0,
+          totalPharmacyMedicines: data?.metrics?.totalPharmacyMedicines || 0,
+        });
+
+        setRecentAppointments(data?.recentAppointments || []);
+      } catch (err) {
+        console.error("Failed to load hospital dashboard:", err);
+        setError(err.message || "Failed to load dashboard.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  const occupancyPercentage =
+    metrics.totalBeds > 0
+      ? Math.round((metrics.occupiedBeds / metrics.totalBeds) * 100)
+      : 0;
+
+  const formatDate = (date) => {
+    if (!date) return "—";
+
+    const parsedDate = new Date(date);
+
+    if (Number.isNaN(parsedDate.getTime())) {
+      return "—";
+    }
+
+    return parsedDate.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getPatientName = (appointment) => {
+    return appointment?.patientId?.name || "Unknown Patient";
+  };
+
+  const getPatientAge = (dob) => {
+    if (!dob) return "—";
+
+    const birthDate = new Date(dob);
+
+    if (Number.isNaN(birthDate.getTime())) {
+      return "—";
+    }
+
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 &&
+        today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+
+    return age >= 0 ? age : "—";
+  };
+
+  const getAppointmentStatus = (status) => {
+    if (!status) return "Pending";
+
+    return status;
+  };
+
+  const getStatusClass = (status) => {
+    const normalized = String(status || "Pending").toLowerCase();
+
+    if (normalized.includes("cancel")) return "cancelled";
+    if (normalized.includes("complete")) return "completed";
+    if (normalized.includes("confirm")) return "confirmed";
+    if (normalized.includes("progress")) return "processing";
+
+    return normalized.replace(/\s+/g, "-");
+  };
+
+  const wardBreakdown = [
+    {
+      name: "Occupied Beds",
+      value: metrics.occupiedBeds,
+      total: metrics.totalBeds,
+      pct: occupancyPercentage,
+      color: "red",
+    },
+    {
+      name: "Available Beds",
+      value: metrics.availableBeds,
+      total: metrics.totalBeds,
+      pct:
+        metrics.totalBeds > 0
+          ? Math.round((metrics.availableBeds / metrics.totalBeds) * 100)
+          : 0,
+      color: "blue",
+    },
+    {
+      name: "Reserved Beds",
+      value: metrics.reservedBeds,
+      total: metrics.totalBeds,
+      pct:
+        metrics.totalBeds > 0
+          ? Math.round((metrics.reservedBeds / metrics.totalBeds) * 100)
+          : 0,
+      color: "teal",
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div className="hosp-dash-page">
+        <div className="hosp-card" style={{ padding: "30px", textAlign: "center" }}>
+          <FaSpinner className="hosp-spin" />
+          <p>Loading hospital dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="hosp-dash-page">
+        <div className="hosp-card" style={{ padding: "30px", textAlign: "center" }}>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="hosp-dash-page">
       {/* ── KPI Grid ── */}
       <section className="hosp-kpi-grid">
-        {kpis.map((kpi, index) => (
-          <div key={index} className={`hosp-kpi-card hosp-kpi-card--${kpi.color}`}>
-            <div className="hosp-kpi-left">
-              <span className="hosp-kpi-title">{kpi.title}</span>
-              <span className="hosp-kpi-val">{kpi.value}</span>
-              <span className="hosp-kpi-sub">{kpi.subtitle}</span>
-            </div>
-            <div className="hosp-kpi-icon-wrapper">{kpi.icon}</div>
+        <div className="hosp-kpi-card hosp-kpi-card--blue">
+          <div className="hosp-kpi-left">
+            <span className="hosp-kpi-title">Total Staff Doctors</span>
+            <span className="hosp-kpi-val">{metrics.totalDoctors}</span>
+            <span className="hosp-kpi-sub">
+              Registered doctors
+            </span>
           </div>
-        ))}
+
+          <div className="hosp-kpi-icon-wrapper">
+            <FaUserMd />
+          </div>
+        </div>
+
+        <div className="hosp-kpi-card hosp-kpi-card--teal">
+          <div className="hosp-kpi-left">
+            <span className="hosp-kpi-title">Hospital Appointments</span>
+            <span className="hosp-kpi-val">
+              {metrics.totalAppointments}
+            </span>
+            <span className="hosp-kpi-sub">
+              Total appointments
+            </span>
+          </div>
+
+          <div className="hosp-kpi-icon-wrapper">
+            <FaUsers />
+          </div>
+        </div>
+
+        <div className="hosp-kpi-card hosp-kpi-card--purple">
+          <div className="hosp-kpi-left">
+            <span className="hosp-kpi-title">
+              Bed Occupancy Status
+            </span>
+            <span className="hosp-kpi-val">
+              {occupancyPercentage}%
+            </span>
+            <span className="hosp-kpi-sub">
+              {metrics.occupiedBeds} / {metrics.totalBeds} beds occupied
+            </span>
+          </div>
+
+          <div className="hosp-kpi-icon-wrapper">
+            <FaBed />
+          </div>
+        </div>
+
+        <div className="hosp-kpi-card hosp-kpi-card--amber">
+          <div className="hosp-kpi-left">
+            <span className="hosp-kpi-title">Pharmacy Medicines</span>
+            <span className="hosp-kpi-val">
+              {metrics.totalPharmacyMedicines}
+            </span>
+            <span className="hosp-kpi-sub">
+              Hospital pharmacy inventory
+            </span>
+          </div>
+
+          <div className="hosp-kpi-icon-wrapper">
+            <FaFlask />
+          </div>
+        </div>
       </section>
 
-      {/* ── Mid Section: Occupancy Chart + Fast Stats ── */}
+      {/* ── Mid Section ── */}
       <section className="hosp-mid-section">
-        {/* Ward Breakdown */}
+        {/* Bed Breakdown */}
         <div className="hosp-card hosp-ward-breakdown">
-          <h2 className="hosp-card-title">Ward Occupancy Breakdown</h2>
+          <h2 className="hosp-card-title">
+            Bed Occupancy Breakdown
+          </h2>
+
           <div className="hosp-ward-list">
-            {[
-              { name: "Intensive Care Unit (ICU)", occupied: 18, total: 20, pct: 90, color: "red" },
-              { name: "General Wards", occupied: 68, total: 80, pct: 85, color: "blue" },
-              { name: "Special Wards & Cabins", occupied: 15, total: 20, pct: 75, color: "teal" },
-              { name: "Emergency Observation", occupied: 8, total: 10, pct: 80, color: "amber" },
-            ].map((ward, index) => (
+            {wardBreakdown.map((bed, index) => (
               <div key={index} className="hosp-ward-row">
                 <div className="hosp-ward-info">
-                  <span className="hosp-ward-name">{ward.name}</span>
-                  <span className="hosp-ward-numbers">{ward.occupied}/{ward.total} Beds occupied</span>
+                  <span className="hosp-ward-name">
+                    {bed.name}
+                  </span>
+
+                  <span className="hosp-ward-numbers">
+                    {bed.value}/{bed.total} Beds
+                  </span>
                 </div>
+
                 <div className="hosp-progress-track">
                   <div
-                    className={`hosp-progress-fill hosp-progress-fill--${ward.color}`}
-                    style={{ width: `${ward.pct}%` }}
+                    className={`hosp-progress-fill hosp-progress-fill--${bed.color}`}
+                    style={{ width: `${bed.pct}%` }}
                   />
                 </div>
               </div>
@@ -151,95 +297,196 @@ function HospitalDashboard() {
           </div>
         </div>
 
-        {/* Quick Operations panel */}
+        {/* Quick Operations */}
         <div className="hosp-card hosp-quick-ops">
-          <h2 className="hosp-card-title">Current Operations Summary</h2>
+          <h2 className="hosp-card-title">
+            Current Operations Summary
+          </h2>
+
           <div className="hosp-ops-grid">
             <div className="hosp-op-badge">
-              <span className="hosp-op-number">8</span>
-              <span className="hosp-op-label">Doctors Active Now</span>
+              <span className="hosp-op-number">
+                {metrics.totalDoctors}
+              </span>
+
+              <span className="hosp-op-label">
+                Staff Doctors
+              </span>
             </div>
+
             <div className="hosp-op-badge">
-              <span className="hosp-op-number">5</span>
-              <span className="hosp-op-label">Scheduled Surgeries</span>
+              <span className="hosp-op-number">
+                {metrics.totalDepartments}
+              </span>
+
+              <span className="hosp-op-label">
+                Departments
+              </span>
             </div>
+
             <div className="hosp-op-badge">
-              <span className="hosp-op-number">3</span>
-              <span className="hosp-op-label">Ambulances Standby</span>
+              <span className="hosp-op-number">
+                {metrics.totalAppointments}
+              </span>
+
+              <span className="hosp-op-label">
+                Total Appointments
+              </span>
             </div>
+
             <div className="hosp-op-badge hosp-op-badge--warning">
-              <span className="hosp-op-number">21</span>
-              <span className="hosp-op-label">Vacant General Beds</span>
+              <span className="hosp-op-number">
+                {metrics.availableBeds}
+              </span>
+
+              <span className="hosp-op-label">
+                Available Beds
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Bottom Section: Active Admissions + Pending Lab Requests ── */}
+      {/* ── Bottom Section ── */}
       <section className="hosp-bottom-section">
-        {/* Table: Recent Admissions */}
+        {/* Recent Appointments */}
         <div className="hosp-card hosp-recent-admissions">
-          <h2 className="hosp-card-title">Recent Patient Admissions</h2>
+          <h2 className="hosp-card-title">
+            Recent Hospital Appointments
+          </h2>
+
           <div className="hosp-table-wrapper">
             <table className="hosp-table">
               <thead>
                 <tr>
-                  <th>Patient ID</th>
+                  <th>Patient</th>
                   <th>Patient Name</th>
-                  <th>Ward / Room</th>
+                  <th>Doctor / Department</th>
                   <th>Status</th>
-                  <th>Check-In Time</th>
+                  <th>Appointment Time</th>
                 </tr>
               </thead>
+
               <tbody>
-                {recentAdmissions.map((pat) => (
-                  <tr key={pat.id}>
-                    <td>
-                      <span className="hosp-pat-id">{pat.id}</span>
+                {recentAppointments.length > 0 ? (
+                  recentAppointments.map((appointment) => {
+                    const status = getAppointmentStatus(
+                      appointment?.status
+                    );
+
+                    return (
+                      <tr key={appointment?._id}>
+                        <td>
+                          <span className="hosp-pat-id">
+                            {appointment?._id
+                              ? `APT-${appointment._id
+                                .toString()
+                                .slice(-6)
+                                .toUpperCase()}`
+                              : "—"}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className="hosp-pat-name-col">
+                            <span className="hosp-pat-name">
+                              {getPatientName(appointment)}
+                            </span>
+
+                            <span className="hosp-pat-meta">
+                              {getPatientAge(
+                                appointment?.patientId?.dob
+                              )}{" "}
+                              yrs ·{" "}
+                              {appointment?.patientId?.gender ||
+                                "—"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <div className="hosp-pat-name-col">
+                            <span className="hosp-pat-name">
+                              {appointment?.doctorId?.name ||
+                                "—"}
+                            </span>
+
+                            <span className="hosp-pat-meta">
+                              {appointment?.doctorId
+                                ?.specialization || "—"}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td>
+                          <span
+                            className={`hosp-status-pill hosp-status-pill--${getStatusClass(
+                              status
+                            )}`}
+                          >
+                            {status}
+                          </span>
+                        </td>
+
+                        <td>
+                          {formatDate(appointment?.date)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      style={{
+                        textAlign: "center",
+                        padding: "30px",
+                      }}
+                    >
+                      No recent appointments found.
                     </td>
-                    <td>
-                      <div className="hosp-pat-name-col">
-                        <span className="hosp-pat-name">{pat.name}</span>
-                        <span className="hosp-pat-meta">{pat.age} yrs · {pat.gender}</span>
-                      </div>
-                    </td>
-                    <td>{pat.ward}</td>
-                    <td>
-                      <span className={`hosp-status-pill hosp-status-pill--${pat.status.toLowerCase()}`}>
-                        {pat.status}
-                      </span>
-                    </td>
-                    <td>{pat.date}</td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Panel: Pending Lab Tests */}
+        {/* Lab Queue */}
         <div className="hosp-card hosp-lab-queue">
-          <h2 className="hosp-card-title">Pending Lab Tests Queue</h2>
+          <h2 className="hosp-card-title">
+            Pending Lab Tests Queue
+          </h2>
+
           <div className="hosp-lab-list">
-            {pendingLabTests.map((test, index) => (
-              <div key={index} className="hosp-lab-item">
-                <div className="hosp-lab-item-header">
-                  <span className="hosp-lab-patient">{test.patient}</span>
-                  <span className={`hosp-urgency-badge hosp-urgency-badge--${test.urgency.toLowerCase()}`}>
-                    {test.urgency}
-                  </span>
-                </div>
-                <div className="hosp-lab-item-body">
-                  <span className="hosp-lab-test">{test.testName}</span>
-                  <span className="hosp-lab-dept">{test.dept}</span>
-                </div>
-                <div className="hosp-lab-item-footer">
-                  <span className="hosp-lab-status">
-                    <FaSpinner className="hosp-spin" /> {test.status}
-                  </span>
-                </div>
+            <div className="hosp-lab-item">
+              <div className="hosp-lab-item-header">
+                <span className="hosp-lab-patient">
+                  Lab queue data
+                </span>
+
+                <span className="hosp-urgency-badge hosp-urgency-badge--routine">
+                  Info
+                </span>
               </div>
-            ))}
+
+              <div className="hosp-lab-item-body">
+                <span className="hosp-lab-test">
+                  Pending lab report API is not available
+                </span>
+
+                <span className="hosp-lab-dept">
+                  No LabReport data in current dashboard endpoint
+                </span>
+              </div>
+
+              <div className="hosp-lab-item-footer">
+                <span className="hosp-lab-status">
+                  <FaSpinner className="hosp-spin" /> No live lab
+                  queue data
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>

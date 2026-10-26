@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
     FaStar,
     FaSearch,
@@ -9,135 +9,12 @@ import {
     FaCommentAlt,
     FaFilter,
     FaThumbsUp,
+    FaSpinner,
+    FaExclamationTriangle,
 } from "react-icons/fa";
 import "./DoctorReviews.css";
 
-/* ─── Static Dummy Data ─────────────────────────────────────── */
-// Toggle this to "Clinic" to test Private Clinic Doctor view
-const DOCTOR_TYPE = "Hospital";
-
-const REVIEWS = [
-    {
-        id: 1,
-        patientName: "Rahul Nair",
-        initials: "RN",
-        avatarColor: "#0d9488",
-        date: "July 10, 2026",
-        rating: 5,
-        text: "Dr. Ayisha was incredibly thorough and compassionate. She listened carefully to all my concerns about my cardiac symptoms and explained everything in simple terms. I felt genuinely cared for. Highly recommend!",
-        consultationType: "Online",
-    },
-    {
-        id: 2,
-        patientName: "Anjali Thomas",
-        initials: "AT",
-        avatarColor: "#7c3aed",
-        date: "July 8, 2026",
-        rating: 4,
-        text: "Very knowledgeable and professional. The consultation was smooth and efficient. She gave detailed advice on my hypertension management. Would have loved a slightly longer session for more questions.",
-        consultationType: "Hospital",
-    },
-    {
-        id: 3,
-        patientName: "Arun Kumar",
-        initials: "AK",
-        avatarColor: "#0284c7",
-        date: "July 6, 2026",
-        rating: 5,
-        text: "Outstanding experience! The doctor identified my issue quickly and prescribed an effective treatment. My cholesterol levels have improved significantly since following her advice. She is simply the best!",
-        consultationType: "Hospital",
-    },
-    {
-        id: 4,
-        patientName: "Meera Pillai",
-        initials: "MP",
-        avatarColor: "#d97706",
-        date: "July 4, 2026",
-        rating: 3,
-        text: "The consultation was decent. The doctor was knowledgeable but seemed a bit rushed. I had more questions that were not fully addressed. The follow-up prescription was helpful though.",
-        consultationType: "Online",
-    },
-    {
-        id: 5,
-        patientName: "Suresh Babu",
-        initials: "SB",
-        avatarColor: "#dc2626",
-        date: "July 2, 2026",
-        rating: 5,
-        text: "Exceptional doctor! Dr. Ayisha patiently reviewed all my post-surgery reports and provided a comprehensive recovery plan. Her expertise in cardiology is top-notch. Truly grateful for her care.",
-        consultationType: "Hospital",
-    },
-    {
-        id: 6,
-        patientName: "Lakshmi Nair",
-        initials: "LN",
-        avatarColor: "#059669",
-        date: "June 30, 2026",
-        rating: 4,
-        text: "Good consultation overall. Doctor was warm and attentive. She thoroughly checked my test reports and adjusted my medication accordingly. The online platform worked perfectly without any technical issues.",
-        consultationType: "Online",
-    },
-    {
-        id: 7,
-        patientName: "Priya Krishnan",
-        initials: "PK",
-        avatarColor: "#9333ea",
-        date: "June 28, 2026",
-        rating: 2,
-        text: "Consultation felt too short. I could not get all my doubts cleared. However, the prescription was appropriate. I hope the next appointment allows more time to discuss my ongoing symptoms.",
-        consultationType: "Online",
-    },
-    {
-        id: 8,
-        patientName: "Deepak Menon",
-        initials: "DM",
-        avatarColor: "#0369a1",
-        date: "June 25, 2026",
-        rating: 5,
-        text: "Dr. Ayisha is a remarkable physician. Her ability to diagnose complex cardiac conditions is impressive. She takes time to explain every detail and I always leave the consultation feeling confident about my health.",
-        consultationType: "Hospital",
-    },
-    {
-        id: 9,
-        patientName: "Kavitha Rajan",
-        initials: "KR",
-        avatarColor: "#be185d",
-        date: "June 22, 2026",
-        rating: 4,
-        text: "Professional and caring doctor. She was very thorough during the hospital visit and spent ample time going through my echocardiogram results. Clear explanations and a well-thought-out treatment plan.",
-        consultationType: "Hospital",
-    },
-    {
-        id: 10,
-        patientName: "Vikram Shetty",
-        initials: "VS",
-        avatarColor: "#b45309",
-        date: "June 20, 2026",
-        rating: 1,
-        text: "I had a difficult experience. The waiting time was very long and the consultation felt hurried. I did not feel that my concerns were fully addressed. I hope future appointments are better managed.",
-        consultationType: "Hospital",
-    },
-    {
-        id: 11,
-        patientName: "Anitha Varma",
-        initials: "AV",
-        avatarColor: "#047857",
-        date: "June 18, 2026",
-        rating: 5,
-        text: "Absolutely wonderful experience. Dr. Ayisha has an exceptional ability to put her patients at ease. Her diagnosis was spot-on and the treatment plan has made a huge positive difference in my health.",
-        consultationType: "Online",
-    },
-    {
-        id: 12,
-        patientName: "Sanjay Patel",
-        initials: "SP",
-        avatarColor: "#1d4ed8",
-        date: "June 15, 2026",
-        rating: 3,
-        text: "Average experience. The doctor was professional but the online platform had some connectivity issues during our session. The prescription was correct though. Technical improvements would enhance the experience.",
-        consultationType: "Online",
-    },
-];
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 /* ─── Star Rating Display ─────────────────────────────────── */
 function StarDisplay({ rating, size = "sm" }) {
@@ -169,7 +46,7 @@ function ReviewCard({ review }) {
                 </div>
                 <span className={`drr-type-badge drr-type-badge--${review.consultationType.toLowerCase()}`}>
                     {review.consultationType === "Online" ? <FaVideo /> : <FaHospital />}
-                    {review.consultationType === "Hospital" && DOCTOR_TYPE === "Clinic" ? "Clinic" : review.consultationType}
+                    {review.consultationType}
                 </span>
             </div>
 
@@ -220,38 +97,127 @@ function BreakdownBar({ star, count, total }) {
     );
 }
 
-/* ─── Filter Dropdown ────────────────────────────────────── */
+/* ─── Filter Options ─────────────────────────────────────── */
 const FILTER_OPTIONS = [
     { value: "all", label: "All Reviews" },
-    { value: "5", label: "5★ Only" },
-    { value: "4", label: "4★ Only" },
-    { value: "3", label: "3★ Only" },
-    { value: "2", label: "2★ Only" },
-    { value: "1", label: "1★ Only" },
+    { value: "5",   label: "5★ Only" },
+    { value: "4",   label: "4★ Only" },
+    { value: "3",   label: "3★ Only" },
+    { value: "2",   label: "2★ Only" },
+    { value: "1",   label: "1★ Only" },
 ];
 
 /* ─── Main Page ──────────────────────────────────────────── */
 function DoctorReviews() {
-    const [search, setSearch] = useState("");
-    const [filter, setFilter] = useState("all");
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError]     = useState(null);
+    const [search, setSearch]   = useState("");
+    const [filter, setFilter]   = useState("all");
 
-    /* ── Computed stats ─────────────────────────────────── */
-    const totalReviews = REVIEWS.length;
-    const avgRating = (REVIEWS.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1);
+    /* ── Fetch reviews from backend ── */
+    const fetchReviews = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                setError("Authentication required. Please log in.");
+                setLoading(false);
+                return;
+            }
+            const res  = await fetch(`${API_BASE}/api/doctor/reviews`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.message || "Failed to load reviews.");
+                setLoading(false);
+                return;
+            }
+            setReviews(data.data || []);
+        } catch (err) {
+            console.error("Fetch reviews error:", err);
+            setError("Network error. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchReviews();
+    }, [fetchReviews]);
+
+    /* ── Computed stats (from real data) ── */
+    const totalReviews = reviews.length;
+    const avgRating    = totalReviews
+        ? (reviews.reduce((s, r) => s + r.rating, 0) / totalReviews).toFixed(1)
+        : "0.0";
 
     const breakdown = [5, 4, 3, 2, 1].map((star) => ({
         star,
-        count: REVIEWS.filter((r) => r.rating === star).length,
+        count: reviews.filter((r) => r.rating === star).length,
     }));
 
-    /* ── Filtered list ──────────────────────────────────── */
+    const positiveCount = reviews.filter((r) => r.rating >= 4).length;
+    const onlineCount   = reviews.filter((r) => r.consultationType === "Online").length;
+    const visitCount    = reviews.filter((r) => r.consultationType !== "Online").length;
+
+    /* ── Filtered list ── */
     const filtered = useMemo(() => {
-        return REVIEWS.filter((r) => {
-            const matchSearch = r.patientName.toLowerCase().includes(search.toLowerCase());
+        return reviews.filter((r) => {
+            const matchSearch = r.patientName.toLowerCase().includes(search.toLowerCase()) ||
+                                r.text.toLowerCase().includes(search.toLowerCase());
             const matchFilter = filter === "all" || r.rating === parseInt(filter);
             return matchSearch && matchFilter;
         });
-    }, [search, filter]);
+    }, [reviews, search, filter]);
+
+    /* ── Loading State ── */
+    if (loading) {
+        return (
+            <div className="drr-page">
+                <div className="drr-header">
+                    <div className="drr-header-text">
+                        <h1 className="drr-page-title">
+                            <FaStar className="drr-title-icon" />
+                            Reviews &amp; Ratings
+                        </h1>
+                    </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "14px" }}>
+                    <FaSpinner style={{ fontSize: "2rem", animation: "spin 1s linear infinite", color: "#6366f1" }} />
+                    <p style={{ color: "#94a3b8" }}>Loading reviews…</p>
+                </div>
+            </div>
+        );
+    }
+
+    /* ── Error State ── */
+    if (error) {
+        return (
+            <div className="drr-page">
+                <div className="drr-header">
+                    <div className="drr-header-text">
+                        <h1 className="drr-page-title">
+                            <FaStar className="drr-title-icon" />
+                            Reviews &amp; Ratings
+                        </h1>
+                    </div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "320px", gap: "14px", textAlign: "center" }}>
+                    <FaExclamationTriangle style={{ fontSize: "2.2rem", color: "#ef4444" }} />
+                    <p style={{ color: "#ef4444", fontWeight: 600 }}>{error}</p>
+                    <button className="drr-helpful-btn" onClick={fetchReviews} style={{ marginTop: "8px" }}>
+                        Retry
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="drr-page">
@@ -293,16 +259,16 @@ function DoctorReviews() {
                 {/* Quick Stats */}
                 <div className="drr-quick-stats">
                     <div className="drr-qstat">
-                        <span className="drr-qstat-val">{REVIEWS.filter((r) => r.rating >= 4).length}</span>
+                        <span className="drr-qstat-val">{positiveCount}</span>
                         <span className="drr-qstat-lbl">Positive Reviews</span>
                     </div>
                     <div className="drr-qstat">
-                        <span className="drr-qstat-val">{REVIEWS.filter((r) => r.consultationType === "Online").length}</span>
+                        <span className="drr-qstat-val">{onlineCount}</span>
                         <span className="drr-qstat-lbl">Online Consults</span>
                     </div>
                     <div className="drr-qstat">
-                        <span className="drr-qstat-val">{REVIEWS.filter((r) => r.consultationType === "Hospital").length}</span>
-                        <span className="drr-qstat-lbl">{DOCTOR_TYPE === "Hospital" ? "Hospital Visits" : "Clinic Visits"}</span>
+                        <span className="drr-qstat-val">{visitCount}</span>
+                        <span className="drr-qstat-lbl">Hospital Visits</span>
                     </div>
                     <div className="drr-qstat drr-qstat--highlight">
                         <span className="drr-qstat-val">{avgRating}</span>
@@ -356,8 +322,12 @@ function DoctorReviews() {
             {filtered.length === 0 ? (
                 <div className="drr-empty">
                     <FaStar className="drr-empty-icon" />
-                    <h3>No reviews found</h3>
-                    <p>Try adjusting your search or filter.</p>
+                    <h3>{totalReviews === 0 ? "No reviews yet" : "No reviews found"}</h3>
+                    <p>
+                        {totalReviews === 0
+                            ? "Patient reviews for your consultations will appear here."
+                            : "Try adjusting your search or filter."}
+                    </p>
                 </div>
             ) : (
                 <div className="drr-grid">

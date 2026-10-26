@@ -1,197 +1,275 @@
-const Cart = require("../models/Cart");
-const Medicine = require("../models/Medicine");
-
+const Cart = require('../models/Cart');
+const Patient = require('../models/Patient');
+const Medicine = require('../models/Medicine');
+const { calculateMedicineOffer, validateCouponDiscount } = require('../services/pricingService');
 const {
-    successResponse,
-    validationErrorResponse,
-    notFoundResponse,
-    serverErrorResponse,
-} = require("../utils/apiResponse");
-const { isValidObjectId } = require("../utils/validators");
+  sendSuccess,
+  sendValidationError,
+  sendNotFound,
+  sendServerError,
+} = require('../utils/responseHandler');
 
-const calculateCartTotal = async (cart) => {
-    let total = 0;
-    for (const item of cart.items) {
-        total += item.price * item.quantity;
+/**
+ * Recalculate cart totals helper
+ */
+const recalculateCart = async (cart) => {
+  let subtotal = 0;
+  let totalOfferDiscount = 0;
+
+  for (let i = 0; i < cart.items.length; i++) {
+    const item = cart.items[i];
+    const med = await Medicine.findById(item.medicineId);
+
+    if (med) {
+      const { offerDiscount, finalUnitPrice } = await calculateMedicineOffer(med._id, med.price);
+      item.unitPrice = med.price;
+      item.offerDiscount = offerDiscount;
+      item.finalUnitPrice = finalUnitPrice;
+      item.itemTotal = Number((finalUnitPrice * item.quantity).toFixed(2));
+
+      subtotal += med.price * item.quantity;
+      totalOfferDiscount += offerDiscount * item.quantity;
     }
-    cart.totalAmount = Math.round(total * 100) / 100;
+  }
+
+  const subtotalAfterOffers = Math.max(0, subtotal - totalOfferDiscount);
+
+  // Revalidate coupon if present
+  let couponDiscount = 0;
+  if (cart.couponCode) {
+    const couponRes = await validateCouponDiscount(cart.couponCode, subtotalAfterOffers);
+    if (couponRes.isValid) {
+      couponDiscount = couponRes.discount;
+    } else {
+      cart.couponCode = '';
+      cart.couponDiscount = 0;
+    }
+  }
+
+  cart.subtotal = Number(subtotal.toFixed(2));
+  cart.totalOfferDiscount = Number(totalOfferDiscount.toFixed(2));
+  cart.couponDiscount = Number(couponDiscount.toFixed(2));
+  cart.totalAmount = Number(Math.max(0, subtotalAfterOffers - couponDiscount).toFixed(2));
+
+  await cart.save();
+  return cart;
 };
 
-// Get current patient cart
+// @desc    Get patient cart
+// @route   GET /api/cart
+// @access  Private (Patient)
 const getCart = async (req, res) => {
-    try {
-        let cart = await Cart.findOne({ patientId: req.user.id }).populate({
-            path: "items.medicineId",
-            select: "name genericName price discountPrice category image stock pharmacyId pharmacyType",
-        });
-
-        if (!cart) {
-            cart = await Cart.create({
-                patientId: req.user.id,
-                items: [],
-                totalAmount: 0,
-            });
-        }
-
-        return successResponse(res, "Cart retrieved successfully", { cart });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to fetch cart", error);
+  try {
+    const patient = await Patient.findOne({ userId: req.user._id });
+    if (!patient) {
+      return sendNotFound(res, 'Patient profile not found.');
     }
+
+    let cart = await Cart.findOne({ patientId: patient._id }).populate('items.medicineId');
+
+    if (!cart) {
+      cart = await Cart.create({
+        patientId: patient._id,
+        items: [],
+      });
+    } else {
+      cart = await recalculateCart(cart);
+      cart = await Cart.findById(cart._id).populate('items.medicineId');
+    }
+
+    return sendSuccess(res, 'Cart fetched successfully.', cart);
+  } catch (error) {
+    return sendServerError(res, 'Failed to fetch cart.', error);
+  }
 };
 
-// Add / increment item in cart
+// @desc    Add item to cart or apply coupon
+// @route   POST /api/cart
+// @access  Private (Patient)
 const addToCart = async (req, res) => {
-    try {
-        const { medicineId, quantity = 1 } = req.body;
-
-        if (!medicineId || !isValidObjectId(medicineId)) {
-            return validationErrorResponse(res, "Valid medicine ID is required");
-        }
-
-        const medicine = await Medicine.findById(medicineId);
-        if (!medicine || !medicine.isActive) {
-            return notFoundResponse(res, "Medicine not found or unavailable");
-        }
-
-        if (medicine.stock < Number(quantity)) {
-            return validationErrorResponse(res, "Requested quantity exceeds available stock");
-        }
-
-        let cart = await Cart.findOne({ patientId: req.user.id });
-        if (!cart) {
-            cart = new Cart({
-                patientId: req.user.id,
-                items: [],
-                totalAmount: 0,
-            });
-        }
-
-        const price = medicine.discountPrice > 0 ? medicine.discountPrice : medicine.price;
-        const existingItemIndex = cart.items.findIndex(
-            (item) => item.medicineId.toString() === medicineId.toString()
-        );
-
-        if (existingItemIndex > -1) {
-            cart.items[existingItemIndex].quantity += Number(quantity);
-            cart.items[existingItemIndex].price = price;
-        } else {
-            cart.items.push({
-                medicineId,
-                quantity: Number(quantity),
-                price,
-            });
-        }
-
-        await calculateCartTotal(cart);
-        await cart.save();
-
-        const populatedCart = await Cart.findById(cart._id).populate({
-            path: "items.medicineId",
-            select: "name genericName price discountPrice category image stock pharmacyId",
-        });
-
-        return successResponse(res, "Item added to cart", { cart: populatedCart });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to add item to cart", error);
+  try {
+    const patient = await Patient.findOne({ userId: req.user._id });
+    if (!patient) {
+      return sendNotFound(res, 'Patient profile not found.');
     }
+
+    const { medicineId, quantity = 1, couponCode } = req.body;
+
+    let cart = await Cart.findOne({ patientId: patient._id });
+    if (!cart) {
+      cart = new Cart({ patientId: patient._id, items: [] });
+    }
+
+    // Apply Coupon flow
+    if (couponCode) {
+      const subtotalAfterOffers = Math.max(0, cart.subtotal - cart.totalOfferDiscount);
+      const couponRes = await validateCouponDiscount(couponCode, subtotalAfterOffers);
+
+      if (!couponRes.isValid) {
+        return sendValidationError(res, couponRes.message, [couponRes.message]);
+      }
+
+      cart.couponCode = couponCode.toUpperCase().trim();
+      cart.couponDiscount = couponRes.discount;
+      await cart.save();
+      await recalculateCart(cart);
+
+      const updated = await Cart.findById(cart._id).populate('items.medicineId');
+      return sendSuccess(res, 'Coupon applied successfully.', updated);
+    }
+
+    // Add Item flow
+    if (!medicineId) {
+      return sendValidationError(res, 'Validation failed', ['Medicine ID is required.']);
+    }
+
+    const medicine = await Medicine.findById(medicineId);
+    if (!medicine) {
+      return sendNotFound(res, 'Medicine not found.');
+    }
+
+    if (medicine.isAvailable === false || !medicine.stock || medicine.stock <= 0) {
+      return sendValidationError(res, 'This medicine is currently out of stock.', [
+        'Out of stock.',
+      ]);
+    }
+
+    const addQty = Math.max(1, Number(quantity) || 1);
+
+    const existingIndex = cart.items.findIndex(
+      (item) => String(item.medicineId?._id || item.medicineId) === String(medicine._id)
+    );
+
+    const existingQty = existingIndex > -1 ? Number(cart.items[existingIndex].quantity || 0) : 0;
+
+    if (existingQty >= medicine.stock) {
+      return sendValidationError(res, 'All available stock is already added to your cart.', [
+        'All available stock is already added to your cart.',
+      ]);
+    }
+
+    if (existingQty + addQty > medicine.stock) {
+      const remainingAllowed = medicine.stock - existingQty;
+      return sendValidationError(
+        res,
+        `Cannot add ${addQty} more. Only ${remainingAllowed} more unit${remainingAllowed === 1 ? '' : 's'} can be added to your cart.`,
+        ['Stock limit exceeded.']
+      );
+    }
+
+    const { offerDiscount, finalUnitPrice } = await calculateMedicineOffer(medicine._id, medicine.price);
+
+    if (existingIndex > -1) {
+      cart.items[existingIndex].quantity += addQty;
+      cart.items[existingIndex].unitPrice = medicine.price;
+      cart.items[existingIndex].offerDiscount = offerDiscount;
+      cart.items[existingIndex].finalUnitPrice = finalUnitPrice;
+      cart.items[existingIndex].itemTotal = Number(
+        (finalUnitPrice * cart.items[existingIndex].quantity).toFixed(2)
+      );
+    } else {
+      cart.items.push({
+        medicineId: medicine._id,
+        quantity: addQty,
+        unitPrice: medicine.price,
+        offerDiscount,
+        finalUnitPrice,
+        itemTotal: Number((finalUnitPrice * addQty).toFixed(2)),
+      });
+    }
+
+    await cart.save();
+    await recalculateCart(cart);
+
+    const updated = await Cart.findById(cart._id).populate('items.medicineId');
+    return sendSuccess(res, 'Item added to cart successfully.', updated);
+  } catch (error) {
+    return sendServerError(res, 'Failed to add item to cart.', error);
+  }
 };
 
-// Update cart item quantity
+// @desc    Update cart item quantity
+// @route   PUT /api/cart/:id
+// @access  Private (Patient)
 const updateCartItem = async (req, res) => {
-    try {
-        const { medicineId } = req.params;
-        const { quantity } = req.body;
+  try {
+    const patient = await Patient.findOne({ userId: req.user._id });
+    if (!patient) return sendNotFound(res, 'Patient profile not found.');
 
-        if (!medicineId || !isValidObjectId(medicineId)) {
-            return validationErrorResponse(res, "Valid medicine ID is required");
+    const { quantity } = req.body;
+    const cart = await Cart.findOne({ patientId: patient._id });
+    if (!cart) return sendNotFound(res, 'Cart not found.');
+
+    const item = cart.items.id(req.params.id);
+    if (!item) return sendNotFound(res, 'Item not found in cart.');
+
+    const newQty = Number(quantity);
+    if (newQty <= 0) {
+      cart.items.pull(req.params.id);
+    } else {
+      const medicine = await Medicine.findById(item.medicineId);
+      if (medicine) {
+        if (medicine.isAvailable === false || medicine.stock <= 0) {
+          return sendValidationError(res, 'This medicine is currently out of stock.', [
+            'Out of stock.',
+          ]);
         }
-
-        const qty = Number(quantity);
-        if (isNaN(qty) || qty < 0) {
-            return validationErrorResponse(res, "Quantity must be 0 or greater");
+        if (newQty > medicine.stock) {
+          return sendValidationError(
+            res,
+            'All available stock is already added to your cart.',
+            [`Maximum available stock is ${medicine.stock} units.`]
+          );
         }
-
-        let cart = await Cart.findOne({ patientId: req.user.id });
-        if (!cart) {
-            return notFoundResponse(res, "Cart not found");
-        }
-
-        if (qty === 0) {
-            cart.items = cart.items.filter(
-                (item) => item.medicineId.toString() !== medicineId.toString()
-            );
-        } else {
-            const itemIndex = cart.items.findIndex(
-                (item) => item.medicineId.toString() === medicineId.toString()
-            );
-
-            if (itemIndex === -1) {
-                return notFoundResponse(res, "Item not found in cart");
-            }
-
-            cart.items[itemIndex].quantity = qty;
-        }
-
-        await calculateCartTotal(cart);
-        await cart.save();
-
-        const populatedCart = await Cart.findById(cart._id).populate({
-            path: "items.medicineId",
-            select: "name genericName price discountPrice category image stock pharmacyId",
-        });
-
-        return successResponse(res, "Cart updated successfully", { cart: populatedCart });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to update cart", error);
+      }
+      item.quantity = newQty;
     }
+
+    await cart.save();
+    await recalculateCart(cart);
+
+    const updated = await Cart.findById(cart._id).populate('items.medicineId');
+    return sendSuccess(res, 'Cart item updated successfully.', updated);
+  } catch (error) {
+    return sendServerError(res, 'Failed to update cart item.', error);
+  }
 };
 
-// Remove single item from cart
-const removeFromCart = async (req, res) => {
-    try {
-        const { medicineId } = req.params;
-        if (!medicineId || !isValidObjectId(medicineId)) {
-            return validationErrorResponse(res, "Valid medicine ID is required");
-        }
+// @desc    Remove cart item or clear coupon
+// @route   DELETE /api/cart/:id
+// @access  Private (Patient)
+const removeCartItem = async (req, res) => {
+  try {
+    const patient = await Patient.findOne({ userId: req.user._id });
+    if (!patient) return sendNotFound(res, 'Patient profile not found.');
 
-        const cart = await Cart.findOne({ patientId: req.user.id });
-        if (!cart) {
-            return notFoundResponse(res, "Cart not found");
-        }
+    const cart = await Cart.findOne({ patientId: patient._id });
+    if (!cart) return sendNotFound(res, 'Cart not found.');
 
-        cart.items = cart.items.filter(
-            (item) => item.medicineId.toString() !== medicineId.toString()
-        );
-
-        await calculateCartTotal(cart);
-        await cart.save();
-
-        return successResponse(res, "Item removed from cart", { cart });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to remove item from cart", error);
+    // Check if user requested removing coupon
+    if (req.params.id === 'coupon') {
+      cart.couponCode = '';
+      cart.couponDiscount = 0;
+      await cart.save();
+      await recalculateCart(cart);
+      const updated = await Cart.findById(cart._id).populate('items.medicineId');
+      return sendSuccess(res, 'Coupon removed successfully.', updated);
     }
-};
 
-// Clear entire cart
-const clearCart = async (req, res) => {
-    try {
-        const cart = await Cart.findOne({ patientId: req.user.id });
-        if (cart) {
-            cart.items = [];
-            cart.totalAmount = 0;
-            await cart.save();
-        }
+    cart.items.pull(req.params.id);
+    await cart.save();
+    await recalculateCart(cart);
 
-        return successResponse(res, "Cart cleared successfully", { cart });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to clear cart", error);
-    }
+    const updated = await Cart.findById(cart._id).populate('items.medicineId');
+    return sendSuccess(res, 'Item removed from cart successfully.', updated);
+  } catch (error) {
+    return sendServerError(res, 'Failed to remove cart item.', error);
+  }
 };
 
 module.exports = {
-    getCart,
-    addToCart,
-    updateCartItem,
-    removeFromCart,
-    clearCart,
+  getCart,
+  addToCart,
+  updateCartItem,
+  removeCartItem,
 };

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaLock, FaCheckCircle, FaExclamationCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaLock } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { API_BASE_URL } from '../../../services/apiConfig';
 import './PatientChangePassword.css';
 
 function PatientChangePassword() {
@@ -9,41 +11,65 @@ function PatientChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess(false);
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setError('Please fill in all fields.');
+      toast.error('Please fill in all fields.');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('New password and confirm password do not match.');
+      toast.error('New password and confirm password do not match.');
       return;
     }
 
-    if (newPassword.length < 8) {
-      setError('New password must be at least 8 characters long.');
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long.');
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setSuccess(true);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      
-      // Auto redirect after 2 seconds
-      setTimeout(() => {
-        navigate(-1);
-      }, 2000);
-    }, 800);
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login/patient');
+        return;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/patient/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(data.message || 'Password successfully updated!');
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => {
+          navigate(-1);
+        }, 1500);
+      } else {
+        toast.error(data.message || 'Failed to update password.');
+      }
+    } catch (err) {
+      console.error('Password update error:', err);
+      toast.error('Network error updating password.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -61,20 +87,6 @@ function PatientChangePassword() {
         <h1 className="pcp-title">Change Password</h1>
         <p className="pcp-subtitle">Update your password to keep your account secure.</p>
 
-        {error && (
-          <div className="pcp-alert pcp-alert-error">
-            <FaExclamationCircle />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="pcp-alert pcp-alert-success">
-            <FaCheckCircle />
-            <span>Password successfully updated! Redirecting...</span>
-          </div>
-        )}
-
         <form className="pcp-form" onSubmit={handleSubmit}>
           <div className="pcp-form-group">
             <label htmlFor="currentPassword">Current Password</label>
@@ -84,6 +96,8 @@ function PatientChangePassword() {
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Enter current password"
+              disabled={loading}
+              required
             />
           </div>
 
@@ -94,7 +108,9 @@ function PatientChangePassword() {
               id="newPassword"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password (min. 8 characters)"
+              placeholder="Enter new password (min. 6 characters)"
+              disabled={loading}
+              required
             />
           </div>
 
@@ -106,11 +122,13 @@ function PatientChangePassword() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Re-enter new password"
+              disabled={loading}
+              required
             />
           </div>
 
-          <button type="submit" className="pcp-submit-btn">
-            Update Password
+          <button type="submit" className="pcp-submit-btn" disabled={loading}>
+            {loading ? 'Updating Password...' : 'Update Password'}
           </button>
         </form>
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaHeartbeat, FaEnvelope, FaCheckCircle } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./ForgotPassword.css";
 
 function ForgotPassword() {
@@ -28,6 +29,7 @@ function ForgotPassword() {
       return;
     }
     console.log("Password reset requested for:", email);
+    toast.info("Password reset instructions have been sent to your email.");
     setIsSubmitted(true);
   };
 

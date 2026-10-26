@@ -54,7 +54,10 @@ function PatientSettings() {
 
   const handleLogoutConfirm = () => {
     setShowLogoutModal(false);
-    triggerToast("Successfully logged out (Simulation)");
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isLoggedIn");
+    navigate("/login/patient");
   };
 
   return (
@@ -272,7 +275,7 @@ function PatientSettings() {
             </div>
           </div>
           <div className="ps-control-wrapper">
-            <span style={{ fontSize: "0.85rem", color: "#64748b", marginRight: "0.5rem" }}>2 Addresses</span>
+            <span style={{ fontSize: "0.85rem", color: "#64748b", marginRight: "0.5rem" }}>Manage</span>
             <FaChevronRight className="ps-chevron" />
           </div>
         </div>

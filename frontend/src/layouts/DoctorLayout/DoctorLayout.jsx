@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   FaHeartbeat,
@@ -18,6 +18,7 @@ import {
   FaChevronRight,
   FaStar,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorLayout.css";
 
 const sidebarNavItems = [
@@ -67,14 +68,55 @@ const sidebarNavItems = [
 function DoctorLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const [doctorProfile, setDoctorProfile] = useState(null);
+
+  useEffect(() => {
+    const fetchDoctorProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) return;
+
+        const response = await fetch(
+          "http://localhost:5000/api/doctor/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setDoctorProfile(
+            data?.data?.profile ||
+            data?.data ||
+            data?.profile ||
+            null
+          );
+        }
+      } catch (error) {
+        console.error("DOCTOR LAYOUT PROFILE ERROR:", error);
+      }
+    };
+
+    fetchDoctorProfile();
+  }, []);
 
   const toggleMobileSidebar = () => setSidebarOpen((prev) => !prev);
   const closeMobileSidebar = () => setSidebarOpen(false);
   const toggleCollapse = () => setSidebarCollapsed((prev) => !prev);
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isLoggedIn");
+    toast.info("You have been logged out successfully.");
     navigate("/login/doctor");
   };
 
@@ -165,9 +207,19 @@ function DoctorLayout() {
           </div>
           {!sidebarCollapsed && (
             <div className="profile-info">
-              <p className="profile-name">Dr. Ayisha Shalba</p>
-              <p className="profile-role">Cardiologist</p>
-              <span className="profile-id-badge">ID: #DR-80241</span>
+              <p className="profile-name">
+                {doctorProfile?.name
+                  ? `Dr. ${doctorProfile.name}`
+                  : "Doctor"}
+              </p>
+
+              <p className="profile-role">
+                {doctorProfile?.specialization || "Doctor"}
+              </p>
+
+              <span className="profile-id-badge">
+                ID: #{doctorProfile?.medRegNumber || "Not Provided"}
+              </span>
             </div>
           )}
         </NavLink>
@@ -275,8 +327,15 @@ function DoctorLayout() {
                 <FaUserMd />
               </div>
               <div className="topnav-profile-info">
-                <span className="topnav-profile-name">Dr. Ayisha Shalba</span>
-                <span className="topnav-profile-role">Cardiologist</span>
+                <span className="topnav-profile-name">
+                  {doctorProfile?.name
+                    ? `Dr. ${doctorProfile.name}`
+                    : "Doctor"}
+                </span>
+
+                <span className="topnav-profile-role">
+                  {doctorProfile?.specialization || "Doctor"}
+                </span>
               </div>
               <FaChevronRight className="topnav-chevron" />
             </NavLink>

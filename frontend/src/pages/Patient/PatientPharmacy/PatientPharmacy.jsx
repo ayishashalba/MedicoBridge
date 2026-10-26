@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+import { API_BASE_URL } from "../../../services/apiConfig";
 import {
   FaMapMarkerAlt,
   FaStar,
@@ -28,6 +28,7 @@ import {
   FaFileAlt,
   FaInfoCircle,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./PatientPharmacy.css";
 import FeaturedMedicines from "./FeaturedMedicines";
 
@@ -80,36 +81,6 @@ const pharmaciesData = [
     delivery: "Free delivery above ₹499 · Est. 60–90 mins",
     deliveryCharge: 0,
     minForFree: 499,
-  },
-];
-
-const ordersData = [
-  {
-    id: "MB20260001",
-    date: "20 June 2026",
-    items: "Paracetamol 650mg × 2, Vitamin C 500mg × 1",
-    amount: 290,
-    status: "Delivered",
-    pharmacy: "Apollo Pharmacy",
-    delivery: "Est. delivery: 1–2 Days (Sufficient Stock) · Delivered 21 June",
-  },
-  {
-    id: "MB20260002",
-    date: "22 June 2026",
-    items: "Amoxicillin 500mg × 1",
-    amount: 185,
-    status: "Shipped",
-    pharmacy: "MediPlus Pharmacy",
-    delivery: "Est. delivery: 1–2 Days (Sufficient Stock)",
-  },
-  {
-    id: "MB20260003",
-    date: "24 June 2026",
-    items: "Digital Thermometer × 1",
-    amount: 399,
-    status: "Pending",
-    pharmacy: "Care Medicals",
-    delivery: "Est. delivery: 2–3 Days (Medium Stock)",
   },
 ];
 
@@ -199,7 +170,7 @@ function RxRequiredModal({ medicine, onClose, onUpload }) {
             if (e.target.files[0]) {
               const f = e.target.files[0];
               if (f.size > 5 * 1024 * 1024) {
-                alert("File too large. Max 5 MB allowed.");
+                toast.warning("File too large. Max 5 MB allowed.");
                 return;
               }
               onUpload(f);
@@ -243,7 +214,11 @@ function ExtractedMedicineCard({ item, onAddToCart }) {
   const [qty, setQty] = useState(item.quantity || 1);
   const [added, setAdded] = useState(false);
 
-  const isAvailable = item.matched && item.product?.stock !== "out-of-stock";
+  const productStock = item.product?.stock;
+  const isOutOfStock = item.product?.stockStatus === "Out of Stock" || productStock === 0 || item.product?.isAvailable === false;
+  const isLowStock = item.product?.stockStatus === "Low Stock" || (typeof productStock === "number" && productStock > 0 && productStock <= 10);
+  const isAvailable = item.matched && !isOutOfStock && item.product?.canOrder !== false;
+  const availableStock = typeof productStock === "number" ? productStock : 10;
 
   const handleAdd = () => {
     if (!isAvailable) return;
@@ -263,7 +238,7 @@ function ExtractedMedicineCard({ item, onAddToCart }) {
         flexDirection: "column",
         gap: "0.6rem",
         boxShadow: "var(--shadow-sm)",
-        borderLeft: `4px solid ${item.matched ? (item.product?.stock === "out-of-stock" ? "#94a3b8" : "var(--primary-color)") : "#f87171"}`,
+        borderLeft: `4px solid ${item.matched ? (isOutOfStock ? "#94a3b8" : "var(--primary-color)") : "#f87171"}`,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
@@ -291,24 +266,34 @@ function ExtractedMedicineCard({ item, onAddToCart }) {
 
       {item.matched ? (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
-          {(item.product?.stock === "low-stock" || item.product?.stock === "out-of-stock") ? (
+          {isOutOfStock ? (
             <span style={{
               fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.55rem",
               borderRadius: "4px",
-              background: item.product?.stock === "low-stock" ? "#fffbeb" : "#f8fafc",
-              color: item.product?.stock === "low-stock" ? "#d97706" : "#94a3b8",
-              border: `1px solid ${item.product?.stock === "low-stock" ? "#fde68a" : "#e2e8f0"}`,
+              background: "#f8fafc",
+              color: "#94a3b8",
+              border: "1px solid #e2e8f0",
             }}>
-              {item.product?.stock === "low-stock" ? "⚠ Low Stock" : "Out of Stock"}
+              Out of Stock
+            </span>
+          ) : isLowStock ? (
+            <span style={{
+              fontSize: "0.75rem", fontWeight: 600, padding: "0.2rem 0.55rem",
+              borderRadius: "4px",
+              background: "#fffbeb",
+              color: "#d97706",
+              border: "1px solid #fde68a",
+            }}>
+              ⚠ Low Stock
             </span>
           ) : <div />}
 
           {isAvailable ? (
             <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
               <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--border-color)", borderRadius: "6px", overflow: "hidden" }}>
-                <button onClick={() => setQty(q => Math.max(1, q - 1))} style={{ border: "none", background: "var(--bg-secondary)", padding: "0.25rem 0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>−</button>
+                <button onClick={() => setQty(q => Math.max(1, q - 1))} disabled={qty <= 1} style={{ border: "none", background: "var(--bg-secondary)", padding: "0.25rem 0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>−</button>
                 <span style={{ padding: "0.2rem 0.5rem", fontSize: "0.85rem", fontWeight: 600 }}>{qty}</span>
-                <button onClick={() => setQty(q => Math.min(99, q + 1))} style={{ border: "none", background: "var(--bg-secondary)", padding: "0.25rem 0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>+</button>
+                <button onClick={() => setQty(q => Math.min(availableStock, q + 1))} disabled={qty >= availableStock} style={{ border: "none", background: "var(--bg-secondary)", padding: "0.25rem 0.5rem", cursor: "pointer", fontSize: "0.9rem" }}>+</button>
               </div>
               <button
                 onClick={handleAdd}
@@ -349,12 +334,14 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState("idle"); // idle | uploading | processing | done | error
   const [extractedData, setExtractedData] = useState(null);
-  const [toast, setToast] = useState("");
   const fileRef = useRef(null);
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(""), 4000);
+  const showToast = (msg, type = "success") => {
+    if (type === "warning") {
+      toast.warning(msg);
+    } else {
+      toast.success(msg);
+    }
   };
 
   const handleFile = async (e) => {
@@ -363,46 +350,23 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
 
     const validTypes = ["image/jpeg", "image/png", "application/pdf"];
     if (!validTypes.includes(selected.type)) {
-      showToast("Invalid file type. Please upload JPG, PNG, or PDF.");
+      showToast("Invalid file type. Please upload JPG, PNG, or PDF.", "warning");
       return;
     }
     if (selected.size > 5 * 1024 * 1024) {
-      showToast("File too large. Maximum size is 5 MB.");
+      showToast("File too large. Maximum size is 5 MB.", "warning");
       return;
     }
 
     setFile(selected);
     setStatus("uploading");
 
-    // Simulate file upload delay then call backend prescription processing
+    // Brief delay to show uploading state, then call backend
     setTimeout(async () => {
       setStatus("processing");
-      const processMock = () => {
-        setExtractedData({
-          prescriptionId: "RX-2026-DEMO",
-          fileName: selected.name,
-          prescriptionDate: new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }),
-          doctorName: "Dr. Suresh Nair",
-          clinicName: "MedicoBridge Digital Clinic",
-          medicines: [
-            { name: "Amoxicillin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 capsule twice daily after food", requiresPrescription: true, matched: true, product: { price: 145, stock: "in-stock" } },
-            { name: "Paracetamol 650mg", dosage: "650mg", quantity: 10, instruction: "Take 1 tablet as needed for fever", requiresPrescription: false, matched: true, product: { price: 28, stock: "in-stock" } },
-            { name: "Azithromycin 500mg", dosage: "500mg", quantity: 5, instruction: "Take 1 tablet daily for 5 days", requiresPrescription: true, matched: true, product: { price: 210, stock: "in-stock" } },
-            { name: "Ciprofloxacin 500mg", dosage: "500mg", quantity: 10, instruction: "Take 1 tablet every 12 hours", requiresPrescription: true, matched: false, product: null },
-          ],
-        });
-        setStatus("done");
-        showToast("Prescription uploaded successfully! Medicines extracted below.");
-        if (onPrescriptionVerified) onPrescriptionVerified(true);
-      };
-
-      if (!ENABLE_BACKEND_API) {
-        processMock();
-        return;
-      }
 
       try {
-        const res = await fetch("http://localhost:5000/api/pharmacy/process-prescription", {
+        const res = await fetch(`${API_BASE_URL}/medicines/process-prescription`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -411,19 +375,21 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
           }),
         });
         const data = await res.json();
-        if (data.success) {
-          setExtractedData(data);
+        if (data.success && data.data) {
+          setExtractedData({ ...data.data, fileName: selected.name });
           setStatus("done");
           showToast("Prescription uploaded successfully! Medicines extracted below.");
           if (onPrescriptionVerified) onPrescriptionVerified(true);
         } else {
           setStatus("error");
+          showToast("Could not process prescription. Please try again.", "warning");
         }
       } catch (err) {
-        // Fallback with mock data if backend unavailable
-        processMock();
+        console.error("Prescription processing error:", err);
+        setStatus("error");
+        showToast("Unable to reach server. Please check your connection.", "warning");
       }
-    }, 1800);
+    }, 1500);
   };
 
   const reset = () => {
@@ -436,20 +402,6 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
 
   return (
     <>
-      {/* Toast Notification */}
-      {toast && (
-        <div style={{
-          position: "fixed", top: "1.25rem", right: "1.25rem",
-          background: "#10b981", color: "#fff",
-          padding: "0.75rem 1.25rem", borderRadius: "8px",
-          fontSize: "0.85rem", fontWeight: 600,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-          zIndex: 9999, animation: "ocFadeIn 0.3s ease",
-        }}>
-          ✓ {toast}
-        </div>
-      )}
-
       <section className="upload-prescription">
         <FaFileUpload className="upload-icon" />
         <h3>Upload Prescription</h3>
@@ -543,8 +495,30 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
                   <ExtractedMedicineCard
                     key={i}
                     item={item}
-                    onAddToCart={(item, qty) => {
-                      console.log("Add to cart:", item.name, "× " + qty);
+                    onAddToCart={async (cartItem, qty) => {
+                      const medicineId = cartItem.product?._id || cartItem.product?.id;
+                      if (!medicineId) {
+                        toast.warning("This medicine is not available in our catalog.");
+                        return;
+                      }
+                      const token = localStorage.getItem("token");
+                      if (!token) { toast.warning("Please log in to add items to cart."); return; }
+                      try {
+                        const res = await fetch(`${API_BASE_URL}/cart`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                          body: JSON.stringify({ medicineId, quantity: qty }),
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                          toast.success(`${cartItem.name} added to cart!`);
+                          window.dispatchEvent(new CustomEvent("cartUpdated"));
+                        } else {
+                          toast.error(data.message || "Failed to add to cart.");
+                        }
+                      } catch {
+                        toast.error("Could not add to cart. Please try again.");
+                      }
                     }}
                   />
                 ))}
@@ -574,17 +548,21 @@ function PrescriptionUpload({ onPrescriptionVerified }) {
 /* ─── Sub-component: My Orders Panel ────────────────────────────── */
 function MyOrdersPanel() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState("active"); // active | history
-
-  const activeOrders = ordersData.filter((o) => o.status !== "Delivered");
-  const historyOrders = ordersData.filter((o) => o.status === "Delivered");
-  const shown = tab === "active" ? activeOrders : historyOrders;
-
-  const statusIcon = (s) => {
-    if (s === "Delivered") return <FaCheckCircle />;
-    if (s === "Shipped") return <FaTruck />;
-    return <FaClock />;
-  };
+  return (
+    <section className="pharmacy-section" style={{ textAlign: "center", padding: "1.5rem" }}>
+      <h3 style={{ marginBottom: "0.5rem" }}>My Orders &amp; Order History</h3>
+      <p style={{ color: "var(--text-secondary)", marginBottom: "1rem", fontSize: "0.9rem" }}>
+        Track your medicine deliveries and view past orders.
+      </p>
+      <button
+        className="primary-btn"
+        onClick={() => navigate("/patient/orders")}
+        style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+      >
+        <FaBoxOpen /> View All Orders
+      </button>
+    </section>
+  );
 }
 
 /* ─── Main Component ────────────────────────────────────────────── */

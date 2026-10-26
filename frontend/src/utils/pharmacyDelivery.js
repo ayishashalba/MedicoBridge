@@ -1,20 +1,72 @@
 /**
  * MedicoBridge Pharmacy Delivery & Stock Logic Utility
  * 
- * Rules:
- * - Stock > 40 units: Sufficient stock -> Estimated delivery: 1–2 Days
- * - Stock 10–40 units: Medium stock -> Estimated delivery: 2–3 Days
- * - Stock 1–9 units: Low stock -> Estimated delivery: 3–5 Days (Limited availability)
- * - Stock = 0 units: Out of Stock -> Ordering disabled
+ * Stock Rules:
+ * - Missing/undefined/null: Stock unavailable -> Ordering disabled
+ * - Stock <= 0 or isAvailable === false: Out of Stock -> Ordering disabled
+ * - Stock 1–10: Low Stock -> Estimated delivery: 3–5 Days (Limited availability)
+ * - Stock > 10–40: In Stock (Medium stock) -> Estimated delivery: 2–3 Days
+ * - Stock > 40: In Stock (Sufficient stock) -> Estimated delivery: 1–2 Days
  */
 
-export function getStockAndDeliveryInfo(stockUnitsOrStatus) {
-  let units = typeof stockUnitsOrStatus === "number" ? stockUnitsOrStatus : null;
+export const LOW_STOCK_THRESHOLD = 10;
 
-  if (units === null) {
-    if (stockUnitsOrStatus === "low-stock") units = 8;
-    else if (stockUnitsOrStatus === "out-of-stock") units = 0;
-    else units = 120; // default in-stock
+export function getStockAndDeliveryInfo(stockUnitsOrStatus, isAvailable = true) {
+  // If explicitly flagged as unavailable in the database
+  if (isAvailable === false) {
+    return {
+      status: "out-of-stock",
+      label: "Out of Stock",
+      stockText: "0 units available",
+      badgeCls: "stock-badge--out",
+      deliveryEta: "Unavailable",
+      deliveryDesc: "Item currently unavailable · Ordering disabled",
+      canOrder: false,
+      availableStock: 0,
+    };
+  }
+
+  // Handle missing/undefined/null stock data explicitly
+  if (stockUnitsOrStatus === undefined || stockUnitsOrStatus === null || stockUnitsOrStatus === "") {
+    return {
+      status: "unavailable",
+      label: "Stock unavailable",
+      stockText: "Stock unverified",
+      badgeCls: "stock-badge--unavailable",
+      deliveryEta: "Pending",
+      deliveryDesc: "Stock verification pending · Ordering paused",
+      canOrder: false,
+      availableStock: 0,
+    };
+  }
+
+  let units;
+  if (typeof stockUnitsOrStatus === "number") {
+    units = stockUnitsOrStatus;
+  } else {
+    // Check if string representation is a valid number
+    const parsed = Number(stockUnitsOrStatus);
+    if (!isNaN(parsed)) {
+      units = parsed;
+    } else if (stockUnitsOrStatus === "low-stock") {
+      units = LOW_STOCK_THRESHOLD;
+    } else if (stockUnitsOrStatus === "out-of-stock") {
+      units = 0;
+    } else if (stockUnitsOrStatus === "in-stock") {
+      units = 50;
+    } else {
+      // Unrecognized string or missing stock data
+      return {
+        status: "unavailable",
+        label: "Stock unavailable",
+        stockText: "Stock unverified",
+        badgeCls: "stock-badge--unavailable",
+        deliveryEta: "Pending",
+        deliveryDesc: "Stock verification pending · Ordering paused",
+        canOrder: false,
+        availableStock: 0,
+      };
+    }
   }
 
   if (units <= 0) {
@@ -26,10 +78,11 @@ export function getStockAndDeliveryInfo(stockUnitsOrStatus) {
       deliveryEta: "Unavailable",
       deliveryDesc: "Item out of stock · Ordering disabled",
       canOrder: false,
+      availableStock: 0,
     };
   }
 
-  if (units < 10) {
+  if (units <= LOW_STOCK_THRESHOLD) {
     return {
       status: "low-stock",
       label: "Low Stock",
@@ -38,18 +91,20 @@ export function getStockAndDeliveryInfo(stockUnitsOrStatus) {
       deliveryEta: "3–5 Days",
       deliveryDesc: "Est. Delivery: 3–5 Days (Limited availability)",
       canOrder: true,
+      availableStock: units,
     };
   }
 
   if (units <= 40) {
     return {
-      status: "medium-stock",
+      status: "in-stock",
       label: "In Stock",
       stockText: `${units} units available`,
-      badgeCls: "stock-badge--medium",
+      badgeCls: "stock-badge--in",
       deliveryEta: "2–3 Days",
       deliveryDesc: "Est. Delivery: 2–3 Days",
       canOrder: true,
+      availableStock: units,
     };
   }
 
@@ -62,5 +117,6 @@ export function getStockAndDeliveryInfo(stockUnitsOrStatus) {
     deliveryEta: "1–2 Days",
     deliveryDesc: "Est. Delivery: 1–2 Days (Sufficient stock)",
     canOrder: true,
+    availableStock: units,
   };
 }

@@ -8,9 +8,8 @@ import {
   FaUpload,
   FaFileAlt,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./PharmacyRegister.css";
-
-const PHARMACY_TYPES = ["Retail Pharmacy"];
 
 const INITIAL_FORM_STATE = {
   pharmacyName: "",
@@ -21,7 +20,6 @@ const INITIAL_FORM_STATE = {
   address: "",
   city: "",
   state: "",
-  pharmacyType: "Retail Pharmacy",
   password: "",
   confirmPassword: "",
   acceptTerms: false,
@@ -70,7 +68,7 @@ function PharmacyRegister() {
     }
     if (!form.email.trim()) {
       errs.email = "Email address is required";
-    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       errs.email = "Please enter a valid email address";
     }
     if (!form.phone.trim()) {
@@ -86,9 +84,6 @@ function PharmacyRegister() {
     }
     if (!form.state.trim()) {
       errs.state = "State is required";
-    }
-    if (!form.pharmacyType) {
-      errs.pharmacyType = "Please select a pharmacy type";
     }
     if (!licenseFile) {
       errs.licenseFile = "Pharmacy license is required";
@@ -111,11 +106,76 @@ function PharmacyRegister() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
-      console.log("Pharmacy registration submitted:", form, { licenseFile });
-      navigate("/verify-email", { state: { role: "pharmacy" } });
+
+    if (!validate()) {
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+
+      formData.append("name", form.pharmacyName.trim());
+      formData.append("email", form.email.trim().toLowerCase());
+      formData.append("password", form.password);
+      formData.append("role", "Pharmacy");
+      formData.append("phone", form.phone.trim());
+      formData.append("address", form.address.trim());
+      formData.append("city", form.city.trim());
+      formData.append("state", form.state.trim());
+      formData.append("licenseNumber", form.licenseNumber.trim());
+      formData.append("pharmacyType", "Retail");
+
+      if (licenseFile) {
+        formData.append("medicalLicense", licenseFile);
+      }
+
+      console.log("=== PHARMACY REGISTRATION ===");
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/register",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("PHARMACY REGISTER RESPONSE:", data);
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Pharmacy registration failed."
+        );
+      }
+
+      const registeredEmail = form.email.trim().toLowerCase();
+
+      localStorage.setItem(
+        "pendingVerificationEmail",
+        registeredEmail
+      );
+
+      localStorage.setItem(
+        "pendingVerificationRole",
+        "Pharmacy"
+      );
+
+      navigate("/verify-email", {
+        state: {
+          email: registeredEmail,
+          role: "Pharmacy",
+        },
+      });
+    } catch (error) {
+      console.error("Pharmacy registration error:", error);
+
+      toast.error(
+        error.message ||
+        "Pharmacy registration failed. Please try again."
+      );
     }
   };
 
@@ -170,28 +230,6 @@ function PharmacyRegister() {
 
             <div className="ph-reg-grid-row">
               {renderField("phone", "Phone Number", "tel", "e.g. 9876543210")}
-
-              {/* Pharmacy Type Dropdown */}
-              <div className="ph-reg-form-group">
-                <label htmlFor="ph-reg-pharmacyType">Pharmacy Type</label>
-                <select
-                  id="ph-reg-pharmacyType"
-                  name="pharmacyType"
-                  className={`ph-reg-input ph-reg-select${errors.pharmacyType ? " ph-reg-input-error" : ""}`}
-                  value={form.pharmacyType}
-                  onChange={handleChange}
-                >
-                  <option value="">Select pharmacy type</option>
-                  {PHARMACY_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-                {errors.pharmacyType && (
-                  <span className="ph-reg-error-msg">{errors.pharmacyType}</span>
-                )}
-              </div>
             </div>
 
             {/* ── Location Details ── */}

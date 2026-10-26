@@ -403,3 +403,7 @@
 .hbs-contact-btn:hover {
   background: #b91c1c;
 }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

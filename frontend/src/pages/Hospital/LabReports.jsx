@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FaFlask,
   FaSearch,
@@ -21,207 +21,68 @@ import {
   FaVial,
   FaLink,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./LabReports.css";
 
-// Realistic initial Lab Reports
-const initialLabReports = [
-  {
-    id: "LAB-9011",
-    patientName: "Devanand S.",
-    patientId: "PAT-4088",
-    patientAge: 56,
-    patientGender: "Male",
-    doctorName: "Dr. Ayisha Shalba",
-    doctorSpecialty: "Cardiology",
-    testName: "Cardiac Troponin & Lipid Panel",
-    category: "Cardiology",
-    testDate: "Aug 18, 2026",
-    sampleCollectedDate: "Aug 18, 2026, 08:30 AM",
-    status: "Processing",
-    sampleType: "Venous Blood",
-    isAbnormal: true,
-    associatedWithMedicalRecord: false,
-    remarks: "Elevated Troponin-I and serum cholesterol levels. Advised urgent clinical correlation.",
-    results: [
-      { parameter: "High-Sensitivity Troponin I", value: "0.14", unit: "ng/mL", referenceRange: "< 0.04 ng/mL", status: "High" },
-      { parameter: "Total Cholesterol", value: "245", unit: "mg/dL", referenceRange: "< 200 mg/dL", status: "High" },
-      { parameter: "HDL Cholesterol", value: "38", unit: "mg/dL", referenceRange: "> 40 mg/dL", status: "Low" },
-      { parameter: "LDL Cholesterol", value: "162", unit: "mg/dL", referenceRange: "< 100 mg/dL", status: "High" },
-      { parameter: "Triglycerides", value: "190", unit: "mg/dL", referenceRange: "< 150 mg/dL", status: "High" },
-    ],
-  },
-  {
-    id: "LAB-9012",
-    patientName: "Leela Mathews",
-    patientId: "PAT-4096",
-    patientAge: 72,
-    patientGender: "Female",
-    doctorName: "Dr. Amit Varma",
-    doctorSpecialty: "General Medicine",
-    testName: "Complete Blood Count (CBC)",
-    category: "Hematology",
-    testDate: "Aug 19, 2026",
-    sampleCollectedDate: "Aug 19, 2026, 09:15 AM",
-    status: "Sample Collected",
-    sampleType: "Whole Blood (EDTA)",
-    isAbnormal: false,
-    associatedWithMedicalRecord: false,
-    remarks: "Sample drawn and transferred to automated hematology analyzer.",
-    results: [
-      { parameter: "Hemoglobin", value: "11.8", unit: "g/dL", referenceRange: "12.0 – 15.5 g/dL", status: "Normal" },
-      { parameter: "Total WBC Count", value: "6,800", unit: "/μL", referenceRange: "4,000 – 11,000 /μL", status: "Normal" },
-      { parameter: "Platelet Count", value: "240,000", unit: "/μL", referenceRange: "150,000 – 450,000 /μL", status: "Normal" },
-      { parameter: "RBC Count", value: "4.2", unit: "million/μL", referenceRange: "3.8 – 5.2 million/μL", status: "Normal" },
-    ],
-  },
-  {
-    id: "LAB-9013",
-    patientName: "John Wesley",
-    patientId: "PAT-4090",
-    patientAge: 46,
-    patientGender: "Male",
-    doctorName: "Dr. Susan George",
-    doctorSpecialty: "Orthopedics",
-    testName: "HbA1c & Fasting Plasma Glucose",
-    category: "Endocrinology",
-    testDate: "Aug 17, 2026",
-    sampleCollectedDate: "Aug 17, 2026, 07:45 AM",
-    status: "Completed",
-    sampleType: "Fluoride Blood & EDTA",
-    isAbnormal: true,
-    associatedWithMedicalRecord: true,
-    remarks: "Elevated glycated hemoglobin indicating sub-optimal glycemic control. Diabetic review advised.",
-    results: [
-      { parameter: "HbA1c (Glycated Hemoglobin)", value: "8.4", unit: "%", referenceRange: "< 5.7 %", status: "High" },
-      { parameter: "Estimated Average Glucose", value: "194", unit: "mg/dL", referenceRange: "< 117 mg/dL", status: "High" },
-      { parameter: "Fasting Blood Glucose", value: "156", unit: "mg/dL", referenceRange: "70 – 99 mg/dL", status: "High" },
-    ],
-  },
-  {
-    id: "LAB-9014",
-    patientName: "Meera Pillai",
-    patientId: "PAT-4105",
-    patientAge: 61,
-    patientGender: "Female",
-    doctorName: "Dr. Priya Thomas",
-    doctorSpecialty: "Pediatrics",
-    testName: "Comprehensive Thyroid Profile",
-    category: "Biochemistry",
-    testDate: "Aug 16, 2026",
-    sampleCollectedDate: "Aug 16, 2026, 08:15 AM",
-    status: "Completed",
-    sampleType: "Serum",
-    isAbnormal: false,
-    associatedWithMedicalRecord: true,
-    remarks: "Euthyroid state. Thyroid hormone levels within optimal therapeutic range.",
-    results: [
-      { parameter: "TSH (Thyroid Stimulating Hormone)", value: "2.45", unit: "μIU/mL", referenceRange: "0.45 – 4.50 μIU/mL", status: "Normal" },
-      { parameter: "Free T3 (Triiodothyronine)", value: "3.1", unit: "pg/mL", referenceRange: "2.0 – 4.4 pg/mL", status: "Normal" },
-      { parameter: "Free T4 (Thyroxine)", value: "1.22", unit: "ng/dL", referenceRange: "0.82 – 1.77 ng/dL", status: "Normal" },
-    ],
-  },
-  {
-    id: "LAB-9015",
-    patientName: "Ramesh Kumar",
-    patientId: "PAT-4091",
-    patientAge: 52,
-    patientGender: "Male",
-    doctorName: "Dr. Rajesh K. Nair",
-    doctorSpecialty: "Neurology",
-    testName: "Renal Function & Electrolytes (RFT)",
-    category: "Biochemistry",
-    testDate: "Aug 18, 2026",
-    sampleCollectedDate: "Aug 18, 2026, 09:00 AM",
-    status: "Completed",
-    sampleType: "Serum",
-    isAbnormal: true,
-    associatedWithMedicalRecord: true,
-    remarks: "Mildly elevated serum creatinine and blood urea nitrogen. Maintain hydration.",
-    results: [
-      { parameter: "Serum Creatinine", value: "1.65", unit: "mg/dL", referenceRange: "0.74 – 1.35 mg/dL", status: "High" },
-      { parameter: "Blood Urea Nitrogen (BUN)", value: "26", unit: "mg/dL", referenceRange: "7 – 20 mg/dL", status: "High" },
-      { parameter: "Serum Sodium (Na+)", value: "139", unit: "mEq/L", referenceRange: "135 – 145 mEq/L", status: "Normal" },
-      { parameter: "Serum Potassium (K+)", value: "4.4", unit: "mEq/L", referenceRange: "3.5 – 5.1 mEq/L", status: "Normal" },
-    ],
-  },
-  {
-    id: "LAB-9016",
-    patientName: "Sonia Sebastian",
-    patientId: "PAT-4092",
-    patientAge: 29,
-    patientGender: "Female",
-    doctorName: "Dr. Priya Thomas",
-    doctorSpecialty: "Pediatrics",
-    testName: "Liver Function Test (LFT)",
-    category: "Biochemistry",
-    testDate: "Aug 19, 2026",
-    sampleCollectedDate: "—",
-    status: "Requested",
-    sampleType: "Serum",
-    isAbnormal: false,
-    associatedWithMedicalRecord: false,
-    remarks: "Awaiting sample collection from general ward 2A-01.",
-    results: [
-      { parameter: "Total Bilirubin", value: "—", unit: "mg/dL", referenceRange: "0.2 – 1.2 mg/dL", status: "Pending" },
-      { parameter: "SGOT / AST", value: "—", unit: "U/L", referenceRange: "8 – 48 U/L", status: "Pending" },
-      { parameter: "SGPT / ALT", value: "—", unit: "U/L", referenceRange: "7 – 55 U/L", status: "Pending" },
-      { parameter: "Alkaline Phosphatase (ALP)", value: "—", unit: "U/L", referenceRange: "44 – 147 U/L", status: "Pending" },
-    ],
-  },
-  {
-    id: "LAB-9017",
-    patientName: "Mohan Lal",
-    patientId: "PAT-4093",
-    patientAge: 64,
-    patientGender: "Male",
-    doctorName: "Dr. Ayisha Shalba",
-    doctorSpecialty: "Cardiology",
-    testName: "Serum Electrolytes & Calcium",
-    category: "Biochemistry",
-    testDate: "Aug 17, 2026",
-    sampleCollectedDate: "Aug 17, 2026, 11:30 AM",
-    status: "Completed",
-    sampleType: "Serum",
-    isAbnormal: false,
-    associatedWithMedicalRecord: true,
-    remarks: "Electrolytes and ionized calcium within normal baseline limits.",
-    results: [
-      { parameter: "Serum Sodium", value: "141", unit: "mmol/L", referenceRange: "136 – 145 mmol/L", status: "Normal" },
-      { parameter: "Serum Potassium", value: "4.1", unit: "mmol/L", referenceRange: "3.5 – 5.0 mmol/L", status: "Normal" },
-      { parameter: "Serum Chloride", value: "102", unit: "mmol/L", referenceRange: "98 – 107 mmol/L", status: "Normal" },
-      { parameter: "Serum Calcium", value: "9.4", unit: "mg/dL", referenceRange: "8.6 – 10.3 mg/dL", status: "Normal" },
-    ],
-  },
-  {
-    id: "LAB-9018",
-    patientName: "Aparna Nair",
-    patientId: "PAT-4094",
-    patientAge: 41,
-    patientGender: "Female",
-    doctorName: "Dr. Vikram Shekar",
-    doctorSpecialty: "Dermatology",
-    testName: "Serum IgE & Allergy Screening",
-    category: "Immunology",
-    testDate: "Aug 19, 2026",
-    sampleCollectedDate: "Aug 19, 2026, 10:00 AM",
-    status: "Processing",
-    sampleType: "Serum",
-    isAbnormal: true,
-    associatedWithMedicalRecord: false,
-    remarks: "Elevated IgE antibody titer detected in serum. Assay verification underway.",
-    results: [
-      { parameter: "Total Serum IgE", value: "380", unit: "IU/mL", referenceRange: "< 100 IU/mL", status: "High" },
-      { parameter: "Absolute Eosinophil Count", value: "540", unit: "/μL", referenceRange: "20 – 500 /μL", status: "High" },
-    ],
-  },
-];
-
+const API_BASE = "http://localhost:5000/api";
 const STATUS_FILTERS = ["All", "Requested", "Sample Collected", "Processing", "Completed", "Abnormal"];
 
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const getToken = () => localStorage.getItem("token");
+
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getToken()}`,
+});
+
+/** Normalise a raw LabReport document from the backend into the shape the UI expects. */
+const normaliseReport = (r) => {
+  const patient = r.patientId || {};
+  const doctor = r.doctorId || {};
+
+  // Compute patient age from dob if available
+  let patientAge = "—";
+  if (patient.dob) {
+    const diff = Date.now() - new Date(patient.dob).getTime();
+    patientAge = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+  }
+
+  return {
+    _id: r._id,
+    id: r.reportId || r._id,
+    patientName: patient.name || "—",
+    patientId: patient.patientId || "—",
+    patientAge,
+    patientGender: patient.gender || "—",
+    doctorName: doctor.name ? `Dr. ${doctor.name}`.replace(/^Dr\. Dr\./, "Dr.") : "—",
+    doctorSpecialty: doctor.specialization || doctor.department || "—",
+    testName: r.testName || "—",
+    category: r.category || "—",
+    testDate: r.reportDate ? new Date(r.reportDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—",
+    sampleCollectedDate: r.sampleCollectedDate
+      ? new Date(r.sampleCollectedDate).toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })
+      : "—",
+    status: r.status || "Requested",
+    sampleType: r.sampleType || "—",
+    isAbnormal: r.isAbnormal || false,
+    associatedWithMedicalRecord: r.associatedWithMedicalRecord || false,
+    remarks: r.remarks || r.notes || "",
+    results: Array.isArray(r.results) ? r.results : [],
+  };
+};
+
 function LabReports() {
-  const [reports, setReports] = useState(initialLabReports);
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+
+  // Patient & Doctor dropdown data for Order modal
+  const [patients, setPatients] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+  const [loadingDropdowns, setLoadingDropdowns] = useState(false);
 
   // Modals
   const [viewModalReport, setViewModalReport] = useState(null);
@@ -229,34 +90,96 @@ function LabReports() {
   const [showNewTestModal, setShowNewTestModal] = useState(false);
 
   // Update Form State
-  const [editStatus, setEditStatus] = useState("Completed");
+  const [editStatus, setEditStatus] = useState("Requested");
   const [editRemarks, setEditRemarks] = useState("");
   const [editResults, setEditResults] = useState([]);
   const [editIsAbnormal, setEditIsAbnormal] = useState(false);
 
   // New Test Order State
-  const [newPatientName, setNewPatientName] = useState("");
   const [newPatientId, setNewPatientId] = useState("");
-  const [newDoctorName, setNewDoctorName] = useState("Dr. Ayisha Shalba");
+  const [newDoctorId, setNewDoctorId] = useState("");
   const [newTestName, setNewTestName] = useState("Complete Blood Count (CBC)");
   const [newCategory, setNewCategory] = useState("Hematology");
   const [newSampleType, setNewSampleType] = useState("Venous Blood");
 
-  // Toast Feedback State
-  const [toastMsg, setToastMsg] = useState(null);
+  // ─── Fetch all lab reports for this hospital ──────────────────────────────
 
-  const showToast = (msg) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3200);
-  };
+  const fetchReports = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_BASE}/hospital/lab-reports`, {
+        headers: authHeaders(),
+      });
 
-  // Metric computations
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Session expired. Please log in again.");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        setReports((data.data || []).map(normaliseReport));
+      } else {
+        toast.error(data.message || "Failed to load lab reports.");
+      }
+    } catch (err) {
+      console.error("Fetch lab reports error:", err);
+      toast.error("Network error: Could not load lab reports.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
+
+  // ─── Load patient & doctor lists when Order modal opens ──────────────────
+
+  const fetchDropdowns = useCallback(async () => {
+    setLoadingDropdowns(true);
+    try {
+      const [pRes, dRes] = await Promise.all([
+        fetch(`${API_BASE}/hospital/patients`, { headers: authHeaders() }),
+        fetch(`${API_BASE}/hospital/doctors`, { headers: authHeaders() }),
+      ]);
+
+      const pData = await pRes.json();
+      const dData = await dRes.json();
+
+      if (pData.success) setPatients(pData.data || []);
+      else toast.warning("Could not load patient list.");
+
+      if (dData.success) setDoctors(dData.data || []);
+      else toast.warning("Could not load doctor list.");
+    } catch {
+      toast.warning("Could not load patient/doctor lists.");
+    } finally {
+      setLoadingDropdowns(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showNewTestModal) {
+      fetchDropdowns();
+      // Reset form
+      setNewPatientId("");
+      setNewDoctorId("");
+      setNewTestName("Complete Blood Count (CBC)");
+      setNewCategory("Hematology");
+      setNewSampleType("Venous Blood");
+    }
+  }, [showNewTestModal, fetchDropdowns]);
+
+  // ─── Metric computations (from backend data) ─────────────────────────────
+
   const totalTests = reports.length;
   const pendingReports = reports.filter((r) => r.status !== "Completed").length;
   const completedReports = reports.filter((r) => r.status === "Completed").length;
   const abnormalReports = reports.filter((r) => r.isAbnormal).length;
 
-  // Filtered reports
+  // ─── Filtered reports ─────────────────────────────────────────────────────
+
   const filteredReports = useMemo(() => {
     return reports.filter((rep) => {
       const q = search.trim().toLowerCase();
@@ -279,116 +202,156 @@ function LabReports() {
     });
   }, [reports, search, statusFilter]);
 
-  // Handler: Open Update/Upload Modal
+  // ─── Handler: Open Update/Upload Modal ───────────────────────────────────
+
   const handleOpenUpdateModal = (report) => {
     setUpdateModalReport(report);
     setEditStatus(report.status);
     setEditRemarks(report.remarks || "");
     setEditIsAbnormal(report.isAbnormal || false);
-    setEditResults(
-      report.results.map((res) => ({ ...res }))
-    );
+    setEditResults(report.results.map((res) => ({ ...res })));
   };
 
-  // Handler: Save Update Report
-  const handleSaveReportUpdate = (e) => {
+  // ─── Handler: Save Update Report → PUT /api/hospital/lab-reports/:id ─────
+
+  const handleSaveReportUpdate = async (e) => {
     e.preventDefault();
     if (!updateModalReport) return;
 
-    const isMarkedCompleted = editStatus === "Completed";
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/hospital/lab-reports/${updateModalReport._id}`, {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          status: editStatus,
+          remarks: editRemarks,
+          isAbnormal: editIsAbnormal,
+          results: editResults,
+        }),
+      });
 
-    setReports((prev) =>
-      prev.map((rep) =>
-        rep.id === updateModalReport.id
-          ? {
-              ...rep,
-              status: editStatus,
-              remarks: editRemarks,
-              isAbnormal: editIsAbnormal,
-              results: editResults,
-              associatedWithMedicalRecord: isMarkedCompleted ? true : rep.associatedWithMedicalRecord,
-            }
-          : rep
-      )
-    );
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Unauthorized. Please log in again.");
+        return;
+      }
+      if (res.status === 404) {
+        toast.error("Lab report not found.");
+        return;
+      }
 
-    setUpdateModalReport(null);
-    if (viewModalReport && viewModalReport.id === updateModalReport.id) {
-      setViewModalReport(null);
-    }
+      const data = await res.json();
 
-    if (isMarkedCompleted) {
-      showToast(`Report ${updateModalReport.id} completed & associated with patient's Medical Records.`);
-    } else {
-      showToast(`Report ${updateModalReport.id} updated successfully.`);
-    }
-  };
-
-  // Handler: Mark Completed Directly
-  const handleMarkCompleted = (reportId) => {
-    setReports((prev) =>
-      prev.map((rep) => {
-        if (rep.id === reportId) {
-          // Adjust any pending parameters to normal
-          const updatedResults = rep.results.map((r) =>
-            r.value === "—" ? { ...r, value: "Verified", status: "Normal" } : r
-          );
-          return {
-            ...rep,
-            status: "Completed",
-            associatedWithMedicalRecord: true,
-            results: updatedResults,
-            remarks: rep.remarks.includes("Awaiting") ? "Sample analysis completed. Findings verified." : rep.remarks,
-          };
+      if (data.success) {
+        await fetchReports();
+        setUpdateModalReport(null);
+        if (viewModalReport && viewModalReport._id === updateModalReport._id) {
+          setViewModalReport(null);
         }
-        return rep;
-      })
-    );
-
-    showToast(`Report ${reportId} marked as Completed & linked to Medical Records.`);
+        toast.success(`Report ${updateModalReport.id} updated successfully.`);
+      } else {
+        toast.error(data.message || "Failed to update report.");
+      }
+    } catch (err) {
+      console.error("Update lab report error:", err);
+      toast.error("Network error: Failed to update report.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Handler: Order New Diagnostic Test
-  const handleCreateNewTest = (e) => {
+  // ─── Handler: Mark Completed → PUT /api/hospital/lab-reports/:id/complete ─
+
+  const handleMarkCompleted = async (report) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/hospital/lab-reports/${report._id}/complete`, {
+        method: "PUT",
+        headers: authHeaders(),
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Unauthorized. Please log in again.");
+        return;
+      }
+      if (res.status === 404) {
+        toast.error("Lab report not found.");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchReports();
+        toast.success(`Report ${report.id} marked as Completed & linked to Medical Records.`);
+      } else {
+        toast.error(data.message || "Failed to mark report completed.");
+      }
+    } catch (err) {
+      console.error("Complete lab report error:", err);
+      toast.error("Network error: Failed to mark report completed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ─── Handler: Order New Diagnostic Test → POST /api/hospital/lab-reports ──
+
+  const handleCreateNewTest = async (e) => {
     e.preventDefault();
-    if (!newPatientName.trim()) {
-      alert("Please enter patient name.");
+
+    if (!newPatientId) {
+      toast.warning("Please select a patient.");
       return;
     }
 
-    const newId = `LAB-${Math.floor(9020 + Math.random() * 80)}`;
-    const pId = newPatientId.trim() || `PAT-${Math.floor(4120 + Math.random() * 80)}`;
+    setSaving(true);
+    try {
+      const body = {
+        patientId: newPatientId,
+        doctorId: newDoctorId || null,
+        testName: newTestName,
+        category: newCategory,
+        sampleType: newSampleType,
+      };
 
-    const newReport = {
-      id: newId,
-      patientName: newPatientName.trim(),
-      patientId: pId,
-      patientAge: 38,
-      patientGender: "Male",
-      doctorName: newDoctorName,
-      doctorSpecialty: "General Medicine",
-      testName: newTestName,
-      category: newCategory,
-      testDate: "Aug 19, 2026",
-      sampleCollectedDate: "—",
-      status: "Requested",
-      sampleType: newSampleType,
-      isAbnormal: false,
-      associatedWithMedicalRecord: false,
-      remarks: "Test requisition created. Awaiting sample collection.",
-      results: [
-        { parameter: "Routine Assay Parameter", value: "—", unit: "—", referenceRange: "Standard Range", status: "Pending" },
-      ],
-    };
+      const res = await fetch(`${API_BASE}/hospital/lab-reports`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
 
-    setReports([newReport, ...reports]);
-    setShowNewTestModal(false);
-    setNewPatientName("");
-    setNewPatientId("");
-    showToast(`Lab order ${newId} created for ${newPatientName}`);
+      if (res.status === 401 || res.status === 403) {
+        toast.error("Unauthorized. Please log in again.");
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.success) {
+        await fetchReports();
+        setShowNewTestModal(false);
+        const createdId = data.data?.reportId || data.data?._id;
+        const patObj = patients.find((p) => p._id === newPatientId);
+        toast.success(`Lab order ${createdId} created for ${patObj?.name || "patient"}.`);
+      } else {
+        // Handle validation errors array
+        if (data.errors && Array.isArray(data.errors)) {
+          data.errors.forEach((err) => toast.error(err));
+        } else {
+          toast.error(data.message || "Failed to create lab order.");
+        }
+      }
+    } catch (err) {
+      console.error("Create lab order error:", err);
+      toast.error("Network error: Failed to create lab order.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Status Badge Class Helper
+  // ─── Status Badge Class Helper ────────────────────────────────────────────
+
   const getStatusBadge = (status) => {
     switch (status) {
       case "Completed":
@@ -403,16 +366,12 @@ function LabReports() {
     }
   };
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="hosp-labs-page">
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div className="hosp-lab-toast" role="alert">
-          <FaCheckCircle className="toast-icon-check" />
-          <span>{toastMsg}</span>
-        </div>
-      )}
-
       {/* Header Banner */}
       <div className="hosp-lab-header-banner">
         <div className="banner-info">
@@ -446,7 +405,7 @@ function LabReports() {
               <FaMicroscope />
             </div>
           </div>
-          <div className="stat-value">{totalTests}</div>
+          <div className="stat-value">{loading ? "—" : totalTests}</div>
           <div className="stat-meta">
             <span className="meta-highlight">Diagnostic Lab</span> active inventory
           </div>
@@ -460,7 +419,7 @@ function LabReports() {
               <FaClock />
             </div>
           </div>
-          <div className="stat-value text-amber">{pendingReports}</div>
+          <div className="stat-value text-amber">{loading ? "—" : pendingReports}</div>
           <div className="stat-meta">
             <span className="meta-badge meta-badge--pending">In Progress</span>
             Requisitions &amp; Analysis
@@ -475,10 +434,10 @@ function LabReports() {
               <FaCheckCircle />
             </div>
           </div>
-          <div className="stat-value text-success">{completedReports}</div>
+          <div className="stat-value text-success">{loading ? "—" : completedReports}</div>
           <div className="stat-meta">
             <span className="meta-badge meta-badge--success">
-              {Math.round((completedReports / totalTests) * 100)}% Verified
+              {totalTests > 0 ? Math.round((completedReports / totalTests) * 100) : 0}% Verified
             </span>
             Synced with Patient Records
           </div>
@@ -492,7 +451,7 @@ function LabReports() {
               <FaExclamationTriangle />
             </div>
           </div>
-          <div className="stat-value text-danger">{abnormalReports}</div>
+          <div className="stat-value text-danger">{loading ? "—" : abnormalReports}</div>
           <div className="stat-meta">
             <span className="meta-badge meta-badge--danger">Critical / Alert</span>
             Out-of-range parameters
@@ -522,7 +481,7 @@ function LabReports() {
                 onClick={() => setStatusFilter(tab)}
               >
                 <span>{tab}</span>
-                <span className="tab-count-badge">{count}</span>
+                <span className="tab-count-badge">{loading ? "—" : count}</span>
               </button>
             );
           })}
@@ -580,9 +539,17 @@ function LabReports() {
               </tr>
             </thead>
             <tbody>
-              {filteredReports.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="hosp-table-empty">
+                    <FaFlask className="empty-icon" />
+                    <h3>Loading lab reports…</h3>
+                    <p>Fetching data from the database.</p>
+                  </td>
+                </tr>
+              ) : filteredReports.length > 0 ? (
                 filteredReports.map((rep) => (
-                  <tr key={rep.id} className="lab-table-row">
+                  <tr key={rep._id} className="lab-table-row">
                     {/* Report ID */}
                     <td>
                       <div className="lab-id-cell">
@@ -653,6 +620,7 @@ function LabReports() {
                           className="hosp-lab-btn btn-update-report"
                           onClick={() => handleOpenUpdateModal(rep)}
                           title="Upload / Update Findings"
+                          disabled={saving}
                         >
                           <FaUpload />
                           <span>Update</span>
@@ -662,8 +630,9 @@ function LabReports() {
                         {rep.status !== "Completed" && (
                           <button
                             className="hosp-lab-btn btn-mark-completed"
-                            onClick={() => handleMarkCompleted(rep.id)}
+                            onClick={() => handleMarkCompleted(rep)}
                             title="Mark as Completed"
+                            disabled={saving}
                           >
                             <FaCheck />
                             <span>Mark Completed</span>
@@ -742,7 +711,10 @@ function LabReports() {
                   </div>
                   <div className="meta-info-row">
                     <span className="label">Demographics:</span>
-                    <span className="value">{viewModalReport.patientGender}, {viewModalReport.patientAge} years</span>
+                    <span className="value">
+                      {viewModalReport.patientGender !== "—" ? viewModalReport.patientGender : "Not recorded"}
+                      {viewModalReport.patientAge !== "—" ? `, ${viewModalReport.patientAge} years` : ""}
+                    </span>
                   </div>
                 </div>
 
@@ -751,11 +723,15 @@ function LabReports() {
                   <span className="meta-box-title">Requisition Details</span>
                   <div className="meta-info-row">
                     <span className="label">Ordered By:</span>
-                    <span className="value font-bold">{viewModalReport.doctorName}</span>
+                    <span className="value font-bold">
+                      {viewModalReport.doctorName !== "—" ? viewModalReport.doctorName : "Not recorded"}
+                    </span>
                   </div>
                   <div className="meta-info-row">
                     <span className="label">Department:</span>
-                    <span className="value">{viewModalReport.doctorSpecialty}</span>
+                    <span className="value">
+                      {viewModalReport.doctorSpecialty !== "—" ? viewModalReport.doctorSpecialty : "Not recorded"}
+                    </span>
                   </div>
                   <div className="meta-info-row">
                     <span className="label">Test Date:</span>
@@ -789,17 +765,17 @@ function LabReports() {
                                 : "param-row--normal"
                             }
                           >
-                            <td className="font-bold">{param.parameter}</td>
+                            <td className="font-bold">{param.parameter || "—"}</td>
                             <td className="param-value font-bold">
-                              {param.value}
+                              {param.value || "—"}
                             </td>
-                            <td className="text-muted">{param.unit}</td>
-                            <td className="text-muted">{param.referenceRange}</td>
+                            <td className="text-muted">{param.unit || "—"}</td>
+                            <td className="text-muted">{param.referenceRange || "—"}</td>
                             <td>
                               <span
-                                className={`param-status-pill param-status--${param.status.toLowerCase()}`}
+                                className={`param-status-pill param-status--${(param.status || "normal").toLowerCase()}`}
                               >
-                                {param.status}
+                                {param.status || "—"}
                               </span>
                             </td>
                           </tr>
@@ -831,7 +807,9 @@ function LabReports() {
                   <div>
                     <span className="sync-title">Associated with Patient Medical Records</span>
                     <p className="sync-desc">
-                      This completed lab report is permanently linked to {viewModalReport.patientName}'s clinical chart under Medical Records.
+                      {viewModalReport.associatedWithMedicalRecord
+                        ? `This completed lab report is permanently linked to ${viewModalReport.patientName}'s clinical chart under Medical Records.`
+                        : "This report is completed. Medical record association status: not recorded."}
                     </p>
                   </div>
                 </div>
@@ -911,42 +889,48 @@ function LabReports() {
               <div className="form-group">
                 <label>Test Parameters &amp; Observed Results</label>
                 <div className="param-editor-list">
-                  {editResults.map((param, index) => (
-                    <div key={index} className="param-edit-row">
-                      <div className="param-name-field">
-                        <span className="param-title">{param.parameter}</span>
-                        <span className="param-ref text-muted">Ref: {param.referenceRange}</span>
+                  {editResults.length > 0 ? (
+                    editResults.map((param, index) => (
+                      <div key={index} className="param-edit-row">
+                        <div className="param-name-field">
+                          <span className="param-title">{param.parameter}</span>
+                          <span className="param-ref text-muted">Ref: {param.referenceRange || "—"}</span>
+                        </div>
+                        <div className="param-val-field">
+                          <input
+                            type="text"
+                            placeholder="Value"
+                            value={param.value}
+                            onChange={(e) => {
+                              const newVals = [...editResults];
+                              newVals[index] = { ...newVals[index], value: e.target.value };
+                              setEditResults(newVals);
+                            }}
+                          />
+                          <span className="param-unit">{param.unit}</span>
+                        </div>
+                        <div className="param-status-field">
+                          <select
+                            value={param.status}
+                            onChange={(e) => {
+                              const newVals = [...editResults];
+                              newVals[index] = { ...newVals[index], status: e.target.value };
+                              setEditResults(newVals);
+                            }}
+                          >
+                            <option value="Normal">Normal</option>
+                            <option value="High">High</option>
+                            <option value="Low">Low</option>
+                            <option value="Pending">Pending</option>
+                          </select>
+                        </div>
                       </div>
-                      <div className="param-val-field">
-                        <input
-                          type="text"
-                          placeholder="Value"
-                          value={param.value}
-                          onChange={(e) => {
-                            const newVals = [...editResults];
-                            newVals[index].value = e.target.value;
-                            setEditResults(newVals);
-                          }}
-                        />
-                        <span className="param-unit">{param.unit}</span>
-                      </div>
-                      <div className="param-status-field">
-                        <select
-                          value={param.status}
-                          onChange={(e) => {
-                            const newVals = [...editResults];
-                            newVals[index].status = e.target.value;
-                            setEditResults(newVals);
-                          }}
-                        >
-                          <option value="Normal">Normal</option>
-                          <option value="High">High</option>
-                          <option value="Low">Low</option>
-                          <option value="Pending">Pending</option>
-                        </select>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-muted" style={{ fontSize: "0.85rem", padding: "0.5rem 0" }}>
+                      No result parameters on this report yet.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -979,12 +963,13 @@ function LabReports() {
                   type="button"
                   className="btn-modal-cancel"
                   onClick={() => setUpdateModalReport(null)}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="hosp-btn-submit">
+                <button type="submit" className="hosp-btn-submit" disabled={saving}>
                   <FaCheckCircle />
-                  <span>Save Report Changes</span>
+                  <span>{saving ? "Saving…" : "Save Report Changes"}</span>
                 </button>
               </div>
             </form>
@@ -1012,42 +997,64 @@ function LabReports() {
 
             <form onSubmit={handleCreateNewTest} className="hosp-modal-form">
               <div className="form-row">
+                {/* Patient selector */}
                 <div className="form-group half">
                   <label>Patient Full Name *</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ramesh Kumar"
-                    value={newPatientName}
-                    onChange={(e) => setNewPatientName(e.target.value)}
+                  <select
+                    value={newPatientId}
+                    onChange={(e) => setNewPatientId(e.target.value)}
                     required
-                  />
+                    disabled={loadingDropdowns}
+                  >
+                    <option value="">
+                      {loadingDropdowns ? "Loading patients…" : "— Select Patient —"}
+                    </option>
+                    {patients.map((p) => (
+                      <option key={p._id} value={p._id}>
+                        {p.name} {p.patientId ? `(${p.patientId})` : ""}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Patient ID display (read-only, derived from selection) */}
                 <div className="form-group half">
                   <label>Patient ID</label>
                   <input
                     type="text"
-                    placeholder="e.g. PAT-4091"
-                    value={newPatientId}
-                    onChange={(e) => setNewPatientId(e.target.value)}
+                    readOnly
+                    value={
+                      newPatientId
+                        ? patients.find((p) => p._id === newPatientId)?.patientId || "—"
+                        : ""
+                    }
+                    placeholder="Auto-filled on patient selection"
+                    style={{ backgroundColor: "var(--bg-secondary, #f9f9f9)", cursor: "not-allowed" }}
                   />
                 </div>
               </div>
 
               <div className="form-row">
+                {/* Doctor selector */}
                 <div className="form-group half">
                   <label>Ordering Physician</label>
                   <select
-                    value={newDoctorName}
-                    onChange={(e) => setNewDoctorName(e.target.value)}
+                    value={newDoctorId}
+                    onChange={(e) => setNewDoctorId(e.target.value)}
+                    disabled={loadingDropdowns}
                   >
-                    <option value="Dr. Ayisha Shalba">Dr. Ayisha Shalba (Cardiology)</option>
-                    <option value="Dr. Rajesh K. Nair">Dr. Rajesh K. Nair (Neurology)</option>
-                    <option value="Dr. Priya Thomas">Dr. Priya Thomas (Pediatrics)</option>
-                    <option value="Dr. Susan George">Dr. Susan George (Orthopedics)</option>
-                    <option value="Dr. Amit Varma">Dr. Amit Varma (General Medicine)</option>
-                    <option value="Dr. Vikram Shekar">Dr. Vikram Shekar (Dermatology)</option>
+                    <option value="">
+                      {loadingDropdowns ? "Loading doctors…" : "— Select Doctor (optional) —"}
+                    </option>
+                    {doctors.map((d) => (
+                      <option key={d._id} value={d._id}>
+                        Dr. {d.name} ({d.specialization || d.department || "General"})
+                      </option>
+                    ))}
                   </select>
                 </div>
+
+                {/* Test Name */}
                 <div className="form-group half">
                   <label>Test Name</label>
                   <select
@@ -1055,17 +1062,18 @@ function LabReports() {
                     onChange={(e) => setNewTestName(e.target.value)}
                   >
                     <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
-                    <option value="Cardiac Troponin & Lipid Panel">Cardiac Troponin &amp; Lipid Panel</option>
+                    <option value="Cardiac Troponin &amp; Lipid Panel">Cardiac Troponin &amp; Lipid Panel</option>
                     <option value="Comprehensive Thyroid Profile">Comprehensive Thyroid Profile</option>
-                    <option value="Renal Function & Electrolytes (RFT)">Renal Function &amp; Electrolytes (RFT)</option>
+                    <option value="Renal Function &amp; Electrolytes (RFT)">Renal Function &amp; Electrolytes (RFT)</option>
                     <option value="Liver Function Test (LFT)">Liver Function Test (LFT)</option>
-                    <option value="HbA1c & Fasting Plasma Glucose">HbA1c &amp; Fasting Plasma Glucose</option>
-                    <option value="Serum IgE & Allergy Screening">Serum IgE &amp; Allergy Screening</option>
+                    <option value="HbA1c &amp; Fasting Plasma Glucose">HbA1c &amp; Fasting Plasma Glucose</option>
+                    <option value="Serum IgE &amp; Allergy Screening">Serum IgE &amp; Allergy Screening</option>
                   </select>
                 </div>
               </div>
 
               <div className="form-row">
+                {/* Category */}
                 <div className="form-group half">
                   <label>Diagnostic Category</label>
                   <select
@@ -1080,6 +1088,8 @@ function LabReports() {
                     <option value="Microbiology">Microbiology</option>
                   </select>
                 </div>
+
+                {/* Sample Type */}
                 <div className="form-group half">
                   <label>Sample / Specimen Type</label>
                   <select
@@ -1100,12 +1110,13 @@ function LabReports() {
                   type="button"
                   className="btn-modal-cancel"
                   onClick={() => setShowNewTestModal(false)}
+                  disabled={saving}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="hosp-btn-submit">
+                <button type="submit" className="hosp-btn-submit" disabled={saving || loadingDropdowns}>
                   <FaPlus />
-                  <span>Submit Lab Order</span>
+                  <span>{saving ? "Submitting…" : "Submit Lab Order"}</span>
                 </button>
               </div>
             </form>

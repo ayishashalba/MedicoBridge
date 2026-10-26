@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
+import { API_BASE_URL } from "../../../services/apiConfig";
+const API_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
 import jsPDF from "jspdf";
 import {
   FaCalendarCheck,
@@ -25,9 +26,10 @@ import {
   FaSearch,
   FaInbox,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./PatientAppointments.css";
 
-/* ─── Status Config ──────────────────────────────────────────────── */
+/* ───────── Status Config ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 const STATUS_CONFIG = {
   pending: {
     label: "Pending",
@@ -65,281 +67,94 @@ const TABS = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-/* ─── Dummy Appointment Data ─────────────────────────────────────── */
-const appointmentsData = [
-  {
-    id: "MB-APT-001",
-    doctorId: 1,
-    doctorName: "Dr. Aisha Khan",
-    initials: "AK",
-    color: "#7c3aed",
-    specialization: "Cardiologist",
-    hospital: "Apollo Hospitals",
-    city: "Mumbai",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-07-20",
-    time: "09:30 AM",
-    fee: 800,
-    rating: 4.9,
-    status: "pending",
-    reason: "General Consultation",
-    notes: "Chest discomfort for past 2 weeks",
-  },
-  {
-    id: "MB-APT-002",
-    doctorId: 7,
-    doctorName: "Dr. Kavitha Reddy",
-    initials: "KR",
-    color: "#6366f1",
-    specialization: "Ophthalmologist",
-    hospital: "Vision Eye Hospital",
-    city: "Kochi",
-    type: "hospital",
-    consultationType: "video",
-    date: "2026-07-22",
-    time: "10:00 AM",
-    fee: 550,
-    rating: 4.7,
-    status: "confirmed",
-    reason: "Follow-up Visit",
-    notes: "Post-surgery follow-up",
-  },
-  {
-    id: "MB-APT-003",
-    doctorId: 3,
-    doctorName: "Dr. Priya Sharma",
-    initials: "PS",
-    color: "#0d9488",
-    specialization: "Dermatologist",
-    hospital: "Skin Care Clinic",
-    city: "Bangalore",
-    type: "clinic",
-    consultationType: "in-person",
-    date: "2026-06-20",
-    time: "11:00 AM",
-    fee: 500,
-    rating: 4.8,
-    status: "completed",
-    reason: "Acne Treatment",
-    notes: "",
-    prescription: true,
-  },
-  {
-    id: "MB-APT-004",
-    doctorId: 4,
-    doctorName: "Dr. Suresh Nair",
-    initials: "SN",
-    color: "#f59e0b",
-    specialization: "Neurologist",
-    hospital: "AIIMS",
-    city: "Chennai",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-06-15",
-    time: "02:00 PM",
-    fee: 1200,
-    rating: 4.9,
-    status: "completed",
-    reason: "Chronic Headache Consultation",
-    notes: "Recurring migraines for 3 months",
-    prescription: true,
-  },
-  {
-    id: "MB-APT-005",
-    doctorId: 5,
-    doctorName: "Dr. Meera Patel",
-    initials: "MP",
-    color: "#ec4899",
-    specialization: "Gynecologist",
-    hospital: "Wockhardt Hospital",
-    city: "Pune",
-    type: "hospital",
-    consultationType: "video",
-    date: "2026-06-28",
-    time: "03:30 PM",
-    fee: 600,
-    rating: 4.6,
-    status: "rejected",
-    reason: "Routine Health Check-up",
-    notes: "",
-    rejectionReason: "Doctor unavailable on the selected date.",
-  },
-  {
-    id: "MB-APT-006",
-    doctorId: 8,
-    doctorName: "Dr. Vikram Singh",
-    initials: "VS",
-    color: "#8b5cf6",
-    specialization: "Psychiatrist",
-    hospital: "MindCare Clinic",
-    city: "Jaipur",
-    type: "clinic",
-    consultationType: "video",
-    date: "2026-07-05",
-    time: "04:00 PM",
-    fee: 700,
-    rating: 4.8,
-    status: "cancelled",
-    reason: "Anxiety Management",
-    notes: "Patient cancelled — personal reasons",
-  },
-  {
-    id: "MB-APT-007",
-    doctorId: 2,
-    doctorName: "Dr. Rahul Verma",
-    initials: "RV",
-    color: "#0284c7",
-    specialization: "Orthopedic Surgeon",
-    hospital: "Fortis Healthcare",
-    city: "Delhi",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-07-24",
-    time: "11:00 AM",
-    fee: 700,
-    rating: 4.7,
-    status: "confirmed",
-    reason: "Knee Pain Follow-up",
-    notes: "Post physiotherapy review",
-  },
-  {
-    id: "MB-APT-008",
-    doctorId: 10,
-    doctorName: "Dr. Rohit Gupta",
-    initials: "RG",
-    color: "#f97316",
-    specialization: "General Physician",
-    hospital: "HealthFirst Clinic",
-    city: "Lucknow",
-    type: "clinic",
-    consultationType: "video",
-    date: "2026-07-21",
-    time: "09:00 AM",
-    fee: 300,
-    rating: 4.4,
-    status: "pending",
-    reason: "Fever & Cold",
-    notes: "High temperature since 2 days",
-  },
-  {
-    id: "MB-APT-009",
-    doctorId: 11,
-    doctorName: "Dr. Sunita Joshi",
-    initials: "SJ",
-    color: "#14b8a6",
-    specialization: "Rheumatologist",
-    hospital: "Medanta Hospital",
-    city: "Gurugram",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-05-30",
-    time: "10:00 AM",
-    fee: 1000,
-    rating: 4.9,
-    status: "completed",
-    reason: "Joint Pain Consultation",
-    notes: "",
-    prescription: true,
-  },
-  {
-    id: "MB-APT-010",
-    doctorId: 6,
-    doctorName: "Dr. Arjun Mehta",
-    initials: "AM",
-    color: "#10b981",
-    specialization: "Pediatrician",
-    hospital: "Child Care Clinic",
-    city: "Hyderabad",
-    type: "clinic",
-    consultationType: "in-person",
-    date: "2026-06-05",
-    time: "10:00 AM",
-    fee: 450,
-    rating: 4.5,
-    status: "cancelled",
-    reason: "Child Vaccination",
-    notes: "Patient cancelled — schedule conflict",
-  },
-  {
-    id: "MB-APT-011",
-    doctorId: 8,
-    doctorName: "Dr. Vikram Singh",
-    initials: "VS",
-    color: "#8b5cf6",
-    specialization: "Psychiatrist",
-    hospital: "MindCare Clinic",
-    city: "Jaipur",
-    type: "clinic",
-    consultationType: "video",
-    date: "2026-07-26",
-    time: "02:00 PM",
-    fee: 700,
-    rating: 4.8,
-    status: "confirmed",
-    reason: "Routine Follow-up",
-    notes: "Monthly checkup",
-  },
-  {
-    id: "MB-APT-012",
-    doctorId: 11,
-    doctorName: "Dr. Sunita Joshi",
-    initials: "SJ",
-    color: "#14b8a6",
-    specialization: "Rheumatologist",
-    hospital: "Medanta Hospital",
-    city: "Gurugram",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-07-27",
-    time: "11:30 AM",
-    fee: 1000,
-    rating: 4.9,
-    status: "pending",
-    reason: "Joint Stiffness Check",
-    notes: "Stiffness in the morning",
-  },
-  {
-    id: "MB-APT-013",
-    doctorId: 1,
-    doctorName: "Dr. Aisha Khan",
-    initials: "AK",
-    color: "#7c3aed",
-    specialization: "Cardiologist",
-    hospital: "Apollo Hospitals",
-    city: "Mumbai",
-    type: "hospital",
-    consultationType: "video",
-    date: "2026-07-29",
-    time: "03:00 PM",
-    fee: 800,
-    rating: 4.9,
-    status: "confirmed",
-    reason: "Hypertension Review",
-    notes: "Blood pressure monitoring review",
-  },
-  {
-    id: "MB-APT-014",
-    doctorId: 2,
-    doctorName: "Dr. Rahul Verma",
-    initials: "RV",
-    color: "#0284c7",
-    specialization: "Orthopedic Surgeon",
-    hospital: "Fortis Healthcare",
-    city: "Delhi",
-    type: "hospital",
-    consultationType: "in-person",
-    date: "2026-07-19",
-    time: "10:30 AM",
-    fee: 700,
-    rating: 4.7,
-    status: "pending",
-    reason: "Bone Density Report",
-    notes: "",
-  }
+/* ───────── Backend Appointment Normalizer ────────────────────────────────────────────────────────────────────────────────────────── */
+const AVATAR_COLORS = [
+  "#7c3aed", "#0284c7", "#0d9488", "#f59e0b", "#ec4899",
+  "#8b5cf6", "#14b8a6", "#f97316", "#10b981", "#6366f1",
 ];
 
-/* ─── Helpers ────────────────────────────────────────────────────── */
+function getAvatarColor(str) {
+  if (!str) return AVATAR_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function normalizeAppointment(appt) {
+  const doctor = appt.doctorId || {};
+  const hospital = appt.hospitalId || {};
+  const doctorName = doctor.name || "Doctor";
+  const specialization = doctor.specialization || "General Physician";
+  // Compute initials from doctor name
+  const initials = doctorName
+    .replace(/^Dr\.?\s*/i, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w.charAt(0).toUpperCase())
+    .join("");
+
+  // Determine hospital/clinic name and city
+  const hospitalName =
+    hospital.name || doctor.hospitalName || doctor.clinicName || "Facility";
+  const city = hospital.city || doctor.city || appt.city || "";
+
+  // Consultation type: backend stores 'Video' or 'In-Person'
+  const rawType = (appt.type || "in-person").toLowerCase();
+  const consultationType = rawType === "video" ? "video" : "in-person";
+
+  // Doctor type (hospital vs clinic)
+  const practiceType = String(doctor.practiceType || "hospital").toLowerCase();
+  const doctorType = practiceType === "clinic" ? "clinic" : "hospital";
+
+  // Status: backend uses sentence-case, UI uses lowercase
+  const status = (appt.status || "pending").toLowerCase();
+
+  // Date: store as ISO date-only string for consistency
+  let dateStr = "";
+  if (appt.date) {
+    const d = new Date(appt.date);
+    if (!isNaN(d.getTime())) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      dateStr = `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  return {
+    id: appt._id || appt.id || "",
+    displayId: appt.appointmentId || appt._id || appt.id || "",
+    doctorId: typeof appt.doctorId === "object" ? appt.doctorId._id : appt.doctorId,
+    doctorName,
+    initials,
+    color: getAvatarColor(doctorName),
+    profileImage: doctor.profileImage || null,
+    specialization,
+    hospital: hospitalName,
+    city,
+    type: doctorType,
+    consultationType,
+    date: dateStr,
+    time: appt.timeSlot || appt.time || "",
+    fee: appt.fee || doctor.consultationFee || 0,
+    rating: doctor.rating || 0,
+    status,
+    reason: appt.reason || "",
+    notes: appt.notes || "",
+    rejectionReason: appt.cancellationReason || "",
+    prescription: appt.prescription || false,
+    slots: doctor.timeSlots || [],
+    feedbackRating: appt.rating || null,
+    feedbackComment: appt.feedback || "",
+    patientName: appt.patientId?.name || appt.patientName || "",
+    prescriptionMedicines: appt.prescriptionId?.medicines || [],
+  };
+}
+
+/* ───────── Helpers ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString("en-IN", {
     weekday: "short",
@@ -409,7 +224,7 @@ function handleDownloadSlip(appt) {
   const file = new Blob([
     `MEDICOBRIDGE APPOINTMENT SLIP\n` +
     `==============================\n` +
-    `Appointment ID: ${appt.id}\n` +
+    `Appointment ID: ${appt.displayId || appt.id}\n` +
     `Doctor: ${appt.doctorName} (${appt.specialization})\n` +
     `Hospital: ${appt.hospital}, ${appt.city}\n` +
     `Date: ${formatDate(appt.date)}\n` +
@@ -421,7 +236,7 @@ function handleDownloadSlip(appt) {
     `Thank you for using MedicoBridge.`
   ], { type: 'text/plain' });
   element.href = URL.createObjectURL(file);
-  element.download = `Appointment_Slip_${appt.id}.txt`;
+  element.download = `Appointment_Slip_${appt.displayId || appt.id}.txt`;
   document.body.appendChild(element);
   element.click();
   document.body.removeChild(element);
@@ -445,13 +260,12 @@ function handleDownloadPrescriptionPDF(appt) {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(15, 23, 42);
     doc.text(`Doctor: ${appt.doctorName}`, 14, 40);
-    doc.text(`Patient: John Doe`, 120, 40);
+    doc.text(`Patient: ${appt.patientName || "Patient"}`, 120, 40);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.text(`Specialization: ${appt.specialization}`, 14, 47);
-    doc.text(`Age/Sex: 30 Years / Male`, 120, 47);
-    doc.text(`Hospital: ${appt.hospital}, ${appt.city}`, 14, 54);
+    doc.text(`Hospital: ${appt.hospital}${appt.city ? ", " + appt.city : ""}`, 14, 54);
     doc.text(`Date: ${formatDate(appt.date)}`, 120, 54);
 
     doc.line(14, 60, 196, 60);
@@ -461,14 +275,16 @@ function handleDownloadPrescriptionPDF(appt) {
     doc.setTextColor(13, 148, 136);
     doc.text("Rx", 14, 73);
 
-    const medicines = [
-      { name: "1. Tab. Pantoprazole 40mg", dosage: "Dosage: 1-0-0 (Before food) • 7 Days" },
-      { name: "2. Cap. Amoxicillin 500mg", dosage: "Dosage: 1-0-1 (After food) • 5 Days" },
-      { name: "3. Tab. Paracetamol 650mg", dosage: "Dosage: 1-0-1 (SOS - If fever) • 3 Days" },
-    ];
+    // Use real medicines from prescription if available, otherwise show generic note
+    const prescMedicines = Array.isArray(appt.prescriptionMedicines) && appt.prescriptionMedicines.length > 0
+      ? appt.prescriptionMedicines.map((m, i) => ({
+          name: `${i + 1}. ${m.name || m.medicineName || "Medicine"}`,
+          dosage: `Dosage: ${m.dosage || m.frequency || "As directed"} • ${m.duration || "As prescribed"}`
+        }))
+      : [{ name: "1. As per prescription", dosage: "Please refer to your physical prescription slip." }];
 
     let yPos = 83;
-    medicines.forEach((med) => {
+    prescMedicines.forEach((med) => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(15, 23, 42);
@@ -492,15 +308,16 @@ function handleDownloadPrescriptionPDF(appt) {
     doc.setTextColor(15, 23, 42);
     doc.text(appt.doctorName, 140, yPos + 26);
 
-    const fileName = `E-Prescription_${appt.id}.pdf`;
+    const fileName = `E-Prescription_${appt.displayId || appt.id}.pdf`;
     doc.save(fileName);
+    toast.success("Prescription downloaded successfully.");
   } catch (err) {
     console.error("Prescription PDF generation error:", err);
-    alert("Unable to generate PDF prescription. Please try again.");
+    toast.error("Unable to generate PDF prescription. Please try again.");
   }
 }
 
-/* ─── Feedback Modal ─────────────────────────────────────────────── */
+/* ───────── Feedback Modal ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function FeedbackModal({ apptId, onClose, onSubmit }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
@@ -562,7 +379,7 @@ function FeedbackModal({ apptId, onClose, onSubmit }) {
   );
 }
 
-/* ─── Appointment Details Modal ──────────────────────────────────── */
+/* ───────── Appointment Details Modal ──────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, onClose, onCancel, onReschedule }) {
   if (!appt) return null;
   const cfg = STATUS_CONFIG[appt.status];
@@ -657,7 +474,7 @@ function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, on
         <dl className="appt-modal-details">
           <div className="appt-modal-row">
             <dt><FaIdCard /> Appointment ID</dt>
-            <dd className="appt-id-mono">{appt.id}</dd>
+            <dd className="appt-id-mono">{appt.displayId || appt.id}</dd>
           </div>
           <div className="appt-modal-row">
             <dt><FaCalendarAlt /> Date</dt>
@@ -712,9 +529,9 @@ function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, on
 
           {/* Hospital Contact details */}
           <div className="appt-modal-row appt-modal-row--full" style={{ borderTop: "1.5px dashed var(--border-color)", paddingTop: "0.8rem", marginTop: "0.4rem" }}>
-            <dt style={{ color: "var(--text-primary)", fontWeight: "700" }}>🏥 Facility Contact Details</dt>
+            <dt style={{ color: "var(--text-primary)", fontWeight: "700" }}>ðŸ¥ Facility Contact Details</dt>
             <dd style={{ textAlign: "left", fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "0.3rem", width: "100%", maxWidth: "100%" }}>
-              <div style={{ marginBottom: "0.2rem" }}>📞 Phone: <strong style={{ color: "var(--text-primary)" }}>{contact.phone}</strong></div>
+              <div style={{ marginBottom: "0.2rem" }}>ðŸ“ž Phone: <strong style={{ color: "var(--text-primary)" }}>{contact.phone}</strong></div>
               <div>✉ Email: <strong style={{ color: "var(--text-primary)" }}>{contact.email}</strong></div>
             </dd>
           </div>
@@ -798,7 +615,7 @@ function AppointmentDetailModal({ appt, hasSubmittedFeedback, onGiveFeedback, on
   );
 }
 
-/* ─── Single Appointment Card ────────────────────────────────────── */
+/* ───────── Single Appointment Card ────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function AppointmentCard({ appt, hasSubmittedFeedback, onGiveFeedback, onViewDetails, onCancel, onReschedule }) {
   const cfg = STATUS_CONFIG[appt.status];
   const upcoming = isUpcoming(appt.date);
@@ -884,7 +701,7 @@ function AppointmentCard({ appt, hasSubmittedFeedback, onGiveFeedback, onViewDet
         <div className="appt-id-row">
           <FaIdCard className="appt-meta-icon" />
           <span className="appt-id-label">ID:</span>
-          <span className="appt-id-value">{appt.id}</span>
+          <span className="appt-id-value">{appt.displayId || appt.id}</span>
         </div>
 
         {/* Rejection reason chip */}
@@ -978,7 +795,7 @@ function AppointmentCard({ appt, hasSubmittedFeedback, onGiveFeedback, onViewDet
   );
 }
 
-/* ─── Summary Stats Bar ──────────────────────────────────────────── */
+/* ───────── Summary Stats Bar ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function AppointmentStats({ data }) {
   const counts = {
     total: data.length,
@@ -1012,9 +829,11 @@ function AppointmentStats({ data }) {
   );
 }
 
-/* ─── Cancel Confirm Dialog ──────────────────────────────────────── */
-function CancelConfirmDialog({ apptId, onConfirm, onDismiss }) {
+/* ───────── Cancel Confirm Dialog ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
+function CancelConfirmDialog({ apptId, allAppointments = [], onConfirm, onDismiss }) {
   if (!apptId) return null;
+  const target = allAppointments.find((a) => a.id === apptId);
+  const displayId = target?.displayId || apptId;
   return (
     <div
       className="appt-modal-overlay"
@@ -1031,7 +850,7 @@ function CancelConfirmDialog({ apptId, onConfirm, onDismiss }) {
         </h3>
         <p className="appt-confirm-desc">
           Are you sure you want to cancel appointment{" "}
-          <strong>{apptId}</strong>? This action cannot be undone.
+          <strong>{displayId}</strong>? This action cannot be undone.
         </p>
         <div className="appt-confirm-actions">
           <button
@@ -1052,32 +871,125 @@ function CancelConfirmDialog({ apptId, onConfirm, onDismiss }) {
   );
 }
 
-const DOCTOR_SLOTS_MAP = {
-  1: ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"],
-  2: ["10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  3: ["10:00 AM", "11:00 AM", "12:00 PM", "02:30 PM", "04:00 PM", "05:00 PM"],
-  4: ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-  5: ["10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
-  6: ["09:00 AM", "10:00 AM", "11:00 AM", "04:00 PM", "05:00 PM"],
-  7: ["09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "03:30 PM"],
-  8: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  9: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-  10: ["09:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", "04:00 PM", "05:00 PM"],
-  11: ["10:00 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-  12: ["10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM"],
-};
-
-/* ─── Reschedule Modal ────────────────────────────────────────── */
+/* ─── Reschedule Modal ──────────────────────────────────────────────── */
 function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
   const [newDate, setNewDate] = useState(appt.date || "");
   const [newSlot, setNewSlot] = useState("");
   const [error, setError] = useState("");
+  const [doctor, setDoctor] = useState(null);
+  const [loadingDoctor, setLoadingDoctor] = useState(true);
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [loadingBookedSlots, setLoadingBookedSlots] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const doctorSlots = DOCTOR_SLOTS_MAP[appt.doctorId] || appt.slots || [
-    "09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:00 PM"
+  // Fetch doctor's real availability from backend
+  useEffect(() => {
+    let isMounted = true;
+    const loadDoctorAvailability = async () => {
+      if (!appt?.doctorId) {
+        setLoadingDoctor(false);
+        return;
+      }
+      try {
+        setLoadingDoctor(true);
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BASE}/api/patient/doctors/${appt.doctorId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const data = await res.json();
+        if (isMounted && res.ok && data.success && data.data) {
+          setDoctor(data.data);
+        }
+      } catch (err) {
+        console.error("Failed to load doctor availability:", err);
+      } finally {
+        if (isMounted) setLoadingDoctor(false);
+      }
+    };
+    loadDoctorAvailability();
+    return () => {
+      isMounted = false;
+    };
+  }, [appt?.doctorId]);
+
+  // Fetch booked slots for the selected date
+  useEffect(() => {
+    let isMounted = true;
+    const loadBookedSlots = async () => {
+      if (!appt?.doctorId || !newDate) {
+        setBookedSlots([]);
+        return;
+      }
+      try {
+        setLoadingBookedSlots(true);
+        const token = localStorage.getItem("token");
+        const res = await fetch(
+          `${API_BASE}/api/patient/doctors/${appt.doctorId}/booked-slots?date=${newDate}`,
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          }
+        );
+        const data = await res.json();
+        if (isMounted && res.ok && data.success && data.data?.bookedSlots) {
+          setBookedSlots(data.data.bookedSlots);
+        } else if (isMounted) {
+          setBookedSlots([]);
+        }
+      } catch (err) {
+        if (isMounted) setBookedSlots([]);
+      } finally {
+        if (isMounted) setLoadingBookedSlots(false);
+      }
+    };
+    loadBookedSlots();
+    return () => {
+      isMounted = false;
+    };
+  }, [appt?.doctorId, newDate]);
+
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
   ];
+  const selectedDayName = newDate
+    ? dayNames[new Date(`${newDate}T00:00:00`).getDay()]
+    : "";
+
+  const availableDays = Array.isArray(doctor?.availableDays)
+    ? doctor.availableDays
+    : [];
+
+  const rawDoctorSlots = Array.isArray(doctor?.availableSlots)
+    ? doctor.availableSlots
+    : [];
+
+  const isDayAvailable =
+    !doctor || availableDays.length === 0 || availableDays.includes(selectedDayName);
+
+  // Slots for the selected day from doctor's real configuration
+  const doctorSlots = (() => {
+    if (!selectedDayName || !rawDoctorSlots.length) return [];
+    const filtered = rawDoctorSlots.filter(
+      (s) => s && s.day === selectedDayName && s.isAvailable !== false
+    );
+    const seen = new Set();
+    const result = [];
+    filtered.forEach((s) => {
+      const slotStr = s.startTime || s.endTime || s.time || "";
+      if (slotStr && !seen.has(slotStr)) {
+        seen.add(slotStr);
+        result.push(slotStr);
+      }
+    });
+    return result;
+  })();
 
   const getSlotStatus = (slotTimeStr) => {
     const selectedDate = newDate || appt.date;
@@ -1099,15 +1011,7 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
       return { disabled: true, reason: "Current appointment slot" };
     }
 
-    const isBookedByOther = allAppointments.some(
-      (other) =>
-        other.id !== appt.id &&
-        (other.doctorId === appt.doctorId || other.doctorName === appt.doctorName) &&
-        other.date === selectedDate &&
-        other.time === slotTimeStr &&
-        (other.status === "confirmed" || other.status === "pending")
-    );
-    if (isBookedByOther) {
+    if (bookedSlots.includes(slotTimeStr)) {
       return { disabled: true, reason: "Already booked" };
     }
 
@@ -1118,13 +1022,17 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
     (slot) => !getSlotStatus(slot).disabled
   ).length;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!newDate) {
       setError("Please select a date.");
       return;
     }
     if (newDate < todayStr) {
       setError("Rescheduled date cannot be in the past.");
+      return;
+    }
+    if (!isDayAvailable) {
+      setError(`Doctor is not available on ${selectedDayName}s.`);
       return;
     }
     if (!newSlot) {
@@ -1144,8 +1052,14 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
       }
       return;
     }
+
     setError("");
-    onConfirm(appt.id, newDate, newSlot);
+    setIsSubmitting(true);
+    const result = await onConfirm(appt.id, newDate, newSlot);
+    if (result && !result.success) {
+      setError(result.message || "Failed to reschedule appointment.");
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1221,6 +1135,11 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
                 outline: "none",
               }}
             />
+            {newDate && selectedDayName && availableDays.length > 0 && (
+              <p style={{ fontSize: "0.76rem", color: isDayAvailable ? "var(--text-muted)" : "#dc2626", margin: "0.1rem 0 0" }}>
+                {selectedDayName} &bull; Doctor available on: {availableDays.join(", ")}
+              </p>
+            )}
           </div>
 
           {/* Doctor Schedule Slots */}
@@ -1230,13 +1149,31 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
                 Doctor's Available Slots <span style={{ color: "#ef4444" }}>*</span>
               </label>
               <span style={{ fontSize: "0.78rem", fontWeight: "700", color: availableSlotsCount > 0 ? "#16a34a" : "#dc2626" }}>
-                {availableSlotsCount > 0 ? `🟢 ${availableSlotsCount} available` : "🔴 0 available"}
+                {loadingDoctor || loadingBookedSlots ? (
+                  "Checking..."
+                ) : availableSlotsCount > 0 ? (
+                  `🟢 ${availableSlotsCount} available`
+                ) : (
+                  "🔴 0 available"
+                )}
               </span>
             </div>
 
-            {availableSlotsCount === 0 ? (
+            {loadingDoctor ? (
+              <div style={{ padding: "1rem", textAlign: "center", fontSize: "0.82rem", color: "var(--text-muted)" }}>
+                Loading doctor schedule...
+              </div>
+            ) : !isDayAvailable ? (
               <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.82rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                <FaTimesCircle /> No available future slots for this date. Please select another date.
+                <FaTimesCircle /> Doctor is not available on {selectedDayName}s. Available days: {availableDays.join(", ")}.
+              </div>
+            ) : doctorSlots.length === 0 ? (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.82rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <FaTimesCircle /> No time slots configured for {selectedDayName || "this date"}. Please choose another date.
+              </div>
+            ) : availableSlotsCount === 0 ? (
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", color: "#991b1b", padding: "0.75rem 1rem", borderRadius: "var(--radius-md)", fontSize: "0.82rem", fontWeight: "600", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                <FaTimesCircle /> All slots for this date are booked or have passed. Please select another date.
               </div>
             ) : (
               <div
@@ -1249,7 +1186,7 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
 
                   let slotTitle = "Click to select slot";
                   if (status.disabled) {
-                    if (status.reason === "Current appointment slot") slotTitle = "Current appointment slot (Already Booked)";
+                    if (status.reason === "Current appointment slot") slotTitle = "Current appointment slot";
                     else if (status.reason === "Past time") slotTitle = "Time slot already passed";
                     else if (status.reason === "Already booked") slotTitle = "Slot already booked";
                     else slotTitle = "Unavailable slot";
@@ -1302,20 +1239,20 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
         </div>
 
         <div className="appt-modal-actions">
-          <button className="appt-action-btn appt-action-btn--secondary" onClick={onClose}>
+          <button className="appt-action-btn appt-action-btn--secondary" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </button>
           <button
             className="appt-action-btn"
-            disabled={availableSlotsCount === 0}
+            disabled={availableSlotsCount === 0 || isSubmitting}
             onClick={handleSave}
             style={{
-              background: availableSlotsCount > 0 ? "var(--primary-color)" : "#cbd5e1",
+              background: availableSlotsCount > 0 && !isSubmitting ? "var(--primary-color)" : "#cbd5e1",
               color: "#fff",
-              cursor: availableSlotsCount > 0 ? "pointer" : "not-allowed",
+              cursor: availableSlotsCount > 0 && !isSubmitting ? "pointer" : "not-allowed",
             }}
           >
-            Confirm Reschedule
+            {isSubmitting ? "Rescheduling..." : "Confirm Reschedule"}
           </button>
         </div>
       </div>
@@ -1323,37 +1260,61 @@ function RescheduleModal({ appt, allAppointments = [], onClose, onConfirm }) {
   );
 }
 
-/* ─── Main Page Component ────────────────────────────────────────── */
+/* ───────── Main Page Component ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */
 function PatientAppointments() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
-  const [appointments, setAppointments] = useState(appointmentsData);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [detailAppt, setDetailAppt] = useState(null);
   const [cancelId, setCancelId] = useState(null);
   const [rescheduleAppt, setRescheduleAppt] = useState(null);
   const [feedbackApptId, setFeedbackApptId] = useState(null);
   const [submittedFeedback, setSubmittedFeedback] = useState({});
-  const [toastMessage, setToastMessage] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [visibleCount, setVisibleCount] = useState(10);
 
-  /* Load persisted feedback from backend on mount */
-  useEffect(() => {
-    if (!ENABLE_BACKEND_API) return;
-    fetch("http://localhost:5000/api/patient/feedback")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          const map = {};
-          data.data.forEach((f) => { map[f.appointmentId] = true; });
-          setSubmittedFeedback(map);
-        }
-      })
-      .catch(() => {
-        /* Backend unavailable — rely on local state */
+  /* Fetch real appointments from backend */
+  const fetchAppointments = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("You are not logged in. Please log in to view your appointments.");
+        setLoading(false);
+        return;
+      }
+      const res = await fetch(`${API_BASE}/api/patient/appointments`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const normalized = (data.data || []).map(normalizeAppointment);
+        setAppointments(normalized);
+        // Rebuild feedback state from persisted data
+        const feedbackMap = {};
+        normalized.forEach((a) => {
+          if (a.feedbackRating != null) {
+            feedbackMap[a.id] = true;
+          }
+        });
+        setSubmittedFeedback(feedbackMap);
+      } else {
+        setError(data.message || "Failed to load appointments.");
+      }
+    } catch (err) {
+      setError("Unable to connect to server. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
   /* Filter by tab + search */
   const filtered = appointments
@@ -1366,7 +1327,8 @@ function PatientAppointments() {
         a.specialization.toLowerCase().includes(q) ||
         a.hospital.toLowerCase().includes(q) ||
         a.city.toLowerCase().includes(q) ||
-        a.id.toLowerCase().includes(q);
+        a.id.toLowerCase().includes(q) ||
+        (a.displayId && a.displayId.toLowerCase().includes(q));
       return matchTab && matchSearch;
     })
     .sort((a, b) => {
@@ -1379,24 +1341,65 @@ function PatientAppointments() {
       }
     });
 
-  /* Cancel logic (UI only) */
-  const handleCancelConfirm = (id) => {
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, status: "cancelled" } : a
-      )
-    );
-    setCancelId(null);
+  /* Cancel logic — calls backend API */
+  const handleCancelConfirm = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/patient/appointments/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cancellationReason: "Cancelled by patient" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.info("Appointment cancelled successfully.");
+        await fetchAppointments();
+      } else {
+        toast.error(data.message || "Failed to cancel appointment.");
+      }
+    } catch (err) {
+      toast.error("Unable to cancel. Please try again.");
+    } finally {
+      setCancelId(null);
+    }
   };
 
-  /* Reschedule logic (UI only) */
-  const handleRescheduleConfirm = (id, newDate, newSlot) => {
-    setAppointments((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, date: newDate, time: newSlot } : a
-      )
-    );
-    setRescheduleAppt(null);
+  /* Reschedule logic — calls backend API */
+  const handleRescheduleConfirm = async (id, newDate, newSlot) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/patient/appointments/${id}/reschedule`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ date: newDate, timeSlot: newSlot }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const updatedAppt = normalizeAppointment(data.data);
+        setAppointments((prev) =>
+          prev.map((a) => (a.id === id ? updatedAppt : a))
+        );
+        setRescheduleAppt(null);
+        toast.success("Appointment rescheduled successfully.");
+        return { success: true };
+      } else {
+        const errMsg =
+          data.message ||
+          (Array.isArray(data.errors) ? data.errors[0] : null) ||
+          "Failed to reschedule appointment.";
+        toast.error(errMsg);
+        return { success: false, message: errMsg };
+      }
+    } catch (err) {
+      toast.error("Unable to connect to server. Please try again.");
+      return { success: false, message: "Unable to connect to server." };
+    }
   };
 
   /* Tab counts */
@@ -1407,7 +1410,7 @@ function PatientAppointments() {
 
   return (
     <div className="appt-page">
-      {/* ── Page Header ──────────────────────────────────────── */}
+      {/* ────── Page Header ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
       <header className="appt-page-header">
         <div className="appt-header-text">
           <h1 className="appt-page-title">My Appointments</h1>
@@ -1425,10 +1428,10 @@ function PatientAppointments() {
         </button>
       </header>
 
-      {/* ── Stats Bar ────────────────────────────────────────── */}
+      {/* ────── Stats Bar ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
       <AppointmentStats data={appointments} />
 
-      {/* ── Search & Filter Controls ─────────────────────────── */}
+      {/* ────── Search & Filter Controls ───────────────────────────────────────────────────────────────────────────────── */}
       <div className="appt-filters-row" style={{ display: "flex", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap", flexShrink: 0 }}>
         <div className="appt-search-bar" style={{ flex: 1, minWidth: "280px", margin: 0 }}>
           <FaSearch className="appt-search-icon" />
@@ -1436,7 +1439,7 @@ function PatientAppointments() {
             id="appt-search-input"
             type="text"
             className="appt-search-input"
-            placeholder="Search by doctor name, specialization, hospital, city or appointment ID…"
+            placeholder="Search by doctor name, specialization, hospital, city or appointment ID..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setVisibleCount(10); }}
             aria-label="Search appointments"
@@ -1483,7 +1486,7 @@ function PatientAppointments() {
         </div>
       </div>
 
-      {/* ── Tabs ─────────────────────────────────────────────── */}
+      {/* ────── Tabs ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
       <div className="appt-tabs" role="tablist" aria-label="Appointment status filter">
         {TABS.map((tab) => (
           <button
@@ -1504,7 +1507,7 @@ function PatientAppointments() {
         ))}
       </div>
 
-      {/* ── Content Area ─────────────────────────────────────── */}
+      {/* ────── Content Area ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
       <div
         className="appt-content"
         role="tabpanel"
@@ -1588,7 +1591,7 @@ function PatientAppointments() {
         )}
       </div>
 
-      {/* ── Modals ───────────────────────────────────────────── */}
+      {/* ────── Modals ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────── */}
       <AppointmentDetailModal
         appt={detailAppt}
         hasSubmittedFeedback={detailAppt ? !!submittedFeedback[detailAppt.id] : false}
@@ -1599,6 +1602,7 @@ function PatientAppointments() {
       />
       <CancelConfirmDialog
         apptId={cancelId}
+        allAppointments={appointments}
         onConfirm={handleCancelConfirm}
         onDismiss={() => setCancelId(null)}
       />
@@ -1615,41 +1619,33 @@ function PatientAppointments() {
           apptId={feedbackApptId}
           onClose={() => setFeedbackApptId(null)}
           onSubmit={async (id, rating, comment) => {
-            // Persist to backend if enabled
-            if (ENABLE_BACKEND_API) {
-              try {
-                await fetch("http://localhost:5000/api/feedback", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ appointmentId: id, rating, comment }),
-                });
-              } catch (err) {
-                /* Backend unavailable — persist locally only */
+            try {
+              const token = localStorage.getItem("token");
+              const res = await fetch(`${API_BASE}/api/patient/appointments/${id}/feedback`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ rating, comment }),
+              });
+              const data = await res.json();
+              if (res.ok && data.success) {
+                setSubmittedFeedback((prev) => ({ ...prev, [id]: true }));
+                setFeedbackApptId(null);
+                toast.success("Thank you for your feedback! It has been submitted.");
+              } else {
+                const errMsg =
+                  data.message ||
+                  (Array.isArray(data.errors) ? data.errors[0] : null) ||
+                  "Failed to submit feedback.";
+                toast.error(errMsg);
               }
+            } catch (err) {
+              toast.error("Unable to submit feedback. Please try again.");
             }
-            setSubmittedFeedback((prev) => ({ ...prev, [id]: true }));
-            setFeedbackApptId(null);
-            setToastMessage("Thank you for your feedback! It has been submitted.");
-            setTimeout(() => setToastMessage(""), 4500);
           }}
         />
-      )}
-
-      {/* Toast notification */}
-      {toastMessage && (
-        <div
-          role="status"
-          style={{
-            position: "fixed", bottom: "1.5rem", right: "1.5rem",
-            background: "#10b981", color: "#fff",
-            padding: "0.75rem 1.25rem", borderRadius: "8px",
-            fontSize: "0.85rem", fontWeight: 600,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-            zIndex: 9999, animation: "apptFadeIn 0.3s ease",
-          }}
-        >
-          ✓ {toastMessage}
-        </div>
       )}
     </div>
   );

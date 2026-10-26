@@ -1,5 +1,10 @@
-import React, { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+
+import {
+  useParams,
+  useNavigate,
+} from "react-router-dom";
+
 import {
   FaArrowLeft,
   FaStethoscope,
@@ -25,855 +30,1545 @@ import {
   FaEnvelope,
   FaShareAlt,
   FaHeartbeat,
+  FaTimes,
 } from "react-icons/fa";
-import { isDoctorSaved, toggleSaveDoctorInStorage } from "../../../utils/savedDoctorsStorage";
+
+import {
+  isDoctorSaved,
+  toggleSaveDoctorInStorage,
+} from "../../../utils/savedDoctorsStorage";
+
+import { API_BASE_URL } from "../../../services/apiConfig";
+
 import "./PatientDoctorProfile.css";
 
-/* ─── Full Dummy Doctor Dataset ──────────────────────────────────── */
-const doctorsData = [
-  {
-    id: 1,
-    name: "Dr. Aisha Khan",
-    specialization: "Cardiologist",
-    qualification: "MBBS, MD (Cardiology), DM (Cardiology)",
-    experience: 14,
-    hospital: "Apollo Hospitals",
-    city: "Mumbai",
-    address: "Plot No. 13, Sector 6, Vikhroli West, Mumbai, Maharashtra – 400083",
-    type: "hospital",
-    fee: 800,
-    rating: 4.9,
-    reviews: 312,
-    available: true,
-    initials: "AK",
-    color: "#7c3aed",
-    languages: ["English", "Hindi", "Urdu"],
-    about:
-      "Dr. Aisha Khan is a highly experienced Cardiologist at Apollo Hospitals, Mumbai, with over 14 years of expertise in diagnosing and treating complex heart conditions. She specializes in interventional cardiology, echocardiography, and preventive cardiac care. Known for her compassionate approach, she has successfully treated thousands of patients with heart disease, hypertension, and cardiac arrhythmias.",
-    availableDays: ["Monday", "Wednesday", "Friday", "Saturday"],
-    slots: ["09:00 AM", "09:30 AM", "10:00 AM", "11:00 AM", "02:00 PM", "03:00 PM", "04:30 PM"],
-    education: [
-      { degree: "MBBS", institution: "King Edward Memorial Hospital, Mumbai", year: "2005" },
-      { degree: "MD – Internal Medicine", institution: "Seth GS Medical College, Mumbai", year: "2009" },
-      { degree: "DM – Cardiology", institution: "AIIMS New Delhi", year: "2012" },
-    ],
-    certifications: [
-      "Fellow of the Cardiological Society of India (FCSI)",
-      "Board Certified in Interventional Cardiology",
-      "Advanced Cardiac Life Support (ACLS) Certified",
-      "Certified in Echocardiography – ICCE",
-    ],
-    services: [
-      "Interventional Cardiology",
-      "Echocardiography (Echo)",
-      "Cardiac Risk Assessment",
-      "Hypertension Management",
-      "Arrhythmia Treatment",
-      "Heart Failure Management",
-      "Preventive Cardiology",
-      "Lipid Disorder Treatment",
-    ],
-    patientReviews: [
-      {
-        id: 1,
-        name: "Ravi Mehta",
-        rating: 5,
-        date: "June 2025",
-        comment:
-          "Dr. Aisha is absolutely brilliant! She explained my condition in simple terms and the treatment plan she suggested worked wonders. Highly recommend!",
-        helpful: 24,
-        avatar: "RM",
-        avatarColor: "#0284c7",
-      },
-      {
-        id: 2,
-        name: "Sunita Sharma",
-        rating: 5,
-        date: "May 2025",
-        comment:
-          "Very thorough and caring doctor. She spent a lot of time with me and answered all my questions. The clinic is well-organized and the staff is friendly.",
-        helpful: 18,
-        avatar: "SS",
-        avatarColor: "#10b981",
-      },
-      {
-        id: 3,
-        name: "Anil Desai",
-        rating: 4,
-        date: "April 2025",
-        comment:
-          "Good experience overall. Had to wait a bit but the consultation was worth it. Dr. Khan is very knowledgeable and professional.",
-        helpful: 11,
-        avatar: "AD",
-        avatarColor: "#f59e0b",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Dr. Rahul Verma",
-    specialization: "Orthopedic Surgeon",
-    qualification: "MBBS, MS (Orthopaedics), Fellowship in Joint Replacement",
-    experience: 10,
-    hospital: "Fortis Healthcare",
-    city: "Delhi",
-    address: "B-22, Vasant Kunj, New Delhi – 110070",
-    type: "hospital",
-    fee: 700,
-    rating: 4.7,
-    reviews: 245,
-    available: true,
-    initials: "RV",
-    color: "#0284c7",
-    languages: ["English", "Hindi", "Punjabi"],
-    about:
-      "Dr. Rahul Verma is an accomplished Orthopedic Surgeon at Fortis Healthcare with a decade of experience in joint replacement surgeries, sports injuries, and spinal disorders. He has performed over 2,000 successful joint replacement procedures and is known for his minimally invasive surgical techniques that ensure faster recovery.",
-    availableDays: ["Tuesday", "Thursday", "Saturday"],
-    slots: ["10:00 AM", "10:30 AM", "11:00 AM", "12:00 PM", "03:00 PM", "04:00 PM"],
-    education: [
-      { degree: "MBBS", institution: "Maulana Azad Medical College, Delhi", year: "2007" },
-      { degree: "MS – Orthopaedics", institution: "AIIMS, New Delhi", year: "2011" },
-      { degree: "Fellowship in Joint Replacement", institution: "Hospital for Special Surgery, New York", year: "2013" },
-    ],
-    certifications: [
-      "Fellow of the Indian Orthopaedic Association (IOA)",
-      "Certified in Minimally Invasive Joint Replacement",
-      "AO Trauma Certification",
-      "Advanced Arthroscopy Certification",
-    ],
-    services: [
-      "Total Knee Replacement",
-      "Total Hip Replacement",
-      "Shoulder Replacement",
-      "Arthroscopic Surgery",
-      "Sports Injury Treatment",
-      "Spinal Disorder Management",
-      "Fracture Management",
-      "Bone Infection Treatment",
-    ],
-    patientReviews: [
-      {
-        id: 1,
-        name: "Priya Kapoor",
-        rating: 5,
-        date: "June 2025",
-        comment:
-          "Dr. Verma performed my knee replacement surgery and I am fully recovered. Exceptional skill and very caring attitude throughout my treatment.",
-        helpful: 31,
-        avatar: "PK",
-        avatarColor: "#7c3aed",
-      },
-      {
-        id: 2,
-        name: "Mohan Lal",
-        rating: 4,
-        date: "May 2025",
-        comment:
-          "Very professional. Explained the procedure clearly before my surgery. Recovery was smooth thanks to his guidance.",
-        helpful: 15,
-        avatar: "ML",
-        avatarColor: "#ef4444",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Dr. Priya Sharma",
-    specialization: "Dermatologist",
-    qualification: "MBBS, MD (Dermatology)",
-    experience: 8,
-    hospital: "Skin Care Clinic",
-    city: "Bangalore",
-    address: "No. 45, 2nd Floor, Residency Road, Bangalore – 560025",
-    type: "clinic",
-    fee: 500,
-    rating: 4.8,
-    reviews: 198,
-    available: false,
-    initials: "PS",
-    color: "#0d9488",
-    languages: ["English", "Hindi", "Kannada"],
-    about:
-      "Dr. Priya Sharma is a dedicated Dermatologist running her own private clinic in Bangalore. With 8 years of expertise, she specializes in cosmetic dermatology, hair disorders, and treating chronic skin conditions. Her clinic is equipped with state-of-the-art laser and aesthetic devices.",
-    availableDays: ["Monday", "Tuesday", "Thursday", "Friday"],
-    slots: ["10:00 AM", "11:00 AM", "12:00 PM", "02:30 PM", "04:00 PM", "05:00 PM"],
-    education: [
-      { degree: "MBBS", institution: "Bangalore Medical College, Bangalore", year: "2010" },
-      { degree: "MD – Dermatology", institution: "St. John's Medical College, Bangalore", year: "2014" },
-    ],
-    certifications: [
-      "Member of Indian Association of Dermatologists",
-      "Certified Laser Therapist",
-      "Cosmetic Dermatology Certification",
-    ],
-    services: [
-      "Acne & Acne Scar Treatment",
-      "Hair Loss Treatment (PRP)",
-      "Laser Skin Resurfacing",
-      "Pigmentation Treatment",
-      "Anti-Aging Treatments",
-      "Eczema & Psoriasis Management",
-      "Chemical Peels",
-      "Skin Allergy Testing",
-    ],
-    patientReviews: [
-      {
-        id: 1,
-        name: "Meena Iyer",
-        rating: 5,
-        date: "June 2025",
-        comment:
-          "Dr. Priya is amazing! My skin has improved significantly after just 3 sessions. She is very thorough and the clinic is spotless.",
-        helpful: 28,
-        avatar: "MI",
-        avatarColor: "#0d9488",
-      },
-      {
-        id: 2,
-        name: "Ranjith Kumar",
-        rating: 5,
-        date: "April 2025",
-        comment:
-          "Excellent doctor. Treated my psoriasis very effectively. Would highly recommend to anyone with chronic skin conditions.",
-        helpful: 20,
-        avatar: "RK",
-        avatarColor: "#f59e0b",
-      },
-    ],
-  },
+const IMAGE_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
+
+const DAYS_ORDER = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ];
 
-/* Fallback for ids not in our partial list */
-const fallbackDoctor = doctorsData[0];
-
-/* ─── Helpers ────────────────────────────────────────────────────── */
-function StarRating({ rating, size = "md" }) {
-  const full = Math.floor(rating);
-  const half = rating % 1 >= 0.5;
+function getDoctorLocation(doctor) {
   return (
-    <span className={`dp-stars dp-stars--${size}`}>
+    doctor.city ||
+    doctor.clinicCity ||
+    doctor.hospital?.city ||
+    doctor.hospitalId?.city ||
+    "Location not provided"
+  );
+}
+
+function getHospitalName(doctor) {
+  if (doctor.practiceType === "clinic") {
+    return doctor.clinicName || "Private Clinic";
+  }
+
+  return (
+    doctor.hospitalName ||
+    doctor.hospital?.name ||
+    doctor.hospitalId?.name ||
+    "Hospital not provided"
+  );
+}
+
+function getDoctorType(doctor) {
+  const practiceType = String(
+    doctor.practiceType || ""
+  ).toLowerCase();
+
+  if (practiceType === "clinic") {
+    return "clinic";
+  }
+
+  return "hospital";
+}
+
+function getInitials(name = "Doctor") {
+  return name
+    .replace(/^Dr\.?\s*/i, "")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) =>
+      word.charAt(0).toUpperCase()
+    )
+    .join("");
+}
+
+function StarRating({
+  rating = 0,
+  size = "md",
+}) {
+  const numericRating = Number(rating) || 0;
+
+  const full = Math.floor(numericRating);
+
+  const half =
+    numericRating % 1 >= 0.5;
+
+  return (
+    <span
+      className={`dp-stars dp-stars--${size}`}
+    >
       {[1, 2, 3, 4, 5].map((i) => {
-        if (i <= full) return <FaStar key={i} />;
-        if (i === full + 1 && half) return <FaStarHalfAlt key={i} />;
-        return <FaRegStar key={i} />;
+        if (i <= full) {
+          return <FaStar key={i} />;
+        }
+
+        if (
+          i === full + 1 &&
+          half
+        ) {
+          return (
+            <FaStarHalfAlt key={i} />
+          );
+        }
+
+        return (
+          <FaRegStar key={i} />
+        );
       })}
     </span>
   );
 }
 
-const DAYS_ORDER = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-/* ─── Main Component ─────────────────────────────────────────────── */
 function PatientDoctorProfile() {
   const { id } = useParams();
+
   const navigate = useNavigate();
 
-  const doctor =
-    doctorsData.find((d) => String(d.id) === String(id)) || fallbackDoctor;
+  const [doctor, setDoctor] =
+    useState(null);
 
-  const [selectedDay, setSelectedDay] = useState(doctor.availableDays[0]);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [bookingMsg, setBookingMsg] = useState("");
-  const [isSaved, setIsSaved] = useState(() => isDoctorSaved(doctor.id));
+  const [isLoading, setIsLoading] =
+    useState(true);
 
-  React.useEffect(() => {
-    setIsSaved(isDoctorSaved(doctor.id));
-    const handleUpdate = () => {
-      setIsSaved(isDoctorSaved(doctor.id));
-    };
-    window.addEventListener("savedDoctorsUpdated", handleUpdate);
-    return () => window.removeEventListener("savedDoctorsUpdated", handleUpdate);
-  }, [doctor.id]);
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
-  const isHospital = doctor.type === "hospital";
+  const [selectedDay, setSelectedDay] =
+    useState(null);
 
-  const handleBookAppointment = () => {
-    navigate(`/patient/book-appointment/${doctor.id}`, {
-      state: {
-        day: selectedDay,
-        slot: selectedSlot || "",
+  const [selectedSlot, setSelectedSlot] =
+    useState(null);
+
+  const [bookingMsg, setBookingMsg] =
+    useState("");
+
+  const [isSaved, setIsSaved] =
+    useState(false);
+
+  /*
+   * Fetch real doctor profile
+   */
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchDoctor = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        if (!id) {
+          throw new Error(
+            "Doctor ID is missing."
+          );
+        }
+
+        const token =
+          localStorage.getItem("token");
+
+        const response = await fetch(
+          `${API_BASE_URL}/patient/doctors/${encodeURIComponent(
+            id
+          )}`,
+          {
+            headers: token
+              ? {
+                Authorization:
+                  `Bearer ${token}`,
+              }
+              : {},
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message ||
+            `Failed to fetch doctor profile (${response.status}).`
+          );
+        }
+
+        const fetchedDoctor =
+          data.data;
+
+        if (!fetchedDoctor) {
+          throw new Error(
+            "Doctor profile was not returned by the server."
+          );
+        }
+
+        if (cancelled) return;
+
+        setDoctor(fetchedDoctor);
+
+        setSelectedDay(
+          fetchedDoctor.availableDays?.[0] ||
+          null
+        );
+
+        setSelectedSlot(null);
+
+        setIsSaved(
+          isDoctorSaved(
+            fetchedDoctor._id
+          )
+        );
+      } catch (error) {
+        console.error(
+          "Patient doctor profile error:",
+          error
+        );
+
+        if (!cancelled) {
+          setDoctor(null);
+
+          setErrorMessage(
+            error.message ||
+            "Unable to load doctor profile."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-    });
-  };
+    };
 
-  const handleSaveDoctor = () => {
-    const nowSaved = toggleSaveDoctorInStorage(doctor);
-    setIsSaved(nowSaved);
-    setBookingMsg(nowSaved ? "Doctor saved to your profile!" : "Doctor removed from saved list");
-    setTimeout(() => setBookingMsg(""), 3000);
-  };
+    fetchDoctor();
 
-  const handleShareProfile = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      setBookingMsg("Profile link copied to clipboard!");
-    } else {
-      setBookingMsg("Profile link: " + window.location.href);
-    }
-    setTimeout(() => setBookingMsg(""), 3000);
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
 
-  const similarDoctors = useMemo(() => {
-    let filtered = doctorsData.filter((d) => d.id !== doctor.id && d.specialization === doctor.specialization);
-    if (filtered.length === 0) {
-      filtered = doctorsData.filter((d) => d.id !== doctor.id);
-    }
-    return filtered.slice(0, 3);
+  /*
+   * Saved doctor listener
+   */
+  useEffect(() => {
+    if (!doctor?._id) return;
+
+    const handleSavedDoctorsUpdate =
+      () => {
+        setIsSaved(
+          isDoctorSaved(
+            doctor._id
+          )
+        );
+      };
+
+    window.addEventListener(
+      "savedDoctorsUpdated",
+      handleSavedDoctorsUpdate
+    );
+
+    return () => {
+      window.removeEventListener(
+        "savedDoctorsUpdated",
+        handleSavedDoctorsUpdate
+      );
+    };
+  }, [doctor?._id]);
+
+  /*
+   * Derived data
+   */
+  const doctorType = useMemo(() => {
+    if (!doctor) return "hospital";
+
+    return getDoctorType(doctor);
   }, [doctor]);
+
+  const isHospital =
+    doctorType === "hospital";
+
+  const doctorName =
+    doctor?.name || "Doctor";
+
+  const initials =
+    getInitials(doctorName);
+
+  const location =
+    doctor
+      ? getDoctorLocation(doctor)
+      : "";
+
+  const hospitalName =
+    doctor
+      ? getHospitalName(doctor)
+      : "";
+
+  const consultationFee =
+    doctor?.consultationFee != null
+      ? Number(
+        doctor.consultationFee
+      )
+      : 500;
+
+  const rating =
+    Number(doctor?.rating) || 0;
+
+  const reviews =
+    Number(doctor?.reviews) || 0;
+
+  const experience =
+    Number(doctor?.experience) || 0;
+
+  const languages =
+    Array.isArray(
+      doctor?.languages
+    )
+      ? doctor.languages
+      : [];
+
+  const availableDays =
+    Array.isArray(
+      doctor?.availableDays
+    )
+      ? doctor.availableDays
+      : [];
+
+  const slots = useMemo(() => {
+    const raw =
+      Array.isArray(doctor?.availableSlots) && doctor.availableSlots.length > 0
+        ? doctor.availableSlots
+        : Array.isArray(doctor?.slots) && doctor.slots.length > 0
+        ? doctor.slots
+        : [];
+    if (!selectedDay || !raw.length) return [];
+    const first = raw[0];
+    if (typeof first === "object" && first !== null) {
+      return raw
+        .filter((s) => s && s.day === selectedDay && s.isAvailable !== false)
+        .map((s) => s.startTime || s.endTime || s.time || "")
+        .filter(Boolean);
+    }
+    if (typeof first === "string") {
+      return raw.filter(Boolean);
+    }
+    return [];
+  }, [doctor, selectedDay]);
+
+  const education =
+    Array.isArray(
+      doctor?.education
+    )
+      ? doctor.education
+      : [];
+
+  const certifications =
+    Array.isArray(
+      doctor?.certifications
+    )
+      ? doctor.certifications
+      : [];
+
+  const services =
+    Array.isArray(
+      doctor?.services
+    )
+      ? doctor.services
+      : [];
+
+  /*
+   * Booking
+   */
+  const handleBookAppointment =
+    () => {
+      if (!doctor?._id) return;
+
+      navigate(
+        `/patient/book-appointment/${doctor._id}`,
+        {
+          state: {
+            day:
+              selectedDay || "",
+            slot:
+              selectedSlot || "",
+          },
+        }
+      );
+    };
+
+  /*
+   * Save doctor
+   */
+  const handleSaveDoctor =
+    () => {
+      if (!doctor?._id) return;
+
+      const nowSaved =
+        toggleSaveDoctorInStorage(
+          {
+            ...doctor,
+            id: doctor._id,
+          }
+        );
+
+      setIsSaved(nowSaved);
+
+      setBookingMsg(
+        nowSaved
+          ? "Doctor saved to your profile!"
+          : "Doctor removed from saved list."
+      );
+
+      setTimeout(() => {
+        setBookingMsg("");
+      }, 3000);
+    };
+
+  /*
+   * Share profile
+   */
+  const handleShareProfile =
+    async () => {
+      try {
+        const url =
+          window.location.href;
+
+        if (
+          navigator.share
+        ) {
+          await navigator.share({
+            title:
+              doctorName,
+            text:
+              `View ${doctorName}'s doctor profile`,
+            url,
+          });
+
+          return;
+        }
+
+        if (
+          navigator.clipboard
+        ) {
+          await navigator.clipboard.writeText(
+            url
+          );
+
+          setBookingMsg(
+            "Profile link copied to clipboard!"
+          );
+        } else {
+          setBookingMsg(
+            `Profile link: ${url}`
+          );
+        }
+      } catch (error) {
+        /*
+         * User cancelled native share.
+         */
+        if (
+          error?.name !==
+          "AbortError"
+        ) {
+          console.error(
+            "Share profile error:",
+            error
+          );
+        }
+      }
+
+      setTimeout(() => {
+        setBookingMsg("");
+      }, 3000);
+    };
+
+  /*
+   * Loading
+   */
+  if (isLoading) {
+    return (
+      <div className="dp-page">
+        <div className="dp-empty-state">
+          <div className="dp-empty-icon">
+            <FaStethoscope />
+          </div>
+
+          <h2>
+            Loading doctor profile...
+          </h2>
+
+          <p>
+            Please wait while we fetch
+            the doctor's information.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  /*
+   * Error
+   */
+  if (errorMessage || !doctor) {
+    return (
+      <div className="dp-page">
+        <div className="dp-empty-state">
+          <div className="dp-empty-icon">
+            <FaTimes />
+          </div>
+
+          <h2>
+            Unable to load doctor profile
+          </h2>
+
+          <p>
+            {errorMessage ||
+              "Doctor profile not found."}
+          </p>
+
+          <button
+            className="dp-btn dp-btn--primary"
+            onClick={() =>
+              navigate(
+                "/patient/find-doctors"
+              )
+            }
+          >
+            <FaArrowLeft />
+            Back to Find Doctors
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dp-page">
-      {/* ── Back Button & Actions Row ───────────────────────── */}
+
+      {/* Header */}
       <div className="dp-header-nav-row">
+
         <button
           className="dp-back-btn"
-          onClick={() => navigate("/patient/find-doctors")}
+          onClick={() =>
+            navigate(
+              "/patient/find-doctors"
+            )
+          }
           aria-label="Back to Find Doctors"
         >
           <FaArrowLeft />
-          <span>Back to Find Doctors</span>
+          <span>
+            Back to Find Doctors
+          </span>
         </button>
 
         <div className="dp-header-actions">
+
           <button
-            className={`dp-header-action-btn ${isSaved ? "dp-header-action-btn--saved" : ""}`}
-            onClick={handleSaveDoctor}
-            aria-label={isSaved ? "Remove saved doctor" : "Save doctor"}
+            className={`dp-header-action-btn ${isSaved
+                ? "dp-header-action-btn--saved"
+                : ""
+              }`}
+            onClick={
+              handleSaveDoctor
+            }
           >
-            {isSaved ? "❤️ Saved" : "🤍 Save Doctor"}
+            {isSaved
+              ? "❤️ Saved"
+              : "🤍 Save Doctor"}
           </button>
+
           <button
             className="dp-header-action-btn"
-            onClick={handleShareProfile}
-            aria-label="Share profile link"
+            onClick={
+              handleShareProfile
+            }
           >
-            🔗 Share Profile
+            <FaShareAlt />
+            Share Profile
           </button>
+
         </div>
       </div>
 
-      {/* ── Availability Banner ─────────────────────────────── */}
-      <div className={`dp-availability-banner ${doctor.available ? "dp-banner--avail" : "dp-banner--unavail"}`}>
-        {doctor.available ? (
-          <span>🟢 Next Available: <strong>{doctor.availableDays[0]}</strong> at <strong>{doctor.slots[0]}</strong></span>
+      {/* Availability */}
+      <div
+        className={`dp-availability-banner ${doctor.isAvailable === false
+            ? "dp-banner--unavail"
+            : "dp-banner--avail"
+          }`}
+      >
+        {doctor.isAvailable ===
+          false ? (
+          <span>
+            🔴 Currently Unavailable
+          </span>
         ) : (
-          <span>🔴 Currently Unavailable</span>
+          <span>
+            🟢 Doctor profile available
+          </span>
         )}
       </div>
 
-      {/* ── Hero Section ──────────────────────────────────────── */}
-      <section className="dp-hero" aria-label="Doctor profile hero">
-        {/* Availability badge */}
+      {/* Hero */}
+      <section
+        className="dp-hero"
+        aria-label="Doctor profile hero"
+      >
+
         <div
-          className={`dp-hero-availability ${doctor.available ? "dp-avail--yes" : "dp-avail--no"}`}
+          className={`dp-hero-availability ${doctor.isAvailable === false
+              ? "dp-avail--no"
+              : "dp-avail--yes"
+            }`}
         >
-          {doctor.available ? <FaCheckCircle /> : <FaClock />}
-          {doctor.available ? "Available Today" : "Currently Unavailable"}
+          {doctor.isAvailable ===
+            false ? (
+            <>
+              <FaClock />
+              Currently Unavailable
+            </>
+          ) : (
+            <>
+              <FaCheckCircle />
+              Available for Booking
+            </>
+          )}
         </div>
 
         <div className="dp-hero-inner">
+
           {/* Avatar */}
           <div
             className="dp-hero-avatar"
-            style={{
-              background: `linear-gradient(135deg, ${doctor.color}dd, ${doctor.color}88)`,
-              boxShadow: `0 8px 32px ${doctor.color}44`,
-            }}
-            aria-label={`Photo of ${doctor.name}`}
+            aria-label={`Photo of ${doctorName}`}
           >
-            <span className="dp-hero-initials">{doctor.initials}</span>
+            {doctor.profileImage ? (
+              <img
+                src={
+                  doctor.profileImage.startsWith(
+                    "http"
+                  )
+                    ? doctor.profileImage
+                    : `${IMAGE_BASE}${doctor.profileImage}`
+                }
+                alt={doctorName}
+              />
+            ) : (
+              <span className="dp-hero-initials">
+                {initials}
+              </span>
+            )}
+
             <span
-              className={`dp-hero-status ${doctor.available ? "dp-status--online" : "dp-status--offline"}`}
+              className={`dp-hero-status ${doctor.isAvailable === false
+                  ? "dp-status--offline"
+                  : "dp-status--online"
+                }`}
             />
           </div>
 
           {/* Identity */}
           <div className="dp-hero-identity">
+
             <div className="dp-hero-name-row">
-              <h1 className="dp-hero-name">{doctor.name}</h1>
+
+              <h1 className="dp-hero-name">
+                {doctorName}
+              </h1>
+
               <span
-                className={`dp-type-pill dp-type-pill--${doctor.type}`}
+                className={`dp-type-pill dp-type-pill--${doctorType}`}
               >
-                {isHospital ? <FaHospital /> : <FaClinicMedical />}
-                {isHospital ? "Hospital Doctor" : "Private Clinic Doctor"}
+                {isHospital ? (
+                  <FaHospital />
+                ) : (
+                  <FaClinicMedical />
+                )}
+
+                {isHospital
+                  ? "Hospital Doctor"
+                  : "Private Clinic Doctor"}
               </span>
+
             </div>
 
             <p className="dp-hero-spec">
               <FaStethoscope className="dp-inline-icon" />
-              {doctor.specialization}
-            </p>
-            <p className="dp-hero-qual">
-              <FaGraduationCap className="dp-inline-icon" />
-              {doctor.qualification}
+
+              {doctor.specialization ||
+                "General Physician"}
             </p>
 
-            {/* Stats row */}
+            <p className="dp-hero-qual">
+              <FaGraduationCap className="dp-inline-icon" />
+
+              {doctor.qualification ||
+                "Qualification not provided"}
+            </p>
+
+            {/* Stats */}
             <div className="dp-hero-stats">
+
               <div className="dp-stat-chip">
                 <FaBriefcase />
+
                 <div>
-                  <span className="dp-stat-val">{doctor.experience}+</span>
-                  <span className="dp-stat-lbl">Years Exp.</span>
+                  <span className="dp-stat-val">
+                    {experience}+
+                  </span>
+
+                  <span className="dp-stat-lbl">
+                    Years Exp.
+                  </span>
                 </div>
               </div>
+
               <div className="dp-stat-chip">
                 <FaStar className="dp-stat-star" />
+
                 <div>
-                  <span className="dp-stat-val">{doctor.rating}</span>
-                  <span className="dp-stat-lbl">{doctor.reviews} Reviews</span>
+                  <span className="dp-stat-val">
+                    {rating > 0
+                      ? rating.toFixed(1)
+                      : "N/A"}
+                  </span>
+
+                  <span className="dp-stat-lbl">
+                    {reviews} Reviews
+                  </span>
                 </div>
               </div>
+
               <div className="dp-stat-chip">
                 <FaMoneyBillWave className="dp-stat-fee" />
+
                 <div>
-                  <span className="dp-stat-val">₹{doctor.fee}</span>
-                  <span className="dp-stat-lbl">Consult Fee</span>
+                  <span className="dp-stat-val">
+                    ₹{consultationFee}
+                  </span>
+
+                  <span className="dp-stat-lbl">
+                    Consult Fee
+                  </span>
                 </div>
               </div>
+
               <div className="dp-stat-chip">
                 <FaLanguage />
+
                 <div>
-                  <span className="dp-stat-val">{doctor.languages.length}</span>
-                  <span className="dp-stat-lbl">Languages</span>
+                  <span className="dp-stat-val">
+                    {languages.length}
+                  </span>
+
+                  <span className="dp-stat-lbl">
+                    Languages
+                  </span>
                 </div>
               </div>
-              <div className="dp-stat-chip">
-                <span className="dp-inline-icon" style={{ fontSize: "1.1rem" }}>⏱</span>
-                <div>
-                  <span className="dp-stat-val">20–30 mins</span>
-                  <span className="dp-stat-lbl">Avg. Duration</span>
-                </div>
-              </div>
+
             </div>
 
             {/* Languages */}
-            <div className="dp-lang-chips">
-              {doctor.languages.map((lang) => (
-                <span key={lang} className="dp-lang-chip">
-                  🌐 {lang}
-                </span>
-              ))}
-            </div>
+            {languages.length >
+              0 && (
+                <div className="dp-lang-chips">
+                  {languages.map(
+                    (language) => (
+                      <span
+                        key={language}
+                        className="dp-lang-chip"
+                      >
+                        🌐 {language}
+                      </span>
+                    )
+                  )}
+                </div>
+              )}
 
-            {/* CTA buttons */}
+            {/* CTA */}
             <div className="dp-hero-ctas">
+
               <button
                 className="dp-btn dp-btn--primary"
-                onClick={handleBookAppointment}
-                aria-label="Book appointment"
+                onClick={
+                  handleBookAppointment
+                }
               >
                 <FaCalendarCheck />
                 Book Appointment
               </button>
+
             </div>
 
-            {/* Booking message */}
             {bookingMsg && (
-              <div className="dp-booking-notice" role="status">
+              <div
+                className="dp-booking-notice"
+                role="status"
+              >
                 {bookingMsg}
               </div>
             )}
+
           </div>
         </div>
       </section>
 
-      {/* ── Main Grid ─────────────────────────────────────────── */}
+      {/* Main */}
       <div className="dp-grid">
-        {/* ── LEFT COLUMN ─────────────────────────── */}
+
+        {/* LEFT */}
         <div className="dp-col dp-col--left">
 
           {/* About */}
-          <section className="dp-card" aria-labelledby="dp-about-heading">
-            <div className="dp-card-header">
-              <FaUserMd className="dp-card-header-icon dp-icon--about" />
-              <h2 id="dp-about-heading" className="dp-card-title">About Doctor</h2>
-            </div>
-            <p className="dp-about-text">{doctor.about}</p>
-          </section>
+          {doctor.about && (
+            <section
+              className="dp-card"
+              aria-labelledby="dp-about-heading"
+            >
+              <div className="dp-card-header">
+                <FaUserMd className="dp-card-header-icon dp-icon--about" />
+
+                <h2
+                  id="dp-about-heading"
+                  className="dp-card-title"
+                >
+                  About Doctor
+                </h2>
+              </div>
+
+              <p className="dp-about-text">
+                {doctor.about}
+              </p>
+            </section>
+          )}
 
           {/* Education */}
-          <section className="dp-card" aria-labelledby="dp-edu-heading">
-            <div className="dp-card-header">
-              <FaGraduationCap className="dp-card-header-icon dp-icon--edu" />
-              <h2 id="dp-edu-heading" className="dp-card-title">Education</h2>
-            </div>
-            <ol className="dp-timeline">
-              {doctor.education.map((edu, idx) => (
-                <li key={idx} className="dp-timeline-item">
-                  <div className="dp-timeline-dot" />
-                  <div className="dp-timeline-body">
-                    <p className="dp-timeline-degree">{edu.degree}</p>
-                    <p className="dp-timeline-inst">{edu.institution}</p>
-                    <span className="dp-timeline-year">{edu.year}</span>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </section>
+          {education.length >
+            0 && (
+              <section
+                className="dp-card"
+                aria-labelledby="dp-edu-heading"
+              >
+                <div className="dp-card-header">
+                  <FaGraduationCap className="dp-card-header-icon dp-icon--edu" />
+
+                  <h2
+                    id="dp-edu-heading"
+                    className="dp-card-title"
+                  >
+                    Education
+                  </h2>
+                </div>
+
+                <ol className="dp-timeline">
+                  {education.map(
+                    (edu, index) => (
+                      <li
+                        key={index}
+                        className="dp-timeline-item"
+                      >
+                        <div className="dp-timeline-dot" />
+
+                        <div className="dp-timeline-body">
+                          <p className="dp-timeline-degree">
+                            {edu.degree ||
+                              "Qualification"}
+                          </p>
+
+                          <p className="dp-timeline-inst">
+                            {edu.institution ||
+                              "Institution not provided"}
+                          </p>
+
+                          {edu.year && (
+                            <span className="dp-timeline-year">
+                              {edu.year}
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    )
+                  )}
+                </ol>
+              </section>
+            )}
 
           {/* Certifications */}
-          <section className="dp-card" aria-labelledby="dp-cert-heading">
-            <div className="dp-card-header">
-              <FaCertificate className="dp-card-header-icon dp-icon--cert" />
-              <h2 id="dp-cert-heading" className="dp-card-title">Certifications</h2>
-            </div>
-            <ul className="dp-cert-list">
-              {doctor.certifications.map((cert, idx) => (
-                <li key={idx} className="dp-cert-item">
-                  <FaCheckCircle className="dp-cert-check" />
-                  <span>{cert}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
+          {certifications.length >
+            0 && (
+              <section
+                className="dp-card"
+                aria-labelledby="dp-cert-heading"
+              >
+                <div className="dp-card-header">
+                  <FaCertificate className="dp-card-header-icon dp-icon--cert" />
+
+                  <h2
+                    id="dp-cert-heading"
+                    className="dp-card-title"
+                  >
+                    Certifications
+                  </h2>
+                </div>
+
+                <ul className="dp-cert-list">
+                  {certifications.map(
+                    (cert, index) => (
+                      <li
+                        key={index}
+                        className="dp-cert-item"
+                      >
+                        <FaCheckCircle className="dp-cert-check" />
+
+                        <span>
+                          {cert}
+                        </span>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </section>
+            )}
 
           {/* Services */}
-          <section className="dp-card" aria-labelledby="dp-svc-heading">
-            <div className="dp-card-header">
-              <FaHeartbeat className="dp-card-header-icon dp-icon--svc" />
-              <h2 id="dp-svc-heading" className="dp-card-title">Services Offered</h2>
-            </div>
-            <div className="dp-services-grid">
-              {doctor.services.map((svc, idx) => (
-                <span key={idx} className="dp-service-chip">
-                  <FaCheckCircle className="dp-service-icon" />
-                  {svc}
-                </span>
-              ))}
-            </div>
-          </section>
+          {services.length >
+            0 && (
+              <section
+                className="dp-card"
+                aria-labelledby="dp-svc-heading"
+              >
+                <div className="dp-card-header">
+                  <FaHeartbeat className="dp-card-header-icon dp-icon--svc" />
 
-          {/* Consultation Options */}
-          <section className="dp-card" aria-labelledby="dp-consultation-heading">
-            <div className="dp-card-header">
-              <FaVideo className="dp-card-header-icon dp-icon--svc" style={{ color: "#3b82f6" }} />
-              <h2 id="dp-consultation-heading" className="dp-card-title">Consultation Options</h2>
-            </div>
-            <div className="dp-consultation-options">
-              <div className="dp-consult-option-item">
-                <span className="dp-consult-icon">🏥</span>
-                <div>
-                  <p className="dp-consult-title">Hospital Visit</p>
-                  <p className="dp-consult-desc">In-person consultation at {doctor.hospital}</p>
+                  <h2
+                    id="dp-svc-heading"
+                    className="dp-card-title"
+                  >
+                    Services Offered
+                  </h2>
                 </div>
-              </div>
-              <div className="dp-consult-option-item">
-                <span className="dp-consult-icon">📹</span>
-                <div>
-                  <p className="dp-consult-title">Video Call</p>
-                  <p className="dp-consult-desc">Face-to-face online consultation</p>
-                </div>
-              </div>
-              <div className="dp-consult-option-item">
-                <span className="dp-consult-icon">📞</span>
-                <div>
-                  <p className="dp-consult-title">Audio Call</p>
-                  <p className="dp-consult-desc">Voice-only consultation for quick checks</p>
-                </div>
-              </div>
-            </div>
-          </section>
 
-          {/* Insurance Accepted */}
-          <section className="dp-card" aria-labelledby="dp-insurance-heading">
-            <div className="dp-card-header">
-              <FaCheckCircle className="dp-card-header-icon dp-icon--edu" style={{ color: "#10b981" }} />
-              <h2 id="dp-insurance-heading" className="dp-card-title">Insurance Accepted</h2>
-            </div>
-            <ul className="dp-insurance-list">
-              <li className="dp-insurance-item">✓ Star Health Insurance</li>
-              <li className="dp-insurance-item">✓ HDFC Ergo Health Insurance</li>
-              <li className="dp-insurance-item">✓ ICICI Lombard General Insurance</li>
-              <li className="dp-insurance-item">✓ Niva Bupa Health Insurance</li>
-            </ul>
-          </section>
+                <div className="dp-services-grid">
+                  {services.map(
+                    (service, index) => (
+                      <span
+                        key={index}
+                        className="dp-service-chip"
+                      >
+                        <FaCheckCircle className="dp-service-icon" />
+                        {service}
+                      </span>
+                    )
+                  )}
+                </div>
+              </section>
+            )}
 
-          {/* Patient Reviews */}
-          <section className="dp-card" aria-labelledby="dp-reviews-heading">
-            <div className="dp-card-header">
-              <FaStar className="dp-card-header-icon dp-icon--review" />
-              <h2 id="dp-reviews-heading" className="dp-card-title">
-                Patient Reviews
-              </h2>
-              <span className="dp-review-count-badge">
-                {doctor.reviews} total
-              </span>
-            </div>
-            {/* Overall rating summary */}
-            <div className="dp-rating-summary">
-              <div className="dp-rating-big">
-                <span className="dp-rating-number">{doctor.rating}</span>
-                <StarRating rating={doctor.rating} size="lg" />
-                <span className="dp-rating-label">
-                  out of 5 · {doctor.reviews} reviews
-                </span>
-              </div>
-            </div>
-            {/* Individual reviews */}
-            <div className="dp-reviews-list">
-              {doctor.patientReviews.map((rev) => (
-                <article key={rev.id} className="dp-review-card">
-                  <div className="dp-review-header">
-                    <div
-                      className="dp-review-avatar"
-                      style={{ background: `linear-gradient(135deg, ${rev.avatarColor}cc, ${rev.avatarColor}66)` }}
-                    >
-                      {rev.avatar}
-                    </div>
-                    <div className="dp-review-meta">
-                      <p className="dp-review-name">{rev.name}</p>
-                      <div className="dp-review-rating-row">
-                        <StarRating rating={rev.rating} size="sm" />
-                        <span className="dp-review-date">{rev.date}</span>
+          {/* Contact */}
+          {(doctor.phone ||
+            doctor.email) && (
+              <section
+                className="dp-card"
+                aria-labelledby="dp-contact-heading"
+              >
+                <div className="dp-card-header">
+                  <FaPhone className="dp-card-header-icon dp-icon--about" />
+
+                  <h2
+                    id="dp-contact-heading"
+                    className="dp-card-title"
+                  >
+                    Contact
+                  </h2>
+                </div>
+
+                <div className="dp-consultation-options">
+
+                  {doctor.phone && (
+                    <div className="dp-consult-option-item">
+                      <span className="dp-consult-icon">
+                        📞
+                      </span>
+
+                      <div>
+                        <p className="dp-consult-title">
+                          Phone
+                        </p>
+
+                        <p className="dp-consult-desc">
+                          {doctor.phone}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  <p className="dp-review-comment">
-                    <FaQuoteLeft className="dp-quote-icon" />
-                    {rev.comment}
-                  </p>
-                  <button
-                    className="dp-helpful-btn"
-                    aria-label={`Mark review by ${rev.name} as helpful`}
+                  )}
+
+                  {doctor.email && (
+                    <div className="dp-consult-option-item">
+                      <span className="dp-consult-icon">
+                        ✉️
+                      </span>
+
+                      <div>
+                        <p className="dp-consult-title">
+                          Email
+                        </p>
+
+                        <p className="dp-consult-desc">
+                          {doctor.email}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </section>
+            )}
+
+          {/* Reviews */}
+          {Array.isArray(
+            doctor.patientReviews
+          ) &&
+            doctor.patientReviews.length >
+            0 && (
+              <section
+                className="dp-card"
+                aria-labelledby="dp-reviews-heading"
+              >
+                <div className="dp-card-header">
+
+                  <FaStar className="dp-card-header-icon dp-icon--review" />
+
+                  <h2
+                    id="dp-reviews-heading"
+                    className="dp-card-title"
                   >
-                    <FaThumbsUp />
-                    Helpful ({rev.helpful})
-                  </button>
-                </article>
-              ))}
-            </div>
-          </section>
+                    Patient Reviews
+                  </h2>
+
+                  <span className="dp-review-count-badge">
+                    {reviews} total
+                  </span>
+
+                </div>
+
+                <div className="dp-rating-summary">
+                  <div className="dp-rating-big">
+
+                    <span className="dp-rating-number">
+                      {rating > 0
+                        ? rating
+                        : "N/A"}
+                    </span>
+
+                    <StarRating
+                      rating={rating}
+                      size="lg"
+                    />
+
+                    <span className="dp-rating-label">
+                      out of 5 ·{" "}
+                      {reviews} reviews
+                    </span>
+
+                  </div>
+                </div>
+
+                <div className="dp-reviews-list">
+
+                  {doctor.patientReviews.map(
+                    (review) => (
+                      <article
+                        key={review.id}
+                        className="dp-review-card"
+                      >
+
+                        <div className="dp-review-header">
+
+                          <div
+                            className="dp-review-avatar"
+                          >
+                            {review.avatar ||
+                              getInitials(
+                                review.name
+                              )}
+                          </div>
+
+                          <div className="dp-review-meta">
+
+                            <p className="dp-review-name">
+                              {review.name ||
+                                "Patient"}
+                            </p>
+
+                            <div className="dp-review-rating-row">
+
+                              <StarRating
+                                rating={
+                                  Number(
+                                    review.rating
+                                  ) || 0
+                                }
+                                size="sm"
+                              />
+
+                              {review.date && (
+                                <span className="dp-review-date">
+                                  {review.date}
+                                </span>
+                              )}
+
+                            </div>
+
+                          </div>
+                        </div>
+
+                        <p className="dp-review-comment">
+                          <FaQuoteLeft className="dp-quote-icon" />
+
+                          {review.comment ||
+                            "No review comment provided."}
+                        </p>
+
+                        <button
+                          className="dp-helpful-btn"
+                          type="button"
+                        >
+                          <FaThumbsUp />
+                          Helpful
+                          {review.helpful != null
+                            ? ` (${review.helpful})`
+                            : ""}
+                        </button>
+
+                      </article>
+                    )
+                  )}
+
+                </div>
+              </section>
+            )}
+
         </div>
 
-        {/* ── RIGHT COLUMN ────────────────────────── */}
+        {/* RIGHT */}
         <div className="dp-col dp-col--right">
 
-          {/* Practice Information */}
-          <section className="dp-card" aria-labelledby="dp-practice-heading">
+          {/* Practice */}
+          <section
+            className="dp-card"
+            aria-labelledby="dp-practice-heading"
+          >
             <div className="dp-card-header">
-              {isHospital
-                ? <FaHospital className="dp-card-header-icon dp-icon--hosp" />
-                : <FaClinicMedical className="dp-card-header-icon dp-icon--clinic" />
-              }
-              <h2 id="dp-practice-heading" className="dp-card-title">
+
+              {isHospital ? (
+                <FaHospital className="dp-card-header-icon dp-icon--hosp" />
+              ) : (
+                <FaClinicMedical className="dp-card-header-icon dp-icon--clinic" />
+              )}
+
+              <h2
+                id="dp-practice-heading"
+                className="dp-card-title"
+              >
                 Practice Information
               </h2>
+
             </div>
+
             <dl className="dp-practice-list">
+
               <div className="dp-practice-item">
-                <dt className="dp-prac-label">Practice Type</dt>
+
+                <dt className="dp-prac-label">
+                  Practice Type
+                </dt>
+
                 <dd>
-                  <span className={`dp-type-pill dp-type-pill--${doctor.type} dp-type-pill--sm`}>
-                    {isHospital ? <FaHospital /> : <FaClinicMedical />}
-                    {isHospital ? "Hospital Doctor" : "Private Clinic Doctor"}
+                  <span
+                    className={`dp-type-pill dp-type-pill--${doctorType} dp-type-pill--sm`}
+                  >
+                    {isHospital ? (
+                      <FaHospital />
+                    ) : (
+                      <FaClinicMedical />
+                    )}
+
+                    {isHospital
+                      ? "Hospital Doctor"
+                      : "Private Clinic Doctor"}
                   </span>
                 </dd>
+
               </div>
+
               <div className="dp-practice-item">
+
                 <dt className="dp-prac-label">
-                  {isHospital ? "Hospital Name" : "Clinic Name"}
+                  {isHospital
+                    ? "Hospital Name"
+                    : "Clinic Name"}
                 </dt>
-                <dd className="dp-prac-value">{doctor.hospital}</dd>
+
+                <dd className="dp-prac-value">
+                  {hospitalName}
+                </dd>
+
               </div>
+
               <div className="dp-practice-item">
-                <dt className="dp-prac-label">City</dt>
+
+                <dt className="dp-prac-label">
+                  City
+                </dt>
+
                 <dd className="dp-prac-value">
                   <FaMapMarkerAlt className="dp-prac-icon dp-icon--loc" />
-                  {doctor.city}
+
+                  {location}
                 </dd>
+
               </div>
+
+              {(doctor.address ||
+                doctor.clinicAddress ||
+                doctor.hospital?.address) && (
+                  <div className="dp-practice-item">
+
+                    <dt className="dp-prac-label">
+                      Full Address
+                    </dt>
+
+                    <dd className="dp-prac-value dp-prac-address">
+
+                      <span>
+                        {doctor.address ||
+                          doctor.clinicAddress ||
+                          doctor.hospital?.address}
+                      </span>
+
+                      <a
+                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                          `${hospitalName}, ${location}, ${doctor.address ||
+                          doctor.clinicAddress ||
+                          doctor.hospital?.address ||
+                          ""
+                          }`
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="dp-maps-link"
+                      >
+                        📍 View on Google Maps
+                      </a>
+
+                    </dd>
+                  </div>
+                )}
+
               <div className="dp-practice-item">
-                <dt className="dp-prac-label">Full Address</dt>
-                <dd className="dp-prac-value dp-prac-address">
-                  <span>{doctor.address}</span>
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(doctor.hospital + ", " + doctor.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="dp-maps-link"
-                  >
-                    📍 View on Google Maps
-                  </a>
-                </dd>
-              </div>
-              <div className="dp-practice-item">
-                <dt className="dp-prac-label">Hospital Hours</dt>
+
+                <dt className="dp-prac-label">
+                  Consultation Fee
+                </dt>
+
                 <dd className="dp-prac-value">
-                  <FaClock className="dp-prac-icon" style={{ color: "var(--primary-color)" }} />
-                  <span>Mon - Sat: 09:00 AM - 06:00 PM (Sun: Closed)</span>
+
+                  <FaMoneyBillWave className="dp-prac-icon" />
+
+                  ₹{consultationFee}
+
                 </dd>
+
               </div>
-              <div className="dp-practice-item">
-                <dt className="dp-prac-label">Avg. Consultation Duration</dt>
-                <dd className="dp-prac-value">
-                  <span className="dp-prac-icon">⏱</span>
-                  <span>20–30 mins</span>
-                </dd>
-              </div>
+
             </dl>
           </section>
 
-          {/* Booking Notice */}
-          <div className={`dp-booking-info-card dp-booking-info--${doctor.type}`}>
+          {/* Booking notice */}
+          <div
+            className={`dp-booking-info-card dp-booking-info--${doctorType}`}
+          >
+
             {isHospital ? (
               <>
                 <FaHospital className="dp-booking-info-icon" />
+
                 <div>
-                  <p className="dp-booking-info-title">Hospital Booking</p>
+                  <p className="dp-booking-info-title">
+                    Hospital Booking
+                  </p>
+
                   <p className="dp-booking-info-desc">
-                    Appointment will be booked through the hospital. Our coordination team will assist you.
+                    Appointment will be
+                    booked through the
+                    hospital.
                   </p>
                 </div>
               </>
             ) : (
               <>
                 <FaClinicMedical className="dp-booking-info-icon" />
+
                 <div>
-                  <p className="dp-booking-info-title">Direct Booking</p>
+                  <p className="dp-booking-info-title">
+                    Direct Booking
+                  </p>
+
                   <p className="dp-booking-info-desc">
-                    Appointment will be booked directly with the doctor. Confirmation within 30 minutes.
+                    Appointment will be
+                    booked directly with
+                    the doctor.
                   </p>
                 </div>
               </>
             )}
+
           </div>
 
-          {/* Availability Schedule */}
-          <section className="dp-card" aria-labelledby="dp-avail-heading">
+          {/* Availability */}
+          <section
+            className="dp-card"
+            aria-labelledby="dp-avail-heading"
+          >
+
             <div className="dp-card-header">
+
               <FaCalendarCheck className="dp-card-header-icon dp-icon--cal" />
-              <h2 id="dp-avail-heading" className="dp-card-title">Available Schedule</h2>
+
+              <h2
+                id="dp-avail-heading"
+                className="dp-card-title"
+              >
+                Available Schedule
+              </h2>
+
             </div>
 
-            {/* Day selector */}
-            <p className="dp-avail-sub">Available Days</p>
-            <div className="dp-day-chips" role="group" aria-label="Select available day">
-              {DAYS_ORDER.filter((d) => doctor.availableDays.includes(d)).map((day) => (
-                <button
-                  key={day}
-                  className={`dp-day-chip ${selectedDay === day ? "dp-day-chip--active" : ""}`}
-                  onClick={() => { setSelectedDay(day); setSelectedSlot(null); }}
-                  aria-pressed={selectedDay === day}
-                >
-                  {day.slice(0, 3)}
-                </button>
-              ))}
-            </div>
-
-            {/* Time slots */}
-            <p className="dp-avail-sub" style={{ marginTop: "1rem" }}>
-              Time Slots — {selectedDay}
+            <p className="dp-avail-sub">
+              Available Days
             </p>
-            <div className="dp-slot-grid" role="group" aria-label="Select time slot">
-              {doctor.slots.map((slot) => (
-                <button
-                  key={slot}
-                  className={`dp-slot-btn ${selectedSlot === slot ? "dp-slot-btn--active" : ""}`}
-                  onClick={() => setSelectedSlot(slot)}
-                  aria-pressed={selectedSlot === slot}
-                >
-                  <FaClock className="dp-slot-icon" />
-                  {slot}
-                </button>
-              ))}
+
+            <div
+              className="dp-day-chips"
+              role="group"
+              aria-label="Select available day"
+            >
+
+              {DAYS_ORDER
+                .filter((day) =>
+                  availableDays.includes(
+                    day
+                  )
+                ).length === 0 ? (
+                  <p style={{ color: "#ef4444", fontSize: "0.85rem", fontStyle: "italic", margin: "4px 0" }}>
+                    No available days configured.
+                  </p>
+                ) : (
+                  DAYS_ORDER
+                    .filter((day) =>
+                      availableDays.includes(
+                        day
+                      )
+                    )
+                    .map((day) => (
+
+                      <button
+                        key={day}
+                        className={`dp-day-chip ${selectedDay === day
+                            ? "dp-day-chip--active"
+                            : ""
+                          }`}
+                        onClick={() => {
+                          setSelectedDay(
+                            day
+                          );
+                          setSelectedSlot(
+                            null
+                          );
+                        }}
+                        aria-pressed={
+                          selectedDay === day
+                        }
+                      >
+                        {day.slice(0, 3)}
+                      </button>
+
+                    ))
+                )}
+
             </div>
 
-            {selectedSlot && (
-              <div className="dp-slot-selected-notice">
-                <FaCheckCircle />
-                Selected: <strong>{selectedDay}</strong> at <strong>{selectedSlot}</strong>
-              </div>
+            {selectedDay && (
+              <>
+                <p
+                  className="dp-avail-sub"
+                  style={{
+                    marginTop:
+                      "1rem",
+                  }}
+                >
+                  Time Slots — {selectedDay}
+                </p>
+
+                {slots.length === 0 ? (
+                  <p style={{ color: "#94a3b8", fontSize: "0.85rem", fontStyle: "italic", margin: "6px 0" }}>
+                    No time slots configured for {selectedDay}.
+                  </p>
+                ) : (
+                  <div
+                    className="dp-slot-grid"
+                    role="group"
+                    aria-label="Select time slot"
+                  >
+
+                    {slots.map(
+                      (slot) => (
+                        <button
+                          key={slot}
+                          className={`dp-slot-btn ${selectedSlot ===
+                              slot
+                              ? "dp-slot-btn--active"
+                              : ""
+                            }`}
+                          onClick={() =>
+                            setSelectedSlot(
+                              slot
+                            )
+                          }
+                          aria-pressed={
+                            selectedSlot ===
+                            slot
+                          }
+                        >
+                          <FaClock className="dp-slot-icon" />
+
+                          {slot}
+                        </button>
+                      )
+                    )}
+
+                  </div>
+                )}
+
+                {selectedSlot && (
+                  <div className="dp-slot-selected-notice">
+
+                    <FaCheckCircle />
+
+                    Selected:{" "}
+                    <strong>
+                      {selectedDay}
+                    </strong>{" "}
+                    at{" "}
+                    <strong>
+                      {selectedSlot}
+                    </strong>
+
+                  </div>
+                )}
+              </>
             )}
+
           </section>
 
-          {/* Book CTA (sticky in right col) */}
+          {/* CTA */}
           <div className="dp-cta-sticky">
+
             <button
               className="dp-btn dp-btn--primary dp-btn--full"
-              onClick={handleBookAppointment}
-              aria-label="Book appointment"
+              onClick={
+                handleBookAppointment
+              }
             >
               <FaCalendarCheck />
+
               Book Appointment
-              {selectedSlot && <span className="dp-cta-slot-tag">{selectedSlot}</span>}
+
+              {selectedSlot && (
+                <span className="dp-cta-slot-tag">
+                  {selectedSlot}
+                </span>
+              )}
+
             </button>
+
             <button
               className="dp-btn dp-btn--outline dp-btn--full"
-              aria-label="Start consultation (UI only)"
+              onClick={() => {
+                setBookingMsg(
+                  "Video consultation will be available after appointment booking."
+                );
+
+                setTimeout(() => {
+                  setBookingMsg("");
+                }, 3000);
+              }}
             >
               <FaVideo />
               Start Consultation
             </button>
+
           </div>
+
         </div>
       </div>
 
-      {/* ── Similar Doctors Section ──────────────────────────── */}
-      {similarDoctors.length > 0 && (
-        <section className="dp-card dp-similar-section">
-          <div className="dp-card-header">
-            <FaUserMd className="dp-card-header-icon dp-icon--about" />
-            <h2 className="dp-card-title">Similar Doctors</h2>
-          </div>
-          <div className="dp-similar-grid">
-            {similarDoctors.map((simDoc) => (
-              <div
-                key={simDoc.id}
-                className="dp-similar-card"
-                onClick={() => {
-                  navigate(`/patient/doctor-profile/${simDoc.id}`);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-              >
-                <div
-                  className="dp-similar-avatar"
-                  style={{
-                    background: `linear-gradient(135deg, ${simDoc.color}cc, ${simDoc.color}66)`,
-                  }}
-                >
-                  {simDoc.initials}
-                </div>
-                <div className="dp-similar-info">
-                  <h4 className="dp-similar-name">{simDoc.name}</h4>
-                  <p className="dp-similar-spec">{simDoc.specialization}</p>
-                  <p className="dp-similar-hosp">{simDoc.hospital}</p>
-                  <div className="dp-similar-rating">
-                    <FaStar className="dp-stat-star" style={{ color: "#f59e0b" }} />
-                    <span>{simDoc.rating} ({simDoc.reviews} reviews)</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Sticky Bottom Action Bar on Mobile */}
+      {/* Mobile actions */}
       <div className="dp-mobile-action-bar">
+
         <button
           className="dp-mobile-action-btn dp-mobile-action-btn--primary"
-          onClick={handleBookAppointment}
+          onClick={
+            handleBookAppointment
+          }
         >
-          <FaCalendarCheck /> Book Appointment
+          <FaCalendarCheck />
+          Book Appointment
         </button>
+
         <button
           className="dp-mobile-action-btn dp-mobile-action-btn--outline"
           onClick={() => {
-            setBookingMsg("Starting video consultation call room...");
-            setTimeout(() => setBookingMsg(""), 3000);
+            setBookingMsg(
+              "Video consultation will be available after appointment booking."
+            );
+
+            setTimeout(() => {
+              setBookingMsg("");
+            }, 3000);
           }}
         >
-          <FaVideo /> Start Consultation
+          <FaVideo />
+          Start Consultation
         </button>
+
       </div>
 
-      {/* Floating booking toast */}
       {bookingMsg && (
-        <div className="dp-toast" role="alert">
+        <div
+          className="dp-toast"
+          role="alert"
+        >
           {bookingMsg}
         </div>
       )}
+
     </div>
   );
 }

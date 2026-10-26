@@ -121,3 +121,226 @@
     }
 
 }
+
+/* ─── Availability Schedule Section ─── */
+.availability-section {
+    grid-column: 1 / -1;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 22px;
+    margin-top: 10px;
+}
+
+.availability-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.availability-section-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.avail-hint-text {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 4px 0 0 0;
+}
+
+.day-toggles-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.day-toggle-chip {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.day-toggle-chip:hover {
+    border-color: #0ea5e9;
+    color: #0284c7;
+}
+
+.day-toggle-chip.selected {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0369a1;
+}
+
+.day-toggle-chip.active-tab {
+    background: #0ea5e9;
+    border-color: #0ea5e9;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.3);
+}
+
+.slots-workspace-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.workspace-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 10px;
+}
+
+.workspace-day-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.copy-all-btn {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-all-btn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.configured-slots-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+    min-height: 38px;
+    align-items: center;
+}
+
+.configured-slot-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0fdf4;
+    border: 1px solid #86efac;
+    color: #15803d;
+    font-size: 0.83rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.slot-delete-btn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    font-size: 0.75rem;
+}
+
+.slot-delete-btn:hover {
+    color: #b91c1c;
+}
+
+.slot-preset-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.preset-slots-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.preset-chip-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 0.77rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.preset-chip-btn:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+    color: #0284c7;
+}
+
+.custom-slot-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    max-width: 320px;
+}
+
+.custom-slot-input {
+    flex: 1;
+    padding: 7px 10px !important;
+    font-size: 0.83rem !important;
+}
+
+.add-custom-slot-btn {
+    background: #0ea5e9;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.add-custom-slot-btn:hover {
+    background: #0284c7;
+}
+
+.no-day-selected-msg {
+    color: #64748b;
+    font-size: 0.88rem;
+    font-style: italic;
+    padding: 12px 0;
+}

@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "../../../services/apiConfig";
+const API_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
 import jsPDF from "jspdf";
 import {
   FaFileMedical,
@@ -21,174 +23,11 @@ import {
   FaCalendarPlus,
   FaSpinner,
   FaCheckCircle,
+  FaExclamationTriangle,
 } from "react-icons/fa";
 import "./PatientMedicalRecords.css";
 import { useNavigate } from "react-router-dom";
-
-/* ─── Static Record Data ────────────────────────────────────────── */
-const ALL_RECORDS = [
-  // Consultations
-  {
-    id: "consultation-1",
-    kind: "Consultations",
-    title: "Consultation — Dr. Sarah Johnson",
-    subtitle: "Cardiologist",
-    hospital: "Apollo Hospital, Kochi",
-    date: "20 Jun 2026",
-    sortDate: "2026-06-20",
-    status: "Completed",
-    badge: "Online Consultation",
-    diagnosis: "Mild Hypertension",
-    hasPrescription: true,
-    notes:
-      "Patient advised to monitor blood pressure daily. Reduce salt intake and exercise 30 min/day.",
-    followUpDate: "20 Jul 2026",
-    fee: "₹800",
-    medicines: [
-      { name: "Amlodipine", dosage: "5mg", frequency: "Once daily", duration: "30 days" },
-      { name: "Aspirin", dosage: "75mg", frequency: "Once daily", duration: "30 days" },
-    ],
-  },
-  {
-    id: "consultation-2",
-    kind: "Consultations",
-    title: "Consultation — Dr. John Smith",
-    subtitle: "Dermatologist",
-    hospital: "Aster Clinic, Kochi",
-    date: "12 Jun 2026",
-    sortDate: "2026-06-12",
-    status: "Follow-up Scheduled",
-    badge: "Hospital Visit",
-    diagnosis: "Skin Allergy",
-    hasPrescription: true,
-    notes: "Prescribed antihistamines and topical cream. Avoid exposure to allergens.",
-    followUpDate: "12 Jul 2026",
-    fee: "₹600",
-    medicines: [
-      { name: "Cetirizine", dosage: "10mg", frequency: "Once daily at night", duration: "14 days" },
-      { name: "Calamine Lotion", dosage: "Apply topically", frequency: "Twice daily", duration: "14 days" },
-    ],
-  },
-  {
-    id: "consultation-3",
-    kind: "Consultations",
-    title: "Consultation — Dr. Emily Wilson",
-    subtitle: "Neurologist",
-    hospital: "Lakeshore Hospital, Ernakulam",
-    date: "03 Jun 2026",
-    sortDate: "2026-06-03",
-    status: "Completed",
-    badge: "Online Consultation",
-    diagnosis: "Migraine",
-    hasPrescription: false,
-    notes: "Prescribed Sumatriptan for acute episodes. Maintain a headache diary.",
-    fee: "₹1,000",
-  },
-  // Prescriptions
-  {
-    id: "prescription-1",
-    kind: "Prescriptions",
-    title: "Prescription — Dr. Sarah Johnson",
-    subtitle: "Cardiologist",
-    hospital: "Apollo Hospital, Kochi",
-    date: "20 Jun 2026",
-    sortDate: "2026-06-20",
-    status: "Active",
-    diagnosis: "Mild Hypertension",
-    hasPrescription: true,
-    medicines: [
-      { name: "Amlodipine", dosage: "5mg", frequency: "Once daily", duration: "30 days" },
-      { name: "Aspirin", dosage: "75mg", frequency: "Once daily", duration: "30 days" },
-    ],
-    notes: "Take medicines after breakfast. Report any dizziness immediately.",
-  },
-  {
-    id: "prescription-2",
-    kind: "Prescriptions",
-    title: "Prescription — Dr. John Smith",
-    subtitle: "Dermatologist",
-    hospital: "Aster Clinic, Kochi",
-    date: "12 Jun 2026",
-    sortDate: "2026-06-12",
-    status: "Active",
-    diagnosis: "Skin Allergy",
-    hasPrescription: true,
-    medicines: [
-      { name: "Cetirizine", dosage: "10mg", frequency: "Once daily at night", duration: "14 days" },
-      { name: "Calamine Lotion", dosage: "Apply topically", frequency: "Twice daily", duration: "14 days" },
-    ],
-    notes: "Avoid scratching affected area. Keep skin moisturized and wear loose cotton clothing.",
-  },
-  // Lab Reports
-  {
-    id: "lab-1",
-    kind: "Lab Reports",
-    title: "Complete Blood Count (CBC)",
-    subtitle: "Ordered by Dr. Sarah Johnson",
-    hospital: "Apollo Hospital, Kochi",
-    date: "18 Jun 2026",
-    sortDate: "2026-06-18",
-    status: "Available",
-    badge: "LAB-APL-2026-0487",
-    results: [
-      { parameter: "Hemoglobin", value: "14.2 g/dL", normalRange: "13.0–17.0", flag: "Normal" },
-      { parameter: "WBC Count", value: "7,500 /μL", normalRange: "4,500–11,000", flag: "Normal" },
-      { parameter: "Platelet Count", value: "2,50,000 /μL", normalRange: "1,50,000–4,00,000", flag: "Normal" },
-    ],
-  },
-  {
-    id: "lab-2",
-    kind: "Lab Reports",
-    title: "Blood Sugar Test",
-    subtitle: "Ordered by Dr. John Smith",
-    hospital: "Aster Clinic, Kochi",
-    date: "05 Jun 2026",
-    sortDate: "2026-06-05",
-    status: "Available",
-    badge: "LAB-AST-2026-0312",
-    results: [
-      { parameter: "Fasting Blood Sugar", value: "98 mg/dL", normalRange: "70–100", flag: "Normal" },
-      { parameter: "HbA1c", value: "5.4%", normalRange: "4.0–5.6", flag: "Normal" },
-    ],
-  },
-  // Documents
-  {
-    id: "doc-1",
-    kind: "Documents",
-    title: "Chest X-Ray",
-    subtitle: "Uploaded by Dr. Sarah Johnson",
-    hospital: "Apollo Hospital, Kochi",
-    date: "15 Jun 2026",
-    sortDate: "2026-06-15",
-    status: "X-Ray",
-    fileSize: "2.4 MB",
-    description: "Chest X-Ray (PA view) — Normal study. No significant abnormality detected.",
-  },
-  {
-    id: "doc-2",
-    kind: "Documents",
-    title: "MRI Brain Scan",
-    subtitle: "Uploaded by Dr. Emily Wilson",
-    hospital: "Lakeshore Hospital, Ernakulam",
-    date: "02 Jun 2026",
-    sortDate: "2026-06-02",
-    status: "MRI",
-    fileSize: "18.7 MB",
-    description: "MRI Brain with contrast — No structural abnormality. No evidence of infarct or hemorrhage.",
-  },
-  {
-    id: "doc-3",
-    kind: "Documents",
-    title: "ECG Report",
-    subtitle: "Uploaded by Dr. Sarah Johnson",
-    hospital: "Aster Clinic, Kochi",
-    date: "28 May 2026",
-    sortDate: "2026-05-28",
-    status: "ECG",
-    fileSize: "1.1 MB",
-    description: "12-lead ECG — Normal sinus rhythm. No ST-T changes or arrhythmia.",
-  },
-];
+import { toast } from "react-toastify";
 
 /* ─── Config ────────────────────────────────────────────────────── */
 const TABS = [
@@ -209,15 +48,15 @@ const KIND_ICON = {
 const KIND_COLOR = {
   Consultations: { bg: "#e0f2fe", color: "#0369a1", dot: "#0ea5e9" },
   Prescriptions: { bg: "#fef3c7", color: "#92400e", dot: "#f59e0b" },
-  "Lab Reports":  { bg: "#d1fae5", color: "#065f46", dot: "#10b981" },
-  Documents:      { bg: "#ede9fe", color: "#5b21b6", dot: "#8b5cf6" },
+  "Lab Reports": { bg: "#d1fae5", color: "#065f46", dot: "#10b981" },
+  Documents: { bg: "#ede9fe", color: "#5b21b6", dot: "#8b5cf6" },
 };
 
 const STATUS_STYLE = {
-  Completed:             { bg: "#d1fae5", color: "#065f46" },
+  Completed: { bg: "#d1fae5", color: "#065f46" },
   "Follow-up Scheduled": { bg: "#fef3c7", color: "#92400e" },
-  Available:             { bg: "#d1fae5", color: "#065f46" },
-  Active:                { bg: "#dbeafe", color: "#1e40af" },
+  Available: { bg: "#d1fae5", color: "#065f46" },
+  Active: { bg: "#dbeafe", color: "#1e40af" },
 };
 
 /* ─── Real PDF Download ─────────────────────────────────────────── */
@@ -313,8 +152,8 @@ function generateRecordPDF(record) {
   doc.text("MedicoBridge Digital Health Platform · Confidential Patient Record", margin, 288);
   doc.text("Page 1 of 1", W - margin, 288, { align: "right" });
 
-  const safeName = record.title.replace(/[^a-zA-Z0-9\s\-]/g, "").replace(/\s+/g, "_");
-  doc.save(`MedicoBridge_${safeName}_${record.date.replace(/\s/g, "")}.pdf`);
+  const safeName = (record.title || "Record").replace(/[^a-zA-Z0-9\s\-]/g, "").replace(/\s+/g, "_");
+  doc.save(`MedicoBridge_${safeName}_${(record.date || "").replace(/\s/g, "")}.pdf`);
 }
 
 /* ─── Prescription View Modal ───────────────────────────────────── */
@@ -327,6 +166,7 @@ function PrescriptionModal({ record, onClose }) {
     setTimeout(() => {
       generateRecordPDF(record);
       setDownloading(false);
+      toast.success("Medical record PDF downloaded successfully.");
     }, 600);
   };
 
@@ -594,10 +434,222 @@ function PatientMedicalRecords() {
   const [search, setSearch] = useState("");
   const [sortNewest, setSortNewest] = useState(true);
   const [viewRecord, setViewRecord] = useState(null);
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  const fetchRecords = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Please log in to view your medical records.");
+      setLoading(false);
+      setRecords([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const headers = { Authorization: `Bearer ${token}` };
+    const fetchEndpoint = async (url) => {
+      const res = await fetch(url, { headers });
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+      return res.json();
+    };
+
+    try {
+      const [mrRes, pRes, lrRes, docRes] = await Promise.allSettled([
+        fetchEndpoint(`${API_BASE}/api/patient/medical-records`),
+        fetchEndpoint(`${API_BASE}/api/patient/prescriptions`),
+        fetchEndpoint(`${API_BASE}/api/patient/lab-reports`),
+        fetchEndpoint(`${API_BASE}/api/patient/medical-reports`),
+      ]);
+
+      const allFailed = [mrRes, pRes, lrRes, docRes].every((r) => r.status === "rejected");
+      if (allFailed) {
+        throw new Error("Unable to connect to healthcare server. Please check your network connection or login session.");
+      }
+
+      const parsedRecords = [];
+
+      // 1. Consultations & Clinical Medical Records
+      if (mrRes.status === "fulfilled" && mrRes.value?.success && Array.isArray(mrRes.value.data)) {
+        mrRes.value.data.forEach((mr) => {
+          const doc = mr.doctorId || {};
+          const hosp = mr.hospitalId || {};
+          const docName = doc.name || mr.doctorName || "Doctor";
+          const spec = doc.specialization || "General Physician";
+          const hospName = hosp.name || mr.hospitalName || (hosp.city ? `Hospital, ${hosp.city}` : "Medical Facility");
+          const dateObj = new Date(mr.date || mr.createdAt);
+          const sortDate = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split("T")[0] : "";
+          const dateStr = !isNaN(dateObj.getTime())
+            ? dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : "";
+
+          let kind = "Consultations";
+          if (mr.recordType === "Prescription") kind = "Prescriptions";
+          else if (mr.recordType === "Lab Report") kind = "Lab Reports";
+          else if (["Discharge Summary", "Vaccination", "General"].includes(mr.recordType) || (mr.attachments && mr.attachments.length > 0)) {
+            kind = "Documents";
+          }
+
+          parsedRecords.push({
+            id: String(mr._id),
+            kind,
+            title: mr.title || `Consultation — ${docName}`,
+            subtitle: spec,
+            hospital: hospName,
+            date: dateStr,
+            sortDate,
+            status: mr.recordType === "Discharge Summary" ? "Completed" : "Completed",
+            badge: mr.recordType || "Clinical Consultation",
+            diagnosis: mr.recordType === "Diagnosis" ? mr.title : (mr.description || ""),
+            hasPrescription: Boolean(mr.recordType === "Prescription" || mr.prescription),
+            notes: mr.description || "",
+            description: mr.description || "",
+            fileSize: mr.attachments && mr.attachments.length > 0 ? `${mr.attachments.length} Attachment(s)` : undefined,
+            attachments: mr.attachments || [],
+          });
+        });
+      }
+
+      // 2. Real Prescriptions
+      if (pRes.status === "fulfilled" && pRes.value?.success && Array.isArray(pRes.value.data)) {
+        pRes.value.data.forEach((p) => {
+          const doc = p.doctorId || {};
+          const hosp = p.hospitalId || {};
+          const docName = doc.name || "Doctor";
+          const spec = doc.specialization || "General Physician";
+          const hospName = hosp.name || doc.hospitalName || "Hospital";
+          const dateObj = new Date(p.createdAt);
+          const sortDate = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split("T")[0] : "";
+          const dateStr = !isNaN(dateObj.getTime())
+            ? dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : "";
+
+          parsedRecords.push({
+            id: String(p._id),
+            kind: "Prescriptions",
+            title: `Prescription — ${docName}`,
+            subtitle: spec,
+            hospital: hospName,
+            date: dateStr,
+            sortDate,
+            status: p.status === "Active" ? "Active" : "Completed",
+            badge: p.prescriptionId || "Digital Prescription",
+            diagnosis: p.diagnosis || "Prescription Issued",
+            hasPrescription: true,
+            notes: [p.advice, p.notes].filter(Boolean).join(" · ") || "",
+            medicines: (p.medicines || []).map((m) => ({
+              name: m.name || m.medicineName || "Medicine",
+              dosage: m.dosage || "",
+              frequency: [m.frequency, m.timing].filter(Boolean).join(", ") || "",
+              duration: m.duration || "",
+              instructions: m.instructions || "",
+            })),
+          });
+        });
+      }
+
+      // 3. Real Lab Reports
+      if (lrRes.status === "fulfilled" && lrRes.value?.success && Array.isArray(lrRes.value.data)) {
+        lrRes.value.data.forEach((lr) => {
+          const doc = lr.doctorId || {};
+          const hosp = lr.hospitalId || {};
+          const docName = doc.name ? `Ordered by ${doc.name}` : (lr.category || "Clinical Pathology");
+          const hospName = hosp.name || "Diagnostic Laboratory";
+          const dateObj = new Date(lr.reportDate || lr.createdAt);
+          const sortDate = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split("T")[0] : "";
+          const dateStr = !isNaN(dateObj.getTime())
+            ? dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : "";
+
+          const mappedResults = (lr.results || []).map((r) => ({
+            parameter: r.parameter || "",
+            value: [r.value, r.unit].filter(Boolean).join(" "),
+            normalRange: r.referenceRange || "Standard",
+            flag: r.status === "High" || r.status === "Low" || r.status === "Abnormal" ? r.status : "Normal",
+          }));
+
+          parsedRecords.push({
+            id: String(lr._id),
+            kind: "Lab Reports",
+            title: lr.testName || "Diagnostic Lab Report",
+            subtitle: docName,
+            hospital: hospName,
+            date: dateStr,
+            sortDate,
+            status: lr.status === "Completed" ? "Available" : lr.status || "Available",
+            badge: lr.reportId || lr.category || "Lab Report",
+            diagnosis: lr.remarks || lr.notes || "",
+            notes: [lr.notes, lr.remarks].filter(Boolean).join(" · ") || "",
+            results: mappedResults,
+            fileSize: lr.fileUrl ? "Document Available" : undefined,
+            fileUrl: lr.fileUrl || "",
+          });
+        });
+      }
+
+      // 4. Real Medical Reports / Clinical Documents
+      if (docRes.status === "fulfilled" && docRes.value?.success && Array.isArray(docRes.value.data)) {
+        docRes.value.data.forEach((dr) => {
+          const doc = dr.doctorId || {};
+          const hosp = dr.hospitalId || {};
+          const docName = doc.name ? `Dr. ${doc.name.replace(/^Dr\.?\s*/i, "")}` : "Authorized Medical Center";
+          const hospName = hosp.name || "Medical Center";
+          const dateObj = new Date(dr.reportDate || dr.createdAt);
+          const sortDate = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split("T")[0] : "";
+          const dateStr = !isNaN(dateObj.getTime())
+            ? dateObj.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })
+            : "";
+
+          parsedRecords.push({
+            id: String(dr._id),
+            kind: "Documents",
+            title: dr.title || "Clinical Report",
+            subtitle: doc.specialization ? `${docName} (${doc.specialization})` : docName,
+            hospital: hospName,
+            date: dateStr,
+            sortDate,
+            status: "Available",
+            badge: dr.reportId || "Medical Document",
+            description: [dr.summary, dr.findings].filter(Boolean).join("\n\n") || "",
+            notes: dr.recommendations || "",
+            fileSize: dr.attachments?.length ? `${dr.attachments.length} Attachment(s)` : undefined,
+            attachments: dr.attachments || [],
+          });
+        });
+      }
+
+      // Deduplicate by ID
+      const uniqueRecords = [];
+      const seenIds = new Set();
+      for (const item of parsedRecords) {
+        if (!seenIds.has(item.id)) {
+          seenIds.add(item.id);
+          uniqueRecords.push(item);
+        }
+      }
+
+      setRecords(uniqueRecords);
+    } catch (err) {
+      console.error("Failed to fetch medical records:", err);
+      setError(err.message || "Failed to load medical records.");
+      setRecords([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecords();
+  }, [fetchRecords]);
+
   const filtered = useMemo(() => {
-    let data = ALL_RECORDS;
+    let data = records;
 
     // Tab filter
     if (activeTab !== "All Records") {
@@ -624,28 +676,28 @@ function PatientMedicalRecords() {
       const db = new Date(b.sortDate);
       return sortNewest ? db - da : da - db;
     });
-  }, [activeTab, search, sortNewest]);
+  }, [activeTab, search, sortNewest, records]);
 
   // Tab counts
   const counts = useMemo(() => {
     const base = search.trim()
-      ? ALL_RECORDS.filter((r) => {
-          const q = search.toLowerCase();
-          return (
-            r.title.toLowerCase().includes(q) ||
-            (r.subtitle || "").toLowerCase().includes(q) ||
-            (r.hospital || "").toLowerCase().includes(q) ||
-            (r.diagnosis || "").toLowerCase().includes(q)
-          );
-        })
-      : ALL_RECORDS;
+      ? records.filter((r) => {
+        const q = search.toLowerCase();
+        return (
+          r.title.toLowerCase().includes(q) ||
+          (r.subtitle || "").toLowerCase().includes(q) ||
+          (r.hospital || "").toLowerCase().includes(q) ||
+          (r.diagnosis || "").toLowerCase().includes(q)
+        );
+      })
+      : records;
 
     const result = { "All Records": base.length };
     ["Consultations", "Prescriptions", "Lab Reports", "Documents"].forEach((k) => {
       result[k] = base.filter((r) => r.kind === k).length;
     });
     return result;
-  }, [search]);
+  }, [search, records]);
 
   const isEmpty = filtered.length === 0;
 
@@ -715,8 +767,31 @@ function PatientMedicalRecords() {
         ))}
       </div>
 
-      {/* ── Records List ── */}
-      {!isEmpty ? (
+      {/* ── Content States ── */}
+      {loading ? (
+        <div className="mr-loading-state" style={{ textAlign: "center", padding: "4rem 1rem", color: "#64748b" }}>
+          <FaSpinner className="spin-icon" style={{ fontSize: "2.2rem", color: "var(--primary-color)", marginBottom: "1rem" }} />
+          <h3 style={{ fontWeight: 600, fontSize: "1.1rem", color: "#1e293b", margin: "0 0 0.5rem" }}>
+            Loading your medical records…
+          </h3>
+          <p style={{ fontSize: "0.88rem", color: "#64748b", margin: 0 }}>
+            Fetching verified records from your healthcare providers.
+          </p>
+        </div>
+      ) : error ? (
+        <div className="mr-empty-state">
+          <div className="mr-empty-illustration" style={{ color: "#ef4444" }}>
+            <FaExclamationTriangle />
+          </div>
+          <h3 className="mr-empty-title">Unable to Load Medical Records</h3>
+          <p className="mr-empty-subtitle">{error}</p>
+          <div className="mr-empty-actions">
+            <button className="mr-empty-book-btn" onClick={fetchRecords}>
+              Retry
+            </button>
+          </div>
+        </div>
+      ) : !isEmpty ? (
         <div className="mr2-list">
           {filtered.map((record) => (
             <RecordCard
@@ -729,21 +804,25 @@ function PatientMedicalRecords() {
       ) : (
         <div className="mr-empty-state">
           <div className="mr-empty-illustration"><FaNotesMedical /></div>
-          <h3 className="mr-empty-title">No Records Found</h3>
+          <h3 className="mr-empty-title">
+            {search || activeTab !== "All Records" ? "No Records Found" : "No medical records available"}
+          </h3>
           <p className="mr-empty-subtitle">
             {search
-              ? `No results matched "${search}". Try a different term or clear the search.`
-              : "You don't have any medical records yet. Book a consultation to get started."}
+              ? `No results matched "${search}". Try a different term or clear the filter.`
+              : activeTab !== "All Records"
+              ? `No records found under ${activeTab}. Records will appear when added by an authorized doctor or hospital.`
+              : "Medical records will appear here once they are added by an authorized doctor or hospital after your consultation or clinical visit."}
           </p>
           <div className="mr-empty-actions">
-            {search && (
-              <button className="mr-empty-clear-btn" onClick={() => { setSearch(""); setActiveTab("All Records"); }}>
+            {(search || activeTab !== "All Records") && (
+              <button
+                className="mr-empty-clear-btn"
+                onClick={() => { setSearch(""); setActiveTab("All Records"); }}
+              >
                 <FaTimes /> Clear Filters
               </button>
             )}
-            <button className="mr-empty-upload-btn" onClick={() => alert("Upload feature coming soon!")}>
-              <FaCloudUploadAlt /> Upload Records
-            </button>
             <button className="mr-empty-book-btn" onClick={() => navigate("/patient/find-doctors")}>
               <FaCalendarPlus /> Book Consultation
             </button>

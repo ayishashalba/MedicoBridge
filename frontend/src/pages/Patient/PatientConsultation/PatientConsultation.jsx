@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import {
@@ -28,7 +27,11 @@ import {
   FaExclamationTriangle,
   FaDownload,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import { API_BASE_URL, ENABLE_BACKEND_API } from "../../../services/apiConfig";
 import "./PatientConsultation.css";
+
+const API_BASE = API_BASE_URL.replace(/\/api\/?$/, "");
 
 /* ─── Status Configuration ────────────────────────────────────────── */
 const STATUS_CONFIG = {
@@ -98,25 +101,6 @@ function parseDateTime(dateStr, timeStr) {
   } catch (e) {
     return new Date();
   }
-}
-
-function getMockDateTime(minutesOffset) {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() + minutesOffset);
-
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const dateStr = `${yyyy}-${mm}-${dd}`;
-
-  let hours = d.getHours();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12;
-  hours = hours ? hours : 12;
-  const minutes = String(d.getMinutes()).padStart(2, "0");
-  const timeStr = `${hours}:${minutes} ${ampm}`;
-
-  return { date: dateStr, time: timeStr };
 }
 
 function formatDate(dateStr) {
@@ -250,7 +234,7 @@ function HardwareTestPanel() {
             <p className="oc-hw-err-desc">
               Please check your browser settings to grant camera and microphone access, or ensure they are plugged in.
             </p>
-            <div className="oc-hw-mock-badge">💡 Simulated Mode Activated below for testing</div>
+            <div className="oc-hw-mock-badge">💡 Check camera and mic settings in your browser address bar</div>
           </div>
         )}
         {permission === "granted" && (
@@ -369,78 +353,13 @@ function PatientConsultation() {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Consultation states using relative schedules
-  const [consultations, setConsultations] = useState([
-    {
-      id: "MC-CON-101",
-      doctorName: "Dr. Aisha Khan",
-      specialization: "Cardiologist",
-      hospital: "Apollo Hospitals",
-      type: "hospital",
-      ...getMockDateTime(10), // Scheduled to start in 10 minutes (Join Active)
-      status: "ready",
-      doctorPhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200",
-      initials: "AK",
-      color: "#7c3aed",
-      online: true,
-      duration: "20–30 mins",
-      fee: 800,
-      paymentStatus: "Paid",
-    },
-    {
-      id: "MC-CON-102",
-      doctorName: "Dr. Rahul Verma",
-      specialization: "Orthopedic Surgeon",
-      hospital: "Fortis Healthcare",
-      type: "hospital",
-      ...getMockDateTime(45), // Scheduled in 45 minutes (Join Disabled)
-      status: "confirmed",
-      doctorPhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=200",
-      initials: "RV",
-      color: "#0284c7",
-      online: false,
-      duration: "20–30 mins",
-      fee: 700,
-      paymentStatus: "Paid",
-    },
-    {
-      id: "MC-CON-103",
-      doctorName: "Dr. Priya Sharma",
-      specialization: "Dermatologist",
-      hospital: "Skin Care Clinic",
-      type: "clinic",
-      ...getMockDateTime(24 * 60), // Scheduled tomorrow (Join Disabled)
-      status: "pending",
-      doctorPhoto: "https://images.unsplash.com/photo-1594824813573-246434de83fb?auto=format&fit=crop&q=80&w=200",
-      initials: "PS",
-      color: "#0d9488",
-      online: true,
-      duration: "20–30 mins",
-      fee: 600,
-      paymentStatus: "Pending Approval",
-    },
-    {
-      id: "MC-CON-104",
-      doctorName: "Dr. Suresh Nair",
-      specialization: "Neurologist",
-      hospital: "AIIMS Hospital",
-      type: "hospital",
-      ...getMockDateTime(-60), // Completed 1 hr ago (Shows Completed layout)
-      status: "completed",
-      doctorPhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=200",
-      initials: "SN",
-      color: "#f59e0b",
-      online: false,
-      duration: "30 mins",
-      fee: 900,
-      paymentStatus: "Paid",
-    },
-  ]);
+  // Consultation states initialized from real backend data
+  const [consultations, setConsultations] = useState([]);
+  const [loadingConsultations, setLoadingConsultations] = useState(true);
 
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [imageErrors, setImageErrors] = useState({});
-  const [toastMessage, setToastMessage] = useState("");
 
   // Modals visibility state
   const [showHardwareTest, setShowHardwareTest] = useState(false);
@@ -454,6 +373,8 @@ function PatientConsultation() {
 
   const [showPrescription, setShowPrescription] = useState(false);
   const [prescriptionId, setPrescriptionId] = useState(null);
+  const [prescriptionData, setPrescriptionData] = useState(null);
+  const [loadingPrescription, setLoadingPrescription] = useState(false);
 
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackId, setFeedbackId] = useState(null);
@@ -471,26 +392,80 @@ function PatientConsultation() {
     return () => clearInterval(timer);
   }, []);
 
-  // Load submitted feedbacks from backend on mount
+  // Load real appointments from backend on mount
   useEffect(() => {
-    if (!ENABLE_BACKEND_API) return;
-    fetch("http://localhost:5000/api/patient/feedback")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          const map = {};
-          data.data.forEach((f) => { map[f.appointmentId] = true; });
-          setSubmittedFeedback(map);
+    async function loadConsultations() {
+      if (!ENABLE_BACKEND_API) {
+        setLoadingConsultations(false);
+        return;
+      }
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          setLoadingConsultations(false);
+          return;
         }
-      })
-      .catch(() => { /* Backend unavailable */ });
+        const res = await fetch(`${API_BASE}/api/patient/appointments`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          const onlineAppts = data.data.filter((a) => {
+            const t = String(a.type || "").toLowerCase();
+            return t.includes("online") || t.includes("video");
+          });
+          const sourceList = onlineAppts.length > 0 ? onlineAppts : data.data;
+          const mapped = sourceList.map((a) => {
+            const doc = a.doctorId || {};
+            const hosp = a.hospitalId || {};
+            const docName = doc.name ? (doc.name.startsWith("Dr.") ? doc.name : `Dr. ${doc.name}`) : "Doctor";
+            const dateObj = a.date ? new Date(a.date) : new Date();
+            const dateStr = !isNaN(dateObj.getTime()) ? dateObj.toISOString().split("T")[0] : "";
+            const rawStatus = String(a.status || "pending").toLowerCase();
+            return {
+              id: a._id,
+              displayId: a.appointmentId || a._id,
+              doctorName: docName,
+              specialization: doc.specialization || "General Physician",
+              hospital: hosp.name || doc.hospitalName || doc.clinicName || "Medical Facility",
+              type: String(doc.practiceType || "hospital").toLowerCase() === "clinic" ? "clinic" : "hospital",
+              date: dateStr,
+              time: a.timeSlot || a.time || "",
+              status: rawStatus === "in-progress" ? "ready" : rawStatus,
+              doctorPhoto: doc.profileImage ? (doc.profileImage.startsWith("http") ? doc.profileImage : `${API_BASE}${doc.profileImage}`) : "",
+              initials: getInitials(docName),
+              color: getAvatarColor(docName),
+              online: true,
+              duration: "20–30 mins",
+              fee: a.fee ?? doc.consultationFee ?? 500,
+              paymentStatus: a.paymentStatus === "Paid" ? "Paid" : "Pending",
+              reason: a.reason || "",
+              slots: doc.timeSlots || [],
+              prescription: a.prescription || false,
+            };
+          });
+          setConsultations(mapped);
+
+          const fbMap = {};
+          data.data.forEach((a) => {
+            if (a.rating != null) fbMap[a._id] = true;
+          });
+          setSubmittedFeedback(fbMap);
+        } else {
+          setConsultations([]);
+        }
+      } catch (err) {
+        console.error("Failed to load patient consultations:", err);
+        setConsultations([]);
+      } finally {
+        setLoadingConsultations(false);
+      }
+    }
+    loadConsultations();
   }, []);
 
   const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage("");
-    }, 4500);
+    toast.success(msg);
   };
 
   const handleImageError = (docId) => {
@@ -539,32 +514,90 @@ function PatientConsultation() {
     }
   };
 
-  const handleSaveReschedule = (e) => {
+  const handleSaveReschedule = async (e) => {
     e.preventDefault();
     if (!rescheduleDate || !rescheduleTime) {
-      alert("Please select both Date and Time slot.");
+      toast.warning("Please select both Date and Time slot.");
       return;
     }
 
     if (isSlotDisabled(rescheduleTime, rescheduleDate, rescheduleId)) {
-      alert("Selected slot is unavailable. Please choose another future time slot.");
+      toast.warning("Selected slot is unavailable. Please choose another future time slot.");
       return;
     }
 
-    setConsultations((prev) =>
-      prev.map((c) =>
-        c.id === rescheduleId
-          ? {
-            ...c,
+    try {
+      const token = localStorage.getItem("token");
+      if (token && rescheduleId) {
+        const res = await fetch(`${API_BASE}/api/patient/appointments/${rescheduleId}/reschedule`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
             date: rescheduleDate,
-            time: rescheduleTime,
-            status: c.status === "ready" ? "confirmed" : c.status,
-          }
-          : c
-      )
-    );
-    setShowReschedule(false);
-    showToast("Your consultation slot was successfully rescheduled!");
+            timeSlot: rescheduleTime,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          toast.error(data.message || "Failed to reschedule consultation.");
+          return;
+        }
+      }
+
+      setConsultations((prev) =>
+        prev.map((c) =>
+          c.id === rescheduleId
+            ? {
+              ...c,
+              date: rescheduleDate,
+              time: rescheduleTime,
+              status: c.status === "ready" ? "confirmed" : c.status,
+            }
+            : c
+        )
+      );
+      setShowReschedule(false);
+      showToast("Your consultation slot was successfully rescheduled!");
+    } catch (err) {
+      toast.error("Failed to reschedule consultation. Please check your network.");
+    }
+  };
+
+  const handleOpenPrescription = async (consult) => {
+    setPrescriptionId(consult.id);
+    setShowPrescription(true);
+    setLoadingPrescription(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE}/api/patient/prescriptions/${consult.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setPrescriptionData(data.data);
+      } else {
+        const listRes = await fetch(`${API_BASE}/api/patient/prescriptions`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const listData = await listRes.json();
+        if (listRes.ok && Array.isArray(listData.data)) {
+          const found = listData.data.find(
+            (p) => String(p.appointmentId?._id || p.appointmentId) === String(consult.id)
+          );
+          setPrescriptionData(found || null);
+        } else {
+          setPrescriptionData(null);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch prescription:", err);
+      setPrescriptionData(null);
+    } finally {
+      setLoadingPrescription(false);
+    }
   };
 
   // Real PDF Generator Handler
@@ -601,7 +634,7 @@ function PatientConsultation() {
       setShowPrescription(false);
     } catch (error) {
       console.error("Prescription PDF generation error:", error);
-      alert("Unable to generate PDF prescription. Please try again.");
+      toast.error("Unable to generate PDF prescription. Please try again.");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -613,10 +646,21 @@ function PatientConsultation() {
     setShowCancel(true);
   };
 
-  const handleConfirmCancel = () => {
-    setConsultations((prev) => prev.filter((c) => c.id !== cancelId));
-    setShowCancel(false);
-    showToast("Consultation cancelled successfully.");
+  const handleConfirmCancel = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token && cancelId) {
+        await fetch(`${API_BASE}/api/patient/appointments/${cancelId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      setConsultations((prev) => prev.filter((c) => c.id !== cancelId));
+      setShowCancel(false);
+      showToast("Consultation cancelled successfully.");
+    } catch (err) {
+      toast.error("Failed to cancel consultation. Please try again.");
+    }
   };
 
   // Join timing eligibility verification: Join becomes active 2m before and up to 30m after start time (Ongoing)
@@ -693,31 +737,6 @@ function PatientConsultation() {
 
   return (
     <div className="oc-page">
-      {/* Toast Notification */}
-      {toastMessage && createPortal(
-        <div style={{
-          position: "fixed",
-          bottom: "2rem",
-          right: "2rem",
-          backgroundColor: "#0f172a",
-          color: "#fff",
-          padding: "1rem 1.5rem",
-          borderRadius: "10px",
-          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
-          zIndex: 2000,
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          fontSize: "0.88rem",
-          border: "1px solid #1e293b",
-          animation: "ocFadeIn 0.3s ease-out"
-        }}>
-          <FaInfoCircle style={{ color: "#0d9488" }} />
-          <span>{toastMessage}</span>
-        </div>,
-        document.body
-      )}
-
       {/* ── Page Header ────────────────────────────────────────── */}
       <header className="oc-header">
         <div>
@@ -960,10 +979,7 @@ function PatientConsultation() {
                       <button
                         className="oc-btn oc-btn--join"
                         style={{ background: "linear-gradient(135deg, var(--primary-color), var(--secondary-color))" }}
-                        onClick={() => {
-                          setPrescriptionId(consult.id);
-                          setShowPrescription(true);
-                        }}
+                        onClick={() => handleOpenPrescription(consult)}
                         aria-label="View Prescription for completed call"
                       >
                         Prescription
@@ -1266,67 +1282,90 @@ function PatientConsultation() {
                 <h3 style={{ color: "var(--primary-color)", margin: 0, fontSize: "1.2rem" }}>
                   📁 Digital Prescription (Rx)
                 </h3>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>ID: {prescriptionId || "MC-CON-104"}</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "0.15rem" }}>
+                  ID: {prescriptionData?.prescriptionId || prescriptionData?._id || prescriptionId || "Rx"}
+                </span>
               </div>
               <button className="oc-modal-close" onClick={() => setShowPrescription(false)}>
                 <FaTimes />
               </button>
             </div>
             <div className="oc-modal-body" style={{ padding: "1.5rem" }} ref={prescContentRef}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", marginBottom: "1rem" }}>
-                <div>
-                  <h4 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)" }}>Dr. Suresh Nair</h4>
-                  <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--primary-color)", fontWeight: 700 }}>Neurologist</p>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>AIIMS Hospital, New Delhi</p>
+              {loadingPrescription ? (
+                <div style={{ textAlign: "center", padding: "2.5rem 1rem", color: "var(--primary-color)" }}>
+                  <FaSpinner className="ocr-spin" style={{ fontSize: "1.8rem", marginBottom: "0.75rem" }} />
+                  <p style={{ margin: 0, fontSize: "0.9rem" }}>Loading digital prescription...</p>
                 </div>
-                <div style={{ textAlign: "right" }}>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}><strong>Date:</strong> 18 Jul 2026</p>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}><strong>Patient:</strong> John Doe</p>
-                  <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}><strong>ID:</strong> #PT-20041</p>
+              ) : !prescriptionData ? (
+                <div style={{ textAlign: "center", padding: "2.5rem 1rem", color: "var(--text-secondary)" }}>
+                  <p style={{ margin: 0, fontSize: "0.95rem" }}>No digital prescription record is linked to this consultation yet.</p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", marginBottom: "1rem" }}>
+                    <div>
+                      <h4 style={{ margin: "0 0 0.2rem 0", color: "var(--text-primary)" }}>
+                        {prescriptionData.doctorId?.name ? (prescriptionData.doctorId.name.startsWith("Dr.") ? prescriptionData.doctorId.name : `Dr. ${prescriptionData.doctorId.name}`) : "Attending Doctor"}
+                      </h4>
+                      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--primary-color)", fontWeight: 700 }}>
+                        {prescriptionData.doctorId?.specialization || "Physician"}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                        {prescriptionData.doctorId?.hospitalName || prescriptionData.hospitalId?.name || "Healthcare Facility"}
+                      </p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                        <strong>Date:</strong> {prescriptionData.createdAt ? new Date(prescriptionData.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                        <strong>Patient:</strong> {prescriptionData.patientId?.name || "Patient"}
+                      </p>
+                      <p style={{ margin: 0, fontSize: "0.75rem", color: "var(--text-secondary)" }}>
+                        <strong>ID:</strong> #{prescriptionData.patientId?.patientId || prescriptionData.patientId?._id?.slice(-6) || "PT"}
+                      </p>
+                    </div>
+                  </div>
 
-              <div style={{ marginBottom: "1rem" }}>
-                <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary-color)", fontFamily: "serif" }}>Rx</span>
-                <p style={{ margin: "0.25rem 0 0.5rem 0", fontSize: "0.85rem", color: "var(--text-primary)" }}>
-                  <strong>Diagnosis:</strong> Mild Tension Headache & Fatigue
-                </p>
-              </div>
+                  <div style={{ marginBottom: "1rem" }}>
+                    <span style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--primary-color)", fontFamily: "serif" }}>Rx</span>
+                    <p style={{ margin: "0.25rem 0 0.5rem 0", fontSize: "0.85rem", color: "var(--text-primary)" }}>
+                      <strong>Diagnosis:</strong> {prescriptionData.diagnosis || "Consultation Diagnosis"}
+                    </p>
+                  </div>
 
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", textAlign: "left", marginBottom: "1.5rem" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid var(--border-color)", color: "var(--text-secondary)" }}>
-                    <th style={{ padding: "0.5rem 0" }}>Medicine Name</th>
-                    <th>Dosage</th>
-                    <th>Duration</th>
-                    <th style={{ textAlign: "right" }}>Instruction</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                    <td style={{ padding: "0.75rem 0", fontWeight: "600" }}>Naproxen 250mg</td>
-                    <td>1 - 0 - 1</td>
-                    <td>5 Days</td>
-                    <td style={{ textAlign: "right" }}>After Food</td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid var(--border-color)" }}>
-                    <td style={{ padding: "0.75rem 0", fontWeight: "600" }}>Methylcobalamin (Vit B12)</td>
-                    <td>0 - 1 - 0</td>
-                    <td>30 Days</td>
-                    <td style={{ textAlign: "right" }}>Before Food</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "0.75rem 0", fontWeight: "600" }}>Paracetamol 650mg</td>
-                    <td>1 - 0 - 0</td>
-                    <td>As needed</td>
-                    <td style={{ textAlign: "right" }}>For headache</td>
-                  </tr>
-                </tbody>
-              </table>
+                  {Array.isArray(prescriptionData.medicines) && prescriptionData.medicines.length > 0 ? (
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", textAlign: "left", marginBottom: "1.5rem" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "2px solid var(--border-color)", color: "var(--text-secondary)" }}>
+                          <th style={{ padding: "0.5rem 0" }}>Medicine Name</th>
+                          <th>Dosage</th>
+                          <th>Duration</th>
+                          <th style={{ textAlign: "right" }}>Instruction</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {prescriptionData.medicines.map((med, idx) => (
+                          <tr key={idx} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                            <td style={{ padding: "0.75rem 0", fontWeight: "600" }}>{med.name || med.medicineName}</td>
+                            <td>{med.dosage || "—"}</td>
+                            <td>{med.duration || "—"}</td>
+                            <td style={{ textAlign: "right" }}>{med.instructions || med.notes || med.frequency || "As directed"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>No medicines prescribed.</p>
+                  )}
 
-              <div style={{ backgroundColor: "var(--bg-secondary)", padding: "0.85rem", borderRadius: "8px", fontSize: "0.8rem", color: "var(--text-secondary)", borderLeft: "4px solid var(--primary-color)" }}>
-                <strong>Advice:</strong> Keep yourself hydrated. Sleep at least 7-8 hours a day. Limit screen time to under 1 hour continuously. Follow-up in 10 days if symptoms persist.
-              </div>
+                  {(prescriptionData.notes || prescriptionData.advice) && (
+                    <div style={{ backgroundColor: "var(--bg-secondary)", padding: "0.85rem", borderRadius: "8px", fontSize: "0.8rem", color: "var(--text-secondary)", borderLeft: "4px solid var(--primary-color)" }}>
+                      <strong>Advice:</strong> {prescriptionData.notes || prescriptionData.advice}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
             <div className="oc-modal-footer">
               <button className="oc-btn oc-btn--details" onClick={() => setShowPrescription(false)}>
@@ -1406,11 +1445,14 @@ function PatientConsultation() {
                   if (feedbackId) {
                     if (ENABLE_BACKEND_API) {
                       try {
-                        await fetch("http://localhost:5000/api/feedback", {
+                        const token = localStorage.getItem("token");
+                        await fetch(`${API_BASE}/api/patient/appointments/${feedbackId}/feedback`, {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
+                          },
                           body: JSON.stringify({
-                            appointmentId: feedbackId,
                             rating: feedbackRating,
                             comment: feedbackComment,
                           }),

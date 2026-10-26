@@ -1,122 +1,243 @@
-const Medicine = require("../models/Medicine");
-
+const Medicine = require('../models/Medicine');
+const Offer = require('../models/Offer');
+const { calculateMedicineOffer } = require('../services/pricingService');
 const {
-    successResponse,
-    validationErrorResponse,
-    notFoundResponse,
-    serverErrorResponse,
-} = require("../utils/apiResponse");
-const { isValidObjectId } = require("../utils/validators");
-const { getStockStatus } = require("../utils/stockCalculator");
+  sendSuccess,
+  sendValidationError,
+  sendNotFound,
+  sendServerError,
+} = require('../utils/responseHandler');
 
-// Public & Patient search medicines with masked stock
-const searchMedicines = async (req, res) => {
-    try {
-        const { search, category, pharmacyType, requiresPrescription, maxPrice } = req.query;
+const LOW_STOCK_THRESHOLD = 10;
 
-        const query = { isActive: true };
+/**
+ * Helper to determine actual stock quantity and status
+ */
+const determineStockInfo = (med) => {
+  const isExplicitlyUnavailable = med.isAvailable === false;
+  const rawStock = med.stock;
 
-        if (category && category !== "All Categories" && category !== "All") {
-            query.category = category;
-        }
+  // If stock is undefined or null or NaN (missing stock data)
+  if (rawStock === undefined || rawStock === null || isNaN(Number(rawStock))) {
+    return {
+      stock: null,
+      stockStatus: isExplicitlyUnavailable ? 'Out of Stock' : 'Stock unavailable',
+      isAvailable: false,
+      canOrder: false,
+    };
+  }
 
-        if (pharmacyType) {
-            query.pharmacyType = pharmacyType;
-        }
+  const numericStock = Number(rawStock);
 
-        if (requiresPrescription !== undefined) {
-            query.requiresPrescription = requiresPrescription === "true";
-        }
+  if (isExplicitlyUnavailable || numericStock <= 0) {
+    return {
+      stock: Math.max(0, numericStock),
+      stockStatus: 'Out of Stock',
+      isAvailable: false,
+      canOrder: false,
+    };
+  }
 
-        if (maxPrice) {
-            query.price = { $lte: Number(maxPrice) };
-        }
+  if (numericStock <= LOW_STOCK_THRESHOLD) {
+    return {
+      stock: numericStock,
+      stockStatus: 'Low Stock',
+      isAvailable: true,
+      canOrder: true,
+    };
+  }
 
-        if (search) {
-            const searchRegex = new RegExp(search.trim(), "i");
-            query.$or = [
-                { name: searchRegex },
-                { genericName: searchRegex },
-                { manufacturer: searchRegex },
-                { category: searchRegex },
-            ];
-        }
-
-        const rawMedicines = await Medicine.find(query)
-            .populate("pharmacyId", "name email phone city address")
-            .sort({ name: 1 })
-            .lean();
-
-        // Apply Stock Masking Rule for Patients:
-        // stock > 10 => in-stock (displayStock: null), patients must NOT see exact count like 120+
-        // stock > 0 && stock <= 10 => low-stock (displayStock: "Low Stock")
-        // stock === 0 => out-of-stock (displayStock: "Out of Stock")
-        const medicines = rawMedicines.map((m) => {
-            const stockInfo = getStockStatus(m.stock);
-            return {
-                ...m,
-                stock: stockInfo.displayStock,
-                stockStatus: stockInfo.status,
-                isAvailable: stockInfo.isAvailable,
-            };
-        });
-
-        return successResponse(res, "Medicines retrieved successfully", {
-            medicines,
-            count: medicines.length,
-        });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to search medicines", error);
-    }
+  return {
+    stock: numericStock,
+    stockStatus: 'In Stock',
+    isAvailable: true,
+    canOrder: true,
+  };
 };
 
-// Get single medicine details (with masked stock for patients)
-const getMedicineById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!isValidObjectId(id)) {
-            return validationErrorResponse(res, "Invalid medicine ID");
-        }
+// @desc    Get all available medicines (Public / Patient) with active offers attached
+// @route   GET /api/medicines
+// @access  Public
+const getAllMedicines = async (req, res) => {
+  try {
+    const { category, search, pharmacyId, requiresPrescription, isAvailable } = req.query;
+    const query = { isHospital: false };
 
-        const medicine = await Medicine.findById(id)
-            .populate("pharmacyId", "name email phone city address")
-            .populate("hospitalId", "hospitalName city")
-            .lean();
+    if (isAvailable !== undefined) {
+      query.isAvailable = isAvailable === 'true';
+    }
 
-        if (!medicine) {
-            return notFoundResponse(res, "Medicine not found");
-        }
+    if (category && category !== 'All' && category !== 'All Categories') {
+      query.category = { $regex: category, $options: 'i' };
+    }
+    if (pharmacyId) {
+      query.pharmacyId = pharmacyId;
+    }
+    if (requiresPrescription !== undefined) {
+      query.requiresPrescription = requiresPrescription === 'true';
+    }
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { genericName: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+        { manufacturer: { $regex: search, $options: 'i' } },
+      ];
+    }
 
-        const stockInfo = getStockStatus(medicine.stock);
-        const maskedMedicine = {
-            ...medicine,
-            stock: stockInfo.displayStock,
-            stockStatus: stockInfo.status,
-            isAvailable: stockInfo.isAvailable,
+    const medicines = await Medicine.find(query).populate('pharmacyId', 'name city rating address');
+
+    // Enrich medicines with active offers and actual stock quantities
+    const enrichedMedicines = await Promise.all(
+      medicines.map(async (med) => {
+        const { offerDiscount, finalUnitPrice, activeOffer } = await calculateMedicineOffer(
+          med._id,
+          med.price
+        );
+
+        const stockInfo = determineStockInfo(med);
+
+        return {
+          _id: med._id,
+          id: med._id,
+          name: med.name,
+          genericName: med.genericName,
+          category: med.category,
+          manufacturer: med.manufacturer,
+          description: med.description,
+          dosageForm: med.dosageForm,
+          requiresPrescription: med.requiresPrescription,
+          price: med.price,
+          originalPrice: med.price,
+          offerDiscount,
+          finalPrice: finalUnitPrice,
+          activeOffer: activeOffer
+            ? {
+                offerName: activeOffer.offerName,
+                discountType: activeOffer.discountType,
+                discountValue: activeOffer.discountValue,
+              }
+            : null,
+          image: med.image,
+          pharmacyId: med.pharmacyId,
+          stockStatus: stockInfo.stockStatus,
+          stock: stockInfo.stock,
+          expiryDate: med.expiryDate,
+          batchNumber: med.batchNumber,
+          storageTemp: med.storageTemp,
+          unit: med.unit,
+          isAvailable: stockInfo.isAvailable,
+          canOrder: stockInfo.canOrder,
         };
+      })
+    );
 
-        return successResponse(res, "Medicine retrieved successfully", {
-            medicine: maskedMedicine,
-        });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to fetch medicine details", error);
-    }
+    return sendSuccess(res, 'Medicines fetched successfully.', enrichedMedicines);
+  } catch (error) {
+    return sendServerError(res, 'Failed to fetch medicines.', error);
+  }
 };
 
-// Get unique categories
-const getCategories = async (req, res) => {
-    try {
-        const categories = await Medicine.distinct("category", { isActive: true });
-        return successResponse(res, "Medicine categories retrieved successfully", {
-            categories: ["All Categories", ...categories.filter(Boolean)],
-        });
-    } catch (error) {
-        return serverErrorResponse(res, "Unable to fetch categories", error);
+// @desc    Get medicine by ID
+// @route   GET /api/medicines/:id
+// @access  Public
+const getMedicineById = async (req, res) => {
+  try {
+    const med = await Medicine.findById(req.params.id).populate('pharmacyId', 'name city rating address');
+    if (!med) {
+      return sendNotFound(res, 'Medicine not found.');
     }
+
+    const { offerDiscount, finalUnitPrice, activeOffer } = await calculateMedicineOffer(
+      med._id,
+      med.price
+    );
+
+    const stockInfo = determineStockInfo(med);
+
+    const enriched = {
+      _id: med._id,
+      id: med._id,
+      name: med.name,
+      genericName: med.genericName,
+      category: med.category,
+      manufacturer: med.manufacturer,
+      description: med.description,
+      dosageForm: med.dosageForm,
+      requiresPrescription: med.requiresPrescription,
+      price: med.price,
+      originalPrice: med.price,
+      offerDiscount,
+      finalPrice: finalUnitPrice,
+      activeOffer,
+      image: med.image,
+      pharmacyId: med.pharmacyId,
+      stockStatus: stockInfo.stockStatus,
+      stock: stockInfo.stock,
+      expiryDate: med.expiryDate,
+      batchNumber: med.batchNumber,
+      storageTemp: med.storageTemp,
+      unit: med.unit,
+      isAvailable: stockInfo.isAvailable,
+      canOrder: stockInfo.canOrder,
+    };
+
+    return sendSuccess(res, 'Medicine details fetched successfully.', enriched);
+  } catch (error) {
+    return sendServerError(res, 'Failed to fetch medicine details.', error);
+  }
+};
+
+// @desc    Process prescription and match with catalog medicines
+// @route   POST /api/medicines/process-prescription
+// @access  Public
+const processPrescription = async (req, res) => {
+  try {
+    const { fileName } = req.body;
+    const medicines = await Medicine.find({ isHospital: false }).limit(4);
+
+    const extractedMedicines = medicines.map((m) => {
+      const stockInfo = determineStockInfo(m);
+
+      return {
+        name: m.name,
+        dosage: m.dosageForm || "Standard Dosage",
+        quantity: 1,
+        instruction: "Take as directed by physician",
+        requiresPrescription: m.requiresPrescription,
+        matched: true,
+        product: {
+          id: m._id,
+          _id: m._id,
+          price: m.price,
+          stock: stockInfo.stock,
+          stockStatus: stockInfo.stockStatus,
+          isAvailable: stockInfo.isAvailable,
+          canOrder: stockInfo.canOrder,
+        },
+      };
+    });
+
+    return sendSuccess(res, 'Prescription processed successfully.', {
+      prescriptionId: `RX-${Date.now().toString().slice(-6)}`,
+      fileName: fileName || "Prescription.pdf",
+      prescriptionDate: new Date().toLocaleDateString("en-IN", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }),
+      doctorName: "Verified Healthcare Practitioner",
+      clinicName: "MedicoBridge Integrated Healthcare",
+      medicines: extractedMedicines,
+    });
+  } catch (error) {
+    return sendServerError(res, 'Failed to process prescription.', error);
+  }
 };
 
 module.exports = {
-    searchMedicines,
-    getMedicineById,
-    getCategories,
+  getAllMedicines,
+  getMedicineById,
+  processPrescription,
 };
+

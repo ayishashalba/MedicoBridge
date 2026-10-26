@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaUser,
@@ -11,112 +11,90 @@ import {
   FaTint,
   FaMapMarkerAlt,
   FaUserCheck,
+  FaSyncAlt,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import { generateBloodGroupReport } from "../../../utils/pdfGenerator";
 import { sortDonorsByProximity, getProximityLabel } from "../../../utils/locationProximity";
 import "./DoctorPatients.css";
+
+const API_BASE = "http://localhost:5000";
 
 const BLOOD_GROUPS = [
   "All Blood Groups",
   "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
 ];
 
-// Patients accessible to the logged-in doctor via active doctor-patient relationship
-// Fields: city and isDonorAvailable support the integrated blood donor search
-const accessiblePatients = [
-  {
-    id: "PAT-4091",
-    name: "Rahul Nair",
-    age: 32,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    phone: "+91 98765 43210",
-    email: "rahul.nair@example.com",
-  },
-  {
-    id: "PAT-4092",
-    name: "Anjali Thomas",
-    age: 27,
-    gender: "Female",
-    bloodGroup: "O+",
-    city: "Malappuram",
-    isDonorAvailable: true,
-    phone: "+91 98765 43211",
-    email: "anjali.thomas@example.com",
-  },
-  {
-    id: "PAT-4093",
-    name: "Arun Kumar",
-    age: 41,
-    gender: "Male",
-    bloodGroup: "A-",
-    city: "Kannur",
-    isDonorAvailable: false,
-    phone: "+91 98765 43212",
-    email: "arun.kumar@example.com",
-  },
-  {
-    id: "PAT-4094",
-    name: "Lakshmi Nair",
-    age: 46,
-    gender: "Female",
-    bloodGroup: "AB+",
-    city: "Kozhikode",
-    isDonorAvailable: true,
-    phone: "+91 98765 43213",
-    email: "lakshmi.nair@example.com",
-  },
-  {
-    id: "PAT-4095",
-    name: "Thomas Kurian",
-    age: 35,
-    gender: "Male",
-    bloodGroup: "Not Provided",
-    city: "Wayanad",
-    isDonorAvailable: false,
-    phone: "+91 98765 43214",
-    email: "thomas.kurian@example.com",
-  },
-  {
-    id: "PAT-4096",
-    name: "Firoz Khan",
-    age: 36,
-    gender: "Male",
-    bloodGroup: "B+",
-    city: "Ernakulam",
-    isDonorAvailable: true,
-    phone: "+91 98765 43219",
-    email: "firoz.khan@example.com",
-  },
-  {
-    id: "PAT-4097",
-    name: "Deepa Menon",
-    age: 29,
-    gender: "Female",
-    bloodGroup: "B+",
-    city: "Delhi",
-    isDonorAvailable: true,
-    phone: "+91 98765 43220",
-    email: "deepa.menon@example.com",
-  },
-];
-
 function DoctorPatients() {
   const navigate = useNavigate();
-  const doctorCity = localStorage.getItem("doctorCity") || "Kozhikode";
+
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [doctorCity, setDoctorCity] = useState("Kozhikode");
+  const [doctorName, setDoctorName] = useState("");
 
   const [search, setSearch] = useState("");
   const [bloodGroupFilter, setBloodGroupFilter] = useState("All Blood Groups");
 
   // Location state: separate input (what user types) vs activeLocation (committed on Search)
-  const [locationInput, setLocationInput] = useState(doctorCity);
-  const [activeLocation, setActiveLocation] = useState(doctorCity);
+  const [locationInput, setLocationInput] = useState("");
+  const [activeLocation, setActiveLocation] = useState("");
 
   // Whether we are in "donor search mode" (a specific blood group is selected)
   const isDonorSearchMode =
     bloodGroupFilter !== "All Blood Groups" && bloodGroupFilter !== "";
+
+  const fetchPatients = useCallback(async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("Please login to view patients.");
+        navigate("/login");
+        return;
+      }
+
+      const res = await fetch(`${API_BASE}/api/doctor/patients`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success && data.data) {
+        const patientList = Array.isArray(data.data) ? data.data : (data.data.patients || []);
+        setPatients(patientList);
+
+        const city = data.data.doctorCity || "Kozhikode";
+        setDoctorCity(city);
+        if (!activeLocation) {
+          setActiveLocation(city);
+          setLocationInput(city);
+        }
+        if (data.data.doctorName) {
+          setDoctorName(data.data.doctorName);
+        }
+      } else {
+        setPatients([]);
+      }
+    } catch (err) {
+      console.error("Error fetching doctor patients:", err);
+      toast.error("Failed to load patient records.");
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, activeLocation]);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [fetchPatients]);
 
   const handleLocationSearch = () => {
     const loc = locationInput.trim() || doctorCity;
@@ -124,14 +102,15 @@ function DoctorPatients() {
   };
 
   const filteredPatients = useMemo(() => {
-    let result = accessiblePatients.filter((patient) => {
+    let result = patients.filter((patient) => {
       const q = search.toLowerCase().trim();
       const matchesSearch =
         !q ||
-        patient.name.toLowerCase().includes(q) ||
-        patient.id.toLowerCase().includes(q) ||
-        patient.email.toLowerCase().includes(q) ||
-        patient.phone.includes(q) ||
+        (patient.name || "").toLowerCase().includes(q) ||
+        (patient.id || "").toLowerCase().includes(q) ||
+        (patient.patientId || "").toLowerCase().includes(q) ||
+        (patient.email || "").toLowerCase().includes(q) ||
+        (patient.phone || "").includes(q) ||
         (patient.city && patient.city.toLowerCase().includes(q));
 
       // Blood group filter
@@ -152,7 +131,7 @@ function DoctorPatients() {
     }
 
     return result;
-  }, [search, bloodGroupFilter, isDonorSearchMode, activeLocation]);
+  }, [patients, search, bloodGroupFilter, isDonorSearchMode, activeLocation]);
 
   const handleDownloadReport = () => {
     generateBloodGroupReport({
@@ -160,7 +139,7 @@ function DoctorPatients() {
         ? `Available ${bloodGroupFilter} Donors near ${activeLocation}`
         : "Doctor Accessible Patients Report",
       selectedBloodGroup: bloodGroupFilter,
-      generatedBy: "Dr. Ayisha Shalba (Doctor)",
+      generatedBy: `Dr. ${doctorName ? doctorName.replace(/^Dr\.\s*/i, "") : "Ayisha Shalba"} (Doctor)`,
       columns: [
         { header: "Patient ID", dataKey: "id" },
         { header: "Name", dataKey: "name" },
@@ -199,6 +178,16 @@ function DoctorPatients() {
               : "Manage and view your assigned patients."}
           </p>
         </div>
+        <button
+          className="download-report-btn"
+          onClick={fetchPatients}
+          disabled={loading}
+          style={{ background: "#ffffff", color: "#475569", border: "1px solid #e2e8f0" }}
+          title="Refresh patient list"
+        >
+          <FaSyncAlt className={loading ? "mr-spin" : ""} />
+          <span>{loading ? "Refreshing..." : "Refresh"}</span>
+        </button>
       </div>
 
       {/* Control Bar */}
@@ -300,7 +289,13 @@ function DoctorPatients() {
       </div>
 
       {/* Patients Grid / Empty state */}
-      {filteredPatients.length === 0 ? (
+      {loading ? (
+        <div className="patients-empty-state">
+          <FaUser className="empty-icon" />
+          <h3>Loading patients...</h3>
+          <p>Fetching assigned patients from database.</p>
+        </div>
+      ) : filteredPatients.length === 0 ? (
         <div className="patients-empty-state">
           <FaUser className="empty-icon" />
           <h3>
@@ -317,16 +312,16 @@ function DoctorPatients() {
       ) : (
         <div className="patients-grid">
           {filteredPatients.map((patient) => (
-            <div className="patient-card" key={patient.id}>
+            <div className="patient-card" key={patient.id || patient._id}>
               <div className="patient-avatar">
                 <FaUser />
               </div>
 
-              <span className="patient-id-tag">{patient.id}</span>
+              <span className="patient-id-tag">{patient.id || patient.patientId}</span>
               <h3>{patient.name}</h3>
 
               <p className="patient-demographics">
-                {patient.age} Years • {patient.gender}
+                {patient.age} {typeof patient.age === "number" ? "Years" : ""} • {patient.gender}
               </p>
 
               <div className="patient-blood-badge-wrap">
@@ -343,16 +338,16 @@ function DoctorPatients() {
               )}
 
               <p className="patient-contact">
-                <FaPhone /> {patient.phone}
+                <FaPhone /> {patient.phone || "Not Provided"}
               </p>
 
               <p className="patient-contact">
-                <FaEnvelope /> {patient.email}
+                <FaEnvelope /> {patient.email || "Not Provided"}
               </p>
 
               <button
                 className="view-btn"
-                onClick={() => navigate(`/doctor/patients/${patient.id}`)}
+                onClick={() => navigate(`/doctor/patients/${patient.id || patient._id}`)}
               >
                 <FaEye /> View Details
               </button>

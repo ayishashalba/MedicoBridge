@@ -35,6 +35,7 @@ import AdminSettings from "../pages/Admin/AdminSettings";
 import AdminNotifications from "../pages/Admin/AdminNotifications";
 import AdminFeedback from "../pages/Admin/AdminFeedback";
 import AdminLogs from "../pages/Admin/AdminLogs";
+import AdminRefunds from "../pages/Admin/AdminRefunds";
 import AdminProfile from "../pages/Admin/AdminProfile";
 
 // ── Hospital Dashboard Layout & Pages ──────────────────────────
@@ -196,7 +197,7 @@ function AppRoutes() {
         />
         <Route path="prescription-preview/:id" element={<DoctorPrescriptionPreview />} />
         <Route
-          path="prescription-success"
+          path="prescription-success/:id"
           element={<DoctorPrescriptionSuccess />}
         />
         <Route
@@ -250,6 +251,7 @@ function AppRoutes() {
         <Route path="users" element={<AdminUsers />} />
         <Route path="approvals" element={<AdminApprovals />} />
         <Route path="pharmacy" element={<AdminPharmacy />} />
+        <Route path="refunds" element={<AdminRefunds />} />
         <Route path="coupons" element={<AdminCoupons />} />
         <Route path="medical-records" element={<AdminMedicalRecords />} />
         <Route path="appointments" element={<AdminAppointments />} />

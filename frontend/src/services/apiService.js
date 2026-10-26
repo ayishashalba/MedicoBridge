@@ -11,6 +11,11 @@ export const BLOOD_GROUP_FILTER_OPTIONS = [
   "Not Provided"
 ];
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 /**
  * Filter data by blood group and search query according to role boundaries.
  */
@@ -52,7 +57,7 @@ export async function getDoctorPatients({ bloodGroup, search, doctorId = "DR-802
   try {
     const res = await axios.get(`${API_BASE_URL}/doctor/patients`, {
       params: { bloodGroup, search },
-      headers: { "x-user-role": "Doctor", "x-user-id": doctorId },
+      headers: { "x-user-role": "Doctor", "x-user-id": doctorId, ...getAuthHeaders() },
     });
     return res.data;
   } catch (err) {
@@ -69,7 +74,7 @@ export async function getHospitalPatients({ bloodGroup, search, status, hospital
   try {
     const res = await axios.get(`${API_BASE_URL}/hospital/patients`, {
       params: { bloodGroup, search, status },
-      headers: { "x-user-role": "Hospital", "x-hospital-id": hospitalId },
+      headers: { "x-user-role": "Hospital", "x-hospital-id": hospitalId, ...getAuthHeaders() },
     });
     return res.data;
   } catch (err) {
@@ -86,7 +91,7 @@ export async function getHospitalStaff({ bloodGroup, search, status, hospitalId 
   try {
     const res = await axios.get(`${API_BASE_URL}/hospital/staff`, {
       params: { bloodGroup, search, status },
-      headers: { "x-user-role": "Hospital", "x-hospital-id": hospitalId },
+      headers: { "x-user-role": "Hospital", "x-hospital-id": hospitalId, ...getAuthHeaders() },
     });
     return res.data;
   } catch (err) {
@@ -103,7 +108,7 @@ export async function getAdminUsers({ tab, bloodGroup, search, status } = {}) {
   try {
     const res = await axios.get(`${API_BASE_URL}/admin/users`, {
       params: { tab, bloodGroup, search, status },
-      headers: { "x-user-role": "Admin" },
+      headers: { "x-user-role": "Admin", ...getAuthHeaders() },
     });
     return res.data;
   } catch (err) {
@@ -120,7 +125,7 @@ export async function searchBloodDonors({ bloodGroup, originCity = "Kozhikode", 
   try {
     const res = await axios.get(`${API_BASE_URL}/blood-donors/search`, {
       params: { bloodGroup, originCity, search },
-      headers: { "x-user-role": userRole },
+      headers: { "x-user-role": userRole, ...getAuthHeaders() },
     });
     return res.data;
   } catch (err) {

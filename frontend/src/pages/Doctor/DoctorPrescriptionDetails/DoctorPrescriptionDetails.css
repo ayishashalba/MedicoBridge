@@ -621,3 +621,9 @@
   .prx-meta-row { flex-direction: column; align-items: flex-start; gap: 0.4rem; }
   .prx-meta-dot { display: none; }
 }
+
+/* ── Spin animation for loading states ────────────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}

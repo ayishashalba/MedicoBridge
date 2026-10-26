@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaStethoscope, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./DoctorLogin.css";
 
 function DoctorLogin() {
@@ -10,6 +11,7 @@ function DoctorLogin() {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -29,30 +31,69 @@ function DoctorLogin() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (validateForm()) {
+    if (!validateForm()) return;
 
-      // Hospital doctor
-      if (email === "hospitaldoctor@gmail.com") {
+    try {
+      setIsLoading(true);
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+            password,
+            role: "Doctor",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("DOCTOR LOGIN RESPONSE:", data);
+
+      if (!response.ok) {
+        toast.error(
+          data?.message ||
+          data?.error ||
+          "Invalid doctor email or password."
+        );
+        return;
+      }
+
+      const token =
+        data?.data?.token ||
+        data?.token;
+
+      if (!token) {
+        toast.error("Login successful, but authentication token was not received.");
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("userRole", "Doctor");
+      localStorage.setItem("isLoggedIn", "true");
+
+      if (data?.data?.doctor?.practiceType === "hospital") {
         localStorage.setItem("doctorType", "Hospital");
-        localStorage.setItem("userRole", "Doctor");
-        localStorage.setItem("isLoggedIn", "true");
-        navigate("/doctor/dashboard");
-      }
-
-      // Private clinic doctor
-      else if (email === "clinicdoctor@gmail.com") {
+      } else {
         localStorage.setItem("doctorType", "Clinic");
-        localStorage.setItem("userRole", "Doctor");
-        localStorage.setItem("isLoggedIn", "true");
-        navigate("/doctor/dashboard");
       }
 
-      else {
-        alert("Invalid doctor account");
-      }
+      toast.success("Login successful! Welcome back, Doctor.");
+      navigate("/doctor/dashboard");
+
+    } catch (error) {
+      console.error("DOCTOR LOGIN ERROR:", error);
+      toast.error("Unable to connect to the server. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -89,7 +130,11 @@ function DoctorLogin() {
                 className={`doctor-form-input ${errors.email ? "doctor-input-error" : ""}`}
                 placeholder="Enter your email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors((prev) => ({ ...prev, email: "" }));
+                }}
+                disabled={isLoading}
               />
               {errors.email && (
                 <span className="doctor-form-error-msg">{errors.email}</span>
@@ -103,11 +148,14 @@ function DoctorLogin() {
                 <input
                   type={showPassword ? "text" : "password"}
                   id="doctor-password"
-                  className={`doctor-form-input ${errors.password ? "doctor-input-error" : ""
-                    }`}
+                  className={`doctor-form-input ${errors.password ? "doctor-input-error" : ""}`}
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (errors.password) setErrors((prev) => ({ ...prev, password: "" }));
+                  }}
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -130,6 +178,7 @@ function DoctorLogin() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
                 />
                 <span>Remember me</span>
               </label>
@@ -139,8 +188,12 @@ function DoctorLogin() {
             </div>
 
             {/* Submit Button */}
-            <button type="submit" className="doctor-form-submit-btn">
-              Login as Doctor
+            <button
+              type="submit"
+              className="doctor-form-submit-btn"
+              disabled={isLoading}
+            >
+              {isLoading ? "Logging in..." : "Login as Doctor"}
             </button>
           </form>
 

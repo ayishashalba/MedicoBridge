@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -22,37 +22,85 @@ import {
   FaTicketAlt,
   FaFileInvoiceDollar,
   FaNotesMedical,
+  FaUndo,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
 import "./AdminLayout.css";
 
 const sidebarNavItems = [
-  { label: "Dashboard",             icon: <FaTachometerAlt />,      path: "/admin/dashboard" },
-  { label: "User Management",       icon: <FaUsers />,              path: "/admin/users" },
-  { label: "Approvals & Review",    icon: <FaUserCheck />,          path: "/admin/approvals", badge: 3 },
-  { label: "Medicine Verification", icon: <FaPills />,              path: "/admin/pharmacy", badge: "Safety" },
-  { label: "Platform Coupons",      icon: <FaTicketAlt />,          path: "/admin/coupons" },
-  { label: "Medical Records",       icon: <FaNotesMedical />,       path: "/admin/medical-records" },
-  { label: "Appointments",          icon: <FaCalendarCheck />,      path: "/admin/appointments" },
-  { label: "Reports & Analytics",   icon: <FaChartBar />,           path: "/admin/reports" },
-  { label: "System Settings",       icon: <FaCogs />,               path: "/admin/settings" },
-  { label: "Notifications",         icon: <FaBell />,               path: "/admin/notifications", badge: 2 },
-  { label: "Feedback & Reviews",    icon: <FaComments />,           path: "/admin/feedback" },
-  { label: "Activity Logs",         icon: <FaHistory />,            path: "/admin/logs" },
-  { label: "Profile Settings",      icon: <FaUserShield />,         path: "/admin/profile" },
+  { label: "Dashboard", icon: <FaTachometerAlt />, path: "/admin/dashboard" },
+  { label: "User Management", icon: <FaUsers />, path: "/admin/users" },
+  { label: "Approvals & Review", icon: <FaUserCheck />, path: "/admin/approvals", badge: 3 },
+  { label: "Medicine Verification", icon: <FaPills />, path: "/admin/pharmacy", badge: "Safety" },
+  { label: "Refund Management", icon: <FaUndo />, path: "/admin/refunds" },
+  { label: "Platform Coupons", icon: <FaTicketAlt />, path: "/admin/coupons" },
+  { label: "Medical Records", icon: <FaNotesMedical />, path: "/admin/medical-records" },
+  { label: "Appointments", icon: <FaCalendarCheck />, path: "/admin/appointments" },
+  { label: "Reports & Analytics", icon: <FaChartBar />, path: "/admin/reports" },
+  { label: "System Settings", icon: <FaCogs />, path: "/admin/settings" },
+  { label: "Notifications", icon: <FaBell />, path: "/admin/notifications", badge: 2 },
+  { label: "Feedback & Reviews", icon: <FaComments />, path: "/admin/feedback" },
+  { label: "Activity Logs", icon: <FaHistory />, path: "/admin/logs" },
+  { label: "Profile Settings", icon: <FaUserShield />, path: "/admin/profile" },
 ];
 
 function AdminLayout() {
-  const navigate   = useNavigate();
-  const location   = useLocation();
-  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  const [adminProfile, setAdminProfile] = useState({
+    id: "",
+    name: "",
+    email: "",
+  });
   const toggleMobileSidebar = () => setSidebarOpen((p) => !p);
-  const closeMobileSidebar  = () => setSidebarOpen(false);
-  const toggleCollapse      = () => setSidebarCollapsed((p) => !p);
+  const closeMobileSidebar = () => setSidebarOpen(false);
+  const toggleCollapse = () => setSidebarCollapsed((p) => !p);
+  useEffect(() => {
+    const fetchAdminProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
+        if (!token) return;
+
+        const response = await fetch(
+          "http://localhost:5000/api/admin/profile",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.message || "Failed to fetch admin profile");
+        }
+
+        const admin = result.data;
+
+        setAdminProfile({
+          id: admin.id || admin._id || "",
+          name: admin.name || "Admin",
+          email: admin.email || "",
+        });
+      } catch (error) {
+        console.error("Fetch admin profile error:", error);
+      }
+    };
+
+    fetchAdminProfile();
+  }, []);
   const handleLogout = () => {
-    // Navigate to Admin Login
+    localStorage.removeItem("token");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("isLoggedIn");
+    toast.info("You have been logged out successfully.");
     navigate("/admin/login");
   };
 
@@ -97,14 +145,31 @@ function AdminLayout() {
         {/* Profile Card */}
         <div className={`adlay-profile-card ${sidebarCollapsed ? "adlay-profile-card--collapsed" : ""}`}>
           <div className="adlay-profile-avatar-wrap">
-            <div className="adlay-profile-avatar">AD</div>
+            <div className="adlay-profile-avatar">
+              {(adminProfile.name || "Admin")
+                .split(" ")
+                .map((word) => word[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
+            </div>
             <span className="adlay-profile-dot" aria-label="Online" />
           </div>
           {!sidebarCollapsed && (
             <div className="adlay-profile-info">
-              <p className="adlay-profile-name">Alex Mercer</p>
-              <p className="adlay-profile-role">Super Administrator</p>
-              <span className="adlay-profile-badge">SYS-ADMIN</span>
+              <p className="adlay-profile-name">
+                {adminProfile.name || "Admin"}
+              </p>
+
+              <p className="adlay-profile-role">
+                Super Administrator
+              </p>
+
+              <span className="adlay-profile-badge">
+                {adminProfile.id
+                  ? adminProfile.id.slice(-3)
+                  : "ADMIN"}
+              </span>
             </div>
           )}
         </div>
@@ -123,7 +188,7 @@ function AdminLayout() {
                   <span className="adlay-nav-icon">{item.icon}</span>
                   {!sidebarCollapsed && <span className="adlay-nav-label">{item.label}</span>}
                   {!sidebarCollapsed && item.badge && <span className="adlay-nav-badge">{item.badge}</span>}
-                  {sidebarCollapsed  && item.badge && <span className="adlay-nav-badge adlay-nav-badge--dot" />}
+                  {sidebarCollapsed && item.badge && <span className="adlay-nav-badge adlay-nav-badge--dot" />}
                 </NavLink>
               </li>
             ))}
@@ -165,10 +230,22 @@ function AdminLayout() {
               <FaCogs />
             </NavLink>
             <div className="adlay-topnav-profile">
-              <div className="adlay-topnav-avatar">AD</div>
+              <div className="adlay-topnav-avatar">
+                {(adminProfile.name || "Admin")
+                  .split(" ")
+                  .map((word) => word[0])
+                  .join("")
+                  .slice(0, 2)
+                  .toUpperCase()}
+              </div>
               <div className="adlay-topnav-profile-info">
-                <span className="adlay-topnav-name">Alex Mercer</span>
-                <span className="adlay-topnav-role">Super Admin</span>
+                <span className="adlay-topnav-name">
+                  {adminProfile.name || "Admin"}
+                </span>
+
+                <span className="adlay-topnav-role">
+                  Super Admin
+                </span>
               </div>
             </div>
           </div>
